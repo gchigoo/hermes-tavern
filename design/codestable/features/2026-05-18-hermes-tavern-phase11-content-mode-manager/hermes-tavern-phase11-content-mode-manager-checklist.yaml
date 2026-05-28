@@ -1,0 +1,34 @@
+feature: 2026-05-18-hermes-tavern-phase11-content-mode-manager
+created: 2026-05-18
+
+steps:
+  - action: "Add session content mode setter"
+    exit_signal: "TavernStore.set_session_content_mode accepts safe/adult-fiction only"
+
+  - action: "Add /rp content mode command family"
+    exit_signal: "Runtime can show and change active session content mode"
+
+  - action: "Expose content mode in status/debug prompt"
+    exit_signal: "/rp status and /rp debug prompt include content_mode"
+
+  - action: "Verify adult-fiction module gating"
+    exit_signal: "Adult-fiction modules are injected only in adult-fiction mode"
+
+checks:
+  - item: "safe is default"
+    status: completed
+
+  - item: "adult-fiction mode is session-scoped"
+    status: completed
+
+  - item: "adult_fiction preset modules are hidden in safe mode"
+    status: completed
+
+  - item: "jailbreak/disallowed modules remain excluded"
+    status: completed
+
+verification:
+  codestable_yaml_validation: passed
+  py_compile: passed
+  direct_smoke: passed
+  pytest: blocked_no_pytest_module

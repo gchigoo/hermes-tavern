@@ -1,0 +1,33 @@
+feature: 2026-05-26-hermes-tavern-phase40-runtime-lifecycle-refactor
+phase: 40
+status: implemented
+items:
+  - item: Extract Tavern lifecycle/status/export command handling from runtime.py into runtime_lifecycle.py.
+    status: done
+  - item: Keep TavernRuntime _export, _status, _end, and _start wrapper methods for compatibility with existing private method callers.
+    status: done
+  - item: Preserve /rp export markdown/st-json MEDIA delivery behavior and profile-safe export paths.
+    status: done
+  - item: Preserve /rp start greeting persistence and embedded lorebook binding behavior.
+    status: done
+  - item: Preserve /rp status and /rp end command output and session-state semantics.
+    status: done
+  - item: Keep DB schema, prompt/model/media/provider behavior unchanged.
+    status: done
+verification:
+  py_compile:
+    command: "venv/bin/python -m py_compile plugins/hermes_tavern/*.py plugins/hermes_tavern/importers/*.py tests/plugins/test_hermes_tavern_*.py"
+    status: passed
+    result: "passed"
+  focused_lifecycle:
+    command: "venv/bin/python -m pytest tests/plugins/test_hermes_tavern_runtime.py tests/plugins/test_hermes_tavern_gateway_hook.py tests/plugins/test_hermes_tavern_lore_runtime.py -q -o 'addopts='"
+    status: passed
+    result: "51 passed in 3.42s"
+  tavern:
+    command: "venv/bin/python -m pytest tests/plugins/test_hermes_tavern_*.py -q -o 'addopts='"
+    status: passed
+    result: "422 passed, 1 warning in 12.18s"
+  checklist_yaml:
+    command: "python .codestable/tools/validate-yaml.py --file .codestable/features/2026-05-26-hermes-tavern-phase40-runtime-lifecycle-refactor/checklist.yaml"
+    status: passed
+    result: "Validated 1 file(s): 1 passed, 0 failed"

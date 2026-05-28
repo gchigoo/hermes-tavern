@@ -1,0 +1,88 @@
+feature: hermes-tavern-phase14-turn-controls-v1
+status: complete
+
+steps:
+  - id: store-get-recent-messages-id
+    description: Add `id` field to get_recent_messages query result
+    status: done
+    file: plugins/hermes_tavern/db.py
+
+  - id: store-delete-message
+    description: Implement delete_message helper for precise retry/edit cleanup
+    status: done
+    file: plugins/hermes_tavern/db.py
+
+  - id: store-delete-last-assistant
+    description: Implement delete_last_assistant_message helper
+    status: done
+    file: plugins/hermes_tavern/db.py
+
+  - id: store-delete-assistant-after-last-user
+    description: Implement delete_assistant_after_last_user_message to preserve greetings while editing turns
+    status: done
+    file: plugins/hermes_tavern/db.py
+
+  - id: store-delete-last-turn
+    description: Implement delete_last_user_assistant_turn helper
+    status: done
+    file: plugins/hermes_tavern/db.py
+
+  - id: store-update-last-user
+    description: Implement update_last_user_message helper
+    status: done
+    file: plugins/hermes_tavern/db.py
+
+  - id: runtime-pipeline-extract
+    description: Extract _run_generation_pipeline helper; refactor handle_active_message_sync
+    status: done
+    file: plugins/hermes_tavern/runtime.py
+
+  - id: runtime-history-command
+    description: Add /rp history [limit] command
+    status: done
+    file: plugins/hermes_tavern/runtime.py
+
+  - id: runtime-retry-command
+    description: Add /rp retry command
+    status: done
+    file: plugins/hermes_tavern/runtime.py
+
+  - id: runtime-undo-command
+    description: Add /rp undo command
+    status: done
+    file: plugins/hermes_tavern/runtime.py
+
+  - id: runtime-edit-command
+    description: Add /rp edit last <text> command
+    status: done
+    file: plugins/hermes_tavern/runtime.py
+
+  - id: runtime-help-update
+    description: Update /rp help to list new turn-control commands
+    status: done
+    file: plugins/hermes_tavern/runtime.py
+
+  - id: tests
+    description: Add tests/plugins/test_hermes_tavern_turn_controls.py
+    status: done
+    file: tests/plugins/test_hermes_tavern_turn_controls.py
+
+  - id: codestable-artifacts
+    description: Write design.md and checklist.yaml under .codestable/features/
+    status: done
+
+verification:
+  py_compile:
+    command: python -m py_compile plugins/hermes_tavern/*.py plugins/hermes_tavern/importers/*.py tests/plugins/test_hermes_tavern_*.py
+    status: passed
+  yaml_validation:
+    command: python .codestable/tools/validate-yaml.py --file .codestable/features/2026-05-19-hermes-tavern-phase14-turn-controls-v1/hermes-tavern-phase14-turn-controls-v1-checklist.yaml
+    status: passed
+  direct_smoke:
+    command: python - <<'PY' ... turn-control smoke ... PY
+    status: passed
+    output: SMOKE_OK
+  pytest_turn_controls:
+    command: python -m pytest tests/plugins/test_hermes_tavern_turn_controls.py -q -o 'addopts='
+    status: blocked
+    blocker: "/Users/steven/.hermes/hermes-agent/venv/bin/python: No module named pytest"

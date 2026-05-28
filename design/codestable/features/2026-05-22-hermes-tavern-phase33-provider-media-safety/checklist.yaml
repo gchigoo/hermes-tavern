@@ -1,0 +1,27 @@
+feature: hermes-tavern-phase33-provider-media-safety
+tasks:
+  - action: "Sanitize image provider exception handling"
+    exit_signal: "Image provider exceptions return a fixed mobile-safe envelope and failed jobs store sanitized error text only"
+    status: completed
+    result: "Replaced raw str(exc) image failure replies/job metadata with a bounded generic error and retry/status hints"
+  - action: "Harden provider debug sanitizer"
+    exit_signal: "Mixed-case and nested secret-like keys are omitted from provider bridge and adapter debug payloads"
+    status: completed
+    result: "Centralized recursive case-insensitive provider payload sanitization and reused it in adapters/model status"
+  - action: "Add MEDIA/export safety regressions"
+    exit_signal: "Quoted MEDIA paths with spaces are preserved and exports do not include raw event JSON or secret metadata"
+    status: completed
+    result: "Added focused runtime export tests without removing MEDIA delivery marker support"
+checks:
+  - item: "py_compile for Tavern plugin and tests"
+    status: completed
+    result: "venv/bin/python -m py_compile plugins/hermes_tavern/*.py tests/plugins/test_hermes_tavern_*.py passed"
+  - item: "Focused Tavern provider/media pytest command"
+    status: completed
+    result: "99 passed, 1 warning"
+  - item: "Full Tavern plugin pytest glob"
+    status: completed
+    result: "419 passed, 1 warning"
+  - item: "Checklist YAML validates"
+    status: completed
+    result: "Validated 1 file(s): 1 passed, 0 failed"

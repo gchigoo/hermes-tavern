@@ -1,0 +1,103 @@
+feature: hermes-tavern-phase17-mobile-inspect-pagination
+status: implemented
+created_at: '2026-05-20'
+
+scope:
+  summary: Mobile-safe inspect parity for presets, lorebooks, and sessions; paginated card browsing.
+  commands:
+    - /rp cards [limit] [page]
+    - /rp preset inspect <preset>
+    - /rp lore inspect <lorebook>
+    - /rp session info
+  out_of_scope:
+    - Telegram inline keyboards
+    - Real provider/network calls
+    - Asset download or file delivery
+    - DB schema changes
+
+implementation:
+  tests-red:
+    status: done
+    files:
+      - tests/plugins/test_hermes_tavern_mobile_browsers.py
+    checks:
+      - Failing tests written for cards pagination (page2, clamp, backward-compat)
+      - Failing tests written for preset inspect aggregate counts + no raw JSON
+      - Failing tests written for lore inspect basic + not-found
+      - Failing tests written for session info active + no-session
+      - pytest shows expected failures; zero pre-existing regressions
+
+  cards-pagination:
+    status: done
+    files:
+      - plugins/hermes_tavern/runtime.py
+    checks:
+      - _cards() parses args[1] as page; defaults to 1; clamps to >=1 and <=total_pages
+      - Limit clamp 1..25 preserved; bad limit still returns usage error
+      - Output header says "page X/Y, N shown"
+      - prev hint shown only when page > 1; next hint shown only when page < total_pages
+      - /rp cards and /rp cards <limit> (no page) produce same output as Phase 16
+
+  preset-inspect-improved:
+    status: done
+    files:
+      - plugins/hermes_tavern/runtime.py
+    checks:
+      - New helper _module_risk_counts_db(modules list[dict]) added (separate from existing _module_risk_counts which takes PromptModule objects)
+      - _preset_inspect() shows aggregate counts (safe enabled, adult_fiction enabled, risky disabled)
+      - Module previews capped at 60 chars; max 5 modules shown
+      - Output contains "/rp preset use <name>" hint
+      - Output never contains raw JSON blob
+      - Existing preset tests still pass
+
+  lore-inspect:
+    status: done
+    files:
+      - plugins/hermes_tavern/runtime.py
+    checks:
+      - _lore_inspect() method added
+      - _lore_command() routes "inspect" subcommand to _lore_inspect()
+      - Output shows lorebook id[:8]/name/source, total/enabled/constant/regex counts
+      - Top 3 entries shown with keys list and 60-char content preview
+      - Output contains "/rp lore use <lorebook>" and "/rp lore test <message>" hints
+      - Not-found case returns "Lorebook not found: <ref>"
+      - /rp help output includes /rp lore inspect <lorebook>
+      - Existing lore tests still pass
+
+  session-info:
+    status: done
+    files:
+      - plugins/hermes_tavern/runtime.py
+    checks:
+      - _session_info() method added
+      - handle_command_sync routes name == "session" to _session_command() or directly to _session_info for "info" subcommand
+      - Output shows session id[:8]/title/status, card/preset/lorebook bindings, content_mode
+      - Output shows adapter_mode and live_confirmed flag
+      - Output shows memory fact count and summary presence
+      - Output shows recent message count (fetched with limit=5)
+      - No message contents or raw JSON in output
+      - No active session returns "No active Hermes Tavern session."
+      - /rp help output includes /rp session info
+      - Existing session tests still pass
+
+verification:
+  compile_check:
+    status: done
+    command: >
+      venv/bin/python -m py_compile
+      plugins/hermes_tavern/*.py
+      plugins/hermes_tavern/importers/*.py
+      tests/plugins/test_hermes_tavern_*.py
+    result: passed
+
+  full_pytest:
+    status: done
+    command: "venv/bin/python -m pytest tests/plugins/test_hermes_tavern_*.py -q -o 'addopts='"
+    result: passed
+
+  yaml_validate:
+    status: done
+    command: >
+      python .codestable/tools/validate-yaml.py
+      --file .codestable/features/2026-05-20-hermes-tavern-phase17-mobile-inspect-pagination/hermes-tavern-phase17-mobile-inspect-pagination-checklist.yaml
+    result: passed

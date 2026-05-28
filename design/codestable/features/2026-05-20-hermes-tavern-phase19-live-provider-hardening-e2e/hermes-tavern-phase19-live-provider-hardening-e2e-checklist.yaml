@@ -1,0 +1,101 @@
+feature: 2026-05-20-hermes-tavern-phase19-live-provider-hardening-e2e
+slug: hermes-tavern-phase19-live-provider-hardening-e2e
+status: done
+
+steps:
+  - id: s1
+    name: Safety skeleton — base_url validator + error envelope
+    status: done
+    paradigm: safety
+    substeps:
+      - Add SAFE_URL_SCHEMES + BLOCKED_PRIVATE_PREFIXES + validate_provider_base_url() to provider_bridge.py
+      - Wire validate_provider_base_url() in HermesChatCompletionAdapter._build_client()
+      - Fix error envelope in runtime._generate_with_session_adapter() — replace exc-leaking message
+      - Add tests to test_hermes_tavern_provider_bridge.py (A1-A6)
+      - Add test to test_hermes_tavern_adapters.py (A7, A8)
+      - Add gateway non-crash test to test_hermes_tavern_runtime.py (A12)
+    exit_signal: py_compile clean; provider_bridge + adapter + runtime non-crash tests pass
+
+  - id: s2
+    name: /rp model test command
+    status: done
+    paradigm: command
+    substeps:
+      - Add _model_test() to TavernRuntime in runtime.py
+      - Wire into _model_command() dispatcher
+      - Add /rp model test to help text
+      - Add tests (A9, A10, A13)
+    exit_signal: /rp model test tests pass; api_key absent from all outputs
+
+  - id: s3
+    name: E2E generation pipeline test
+    status: done
+    paradigm: test
+    substeps:
+      - Create tests/plugins/test_hermes_tavern_e2e.py
+      - Test covers session + card + preset + lore + memory -> compile -> render -> injected fake adapter -> persisted reply (A11)
+    exit_signal: E2E test passes; no network; both messages in DB
+
+  - id: s4
+    name: Full test suite + YAML validation
+    status: done
+    paradigm: verification
+    substeps:
+      - python -m pytest tests/plugins/test_hermes_tavern_*.py -q -o 'addopts='
+      - py_compile plugins/hermes_tavern/*.py tests/plugins/test_hermes_tavern_*.py
+      - python .codestable/tools/validate-yaml.py --file .codestable/features/2026-05-20-hermes-tavern-phase19-live-provider-hardening-e2e/hermes-tavern-phase19-live-provider-hardening-e2e-checklist.yaml --yaml-only
+    exit_signal: all tests green; no compile errors; YAML valid
+
+checks:
+  - id: c1
+    ref: A1
+    desc: validate_provider_base_url rejects http scheme
+    status: passed
+  - id: c2
+    ref: A2
+    desc: validate_provider_base_url rejects file scheme
+    status: passed
+  - id: c3
+    ref: A3
+    desc: validate_provider_base_url rejects localhost/127.x
+    status: passed
+  - id: c4
+    ref: A4
+    desc: validate_provider_base_url rejects 192.168.x private range
+    status: passed
+  - id: c5
+    ref: A5
+    desc: validate_provider_base_url allows https://api.apiyi.com/v1
+    status: passed
+  - id: c6
+    ref: A6
+    desc: validate_provider_base_url allows https://api.openai.com/v1
+    status: passed
+  - id: c7
+    ref: A7
+    desc: adapter invalid base_url -> bounded error message; no URL in response
+    status: passed
+  - id: c8
+    ref: A8
+    desc: arbitrary RuntimeError from adapter does not leak exception detail
+    status: passed
+  - id: c9
+    ref: A9
+    desc: /rp model test returns readiness; no real generation; no api_key in output
+    status: passed
+  - id: c10
+    ref: A10
+    desc: /rp model test with no session returns safe error
+    status: passed
+  - id: c11
+    ref: A11
+    desc: E2E pipeline (session+card+preset+lore+memory) -> fake adapter -> reply persisted
+    status: passed
+  - id: c12
+    ref: A12
+    desc: gateway hook survives provider exception; returns allow
+    status: passed
+  - id: c13
+    ref: A13
+    desc: api_key / access_token absent from all test-asserted output strings
+    status: passed

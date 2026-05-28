@@ -1,0 +1,57 @@
+feature: hermes-tavern-phase13-memory-summary-v1
+status: implemented
+scope:
+  include:
+    - session-scoped memory fact persistence
+    - session-scoped manual summary persistence
+    - deterministic recent-message summary generation
+    - prompt module injection for saved memory
+    - /rp memory runtime commands
+    - focused tests for store/helper/runtime behavior
+  exclude:
+    - live LLM summarization
+    - vector retrieval
+    - cross-session memory merge
+    - network calls
+    - hermes core entrypoint changes
+files:
+  production:
+    - plugins/hermes_tavern/memory.py
+    - plugins/hermes_tavern/db.py
+    - plugins/hermes_tavern/runtime.py
+  tests:
+    - tests/plugins/test_hermes_tavern_memory.py
+acceptance:
+  - id: db-memory-tables
+    description: session_memory_facts and session_summaries migrate idempotently
+    status: implemented
+  - id: memory-store-roundtrip
+    description: facts and summary round-trip through TavernStore APIs
+    status: implemented
+  - id: memory-runtime-commands
+    description: /rp memory add/list/summary/debug expose local session memory
+    status: implemented
+  - id: prompt-injection
+    description: saved memory appears in debug prompt as memory modules
+    status: implemented
+  - id: mock-first-summary
+    description: summary generation is deterministic and provider-free
+    status: implemented
+verification:
+  py_compile:
+    command: python -m py_compile plugins/hermes_tavern/*.py plugins/hermes_tavern/importers/*.py tests/plugins/test_hermes_tavern_*.py
+    status: passed
+  yaml_validation:
+    command: python .codestable/tools/validate-yaml.py --file .codestable/features/2026-05-19-hermes-tavern-phase13-memory-summary-v1/hermes-tavern-phase13-memory-summary-v1-checklist.yaml
+    status: passed
+  direct_smoke:
+    command: python - <<'PY' ... memory runtime smoke ... PY
+    status: passed
+  pytest_memory:
+    command: python -m pytest tests/plugins/test_hermes_tavern_memory.py -q -o 'addopts='
+    status: blocked
+    blocker: "/Users/steven/.hermes/hermes-agent/venv/bin/python: No module named pytest"
+notes:
+  - This phase is mock-first. It must not call real providers or make network requests.
+  - Existing live-provider gates remain unchanged.
+  - Memory is intentionally session-scoped for v1 to avoid accidental global persona contamination.

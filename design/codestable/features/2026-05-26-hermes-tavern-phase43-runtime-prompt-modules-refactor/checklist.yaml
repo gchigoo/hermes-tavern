@@ -1,0 +1,33 @@
+feature: 2026-05-26-hermes-tavern-phase43-runtime-prompt-modules-refactor
+phase: 43
+status: implemented
+items:
+  - id: extract-prompt-modules
+    description: Extract Tavern prompt-module assembly helpers from runtime.py into runtime_prompt_modules.py.
+    status: done
+  - id: preserve-prompt-module-wrappers
+    description: Keep TavernRuntime _session_*_modules wrappers for compatibility with existing tests and internal callers.
+    status: done
+  - id: preserve-module-ordering
+    description: Preserve preset, persona, author note, memory, and lore module ordering and filtering behavior.
+    status: done
+  - id: preserve-core-pipeline
+    description: Keep DB schema, prompt compiler, model/provider routing, live gate, media, and gateway behavior unchanged.
+    status: done
+verification:
+  py_compile:
+    status: passed
+    command: venv/bin/python -m py_compile plugins/hermes_tavern/*.py plugins/hermes_tavern/importers/*.py tests/plugins/test_hermes_tavern_*.py
+    result: passed
+  focused:
+    status: passed
+    command: venv/bin/python -m pytest tests/plugins/test_hermes_tavern_runtime.py tests/plugins/test_hermes_tavern_content_mode.py tests/plugins/test_hermes_tavern_preset_use.py tests/plugins/test_hermes_tavern_lore_runtime.py tests/plugins/test_hermes_tavern_memory.py tests/plugins/test_hermes_tavern_notes.py tests/plugins/test_hermes_tavern_personas.py tests/plugins/test_hermes_tavern_macros.py tests/plugins/test_hermes_tavern_e2e.py -q -o 'addopts='
+    result: "72 passed in 4.47s"
+  tavern:
+    status: passed
+    command: venv/bin/python -m pytest tests/plugins/test_hermes_tavern_*.py -q -o 'addopts='
+    result: "422 passed, 1 warning in 14.03s"
+  checklist_yaml:
+    status: passed
+    command: python .codestable/tools/validate-yaml.py --file .codestable/features/2026-05-26-hermes-tavern-phase43-runtime-prompt-modules-refactor/checklist.yaml
+    result: "Validated 1 file(s): 1 passed, 0 failed"

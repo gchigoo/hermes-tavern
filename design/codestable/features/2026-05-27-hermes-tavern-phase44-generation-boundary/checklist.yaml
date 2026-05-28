@@ -1,0 +1,65 @@
+feature: 2026-05-27-hermes-tavern-phase44-generation-boundary
+slug: hermes-tavern-phase44-generation-boundary
+status: implemented
+
+steps:
+  - id: s1
+    name: CodeStable design and plan
+    status: done
+    paradigm: planning
+    substeps:
+      - Create design.md with scope and non-goals
+      - Verify current runtime.py structure
+    exit_signal: Design doc exists and accurately reflects current code
+
+  - id: s2
+    name: Extract generation adapter to runtime_generation.py
+    status: done
+    paradigm: refactor
+    substeps:
+      - Create plugins/hermes_tavern/runtime_generation.py
+      - Move _generate_with_session_adapter logic to a pure function
+      - Preserve all five code paths (fake, live gate, hermes lazy-init, error boundaries)
+      - Add wrapper on TavernRuntime delegating to new module
+    exit_signal: py_compile passes and focused tests pass
+
+  - id: s3
+    name: Verification gates
+    status: done
+    paradigm: verification
+    substeps:
+      - Run py_compile gate — passed
+      - Run focused generation/runtime/provider tests — 85 passed in 3.46s
+      - Run full Tavern test glob — 424 passed, 1 warning in 14.86s
+      - Create and validate checklist YAML
+    exit_signal: All verification commands pass with same or better results
+
+checks:
+  - id: c1
+    ref: A1
+    desc: Fake adapter path returns deterministic placeholder
+    status: passed
+  - id: c2
+    ref: A2
+    desc: Live gate blocks unconfirmed hermes mode
+    status: passed
+  - id: c3
+    ref: A3
+    desc: Hermes adapter lazy-init and generates via provider
+    status: passed
+  - id: c4
+    ref: A4
+    desc: ConnectionError/TimeoutError returns retryable message
+    status: passed
+  - id: c5
+    ref: A5
+    desc: NotImplementedError returns "not wired yet" message
+    status: passed
+  - id: c6
+    ref: A6
+    desc: Generic Exception returns "provider error" message
+    status: passed
+  - id: c7
+    ref: A7
+    desc: py_compile, focused tests, full Tavern glob, and YAML validation pass
+    status: passed

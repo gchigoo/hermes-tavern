@@ -1,0 +1,39 @@
+feature: 2026-05-22-hermes-tavern-phase22-author-note-v1
+phase: 22
+status: implemented
+items:
+  - item: Add guarded session note columns to the SQLite migration.
+    status: done
+  - item: Add DB helpers for setting, clearing, positioning, and scheduling the note.
+    status: done
+  - item: Add `/rp note` runtime commands and help entries.
+    status: done
+  - item: Inject the active note as the `note:author` prompt module.
+    status: done
+  - item: Route note content through existing PromptCompiler macro expansion.
+    status: done
+  - item: Keep note command output mobile-safe with no raw JSON dumps.
+    status: done
+  - item: Add focused Author's Note / Scene Note tests.
+    status: done
+verification:
+  focused_red:
+    command: "python -m pytest tests/plugins/test_hermes_tavern_notes.py -q -o 'addopts='"
+    status: passed
+    result: "initial RED observed: 5 failed, 1 warning"
+  focused:
+    command: "python -m pytest tests/plugins/test_hermes_tavern_notes.py -q -o 'addopts='"
+    status: passed
+    result: "5 passed, 1 warning"
+  py_compile:
+    command: "python -m py_compile plugins/hermes_tavern/db.py plugins/hermes_tavern/runtime.py tests/plugins/test_hermes_tavern_notes.py"
+    status: passed
+    result: "passed"
+  checklist_yaml:
+    command: "python .codestable/tools/validate-yaml.py --file .codestable/features/2026-05-22-hermes-tavern-phase22-author-note-v1/checklist.yaml"
+    status: passed
+    result: "Validated 1 file(s): 1 passed, 0 failed"
+  tavern:
+    command: "python -m pytest tests/plugins/test_hermes_tavern_*.py -q -o 'addopts='"
+    status: passed
+    result: "369 passed, 1 warning"

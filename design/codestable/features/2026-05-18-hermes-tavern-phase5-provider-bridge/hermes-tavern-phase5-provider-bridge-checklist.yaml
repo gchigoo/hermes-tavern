@@ -1,0 +1,65 @@
+feature: 2026-05-18-hermes-tavern-phase5-provider-bridge
+created: 2026-05-18
+
+steps:
+  - action: "Add TavernModelClient protocol and HermesProviderAdapter skeleton with injected resolver, secret-free debug descriptor, and NotImplementedError before real generation"
+    exit_signal: "HermesProviderAdapter.resolve_debug_descriptor omits api_key/access_token; generate raises NotImplementedError without network"
+
+  - action: "Extend ModelProfileDescriptor with to_debug_dict and profile_name metadata"
+    exit_signal: "ModelRouter().resolve().to_debug_dict() includes provider/model_id/profile_name but no secret fields"
+
+  - action: "Add model profile storage helpers to TavernStore and reject secret-like raw_json keys recursively"
+    exit_signal: "save/list/get model profile works; raw={'api_key': ...} raises ValueError"
+
+  - action: "Add /rp model status and /rp model profiles runtime commands"
+    exit_signal: "/rp model status shows Opus 4.6 default route without secrets; /rp model profiles lists configured profiles"
+
+  - action: "Add focused tests and direct smoke checks"
+    exit_signal: "py_compile and direct smoke pass; pytest remains blocked if pytest module is absent"
+
+checks:
+  - item: "TavernModelClient protocol is importable from plugins.hermes_tavern.adapters"
+    source: 名词契约
+    status: completed
+
+  - item: "HermesProviderAdapter debug descriptor omits api_key/access_token/secret/token/password"
+    source: 凭证边界
+    status: completed
+
+  - item: "HermesProviderAdapter.generate raises NotImplementedError before any real network generation"
+    source: 范围守护
+    status: completed
+
+  - item: "ModelProfileDescriptor.to_debug_dict contains provider/model_id/profile_name/source and no secret fields"
+    source: 编排骨架
+    status: completed
+
+  - item: "TavernStore.save_model_profile/list_model_profiles/get_model_profile work with secret-free metadata"
+    source: 存储契约
+    status: completed
+
+  - item: "TavernStore.save_model_profile rejects raw_json containing api_key"
+    source: 凭证边界
+    status: completed
+
+  - item: "ModelRouter resolves session-bound model_profile_id to db_profile descriptor"
+    source: 编排骨架
+    status: completed
+
+  - item: "/rp model status returns claude-opus-4-6 default route and no secret strings"
+    source: 用户命令
+    status: completed
+
+  - item: "/rp model profiles lists configured profile names and model ids"
+    source: 用户命令
+    status: completed
+
+  - item: "No real HTTP/LLM call or resolve_runtime_provider import in Phase 5 skeleton"
+    source: 范围守护
+    status: completed
+
+verification:
+  codestable_yaml_validation: passed
+  py_compile: passed
+  direct_smoke: passed
+  pytest: blocked_no_pytest_module

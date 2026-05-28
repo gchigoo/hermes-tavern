@@ -1,0 +1,31 @@
+feature: 2026-05-23-hermes-tavern-phase35-runtime-boundary-refactor-slice1
+phase: 35
+status: implemented
+items:
+  - item: Extract Tavern preset command handling from runtime.py into runtime_presets.py.
+    status: done
+  - item: Keep TavernRuntime preset wrapper methods for compatibility with existing private method callers.
+    status: done
+  - item: Extract Tavern content mode command handling from runtime.py into runtime_content.py.
+    status: done
+  - item: Preserve generation pipeline, provider/image code, DB schema, safety policy, and prompt semantics.
+    status: done
+  - item: Keep focused preset and content mode behavior coverage.
+    status: done
+verification:
+  py_compile:
+    command: "venv/bin/python -m py_compile plugins/hermes_tavern/*.py plugins/hermes_tavern/importers/*.py tests/plugins/test_hermes_tavern_*.py"
+    status: passed
+    result: "passed"
+  focused_presets_content:
+    command: "venv/bin/python -m pytest tests/plugins/test_hermes_tavern_runtime_presets.py tests/plugins/test_hermes_tavern_preset_importer.py tests/plugins/test_hermes_tavern_preset_use.py tests/plugins/test_hermes_tavern_content_mode.py -q -o 'addopts='"
+    status: passed
+    result: "6 passed, 1 warning in 0.53s"
+  tavern:
+    command: "venv/bin/python -m pytest tests/plugins/test_hermes_tavern_*.py -q -o 'addopts='"
+    status: passed
+    result: "422 passed, 1 warning in 8.27s"
+  checklist_yaml:
+    command: "python .codestable/tools/validate-yaml.py --file .codestable/features/2026-05-23-hermes-tavern-phase35-runtime-boundary-refactor-slice1/checklist.yaml"
+    status: passed
+    result: "Validated 1 file(s): 1 passed, 0 failed"

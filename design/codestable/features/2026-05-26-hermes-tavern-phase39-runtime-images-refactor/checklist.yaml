@@ -1,0 +1,31 @@
+feature: 2026-05-26-hermes-tavern-phase39-runtime-images-refactor
+phase: 39
+status: implemented
+items:
+  - item: Extract Tavern image command handling from runtime.py into runtime_images.py.
+    status: done
+  - item: Keep TavernRuntime image wrapper methods for compatibility with existing private method callers.
+    status: done
+  - item: Preserve /rp image settings, safety, style, provider, history, generate, retry, inspect behavior and MEDIA delivery semantics.
+    status: done
+  - item: Keep DB schema, prompt/media compilation semantics, provider selection, and network behavior unchanged.
+    status: done
+  - item: Remove no-longer-needed direct image command imports from runtime.py while keeping runtime constructor type dependencies.
+    status: done
+verification:
+  py_compile:
+    command: "venv/bin/python -m py_compile plugins/hermes_tavern/*.py plugins/hermes_tavern/importers/*.py tests/plugins/test_hermes_tavern_*.py"
+    status: passed
+    result: "passed"
+  focused_images:
+    command: "venv/bin/python -m pytest tests/plugins/test_hermes_tavern_images.py tests/plugins/test_hermes_tavern_runtime.py -q -o 'addopts='"
+    status: passed
+    result: "63 passed, 1 warning in 3.85s"
+  tavern:
+    command: "venv/bin/python -m pytest tests/plugins/test_hermes_tavern_*.py -q -o 'addopts='"
+    status: passed
+    result: "422 passed, 1 warning in 13.45s"
+  checklist_yaml:
+    command: "python .codestable/tools/validate-yaml.py --file .codestable/features/2026-05-26-hermes-tavern-phase39-runtime-images-refactor/checklist.yaml"
+    status: passed
+    result: "Validated 1 file(s): 1 passed, 0 failed"

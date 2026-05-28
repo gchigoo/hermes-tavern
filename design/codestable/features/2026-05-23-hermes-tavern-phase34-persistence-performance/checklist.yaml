@@ -1,0 +1,33 @@
+feature: 2026-05-23-hermes-tavern-phase34-persistence-performance
+phase: 34
+status: implemented
+items:
+  - item: Set a bounded SQLite busy_timeout for TavernStore connections.
+    status: done
+  - item: Keep Tavern file DB journal behavior unchanged for temp/test DB stability.
+    status: done
+  - item: Add idempotent indexes for Tavern message, session, memory, lorebook, and image hot paths.
+    status: done
+  - item: Add obvious name and join indexes used by Tavern lookup helpers.
+    status: done
+  - item: Add focused tests for migration indexes and connection busy_timeout.
+    status: done
+  - item: Add a bounded large-table message pagination regression.
+    status: done
+verification:
+  py_compile:
+    command: "venv/bin/python -m py_compile plugins/hermes_tavern/*.py tests/plugins/test_hermes_tavern_*.py"
+    status: passed
+    result: "passed"
+  focused_db_session_images:
+    command: "venv/bin/python -m pytest tests/plugins/test_hermes_tavern_db.py tests/plugins/test_hermes_tavern_session_browser.py tests/plugins/test_hermes_tavern_images.py -q -o 'addopts='"
+    status: passed
+    result: "79 passed, 1 warning in 2.30s"
+  tavern:
+    command: "venv/bin/python -m pytest tests/plugins/test_hermes_tavern_*.py -q -o 'addopts='"
+    status: passed
+    result: "422 passed, 1 warning in 9.02s"
+  checklist_yaml:
+    command: "python .codestable/tools/validate-yaml.py --file .codestable/features/2026-05-23-hermes-tavern-phase34-persistence-performance/checklist.yaml"
+    status: passed
+    result: "Validated 1 file(s): 1 passed, 0 failed"

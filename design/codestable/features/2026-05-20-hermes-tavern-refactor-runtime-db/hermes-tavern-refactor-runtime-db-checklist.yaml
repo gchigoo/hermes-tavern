@@ -1,0 +1,58 @@
+feature: 2026-05-20-hermes-tavern-refactor-runtime-db
+slug: hermes-tavern-refactor-runtime-db
+status: done
+
+steps:
+  - id: s1
+    name: Runtime asset/card command extraction
+    status: done
+    paradigm: refactor
+    substeps:
+      - Move asset dashboard and card browser command bodies to runtime_assets.py
+      - Keep TavernRuntime private wrappers delegating to extracted helpers
+      - Preserve mobile output strings and pagination behavior
+    exit_signal: Runtime imports compile and mobile browser tests remain covered
+
+  - id: s2
+    name: Runtime model and session command extraction
+    status: done
+    paradigm: refactor
+    substeps:
+      - Move /rp model command group to runtime_model.py
+      - Move session browser and management helpers to runtime_sessions.py
+      - Preserve fake default and dry-run-only /rp model test behavior
+    exit_signal: Runtime imports compile and command tests remain covered
+
+  - id: s3
+    name: Shared helper extraction
+    status: done
+    paradigm: refactor
+    substeps:
+      - Move runtime formatting, row conversion, risk counts, and macro-context helpers to runtime_utils.py
+      - Move DB timestamp, row conversion, and secret validation helpers to db_utils.py
+      - Avoid schema, SQL, or provider-call changes
+    exit_signal: DB/runtime compile and TavernStore public behavior remains unchanged
+
+  - id: s4
+    name: Verification
+    status: done
+    paradigm: verification
+    substeps:
+      - py_compile plugin, importer, and Tavern test modules
+      - Run Tavern plugin pytest suite
+      - Validate this checklist YAML
+    exit_signal: Requested verification commands pass
+
+checks:
+  - id: c1
+    desc: runtime.py reduced meaningfully while keeping TavernRuntime command wrappers
+    status: passed
+  - id: c2
+    desc: db.py reduced only through pure helper extraction
+    status: passed
+  - id: c3
+    desc: No network/provider generation path added or enabled by default
+    status: passed
+  - id: c4
+    desc: CodeStable artifact follows existing design/checklist naming pattern
+    status: passed

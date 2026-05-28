@@ -1,0 +1,36 @@
+feature: 2026-05-26-hermes-tavern-phase41-runtime-turn-controls-refactor
+phase: 41
+status: implemented
+items:
+  - id: extract-turn-controls
+    description: Extract Tavern greeting/say/voice/history/retry/swipe/undo/edit command handling from runtime.py into runtime_turns.py.
+    status: done
+  - id: preserve-wrappers
+    description: Keep TavernRuntime private wrapper methods for compatibility with existing tests and internal callers.
+    status: done
+  - id: preserve-active-message-auto-speak
+    description: Preserve active-message and /rp say auto-speak behavior through _with_auto_speak wrapper delegation.
+    status: done
+  - id: preserve-turn-semantics
+    description: Preserve /rp history, /rp retry, /rp swipe, /rp undo, /rp edit, /rp greeting, /rp speak, and /rp voice outputs and state semantics.
+    status: done
+  - id: preserve-core-pipeline
+    description: Keep DB schema, prompt/compiler/model/provider/media behavior unchanged.
+    status: done
+verification:
+  py_compile:
+    status: passed
+    command: venv/bin/python -m py_compile plugins/hermes_tavern/*.py plugins/hermes_tavern/importers/*.py tests/plugins/test_hermes_tavern_*.py
+    result: passed
+  focused:
+    status: passed
+    command: venv/bin/python -m pytest tests/plugins/test_hermes_tavern_turn_controls.py tests/plugins/test_hermes_tavern_turn_controls_mobile.py tests/plugins/test_hermes_tavern_runtime.py tests/plugins/test_hermes_tavern_gateway_hook.py -q -o 'addopts='
+    result: 89 passed, 1 warning in 4.66s
+  tavern:
+    status: passed
+    command: venv/bin/python -m pytest tests/plugins/test_hermes_tavern_*.py -q -o 'addopts='
+    result: 422 passed, 1 warning in 13.15s
+  checklist_yaml:
+    status: passed
+    command: python .codestable/tools/validate-yaml.py --file .codestable/features/2026-05-26-hermes-tavern-phase41-runtime-turn-controls-refactor/checklist.yaml
+    result: "Validated 1 file(s): 1 passed, 0 failed"

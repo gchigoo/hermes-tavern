@@ -1,0 +1,83 @@
+feature: 2026-05-18-hermes-tavern-phase4-prompt-compiler
+created: 2026-05-18
+
+steps:
+  - action: "Noun layer: create plugins/hermes_tavern/prompt.py with frozen dataclasses PromptModule (name, role, content, position, insertion_order, enabled) and CompiledContext (modules, history, user_message, card_name, token_budget); add PromptCompiler class with compile(card, history_rows, user_message, preset_modules=[]) method that builds ordered modules from card fields + preset list, sums token_budget via estimate_tokens"
+    exit_signal: "py_compile plugins/hermes_tavern/prompt.py succeeds; PromptCompiler().compile(fake_card, [], 'hi') returns CompiledContext with user_message='hi'"
+
+  - action: "Adapters: create plugins/hermes_tavern/adapters.py with FakeModelAdapter dataclass/class exposing generate(messages: list[dict], profile: Any) -> str returning fixed string '[Hermes Tavern fake adapter response]'"
+    exit_signal: "py_compile adapters.py succeeds; FakeModelAdapter().generate([], None) == '[Hermes Tavern fake adapter response]'"
+
+  - action: "Model router: create plugins/hermes_tavern/model_router.py with frozen dataclass ModelProfileDescriptor (provider, model_id, mode, context_window, source — NO api_key/access_token); ModelRouter class with resolve(session_row=None, store=None) -> ModelProfileDescriptor implementing 4-tier priority: (1) check session_row for model_profile_id → DB lookup → descriptor with source='db_profile'; (2) default_priority_1 stub for future claude-subscription adapter (source='default_priority_1', skipped if no registry hook); (3) default_priority_2 = anthropic/claude-opus-4-6; (4) hermes_global fallback. For Phase 4, priorities 1 and 3 always fall through to priority 2/4 since no real registry; resolve_runtime_provider is represented as a protocol/stub, NOT imported in this file."
+    exit_signal: "py_compile model_router.py succeeds; ModelRouter().resolve() returns ModelProfileDescriptor(provider='anthropic', model_id='claude-opus-4-6'); hasattr(descriptor, 'api_key') is False"
+
+  - action: "Storage extension: add TavernStore.get_recent_messages(session_id: str, limit: int = 20) -> list[dict[str, Any]] that queries messages table ordered by created_at ASC, returns list of dicts with role/content keys"
+    exit_signal: "get_recent_messages on fresh DB returns []; get_recent_messages after append_message returns list with correct role/content"
+
+  - action: "Renderers: create plugins/hermes_tavern/renderers.py with ChatRenderer class (render(ctx: CompiledContext) -> list[dict]) building [system modules..., history turns..., {role:user, content:user_message}]; StoryStringRenderer stub (render(ctx) -> str) concatenating '[ROLE] content' blocks with double newline"
+    exit_signal: "py_compile renderers.py succeeds; ChatRenderer().render(ctx_with_1_system_2_history_user) returns list of length 4 with correct role ordering; StoryStringRenderer().render(ctx) returns non-empty str"
+
+  - action: "Runtime wiring: update handle_active_message_sync in runtime.py to (1) call get_recent_messages(limit=20), (2) call get_card if session has card_id, (3) call PromptCompiler().compile, (4) call ModelRouter().resolve, (5) call ChatRenderer().render, (6) call FakeModelAdapter().generate(messages, descriptor), (7) append user+assistant messages, (8) return reply. Add _debug_prompt(event) method that compiles context for active session and returns a debug string containing 'modules:', 'tokens:', and truncated message previews. Wire 'debug' subcommand in handle_command_sync dispatch: if name=='debug' and args[0]=='prompt' -> _debug_prompt(event)."
+    exit_signal: "handle_active_message_sync with active session returns '[Hermes Tavern fake adapter response]'; _debug_prompt with active session returns string containing 'modules:' and 'tokens:'; _debug_prompt with no session returns 'No active Hermes Tavern session.'"
+
+  - action: "Tests: create tests/plugins/test_hermes_tavern_compiler.py testing PromptCompiler (system_prompt_override fallback to description, empty → no system module, preset modules appended, token_budget > 0); tests/plugins/test_hermes_tavern_model_router.py testing ModelRouter.resolve with no session, with session_row having no profile_id; tests/plugins/test_hermes_tavern_renderers.py testing ChatRenderer role ordering and StoryStringRenderer returns str; update tests/plugins/test_hermes_tavern_runtime.py active-message test to assert return value is FakeModelAdapter output string. Smoke-check py_compile on all new test files."
+    exit_signal: "py_compile on all new test files succeeds; active-message runtime test asserts result == '[Hermes Tavern fake adapter response]'"
+
+checks:
+  - item: "PromptModule and CompiledContext are importable from plugins.hermes_tavern.prompt"
+    source: 名词契约
+    status: completed
+
+  - item: "ModelProfileDescriptor has no api_key or access_token field"
+    source: 名词契约
+    status: completed
+
+  - item: "FakeModelAdapter.generate returns '[Hermes Tavern fake adapter response]' always"
+    source: 名词契约
+    status: completed
+
+  - item: "ChatRenderer.render returns list[dict] with system modules first, history turns in order, user_message last"
+    source: 编排骨架
+    status: completed
+
+  - item: "StoryStringRenderer.render returns str (not list)"
+    source: 编排骨架
+    status: completed
+
+  - item: "ModelRouter.resolve() with no session returns provider='anthropic', model_id='claude-opus-4-6', source starting with 'default'"
+    source: 编排骨架
+    status: completed
+
+  - item: "TavernStore.get_recent_messages returns [] on empty session"
+    source: 挂载点
+    status: completed
+
+  - item: "handle_active_message_sync returns FakeModelAdapter output (not bare PLACEHOLDER_REPLY) when session active"
+    source: 编排骨架
+    status: completed
+
+  - item: "/rp debug prompt with active session returns string containing 'modules:' and 'tokens:'"
+    source: 挂载点
+    status: completed
+
+  - item: "/rp debug prompt with no active session returns 'No active Hermes Tavern session.'"
+    source: 验收场景
+    status: completed
+
+  - item: "No import of tiktoken anywhere in new files"
+    source: 范围守护
+    status: completed
+
+  - item: "No real HTTP call or resolve_runtime_provider import in model_router.py or tests"
+    source: 范围守护
+    status: completed
+
+  - item: "py_compile green on: prompt.py, adapters.py, model_router.py, renderers.py, updated runtime.py, all new test files"
+    source: 验收场景
+    status: completed
+
+verification:
+  codestable_yaml_validation: passed
+  py_compile: passed
+  direct_smoke: passed
+  pytest: blocked_no_pytest_module

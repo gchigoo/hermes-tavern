@@ -1,0 +1,95 @@
+feature: 2026-05-18-hermes-tavern-phase-3-5-hardening
+created: 2026-05-18
+
+steps:
+  - action: "Schema layer: add _migrated flag to TavernStore.__init__; extend migrate() with guard + schema v2 DDL (presets, prompt_modules, model_profiles tables; sessions.content_mode column via PRAGMA-guarded ALTER TABLE)"
+    exit_signal: "migrate() called twice leaves DB unchanged on second call; tables presets/prompt_modules/model_profiles exist; PRAGMA table_info(sessions) shows content_mode column"
+    status: completed
+
+  - action: "Data contracts: extend CharacterCard with 6 fields (system_prompt_override, post_history_instructions, tags, talkativeness, extensions, source_path); update parse_character_card to populate them; update TavernStore.save_card to accept CharacterCard and serialise all fields"
+    exit_signal: "parse test with all 6 new fields passes; round-trip save_card -> get_card preserves system_prompt_override"
+    status: completed
+
+  - action: "Orchestration: wrap pre_gateway_dispatch body in try/except Exception with ERROR log and allow fallback; make handle_active_message a true async def coroutine; update hook to call it via async compat helper"
+    exit_signal: "hook test with raising store returns {action: allow} without propagating; inspect.iscoroutinefunction(runtime.handle_active_message) is True"
+    status: completed
+
+  - action: "Utilities: add plugins/hermes_tavern/utils.py exposing estimate_tokens(text: str) -> int using max(1, len(text) // 4)"
+    exit_signal: "estimate_tokens('hello world') returns integer >= 1; estimate_tokens('') returns 1; no tiktoken import"
+    status: completed
+
+  - action: "Test coverage: add adapter enum-key test for _get_adapter; create tests/fixtures/cards/st_v2.json and tests/fixtures/cards/direct.json; add fixture-based parse tests"
+    exit_signal: "all tests/plugins/test_hermes_tavern_*.py pass; tests/fixtures/cards/ contains both fixture files"
+    status: completed
+
+checks:
+  - item: "CharacterCard has fields: system_prompt_override, post_history_instructions, tags, talkativeness, extensions, source_path"
+    source: 名词契约
+    status: completed
+
+  - item: "TavernStore._migrated guard: second migrate() call on same instance runs no DDL"
+    source: 名词契约
+    status: completed
+
+  - item: "estimate_tokens is importable from plugins.hermes_tavern.utils; floor of 1 applied for empty input"
+    source: 名词契约
+    status: completed
+
+  - item: "pre_gateway_dispatch returns {action: allow} on any Exception from store or runtime — never raises"
+    source: 编排骨架
+    status: completed
+
+  - item: "handle_command and handle_active_message are awaitable (inspect.iscoroutinefunction)"
+    source: 编排骨架
+    status: completed
+
+  - item: "migrate() is idempotent: tables created IF NOT EXISTS; content_mode column addition guarded by PRAGMA table_info check"
+    source: 流程级约束
+    status: completed
+
+  - item: "presets, prompt_modules, model_profiles tables exist after migrate()"
+    source: 挂载点
+    status: completed
+
+  - item: "sessions.content_mode column exists with default 'safe' after migrate()"
+    source: 挂载点
+    status: completed
+
+  - item: "estimate_tokens entry point exists in utils.py (delete it and Phase 4 context budget has no token counting)"
+    source: 挂载点
+    status: completed
+
+  - item: "No LLM call in handle_active_message body — PLACEHOLDER_REPLY constant still returned"
+    source: 范围守护
+    status: completed
+
+  - item: "No save_preset or save_model_profile methods on TavernStore"
+    source: 范围守护
+    status: completed
+
+  - item: "No tiktoken import anywhere in the plugin"
+    source: 范围守护
+    status: completed
+
+  - item: "parse_character_card on tests/fixtures/cards/st_v2.json succeeds; card.name non-empty"
+    source: 验收场景
+    status: completed
+
+  - item: "parse_character_card on tests/fixtures/cards/direct.json succeeds; card.name non-empty"
+    source: 验收场景
+    status: completed
+
+  - item: "_get_adapter with enum-valued platform (platform.value == 'telegram') and adapters={'telegram': adapter} returns adapter"
+    source: 验收场景
+    status: completed
+
+  - item: "pre_gateway_dispatch with FakeStore raising RuntimeError returns {action: allow}"
+    source: 验收场景
+    status: completed
+
+verification:
+  py_compile: passed
+  codestable_yaml_validation: passed
+  direct_smoke: passed
+  pytest: blocked_no_pytest_module
+  note: "python -m pytest tests/plugins/test_hermes_tavern_*.py -q -o 'addopts=' currently fails because the active Hermes venv has no pytest module. Direct smoke checks cover schema v2, card fields, adapter lookup, no-active-session allow behavior inside a running event loop, async runtime entrypoints, and token estimator."

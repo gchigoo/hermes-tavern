@@ -1,0 +1,47 @@
+feature: 2026-05-18-hermes-tavern-apiyi-provider-profile
+created: 2026-05-18
+
+steps:
+  - action: "Inspect APIYI docs for OpenAI-compatible endpoint"
+    exit_signal: "Endpoint recorded as https://api.apiyi.com/v1"
+
+  - action: "Store APIYI credential in Hermes .env only"
+    exit_signal: "APIYI_API_KEY saved; no secret is written to Tavern DB or tests"
+
+  - action: "Add APIYI provider entry to Hermes config providers map"
+    exit_signal: "providers.apiyi uses base_url/key_env/api_mode/default_model metadata"
+
+  - action: "Add Tavern APIYI resolver support"
+    exit_signal: "HermesRuntimeProviderResolver handles provider=apiyi via get_env_value(APIYI_API_KEY)"
+
+  - action: "Add /rp model seed apiyi and /rp model use <profile>"
+    exit_signal: "Runtime can seed and bind apiyi-opus-default without exposing credentials"
+
+  - action: "Seed local Tavern DB profile"
+    exit_signal: "apiyi-opus-default exists in default Tavern store and raw_json has no api_key"
+
+checks:
+  - item: "APIYI docs expose OpenAI-compatible base_url"
+    status: completed
+
+  - item: "APIYI_API_KEY exists through provider bridge resolution"
+    status: completed
+
+  - item: "Provider bridge sanitized payload has no api_key/access_token/secret/token/password"
+    status: completed
+
+  - item: "Tavern model profile raw_json has no api_key"
+    status: completed
+
+  - item: "/rp model seed apiyi output references key_env but not api_key"
+    status: completed
+
+  - item: "/rp model use apiyi-opus-default binds session and /rp model status shows provider apiyi"
+    status: completed
+
+verification:
+  codestable_yaml_validation: passed
+  py_compile: passed
+  direct_smoke: passed
+  pytest: blocked_no_pytest_module
+  live_models_probe: tls_handshake_timeout

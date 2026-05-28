@@ -1,0 +1,31 @@
+feature: 2026-05-25-hermes-tavern-phase38-runtime-memory-refactor
+phase: 38
+status: implemented
+items:
+  - item: Extract Tavern memory command handling from runtime.py into runtime_memory.py.
+    status: done
+  - item: Move live memory summarization into runtime_memory.py while preserving live gating and deterministic fallback behavior.
+    status: done
+  - item: Keep TavernRuntime memory wrapper methods for compatibility with existing private method callers.
+    status: done
+  - item: Preserve /rp memory add/list/summary/debug command strings, pagination, session summary persistence, and mobile-safe behavior.
+    status: done
+  - item: Keep DB schema, prompt injection semantics, and provider/network behavior unchanged.
+    status: done
+verification:
+  py_compile:
+    command: "venv/bin/python -m py_compile plugins/hermes_tavern/*.py plugins/hermes_tavern/importers/*.py tests/plugins/test_hermes_tavern_*.py"
+    status: passed
+    result: "passed"
+  focused_memory:
+    command: "venv/bin/python -m pytest tests/plugins/test_hermes_tavern_memory.py tests/plugins/test_hermes_tavern_runtime.py tests/plugins/test_hermes_tavern_model_live.py -q -o 'addopts='"
+    status: passed
+    result: "60 passed, 1 warning in 11.09s"
+  tavern:
+    command: "venv/bin/python -m pytest tests/plugins/test_hermes_tavern_*.py -q -o 'addopts='"
+    status: passed
+    result: "422 passed, 1 warning in 12.80s"
+  checklist_yaml:
+    command: "python .codestable/tools/validate-yaml.py --file .codestable/features/2026-05-25-hermes-tavern-phase38-runtime-memory-refactor/checklist.yaml"
+    status: passed
+    result: "Validated 1 file(s): 1 passed, 0 failed"

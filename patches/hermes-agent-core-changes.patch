@@ -1,0 +1,1440 @@
+diff --git a/agent/anthropic_adapter.py b/agent/anthropic_adapter.py
+index 3aee7dc50..f77ca12cf 100644
+--- a/agent/anthropic_adapter.py
++++ b/agent/anthropic_adapter.py
+@@ -599,7 +599,7 @@ def _build_anthropic_client_with_bearer_hook(
+     from httpx import Timeout
+     from agent.azure_identity_adapter import build_bearer_http_client
+ 
+-    _read_timeout = timeout if (isinstance(timeout, (int, float)) and timeout > 0) else 900.0
++    _read_timeout = timeout if (isinstance(timeout, (int, float)) and timeout > 0) else 1800.0
+     timeout_obj = Timeout(timeout=float(_read_timeout), connect=10.0)
+ 
+     # Strip any trailing /v1 — the Anthropic SDK appends /v1/messages.
+@@ -657,7 +657,7 @@ def build_anthropic_client(
+       fresh JWT per outbound request and rewrites the ``Authorization``
+       header. The SDK never sees the callable directly.
+ 
+-    If *timeout* is provided it overrides the default 900s read timeout.  The
++    If *timeout* is provided it overrides the default 1800s read timeout.  The
+     connect timeout stays at 10s.  Callers pass this from the per-provider /
+     per-model ``request_timeout_seconds`` config so Anthropic-native and
+     Anthropic-compatible providers respect the same knob as OpenAI-wire
+@@ -691,7 +691,7 @@ def build_anthropic_client(
+     from httpx import Timeout
+ 
+     normalized_base_url = _normalize_base_url_text(base_url)
+-    _read_timeout = timeout if (isinstance(timeout, (int, float)) and timeout > 0) else 900.0
++    _read_timeout = timeout if (isinstance(timeout, (int, float)) and timeout > 0) else 1800.0
+     kwargs = {
+         "timeout": Timeout(timeout=float(_read_timeout), connect=10.0),
+     }
+diff --git a/agent/auxiliary_client.py b/agent/auxiliary_client.py
+index 89dc7d935..f170b6876 100644
+--- a/agent/auxiliary_client.py
++++ b/agent/auxiliary_client.py
+@@ -4340,7 +4340,7 @@ def _resolve_task_provider_model(
+     return "auto", resolved_model, None, None, resolved_api_mode
+ 
+ 
+-_DEFAULT_AUX_TIMEOUT = 30.0
++_DEFAULT_AUX_TIMEOUT = 60.0
+ 
+ 
+ def _get_auxiliary_task_config(task: str) -> Dict[str, Any]:
+diff --git a/agent/chat_completion_helpers.py b/agent/chat_completion_helpers.py
+index c68f2271f..b09b15fef 100644
+--- a/agent/chat_completion_helpers.py
++++ b/agent/chat_completion_helpers.py
+@@ -1317,16 +1317,16 @@ def interruptible_streaming_api_call(agent, api_kwargs: dict, *, on_first_delta=
+             else float(os.getenv("HERMES_API_TIMEOUT", 1800.0))
+         )
+         # Read timeout: config wins here too.  Otherwise use
+-        # HERMES_STREAM_READ_TIMEOUT (default 120s) for cloud providers.
++        # HERMES_STREAM_READ_TIMEOUT (default 300s) for cloud providers.
+         if _provider_timeout_cfg is not None:
+             _stream_read_timeout = _provider_timeout_cfg
+         else:
+-            _stream_read_timeout = float(os.getenv("HERMES_STREAM_READ_TIMEOUT", 120.0))
++            _stream_read_timeout = float(os.getenv("HERMES_STREAM_READ_TIMEOUT", 300.0))
+             # Local providers (Ollama, llama.cpp, vLLM) can take minutes for
+             # prefill on large contexts before producing the first token.
+             # Auto-increase the httpx read timeout unless the user explicitly
+             # overrode HERMES_STREAM_READ_TIMEOUT.
+-            if _stream_read_timeout == 120.0 and agent.base_url and is_local_endpoint(agent.base_url):
++            if _stream_read_timeout == 300.0 and agent.base_url and is_local_endpoint(agent.base_url):
+                 _stream_read_timeout = _base_timeout
+                 logger.debug(
+                     "Local provider detected (%s) — stream read timeout raised to %.0fs",
+@@ -1685,7 +1685,7 @@ def interruptible_streaming_api_call(agent, api_kwargs: dict, *, on_first_delta=
+                 # this, /stop closes the HTTP connection (outer poll loop),
+                 # but the retry loop opens a FRESH connection — negating the
+                 # interrupt entirely.  On slow providers (ollama-cloud) each
+-                # retry can block for the full stream-read timeout (120s+),
++                # retry can block for the full stream-read timeout (300s+),
+                 # causing multi-minute delays between /stop and response.
+                 if agent._interrupt_requested:
+                     raise InterruptedError("Agent interrupted before stream retry")
+@@ -1926,11 +1926,11 @@ def interruptible_streaming_api_call(agent, api_kwargs: dict, *, on_first_delta=
+     if _cfg_stale is not None:
+         _stream_stale_timeout_base = _cfg_stale
+     else:
+-        _stream_stale_timeout_base = float(os.getenv("HERMES_STREAM_STALE_TIMEOUT", 180.0))
++        _stream_stale_timeout_base = float(os.getenv("HERMES_STREAM_STALE_TIMEOUT", 300.0))
+     # Local providers (Ollama, oMLX, llama-cpp) can take 300+ seconds
+     # for prefill on large contexts.  Disable the stale detector unless
+     # the user explicitly set HERMES_STREAM_STALE_TIMEOUT.
+-    if _stream_stale_timeout_base == 180.0 and agent.base_url and is_local_endpoint(agent.base_url):
++    if _stream_stale_timeout_base == 300.0 and agent.base_url and is_local_endpoint(agent.base_url):
+         _stream_stale_timeout = float("inf")
+         logger.debug("Local provider detected (%s) — stale stream timeout disabled", agent.base_url)
+     else:
+diff --git a/cli.py b/cli.py
+index 4cdc6cc13..63b9351c2 100644
+--- a/cli.py
++++ b/cli.py
+@@ -366,7 +366,7 @@ def load_cli_config() -> Dict[str, Any]:
+         "terminal": {
+             "env_type": "local",
+             "cwd": ".",  # "." is resolved to os.getcwd() at runtime
+-            "timeout": 60,
++            "timeout": 300,
+             "lifetime_seconds": 300,
+             "docker_image": "nikolaik/python-nodejs:python3.11-nodejs20",
+             "docker_forward_env": [],
+@@ -377,7 +377,7 @@ def load_cli_config() -> Dict[str, Any]:
+             "docker_mount_cwd_to_workspace": False,  # explicit opt-in only; default off for sandbox isolation
+         },
+         "browser": {
+-            "inactivity_timeout": 120,  # Auto-cleanup inactive browser sessions after 2 min
++            "inactivity_timeout": 300,  # Auto-cleanup inactive browser sessions after 5 min
+             "record_sessions": False,  # Auto-record browser sessions as WebM videos
+             "engine": "auto",  # Browser engine: auto (Chrome), lightpanda, chrome
+         },
+@@ -6079,7 +6079,7 @@ class HermesCLI:
+         # Get terminal config from environment (which was set from cli-config.yaml)
+         terminal_env = os.getenv("TERMINAL_ENV", "local")
+         terminal_cwd = os.getenv("TERMINAL_CWD", os.getcwd())
+-        terminal_timeout = os.getenv("TERMINAL_TIMEOUT", "60")
++        terminal_timeout = os.getenv("TERMINAL_TIMEOUT", "300")
+         
+         user_config_path = _hermes_home / 'config.yaml'
+         project_config_path = Path(__file__).parent / 'cli-config.yaml'
+diff --git a/cron/scheduler.py b/cron/scheduler.py
+index e76f67064..383858bc9 100644
+--- a/cron/scheduler.py
++++ b/cron/scheduler.py
+@@ -760,7 +760,7 @@ def _deliver_result(job: dict, content: str, adapters=None, loop=None) -> Option
+     return None
+ 
+ 
+-_DEFAULT_SCRIPT_TIMEOUT = 120  # seconds
++_DEFAULT_SCRIPT_TIMEOUT = 300  # seconds
+ # Backward-compatible module override used by tests and emergency monkeypatches.
+ _SCRIPT_TIMEOUT = _DEFAULT_SCRIPT_TIMEOUT
+ 
+@@ -1588,7 +1588,7 @@ def _run_job_impl(job: dict) -> tuple[bool, str, str, Optional[str]]:
+         # Run the agent with an *inactivity*-based timeout: the job can run
+         # for hours if it's actively calling tools / receiving stream tokens,
+         # but a hung API call or stuck tool with no activity for the configured
+-        # duration is caught and killed.  Default 600s (10 min inactivity);
++        # duration is caught and killed.  Default 1800s (30 min inactivity);
+         # override via HERMES_CRON_TIMEOUT env var.  0 = unlimited.
+         #
+         # Uses the agent's built-in activity tracker (updated by
+@@ -1599,12 +1599,12 @@ def _run_job_impl(job: dict) -> tuple[bool, str, str, Optional[str]]:
+                 _cron_timeout = float(_raw_cron_timeout)
+             except (ValueError, TypeError):
+                 logger.warning(
+-                    "Invalid HERMES_CRON_TIMEOUT=%r; using default 600s",
++                    "Invalid HERMES_CRON_TIMEOUT=%r; using default 1800s",
+                     _raw_cron_timeout,
+                 )
+-                _cron_timeout = 600.0
++                _cron_timeout = 1800.0
+         else:
+-            _cron_timeout = 600.0
++            _cron_timeout = 1800.0
+         _cron_inactivity_limit = _cron_timeout if _cron_timeout > 0 else None
+         _POLL_INTERVAL = 5.0
+         _cron_pool = concurrent.futures.ThreadPoolExecutor(max_workers=1)
+diff --git a/gateway/run.py b/gateway/run.py
+index 198ee816e..5c3872eb8 100644
+--- a/gateway/run.py
++++ b/gateway/run.py
+@@ -6687,7 +6687,7 @@ class GatewayRunner:
+         # wall-clock age alone isn't sufficient.  Evict only when the agent
+         # has been *idle* beyond the inactivity threshold (or when the agent
+         # object has no activity tracker and wall-clock age is extreme).
+-        _raw_stale_timeout = _float_env("HERMES_AGENT_TIMEOUT", 1800)
++        _raw_stale_timeout = _float_env("HERMES_AGENT_TIMEOUT", 3600)
+         _stale_ts = self._running_agents_ts.get(_quick_key, 0)
+         if _quick_key in self._running_agents and _stale_ts:
+             _stale_age = time.time() - _stale_ts
+@@ -17108,10 +17108,10 @@ class GatewayRunner:
+             #
+             # Config: agent.gateway_timeout in config.yaml, or
+             # HERMES_AGENT_TIMEOUT env var (env var takes precedence).
+-            # Default 1800s (30 min inactivity).  0 = unlimited.
+-            _agent_timeout_raw = _float_env("HERMES_AGENT_TIMEOUT", 1800)
++            # Default 3600s (60 min inactivity).  0 = unlimited.
++            _agent_timeout_raw = _float_env("HERMES_AGENT_TIMEOUT", 3600)
+             _agent_timeout = _agent_timeout_raw if _agent_timeout_raw > 0 else None
+-            _agent_warning_raw = _float_env("HERMES_AGENT_TIMEOUT_WARNING", 900)
++            _agent_warning_raw = _float_env("HERMES_AGENT_TIMEOUT_WARNING", 1800)
+             _agent_warning = _agent_warning_raw if _agent_warning_raw > 0 else None
+             _warning_fired = False
+             _executor_task = asyncio.ensure_future(
+diff --git a/hermes_cli/config.py b/hermes_cli/config.py
+index 715fd7eb7..3be7a285e 100644
+--- a/hermes_cli/config.py
++++ b/hermes_cli/config.py
+@@ -512,17 +512,17 @@ DEFAULT_CONFIG = {
+         # The agent can run indefinitely as long as it's actively calling
+         # tools or receiving API responses.  Only fires when the agent has
+         # been completely idle for this duration.  0 = unlimited.
+-        "gateway_timeout": 1800,
++        "gateway_timeout": 3600,
+         # Graceful drain timeout for gateway stop/restart (seconds).
+         # The gateway stops accepting new work, waits for running agents
+         # to finish, then interrupts any remaining runs after the timeout.
+         # 0 = no drain, interrupt immediately.
+         #
+-        # 180s is calibrated for realistic in-flight agent turns: a typical
++        # 300s is calibrated for realistic in-flight agent turns: a typical
+         # coding conversation mid-reasoning runs 60–150s per call, so a 60s
+         # budget routinely interrupted legitimate work on /restart. Raise
+         # further in config.yaml if you run very-long-reasoning models.
+-        "restart_drain_timeout": 180,
++        "restart_drain_timeout": 300,
+         # Max app-level retry attempts for API errors (connection drops,
+         # provider timeouts, 5xx, etc.) before the agent surfaces the
+         # failure.  The OpenAI SDK already does its own low-level retries
+@@ -542,21 +542,21 @@ DEFAULT_CONFIG = {
+         # Staged inactivity warning: send a warning to the user at this
+         # threshold before escalating to a full timeout.  The warning fires
+         # once per run and does not interrupt the agent.  0 = disable warning.
+-        "gateway_timeout_warning": 900,
++        "gateway_timeout_warning": 1800,
+         # Maximum time (seconds) the gateway will block an agent waiting for
+         # a clarify-tool response from the user.  Hit this and the agent
+         # unblocks with "[user did not respond within Xm]" so it can adapt
+         # rather than pinning the running-agent guard forever.  CLI clarify
+         # blocks indefinitely (input() is synchronous) and ignores this.
+-        "clarify_timeout": 600,
++        "clarify_timeout": 900,
+         # Periodic "still working" notification interval (seconds).
+         # Sends a status message every N seconds so the user knows the
+         # agent hasn't died during long tasks.  0 = disable notifications.
+         # Lower values mean faster feedback on slow tasks but more chat
+-        # noise; 180s is a compromise that catches spinning weak-model runs
++        # noise; 300s is a compromise that catches spinning weak-model runs
+         # (60+ tool iterations with tiny output) before users assume the
+         # bot is dead and /restart.
+-        "gateway_notify_interval": 180,
++        "gateway_notify_interval": 300,
+         # Freshness window for the gateway auto-continue note (seconds).
+         # After a gateway crash/restart/SIGTERM mid-run, the next user
+         # message gets a "[System note: your previous turn was
+@@ -567,10 +567,10 @@ DEFAULT_CONFIG = {
+         # an unrelated old task when the user's next message starts new
+         # work.  This window is the max age of the last persisted
+         # transcript row for which we still inject the continue note.
+-        # Default 3600s comfortably covers a long turn (gateway_timeout
+-        # default is 1800s) plus runtime slack.  Set to 0 to disable the
++        # Default 7200s comfortably covers a long turn (gateway_timeout
++        # default is 3600s) plus runtime slack.  Set to 0 to disable the
+         # gate and restore pre-fix behaviour (always inject).
+-        "gateway_auto_continue_freshness": 3600,
++        "gateway_auto_continue_freshness": 7200,
+         # How user-attached images are presented to the main model on each turn.
+         #   "auto"   — attach natively when the active model reports
+         #              supports_vision=True AND the user hasn't explicitly
+@@ -592,7 +592,7 @@ DEFAULT_CONFIG = {
+         "backend": "local",
+         "modal_mode": "auto",
+         "cwd": ".",  # Use current directory
+-        "timeout": 180,
++        "timeout": 300,
+         # Environment variables to pass through to sandboxed execution
+         # (terminal and execute_code).  Skill-declared required_environment_variables
+         # are passed through automatically; this list is for non-skill use cases.
+@@ -676,8 +676,8 @@ DEFAULT_CONFIG = {
+     },
+ 
+     "browser": {
+-        "inactivity_timeout": 120,
+-        "command_timeout": 30,  # Timeout for browser commands in seconds (screenshot, navigate, etc.)
++        "inactivity_timeout": 300,
++        "command_timeout": 60,  # Timeout for browser commands in seconds (screenshot, navigate, etc.)
+         "record_sessions": False,  # Auto-record browser sessions as WebM videos
+         "allow_private_urls": False,  # Allow navigating to private/internal IPs (localhost, 192.168.x.x, etc.)
+         # Browser engine for local mode.  Passed as ``--engine <value>`` to
+@@ -895,16 +895,16 @@ DEFAULT_CONFIG = {
+             "model": "",           # e.g. "google/gemini-2.5-flash", "gpt-4o"
+             "base_url": "",        # direct OpenAI-compatible endpoint (takes precedence over provider)
+             "api_key": "",         # API key for base_url (falls back to OPENAI_API_KEY)
+-            "timeout": 120,        # seconds — LLM API call timeout; vision payloads need generous timeout
++            "timeout": 300,        # seconds — LLM API call timeout; vision payloads need generous timeout
+             "extra_body": {},      # OpenAI-compatible provider-specific request fields
+-            "download_timeout": 30,  # seconds — image HTTP download timeout; increase for slow connections
++            "download_timeout": 60,  # seconds — image HTTP download timeout; increase for slow connections
+         },
+         "web_extract": {
+             "provider": "auto",
+             "model": "",
+             "base_url": "",
+             "api_key": "",
+-            "timeout": 360,        # seconds (6min) — per-attempt LLM summarization timeout; increase for slow local models
++            "timeout": 600,        # seconds (10min) — per-attempt LLM summarization timeout; increase for slow local models
+             "extra_body": {},
+         },
+         "compression": {
+@@ -912,7 +912,7 @@ DEFAULT_CONFIG = {
+             "model": "",
+             "base_url": "",
+             "api_key": "",
+-            "timeout": 120,        # seconds — compression summarises large contexts; increase for local models
++            "timeout": 300,        # seconds — compression summarises large contexts; increase for local models
+             "extra_body": {},
+         },
+         # Note: session_search no longer uses an auxiliary LLM (PR #27590 —
+@@ -924,7 +924,7 @@ DEFAULT_CONFIG = {
+             "model": "",
+             "base_url": "",
+             "api_key": "",
+-            "timeout": 30,
++            "timeout": 60,
+             "extra_body": {},
+         },
+         "approval": {
+@@ -932,7 +932,7 @@ DEFAULT_CONFIG = {
+             "model": "",           # fast/cheap model recommended (e.g. gemini-flash, haiku)
+             "base_url": "",
+             "api_key": "",
+-            "timeout": 30,
++            "timeout": 60,
+             "extra_body": {},
+         },
+         "mcp": {
+@@ -940,7 +940,7 @@ DEFAULT_CONFIG = {
+             "model": "",
+             "base_url": "",
+             "api_key": "",
+-            "timeout": 30,
++            "timeout": 60,
+             "extra_body": {},
+         },
+         "title_generation": {
+@@ -948,7 +948,7 @@ DEFAULT_CONFIG = {
+             "model": "",
+             "base_url": "",
+             "api_key": "",
+-            "timeout": 30,
++            "timeout": 60,
+             "extra_body": {},
+         },
+         # Triage specifier — flesh out a rough one-liner in the Kanban
+@@ -961,7 +961,7 @@ DEFAULT_CONFIG = {
+             "model": "",
+             "base_url": "",
+             "api_key": "",
+-            "timeout": 120,
++            "timeout": 300,
+             "extra_body": {},
+         },
+         # Kanban decomposer — decomposes a triage task into a graph of
+@@ -974,7 +974,7 @@ DEFAULT_CONFIG = {
+             "model": "",
+             "base_url": "",
+             "api_key": "",
+-            "timeout": 180,
++            "timeout": 300,
+             "extra_body": {},
+         },
+         # Profile describer — auto-generates a 1-2 sentence description
+@@ -986,7 +986,7 @@ DEFAULT_CONFIG = {
+             "model": "",
+             "base_url": "",
+             "api_key": "",
+-            "timeout": 60,
++            "timeout": 120,
+             "extra_body": {},
+         },
+         # Curator — skill-usage review fork. Timeout is generous because the
+@@ -999,7 +999,7 @@ DEFAULT_CONFIG = {
+             "model": "",
+             "base_url": "",
+             "api_key": "",
+-            "timeout": 600,
++            "timeout": 1800,
+             "extra_body": {},
+         },
+     },
+@@ -1221,7 +1221,7 @@ DEFAULT_CONFIG = {
+         "inherit_mcp_toolsets": True,
+         "max_iterations": 50,  # per-subagent iteration cap (each subagent gets its own budget,
+                                # independent of the parent's max_iterations)
+-        "child_timeout_seconds": 600,  # wall-clock timeout for each child agent (floor 30s,
++        "child_timeout_seconds": 1800,  # wall-clock timeout for each child agent (floor 30s,
+                                        # no ceiling). High-reasoning models on large tasks
+                                        # (e.g. gpt-5.5 xhigh, opus-4.6) need generous budgets;
+                                        # raise if children time out before producing output.
+diff --git a/hermes_cli/main.py b/hermes_cli/main.py
+index 4488995dc..7f5d28408 100644
+--- a/hermes_cli/main.py
++++ b/hermes_cli/main.py
+@@ -9295,7 +9295,7 @@ def _cmd_update_impl(args, gateway_mode: bool):
+                 return total if matched else default
+ 
+             # Drain budget for graceful SIGUSR1 restarts.  The gateway drains
+-            # for up to ``agent.restart_drain_timeout`` (default 60s) before
++            # for up to ``agent.restart_drain_timeout`` (default 300s) before
+             # exiting with code 75; we wait slightly longer so the drain
+             # completes before we fall back to a hard restart.  On older
+             # systemd units without SIGUSR1 wiring this wait just times out
+@@ -9305,7 +9305,7 @@ def _cmd_update_impl(args, gateway_mode: bool):
+                     DEFAULT_GATEWAY_RESTART_DRAIN_TIMEOUT as _DEFAULT_DRAIN,
+                 )
+             except Exception:
+-                _DEFAULT_DRAIN = 60.0
++                _DEFAULT_DRAIN = 300.0
+             _cfg_drain = None
+             try:
+                 from hermes_cli.config import load_config
+diff --git a/hermes_cli/tips.py b/hermes_cli/tips.py
+index 2871cc4af..c15416cb3 100644
+--- a/hermes_cli/tips.py
++++ b/hermes_cli/tips.py
+@@ -289,7 +289,7 @@ TIPS = [
+     "Delegation has a heartbeat thread — child activity propagates to the parent, preventing gateway timeouts.",
+     "When a provider returns HTTP 402 (payment required), the auxiliary client auto-falls back to the next one.",
+     "agent.tool_use_enforcement steers models that describe actions instead of calling tools — auto for GPT/Codex.",
+-    "agent.restart_drain_timeout (default 60s) lets running agents finish before a gateway restart takes effect.",
++    "agent.restart_drain_timeout (default 300s) lets running agents finish before a gateway restart takes effect.",
+     "agent.api_max_retries (default 3) controls how many times the agent retries a failed API call before surfacing the error — lower it for fast fallback.",
+     "The gateway caches AIAgent instances per session — destroying this cache breaks Anthropic prompt caching.",
+     "Any website can expose skills via /.well-known/skills/index.json — the skills hub discovers them automatically.",
+@@ -451,7 +451,7 @@ TIPS = [
+     # --- Gateway Behavior Env Vars ---
+     'HERMES_GATEWAY_BUSY_ACK_ENABLED=false silences the ⚡/⏳/⏩ ack messages when a user messages a busy agent.',
+     'HERMES_AGENT_NOTIFY_INTERVAL (default 180s) sets how often the gateway pings with progress on long turns.',
+-    'HERMES_RESTART_DRAIN_TIMEOUT (default 900s) caps how long /restart waits for in-flight runs before forcing.',
++    'HERMES_RESTART_DRAIN_TIMEOUT (default 300s) caps how long /restart waits for in-flight runs before forcing.',
+     'HERMES_CHECKPOINT_TIMEOUT (default 30s) caps filesystem checkpoint creation — raise it on huge monorepos.',
+ 
+     # --- Auxiliary Tasks & Image Generation ---
+@@ -482,4 +482,3 @@ def get_random_tip(exclude_recent: int = 0) -> str:
+     """
+     return random.choice(TIPS)
+ 
+-
+diff --git a/tests/agent/test_local_stream_timeout.py b/tests/agent/test_local_stream_timeout.py
+index 0252633f3..54a75b959 100644
+--- a/tests/agent/test_local_stream_timeout.py
++++ b/tests/agent/test_local_stream_timeout.py
+@@ -2,7 +2,7 @@
+ 
+ When a local LLM provider is detected (Ollama, llama.cpp, vLLM, etc.),
+ the httpx stream read timeout should be automatically increased from the
+-default 60s to HERMES_API_TIMEOUT (1800s) to avoid premature connection
++default 300s to HERMES_API_TIMEOUT (1800s) to avoid premature connection
+ kills during long prefill phases.
+ """
+ 
+@@ -31,8 +31,8 @@ class TestLocalStreamReadTimeout:
+         with patch.dict(os.environ, {}, clear=False):
+             os.environ.pop("HERMES_STREAM_READ_TIMEOUT", None)
+             _base_timeout = float(os.getenv("HERMES_API_TIMEOUT", 1800.0))
+-            _stream_read_timeout = float(os.getenv("HERMES_STREAM_READ_TIMEOUT", 120.0))
+-            if _stream_read_timeout == 120.0 and base_url and is_local_endpoint(base_url):
++            _stream_read_timeout = float(os.getenv("HERMES_STREAM_READ_TIMEOUT", 300.0))
++            if _stream_read_timeout == 300.0 and base_url and is_local_endpoint(base_url):
+                 _stream_read_timeout = _base_timeout
+             assert _stream_read_timeout == 1800.0
+ 
+@@ -40,9 +40,9 @@ class TestLocalStreamReadTimeout:
+         """User sets HERMES_STREAM_READ_TIMEOUT -> keep their value even for local."""
+         with patch.dict(os.environ, {"HERMES_STREAM_READ_TIMEOUT": "300"}, clear=False):
+             _base_timeout = float(os.getenv("HERMES_API_TIMEOUT", 1800.0))
+-            _stream_read_timeout = float(os.getenv("HERMES_STREAM_READ_TIMEOUT", 120.0))
++            _stream_read_timeout = float(os.getenv("HERMES_STREAM_READ_TIMEOUT", 300.0))
+             base_url = "http://localhost:11434"
+-            if _stream_read_timeout == 120.0 and base_url and is_local_endpoint(base_url):
++            if _stream_read_timeout == 300.0 and base_url and is_local_endpoint(base_url):
+                 _stream_read_timeout = _base_timeout
+             assert _stream_read_timeout == 300.0
+ 
+@@ -52,25 +52,25 @@ class TestLocalStreamReadTimeout:
+         "https://api.anthropic.com",
+     ])
+     def test_remote_endpoint_keeps_default(self, base_url):
+-        """Remote endpoint -> keep 120s default."""
++        """Remote endpoint -> keep 300s default."""
+         with patch.dict(os.environ, {}, clear=False):
+             os.environ.pop("HERMES_STREAM_READ_TIMEOUT", None)
+             _base_timeout = float(os.getenv("HERMES_API_TIMEOUT", 1800.0))
+-            _stream_read_timeout = float(os.getenv("HERMES_STREAM_READ_TIMEOUT", 120.0))
+-            if _stream_read_timeout == 120.0 and base_url and is_local_endpoint(base_url):
++            _stream_read_timeout = float(os.getenv("HERMES_STREAM_READ_TIMEOUT", 300.0))
++            if _stream_read_timeout == 300.0 and base_url and is_local_endpoint(base_url):
+                 _stream_read_timeout = _base_timeout
+-            assert _stream_read_timeout == 120.0
++            assert _stream_read_timeout == 300.0
+ 
+     def test_empty_base_url_keeps_default(self):
+-        """No base_url set -> keep 120s default."""
++        """No base_url set -> keep 300s default."""
+         with patch.dict(os.environ, {}, clear=False):
+             os.environ.pop("HERMES_STREAM_READ_TIMEOUT", None)
+             _base_timeout = float(os.getenv("HERMES_API_TIMEOUT", 1800.0))
+-            _stream_read_timeout = float(os.getenv("HERMES_STREAM_READ_TIMEOUT", 120.0))
++            _stream_read_timeout = float(os.getenv("HERMES_STREAM_READ_TIMEOUT", 300.0))
+             base_url = ""
+-            if _stream_read_timeout == 120.0 and base_url and is_local_endpoint(base_url):
++            if _stream_read_timeout == 300.0 and base_url and is_local_endpoint(base_url):
+                 _stream_read_timeout = _base_timeout
+-            assert _stream_read_timeout == 120.0
++            assert _stream_read_timeout == 300.0
+ 
+ 
+ class TestIsLocalEndpoint:
+diff --git a/tests/cron/test_cron_inactivity_timeout.py b/tests/cron/test_cron_inactivity_timeout.py
+index 67e932089..934700d59 100644
+--- a/tests/cron/test_cron_inactivity_timeout.py
++++ b/tests/cron/test_cron_inactivity_timeout.py
+@@ -175,8 +175,8 @@ class TestInactivityTimeout:
+             try:
+                 return float(raw_value)
+             except (ValueError, TypeError):
+-                return 600.0
+-        return 600.0
++                return 1800.0
++        return 1800.0
+ 
+     def test_timeout_env_var_parsing(self, monkeypatch):
+         """HERMES_CRON_TIMEOUT env var is respected."""
+@@ -197,20 +197,20 @@ class TestInactivityTimeout:
+         assert _cron_inactivity_limit is None
+ 
+     def test_timeout_invalid_value_falls_back_to_default(self, monkeypatch):
+-        """HERMES_CRON_TIMEOUT=abc should fall back to 600s, not raise ValueError."""
++        """HERMES_CRON_TIMEOUT=abc should fall back to 1800s, not raise ValueError."""
+         monkeypatch.setenv("HERMES_CRON_TIMEOUT", "abc")
+         raw = os.getenv("HERMES_CRON_TIMEOUT", "").strip()
+         _cron_timeout = self._parse_cron_timeout(raw)
+-        assert _cron_timeout == 600.0
++        assert _cron_timeout == 1800.0
+         _cron_inactivity_limit = _cron_timeout if _cron_timeout > 0 else None
+-        assert _cron_inactivity_limit == 600.0
++        assert _cron_inactivity_limit == 1800.0
+ 
+     def test_timeout_empty_string_uses_default(self, monkeypatch):
+-        """HERMES_CRON_TIMEOUT='' (empty) should use the 600s default."""
++        """HERMES_CRON_TIMEOUT='' (empty) should use the 1800s default."""
+         monkeypatch.setenv("HERMES_CRON_TIMEOUT", "")
+         raw = os.getenv("HERMES_CRON_TIMEOUT", "").strip()
+         _cron_timeout = self._parse_cron_timeout(raw)
+-        assert _cron_timeout == 600.0
++        assert _cron_timeout == 1800.0
+ 
+     def test_timeout_error_includes_diagnostics(self):
+         """The TimeoutError message should include last activity info."""
+diff --git a/tests/gateway/test_config_env_bridge_authority.py b/tests/gateway/test_config_env_bridge_authority.py
+index 26c54f1c7..494ba6edb 100644
+--- a/tests/gateway/test_config_env_bridge_authority.py
++++ b/tests/gateway/test_config_env_bridge_authority.py
+@@ -120,8 +120,8 @@ def test_config_max_turns_wins_over_stale_env(hermes_home: Path) -> None:
+ def test_config_gateway_timeout_wins_over_stale_env(hermes_home: Path) -> None:
+     """Every agent.* bridge key must be config-authoritative, not .env-authoritative."""
+     _write_config(hermes_home, agent_cfg={
+-        "gateway_timeout": 1800,
+-        "gateway_timeout_warning": 900,
++        "gateway_timeout": 3600,
++        "gateway_timeout_warning": 1800,
+     })
+     _write_env(hermes_home, {
+         "HERMES_AGENT_TIMEOUT": "60",
+@@ -130,8 +130,8 @@ def test_config_gateway_timeout_wins_over_stale_env(hermes_home: Path) -> None:
+ 
+     env = _run_gateway_import(hermes_home, initial_env={})
+ 
+-    assert env.get("HERMES_AGENT_TIMEOUT") == "1800"
+-    assert env.get("HERMES_AGENT_TIMEOUT_WARNING") == "900"
++    assert env.get("HERMES_AGENT_TIMEOUT") == "3600"
++    assert env.get("HERMES_AGENT_TIMEOUT_WARNING") == "1800"
+ 
+ 
+ def test_config_display_busy_input_mode_wins_over_stale_env(hermes_home: Path) -> None:
+diff --git a/tests/gateway/test_gateway_inactivity_timeout.py b/tests/gateway/test_gateway_inactivity_timeout.py
+index 28e22b057..5cb633a4d 100644
+--- a/tests/gateway/test_gateway_inactivity_timeout.py
++++ b/tests/gateway/test_gateway_inactivity_timeout.py
+@@ -241,13 +241,13 @@ class TestStagedInactivityWarning:
+     def test_warning_env_var_respected(self, monkeypatch):
+         """HERMES_AGENT_TIMEOUT_WARNING env var is parsed correctly."""
+         monkeypatch.setenv("HERMES_AGENT_TIMEOUT_WARNING", "600")
+-        _warning = float(os.getenv("HERMES_AGENT_TIMEOUT_WARNING", 900))
++        _warning = float(os.getenv("HERMES_AGENT_TIMEOUT_WARNING", 1800))
+         assert _warning == 600.0
+ 
+     def test_warning_zero_means_disabled(self, monkeypatch):
+         """HERMES_AGENT_TIMEOUT_WARNING=0 disables the warning."""
+         monkeypatch.setenv("HERMES_AGENT_TIMEOUT_WARNING", "0")
+-        _raw = float(os.getenv("HERMES_AGENT_TIMEOUT_WARNING", 900))
++        _raw = float(os.getenv("HERMES_AGENT_TIMEOUT_WARNING", 1800))
+         _warning = _raw if _raw > 0 else None
+         assert _warning is None
+ 
+diff --git a/tests/hermes_cli/test_aux_config.py b/tests/hermes_cli/test_aux_config.py
+index 0bd978f93..d89a41760 100644
+--- a/tests/hermes_cli/test_aux_config.py
++++ b/tests/hermes_cli/test_aux_config.py
+@@ -125,16 +125,16 @@ def test_save_aux_choice_preserves_timeout(tmp_path, monkeypatch):
+     monkeypatch.setattr(Path, "home", lambda: tmp_path)
+     (tmp_path / ".hermes").mkdir(exist_ok=True)
+ 
+-    # Default vision timeout is 120
++    # Default vision timeout is 300
+     cfg_before = load_config()
+     default_timeout = cfg_before["auxiliary"]["vision"]["timeout"]
+-    assert default_timeout == 120
++    assert default_timeout == 300
+ 
+     _save_aux_choice("vision", provider="nous", model="gemini-3-flash")
+     cfg_after = load_config()
+     assert cfg_after["auxiliary"]["vision"]["timeout"] == default_timeout
+     # download_timeout also preserved for vision
+-    assert cfg_after["auxiliary"]["vision"].get("download_timeout") == 30
++    assert cfg_after["auxiliary"]["vision"].get("download_timeout") == 60
+ 
+ 
+ def test_save_aux_choice_does_not_touch_main_model(tmp_path, monkeypatch):
+@@ -222,7 +222,7 @@ def test_reset_aux_to_auto_clears_routing_preserves_timeouts(tmp_path, monkeypat
+     # User-tuned timeout survives reset
+     assert cfg["auxiliary"]["vision"]["timeout"] == 300
+     # Default compression timeout preserved
+-    assert cfg["auxiliary"]["compression"]["timeout"] == 120
++    assert cfg["auxiliary"]["compression"]["timeout"] == 300
+ 
+ 
+ def test_reset_aux_to_auto_idempotent(tmp_path, monkeypatch):
+diff --git a/tests/hermes_cli/test_timeouts.py b/tests/hermes_cli/test_timeouts.py
+index 0f641a5c1..2545a740d 100644
+--- a/tests/hermes_cli/test_timeouts.py
++++ b/tests/hermes_cli/test_timeouts.py
+@@ -131,7 +131,7 @@ def test_invalid_stale_timeout_values_return_none(monkeypatch, tmp_path):
+ 
+ 
+ def test_anthropic_adapter_honors_timeout_kwarg():
+-    """build_anthropic_client(timeout=X) overrides the 900s default read timeout."""
++    """build_anthropic_client(timeout=X) overrides the 1800s default read timeout."""
+     pytest = __import__("pytest")
+     anthropic = pytest.importorskip("anthropic")  # skip if optional SDK missing
+     from agent.anthropic_adapter import build_anthropic_client
+@@ -140,10 +140,10 @@ def test_anthropic_adapter_honors_timeout_kwarg():
+     c_custom = build_anthropic_client("sk-ant-dummy", None, timeout=45.0)
+     c_invalid = build_anthropic_client("sk-ant-dummy", None, timeout=-1)
+ 
+-    # Default stays at 900s; custom overrides; invalid falls back to default
+-    assert c_default.timeout.read == 900.0
++    # Default stays at 1800s; custom overrides; invalid falls back to default
++    assert c_default.timeout.read == 1800.0
+     assert c_custom.timeout.read == 45.0
+-    assert c_invalid.timeout.read == 900.0
++    assert c_invalid.timeout.read == 1800.0
+     # Connect timeout always stays at 10s regardless
+     assert c_default.timeout.connect == 10.0
+     assert c_custom.timeout.connect == 10.0
+diff --git a/tests/tools/test_approval_heartbeat.py b/tests/tools/test_approval_heartbeat.py
+index c725a24eb..8af978887 100644
+--- a/tests/tools/test_approval_heartbeat.py
++++ b/tests/tools/test_approval_heartbeat.py
+@@ -4,7 +4,7 @@ Regression test for false gateway inactivity timeouts firing while the agent
+ is legitimately blocked waiting for a user to respond to a dangerous-command
+ approval prompt.  Before the fix, ``entry.event.wait(timeout=...)`` blocked
+ silently — no ``_touch_activity()`` calls — and the gateway's inactivity
+-watchdog (``agent.gateway_timeout``, default 1800s) would kill the agent
++watchdog (``agent.gateway_timeout``, default 3600s) would kill the agent
+ while the user was still choosing whether to approve.
+ 
+ The fix polls the event in short slices and fires ``touch_activity_if_due``
+@@ -60,4 +60,3 @@ class TestApprovalHeartbeat:
+         _clear_approval_state()
+ 
+ 
+-
+diff --git a/tests/tools/test_browser_camofox.py b/tests/tools/test_browser_camofox.py
+index cf1c32592..76ed4899c 100644
+--- a/tests/tools/test_browser_camofox.py
++++ b/tests/tools/test_browser_camofox.py
+@@ -323,7 +323,7 @@ class TestCamofoxVisionConfig:
+         assert result["success"] is True
+         assert result["analysis"] == "Default camofox screenshot analysis"
+         assert mock_llm.call_args.kwargs["temperature"] == 0.1
+-        assert mock_llm.call_args.kwargs["timeout"] == 120.0
++        assert mock_llm.call_args.kwargs["timeout"] == 300.0
+ 
+ 
+ # ---------------------------------------------------------------------------
+@@ -350,4 +350,3 @@ class TestBrowserToolRouting:
+         from tools.browser_tool import check_browser_requirements
+         assert check_browser_requirements() is True
+ 
+-
+diff --git a/tests/tools/test_browser_console.py b/tests/tools/test_browser_console.py
+index b058fb3f3..1ba3d89cf 100644
+--- a/tests/tools/test_browser_console.py
++++ b/tests/tools/test_browser_console.py
+@@ -249,7 +249,7 @@ class TestBrowserVisionConfig:
+         assert result["success"] is True
+         assert result["analysis"] == "Default screenshot analysis"
+         assert mock_llm.call_args.kwargs["temperature"] == 0.1
+-        assert mock_llm.call_args.kwargs["timeout"] == 120.0
++        assert mock_llm.call_args.kwargs["timeout"] == 300.0
+ 
+ 
+ # ── auto-recording config ────────────────────────────────────────────
+diff --git a/tests/tools/test_browser_hardening.py b/tests/tools/test_browser_hardening.py
+index 374f7af61..56e4ba933 100644
+--- a/tests/tools/test_browser_hardening.py
++++ b/tests/tools/test_browser_hardening.py
+@@ -99,7 +99,7 @@ class TestCommandTimeoutCache:
+     def test_default_is_30(self):
+         from tools.browser_tool import _get_command_timeout
+         with patch("hermes_cli.config.read_raw_config", return_value={}):
+-            assert _get_command_timeout() == 30
++            assert _get_command_timeout() == 60
+ 
+     def test_reads_from_config(self):
+         from tools.browser_tool import _get_command_timeout
+diff --git a/tests/tools/test_clarify_gateway.py b/tests/tools/test_clarify_gateway.py
+index 86385be35..e184bb668 100644
+--- a/tests/tools/test_clarify_gateway.py
++++ b/tests/tools/test_clarify_gateway.py
+@@ -168,7 +168,7 @@ class TestClarifyPrimitive:
+         assert b is not None and b.clarify_id == "idB"
+ 
+     def test_clarify_timeout_config_default(self):
+-        """get_clarify_timeout returns 600 by default."""
++        """get_clarify_timeout returns a positive configured/default value."""
+         from tools import clarify_gateway as cm
+ 
+         timeout = cm.get_clarify_timeout()
+diff --git a/tests/tools/test_mcp_tool.py b/tests/tools/test_mcp_tool.py
+index 3212a350c..62cb2cfbc 100644
+--- a/tests/tools/test_mcp_tool.py
++++ b/tests/tools/test_mcp_tool.py
+@@ -1713,7 +1713,7 @@ class TestConfigurableTimeouts:
+ 
+         server = MCPServerTask("test_srv")
+         assert server.tool_timeout == _DEFAULT_TOOL_TIMEOUT
+-        assert server.tool_timeout == 120
++        assert server.tool_timeout == 300
+ 
+     def test_custom_timeout(self):
+         """Server with timeout=180 in config gets 180."""
+diff --git a/tests/tools/test_parse_env_var.py b/tests/tools/test_parse_env_var.py
+index 8cbbce698..69a3b274d 100644
+--- a/tests/tools/test_parse_env_var.py
++++ b/tests/tools/test_parse_env_var.py
+@@ -94,7 +94,7 @@ class TestImportTimeEnvParsing:
+         try:
+             with patch.dict("os.environ", {"TERMINAL_MAX_FOREGROUND_TIMEOUT": "5m"}, clear=False):
+                 mod = importlib.reload(_tt_mod)
+-                assert mod.FOREGROUND_MAX_TIMEOUT == 600
++                assert mod.FOREGROUND_MAX_TIMEOUT == 900
+         finally:
+             importlib.reload(_tt_mod)
+ 
+diff --git a/tests/tools/test_terminal_foreground_timeout_cap.py b/tests/tools/test_terminal_foreground_timeout_cap.py
+index 54848f629..e9e95013c 100644
+--- a/tests/tools/test_terminal_foreground_timeout_cap.py
++++ b/tests/tools/test_terminal_foreground_timeout_cap.py
+@@ -15,7 +15,7 @@ def _make_env_config(**overrides):
+     """Return a minimal _get_env_config()-shaped dict with optional overrides."""
+     config = {
+         "env_type": "local",
+-        "timeout": 180,
++        "timeout": 300,
+         "cwd": "/tmp",
+         "host_cwd": None,
+         "modal_mode": "auto",
+@@ -174,11 +174,11 @@ class TestForegroundTimeoutCap:
+         assert "error" not in result or result["error"] is None
+ 
+     def test_default_timeout_not_rejected(self):
+-        """Default timeout (180s) should not trigger rejection."""
++        """Default timeout (300s) should not trigger rejection."""
+         from tools.terminal_tool import terminal_tool, FOREGROUND_MAX_TIMEOUT
+ 
+-        # 180 < 600, so no rejection
+-        assert 180 < FOREGROUND_MAX_TIMEOUT
++        # 300 < the foreground cap, so no rejection
++        assert 300 < FOREGROUND_MAX_TIMEOUT
+ 
+         with patch("tools.terminal_tool._get_env_config", return_value=_make_env_config()), \
+              patch("tools.terminal_tool._start_cleanup_thread"):
+@@ -192,7 +192,7 @@ class TestForegroundTimeoutCap:
+                 result = json.loads(terminal_tool(command="echo hello"))
+ 
+         call_kwargs = mock_env.execute.call_args
+-        assert call_kwargs[1]["timeout"] == 180
++        assert call_kwargs[1]["timeout"] == 300
+         assert "error" not in result or result["error"] is None
+ 
+     def test_exactly_at_max_not_rejected(self):
+@@ -222,9 +222,9 @@ class TestForegroundMaxTimeoutConstant:
+     """Verify the FOREGROUND_MAX_TIMEOUT constant and schema."""
+ 
+     def test_default_value_is_600(self):
+-        """Default FOREGROUND_MAX_TIMEOUT is 600 when env var is not set."""
++        """Default FOREGROUND_MAX_TIMEOUT is 900 when env var is not set."""
+         from tools.terminal_tool import FOREGROUND_MAX_TIMEOUT
+-        assert FOREGROUND_MAX_TIMEOUT == 600
++        assert FOREGROUND_MAX_TIMEOUT == 900
+ 
+     def test_schema_mentions_max(self):
+         """Tool schema description should mention the max timeout."""
+diff --git a/tests/tools/test_vision_tools.py b/tests/tools/test_vision_tools.py
+index d8977f849..f53fb21c1 100644
+--- a/tests/tools/test_vision_tools.py
++++ b/tests/tools/test_vision_tools.py
+@@ -423,7 +423,7 @@ class TestVisionConfig:
+ 
+         assert result["success"] is True
+         assert mock_llm.await_args.kwargs["temperature"] == 0.1
+-        assert mock_llm.await_args.kwargs["timeout"] == 120.0
++        assert mock_llm.await_args.kwargs["timeout"] == 300.0
+ 
+ 
+ class TestVisionSafetyGuards:
+diff --git a/tools/approval.py b/tools/approval.py
+index bfc70cd0f..fd7ba7875 100644
+--- a/tools/approval.py
++++ b/tools/approval.py
+@@ -1233,19 +1233,19 @@ def check_all_command_guards(command: str, env_type: str,
+                     "description": combined_desc,
+                 }
+ 
+-            # Block until the user responds or timeout (default 5 min).
++            # Block until the user responds or timeout (default 15 min).
+             # Poll in short slices so we can fire activity heartbeats every
+             # ~10s to the agent's inactivity tracker.  Without this, the
+             # blocking event.wait() never touches activity, and the
+             # gateway's inactivity watchdog (agent.gateway_timeout, default
+-            # 1800s) kills the agent while the user is still responding to
++            # 3600s) kills the agent while the user is still responding to
+             # the approval prompt.  Mirrors the _wait_for_process() cadence
+             # in tools/environments/base.py.
+-            timeout = _get_approval_config().get("gateway_timeout", 300)
++            timeout = _get_approval_config().get("gateway_timeout", 900)
+             try:
+                 timeout = int(timeout)
+             except (ValueError, TypeError):
+-                timeout = 300
++                timeout = 900
+ 
+             try:
+                 from tools.environments.base import touch_activity_if_due
+diff --git a/tools/browser_camofox.py b/tools/browser_camofox.py
+index 45bf885de..a4818b53b 100644
+--- a/tools/browser_camofox.py
++++ b/tools/browser_camofox.py
+@@ -641,10 +641,10 @@ def camofox_vision(question: str, annotate: bool = False,
+         try:
+             _cfg = load_config()
+             _vision_cfg = cfg_get(_cfg, "auxiliary", "vision", default={})
+-            _vision_timeout = float(_vision_cfg.get("timeout", 120))
++            _vision_timeout = float(_vision_cfg.get("timeout", 300))
+             _vision_temperature = float(_vision_cfg.get("temperature", 0.1))
+         except Exception:
+-            _vision_timeout = 120.0
++            _vision_timeout = 300.0
+             _vision_temperature = 0.1
+ 
+         response = call_llm(
+@@ -696,4 +696,3 @@ def camofox_console(clear: bool = False, task_id: Optional[str] = None) -> str:
+     })
+ 
+ 
+-
+diff --git a/tools/browser_tool.py b/tools/browser_tool.py
+index 447f65007..0bde08018 100644
+--- a/tools/browser_tool.py
++++ b/tools/browser_tool.py
+@@ -185,7 +185,7 @@ _last_screenshot_cleanup_by_dir: dict[str, float] = {}
+ # ============================================================================
+ 
+ # Default timeout for browser commands (seconds)
+-DEFAULT_COMMAND_TIMEOUT = 30
++DEFAULT_COMMAND_TIMEOUT = 60
+ 
+ # Max tokens for snapshot content before summarization
+ SNAPSHOT_SUMMARIZE_THRESHOLD = 8000
+@@ -201,7 +201,7 @@ def _get_command_timeout() -> int:
+     """Return the configured browser command timeout from config.yaml.
+ 
+     Reads ``config["browser"]["command_timeout"]`` and falls back to
+-    ``DEFAULT_COMMAND_TIMEOUT`` (30s) if unset or unreadable.  Result is
++    ``DEFAULT_COMMAND_TIMEOUT`` (60s) if unset or unreadable.  Result is
+     cached after the first call and cleared by ``cleanup_all_browsers()``.
+     """
+     global _cached_command_timeout, _command_timeout_resolved
+@@ -1886,7 +1886,7 @@ def _run_browser_command(
+         command: The command to run (e.g., "open", "click")
+         args: Additional arguments for the command
+         timeout: Command timeout in seconds.  ``None`` reads
+-                 ``browser.command_timeout`` from config (default 30s).
++                 ``browser.command_timeout`` from config (default 60s).
+         _engine_override: Force a specific engine for this call only.  Used
+                           internally by the Lightpanda fallback to retry with
+                           Chrome without touching global state.
+@@ -3203,7 +3203,7 @@ def browser_vision(question: str, annotate: bool = False, task_id: Optional[str]
+         # Read vision timeout/temperature from config (auxiliary.vision.*).
+         # Local vision models (llama.cpp, ollama) can take well over 30s for
+         # screenshot analysis, so the default timeout must be generous.
+-        vision_timeout = 120.0
++        vision_timeout = 300.0
+         vision_temperature = 0.1
+         try:
+             from hermes_cli.config import load_config
+diff --git a/tools/clarify_gateway.py b/tools/clarify_gateway.py
+index 585d16762..01ae36d89 100644
+--- a/tools/clarify_gateway.py
++++ b/tools/clarify_gateway.py
+@@ -231,7 +231,7 @@ def clear_session(session_key: str) -> int:
+ def get_clarify_timeout() -> int:
+     """Read the clarify response timeout (seconds) from config.
+ 
+-    Defaults to 600 (10 minutes) — long enough for the user to type a
++    Defaults to 900 (15 minutes) — long enough for the user to type a
+     thoughtful response, short enough that an abandoned prompt eventually
+     unblocks the agent thread instead of pinning the running-agent guard
+     forever.
+@@ -242,9 +242,9 @@ def get_clarify_timeout() -> int:
+         from hermes_cli.config import load_config
+         cfg = load_config() or {}
+         agent_cfg = cfg.get("agent", {}) or {}
+-        return int(agent_cfg.get("clarify_timeout", 600))
++        return int(agent_cfg.get("clarify_timeout", 900))
+     except Exception:
+-        return 600
++        return 900
+ 
+ 
+ # =========================================================================
+diff --git a/tools/delegate_tool.py b/tools/delegate_tool.py
+index 86dcd0715..b39c1ce90 100644
+--- a/tools/delegate_tool.py
++++ b/tools/delegate_tool.py
+@@ -368,7 +368,7 @@ def _get_child_timeout() -> float:
+     """Read delegation.child_timeout_seconds from config.
+ 
+     Returns the number of seconds a single child agent is allowed to run
+-    before being considered stuck.  Default: 600 s (10 minutes).
++    before being considered stuck.  Default: 1800 s (30 minutes).
+     """
+     cfg = _load_config()
+     val = cfg.get("child_timeout_seconds")
+@@ -510,7 +510,7 @@ def _preserve_parent_mcp_toolsets(
+ 
+ 
+ DEFAULT_MAX_ITERATIONS = 50
+-DEFAULT_CHILD_TIMEOUT = 600  # seconds before a child agent is considered stuck
++DEFAULT_CHILD_TIMEOUT = 1800  # seconds before a child agent is considered stuck
+ _HEARTBEAT_INTERVAL = 30  # seconds between parent activity heartbeats during delegation
+ # Stale-heartbeat thresholds. A child with no API-call progress is either:
+ #   - idle between turns (no current_tool) — probably stuck on a slow API call
+@@ -518,7 +518,7 @@ _HEARTBEAT_INTERVAL = 30  # seconds between parent activity heartbeats during de
+ #     operation (terminal command, web fetch, large file read)
+ # The idle ceiling stays tight so genuinely stuck children don't mask the gateway
+ # timeout. The in-tool ceiling is much higher so legit long-running tools get
+-# time to finish; child_timeout_seconds (default 600s) is still the hard cap.
++# time to finish; child_timeout_seconds (default 1800s) is still the hard cap.
+ _HEARTBEAT_STALE_CYCLES_IDLE = 15  # 15 * 30s = 450s idle between turns → stale
+ _HEARTBEAT_STALE_CYCLES_IN_TOOL = 40  # 40 * 30s = 1200s stuck on same tool → stale
+ DEFAULT_TOOLSETS = ["terminal", "file", "web"]
+diff --git a/tools/mcp_tool.py b/tools/mcp_tool.py
+index e50efc05a..5181276f4 100644
+--- a/tools/mcp_tool.py
++++ b/tools/mcp_tool.py
+@@ -17,7 +17,7 @@ Example config::
+         command: "npx"
+         args: ["-y", "@modelcontextprotocol/server-filesystem", "/tmp"]
+         env: {}
+-        timeout: 120         # per-tool-call timeout in seconds (default: 120)
++        timeout: 300         # per-tool-call timeout in seconds (default: 300)
+         connect_timeout: 60  # initial connection timeout (default: 60)
+       github:
+         command: "npx"
+@@ -257,7 +257,7 @@ if _MCP_AVAILABLE and not _MCP_MESSAGE_HANDLER_SUPPORTED:
+ # Constants
+ # ---------------------------------------------------------------------------
+ 
+-_DEFAULT_TOOL_TIMEOUT = 120      # seconds for tool calls
++_DEFAULT_TOOL_TIMEOUT = 300      # seconds for tool calls
+ _DEFAULT_CONNECT_TIMEOUT = 60    # seconds for initial connection per server
+ _MAX_RECONNECT_RETRIES = 5
+ _MAX_INITIAL_CONNECT_RETRIES = 3 # retries for the very first connection attempt
+@@ -1386,7 +1386,7 @@ class MCPServerTask:
+                     "Upgrade the mcp package to get SSE support."
+                 )
+             # sse_read_timeout governs how long sse_client will wait between
+-            # events on the SSE stream. Using the tool_timeout (default 60s)
++            # events on the SSE stream. Using the tool_timeout (default 300s)
+             # here is wrong: SSE servers commonly hold the stream idle for
+             # minutes between events, so a 60s read timeout drops the
+             # connection after the first slow stretch. 300s matches the
+diff --git a/tools/process_registry.py b/tools/process_registry.py
+index 771ebf0b4..198a45feb 100644
+--- a/tools/process_registry.py
++++ b/tools/process_registry.py
+@@ -1009,9 +1009,9 @@ class ProcessRegistry:
+         from tools.interrupt import is_interrupted as _is_interrupted
+ 
+         try:
+-            default_timeout = int(os.getenv("TERMINAL_TIMEOUT", "180"))
++            default_timeout = int(os.getenv("TERMINAL_TIMEOUT", "300"))
+         except (ValueError, TypeError):
+-            default_timeout = 180
++            default_timeout = 300
+         max_timeout = default_timeout
+         requested_timeout = timeout
+         timeout_note = None
+diff --git a/tools/terminal_tool.py b/tools/terminal_tool.py
+index 387e27881..1f9127b8d 100644
+--- a/tools/terminal_tool.py
++++ b/tools/terminal_tool.py
+@@ -107,7 +107,7 @@ def _safe_parse_import_env(
+ # Hard cap on foreground timeout; override via TERMINAL_MAX_FOREGROUND_TIMEOUT env var.
+ FOREGROUND_MAX_TIMEOUT = _safe_parse_import_env(
+     "TERMINAL_MAX_FOREGROUND_TIMEOUT",
+-    600,
++    900,
+     int,
+     "integer",
+ )
+@@ -1066,7 +1066,7 @@ def _get_env_config() -> Dict[str, Any]:
+         "cwd": cwd,
+         "host_cwd": host_cwd,
+         "docker_mount_cwd_to_workspace": mount_docker_cwd,
+-        "timeout": _parse_env_var("TERMINAL_TIMEOUT", "180"),
++        "timeout": _parse_env_var("TERMINAL_TIMEOUT", "300"),
+         "lifetime_seconds": _parse_env_var("TERMINAL_LIFETIME_SECONDS", "300"),
+         # SSH-specific config
+         "ssh_host": os.getenv("TERMINAL_SSH_HOST", ""),
+@@ -2301,7 +2301,7 @@ if __name__ == "__main__":
+     print(f"  TERMINAL_CWD: {os.getenv('TERMINAL_CWD', os.getcwd())}")
+     from hermes_constants import display_hermes_home as _dhh
+     print(f"  TERMINAL_SANDBOX_DIR: {os.getenv('TERMINAL_SANDBOX_DIR', f'{_dhh()}/sandboxes')}")
+-    print(f"  TERMINAL_TIMEOUT: {os.getenv('TERMINAL_TIMEOUT', '60')}")
++    print(f"  TERMINAL_TIMEOUT: {os.getenv('TERMINAL_TIMEOUT', '300')}")
+     print(f"  TERMINAL_LIFETIME_SECONDS: {os.getenv('TERMINAL_LIFETIME_SECONDS', '300')}")
+ 
+ 
+@@ -2327,7 +2327,7 @@ TERMINAL_SCHEMA = {
+             },
+             "timeout": {
+                 "type": "integer",
+-                "description": f"Max seconds to wait (default: 180, foreground max: {FOREGROUND_MAX_TIMEOUT}). Returns INSTANTLY when command finishes — set high for long tasks, you won't wait unnecessarily. Foreground timeout above {FOREGROUND_MAX_TIMEOUT}s is rejected; use background=true for longer commands.",
++                "description": f"Max seconds to wait (default: 300, foreground max: {FOREGROUND_MAX_TIMEOUT}). Returns INSTANTLY when command finishes — set high for long tasks, you won't wait unnecessarily. Foreground timeout above {FOREGROUND_MAX_TIMEOUT}s is rejected; use background=true for longer commands.",
+                 "minimum": 1
+             },
+             "workdir": {
+diff --git a/tools/vision_tools.py b/tools/vision_tools.py
+index 912777e2e..fbba99edd 100644
+--- a/tools/vision_tools.py
++++ b/tools/vision_tools.py
+@@ -49,7 +49,7 @@ _debug = DebugSession("vision_tools", env_var="VISION_TOOLS_DEBUG")
+ 
+ # Configurable HTTP download timeout for _download_image().
+ # Separate from auxiliary.vision.timeout which governs the LLM API call.
+-# Resolution: config.yaml auxiliary.vision.download_timeout → env var → 30s default.
++# Resolution: config.yaml auxiliary.vision.download_timeout → env var → 60s default.
+ def _resolve_download_timeout() -> float:
+     env_val = os.getenv("HERMES_VISION_DOWNLOAD_TIMEOUT", "").strip()
+     if env_val:
+@@ -65,7 +65,7 @@ def _resolve_download_timeout() -> float:
+             return float(val)
+     except Exception:
+         pass
+-    return 30.0
++    return 60.0
+ 
+ _VISION_DOWNLOAD_TIMEOUT = _resolve_download_timeout()
+ 
+@@ -780,9 +780,9 @@ async def vision_analyze_tool(
+         logger.info("Processing image with vision model...")
+         
+         # Call the vision API via centralized router.
+-        # Read timeout from config.yaml (auxiliary.vision.timeout), default 120s.
++        # Read timeout from config.yaml (auxiliary.vision.timeout), default 300s.
+         # Local vision models (llama.cpp, ollama) can take well over 30s.
+-        vision_timeout = 120.0
++        vision_timeout = 300.0
+         vision_temperature = 0.1
+         try:
+             from hermes_cli.config import cfg_get, load_config
+diff --git a/tools/web_tools.py b/tools/web_tools.py
+index a55fe78c4..d5c124c33 100644
+--- a/tools/web_tools.py
++++ b/tools/web_tools.py
+@@ -511,8 +511,8 @@ Create a markdown summary that captures all key information in a well-organized,
+                 "temperature": 0.1,
+                 "max_tokens": max_tokens,
+                 # No explicit timeout — async_call_llm reads auxiliary.web_extract.timeout
+-                # from config.yaml. Fresh configs ship with 360s; if the key is absent
+-                # the runtime default is 30s (_DEFAULT_AUX_TIMEOUT in
++                # from config.yaml. Fresh configs ship with 600s; if the key is absent
++                # the runtime default is 60s (_DEFAULT_AUX_TIMEOUT in
+                 # agent/auxiliary_client.py). Users with slow local models should set
+                 # or increase auxiliary.web_extract.timeout in config.yaml.
+             }
+diff --git a/website/docs/getting-started/nix-setup.md b/website/docs/getting-started/nix-setup.md
+index 80e8cae97..c1b3ca52b 100644
+--- a/website/docs/getting-started/nix-setup.md
++++ b/website/docs/getting-started/nix-setup.md
+@@ -823,7 +823,7 @@ nix build .#checks.x86_64-linux.config-roundtrip    # merge script preserves use
+ | `mcpServers.<name>.headers` | `attrsOf str` | `{}` | HTTP headers, e.g. `Authorization` |
+ | `mcpServers.<name>.auth` | `null` or `"oauth"` | `null` | Authentication method. `"oauth"` enables OAuth 2.1 PKCE |
+ | `mcpServers.<name>.enabled` | `bool` | `true` | Enable or disable this server |
+-| `mcpServers.<name>.timeout` | `null` or `int` | `null` | Tool call timeout in seconds (default: 120) |
++| `mcpServers.<name>.timeout` | `null` or `int` | `null` | Tool call timeout in seconds (default: 300) |
+ | `mcpServers.<name>.connect_timeout` | `null` or `int` | `null` | Connection timeout in seconds (default: 60) |
+ | `mcpServers.<name>.tools` | `null` or `submodule` | `null` | Tool filtering (`include`/`exclude` lists) |
+ | `mcpServers.<name>.sampling` | `null` or `submodule` | `null` | Sampling config for server-initiated LLM requests |
+diff --git a/website/docs/guides/cron-troubleshooting.md b/website/docs/guides/cron-troubleshooting.md
+index 0db25044b..57bfc73d7 100644
+--- a/website/docs/guides/cron-troubleshooting.md
++++ b/website/docs/guides/cron-troubleshooting.md
+@@ -157,7 +157,7 @@ The skill must be installed on the machine running the scheduler. If you move be
+ Likely a delivery target issue (see Delivery Failures above) or a silently suppressed response (`[SILENT]`).
+ 
+ **Job hangs or times out**
+-The scheduler uses an inactivity-based timeout (default 600s, configurable via `HERMES_CRON_TIMEOUT` env var, `0` for unlimited). The agent can run as long as it's actively calling tools — the timer only fires after sustained inactivity. Long-running jobs should use scripts to handle data collection and deliver only the result.
++The scheduler uses an inactivity-based timeout (default 1800s, configurable via `HERMES_CRON_TIMEOUT` env var, `0` for unlimited). The agent can run as long as it's actively calling tools — the timer only fires after sustained inactivity. Long-running jobs should use scripts to handle data collection and deliver only the result.
+ 
+ ### Check 3: Lock contention
+ 
+diff --git a/website/docs/guides/local-llm-on-mac.md b/website/docs/guides/local-llm-on-mac.md
+index 975ba6b12..410da5be6 100644
+--- a/website/docs/guides/local-llm-on-mac.md
++++ b/website/docs/guides/local-llm-on-mac.md
+@@ -227,14 +227,14 @@ Hermes automatically detects local endpoints (localhost, LAN IPs) and relaxes it
+ If you still hit timeout errors (e.g. very large contexts on slow hardware), you can override the streaming read timeout:
+ 
+ ```bash
+-# In your .env — raise from the 120s default to 30 minutes
++# In your .env — raise from the 300s default to 30 minutes
+ HERMES_STREAM_READ_TIMEOUT=1800
+ ```
+ 
+ | Timeout | Default | Local auto-adjustment | Env var override |
+ |---------|---------|----------------------|------------------|
+-| Stream read (socket-level) | 120s | Raised to 1800s | `HERMES_STREAM_READ_TIMEOUT` |
+-| Stale stream detection | 180s | Disabled entirely | `HERMES_STREAM_STALE_TIMEOUT` |
++| Stream read (socket-level) | 300s | Raised to 1800s | `HERMES_STREAM_READ_TIMEOUT` |
++| Stale stream detection | 300s | Disabled entirely | `HERMES_STREAM_STALE_TIMEOUT` |
+ | API call (non-streaming) | 1800s | No change needed | `HERMES_API_TIMEOUT` |
+ 
+ The stream read timeout is the one most likely to cause issues — it's the socket-level deadline for receiving the next chunk of data. During prefill on large contexts, local models may produce no output for minutes while processing the prompt. The auto-detection handles this transparently.
+diff --git a/website/docs/reference/environment-variables.md b/website/docs/reference/environment-variables.md
+index e94033370..9876d56db 100644
+--- a/website/docs/reference/environment-variables.md
++++ b/website/docs/reference/environment-variables.md
+@@ -504,13 +504,13 @@ Advanced per-platform knobs for throttling the outbound message batcher. Most us
+ | `HERMES_FEISHU_DEDUP_CACHE_SIZE` | Size of the Feishu webhook dedup cache (default: `1024`). |
+ | `HERMES_WECOM_TEXT_BATCH_DELAY_SECONDS` / `_SPLIT_DELAY_SECONDS` | WeCom batcher tuning. |
+ | `HERMES_VISION_DOWNLOAD_TIMEOUT` | Timeout in seconds for downloading an image before handing it to vision models (default: `30`). |
+-| `HERMES_RESTART_DRAIN_TIMEOUT` | Gateway: seconds to wait for active runs to drain on `/restart` before forcing the restart (default: `900`). |
++| `HERMES_RESTART_DRAIN_TIMEOUT` | Gateway: seconds to wait for active runs to drain on `/restart` before forcing the restart (default: `300`). |
+ | `HERMES_GATEWAY_PLATFORM_CONNECT_TIMEOUT` | Per-platform connect timeout during gateway startup (seconds). |
+ | `HERMES_GATEWAY_BUSY_INPUT_MODE` | Default gateway busy-input behavior: `queue`, `steer`, or `interrupt`. Can be overridden per chat with `/busy`. |
+ | `HERMES_GATEWAY_BUSY_ACK_ENABLED` | Whether the gateway sends an acknowledgment message (⚡/⏳/⏩) when a user sends input while the agent is busy (default: `true`). Set to `false` to suppress these messages entirely — the input is still queued/steered/interrupts as normal, only the chat reply is silenced. Bridged from `display.busy_ack_enabled` in `config.yaml`. |
+ | `HERMES_FILE_MUTATION_VERIFIER` | Enable the per-turn file-mutation verifier footer (default: `true`). When enabled, Hermes appends an advisory listing any `write_file` / `patch` calls that failed during the turn and were not superseded by a successful write. Set to `0`, `false`, `no`, or `off` to suppress. Mirrors `display.file_mutation_verifier` in `config.yaml`; the env var wins when set. |
+-| `HERMES_CRON_TIMEOUT` | Inactivity timeout for cron job agent runs in seconds (default: `600`). The agent can run indefinitely while actively calling tools or receiving stream tokens — this only triggers when idle. Set to `0` for unlimited. |
+-| `HERMES_CRON_SCRIPT_TIMEOUT` | Timeout for pre-run scripts attached to cron jobs in seconds (default: `120`). Override for scripts that need longer execution (e.g., randomized delays for anti-bot timing). Also configurable via `cron.script_timeout_seconds` in `config.yaml`. |
++| `HERMES_CRON_TIMEOUT` | Inactivity timeout for cron job agent runs in seconds (default: `1800`). The agent can run indefinitely while actively calling tools or receiving stream tokens — this only triggers when idle. Set to `0` for unlimited. |
++| `HERMES_CRON_SCRIPT_TIMEOUT` | Timeout for pre-run scripts attached to cron jobs in seconds (default: `300`). Override for scripts that need longer execution (e.g., randomized delays for anti-bot timing). Also configurable via `cron.script_timeout_seconds` in `config.yaml`. |
+ | `HERMES_CRON_MAX_PARALLEL` | Max cron jobs run in parallel per tick (default: `4`). |
+ 
+ ## Agent Behavior
+@@ -534,10 +534,10 @@ Advanced per-platform knobs for throttling the outbound message batcher. Most us
+ | `HERMES_KANBAN_TASK` | Set by the kanban dispatcher when spawning a worker (task UUID). Workers and the spawned `hermes-tools` MCP subprocess inherit it so kanban tools gate correctly. Don't set manually. |
+ | `HERMES_API_TIMEOUT` | LLM API call timeout in seconds (default: `1800`) |
+ | `HERMES_API_CALL_STALE_TIMEOUT` | Non-streaming stale-call timeout in seconds (default: `300`). Auto-disabled for local providers when left unset. Also configurable via `providers.<id>.stale_timeout_seconds` or `providers.<id>.models.<model>.stale_timeout_seconds` in `config.yaml`. |
+-| `HERMES_STREAM_READ_TIMEOUT` | Streaming socket read timeout in seconds (default: `120`). Auto-increased to `HERMES_API_TIMEOUT` for local providers. Increase if local LLMs time out during long code generation. |
+-| `HERMES_STREAM_STALE_TIMEOUT` | Stale stream detection timeout in seconds (default: `180`). Auto-disabled for local providers. Triggers connection kill if no chunks arrive within this window. |
++| `HERMES_STREAM_READ_TIMEOUT` | Streaming socket read timeout in seconds (default: `300`). Auto-increased to `HERMES_API_TIMEOUT` for local providers. Increase if local LLMs time out during long code generation. |
++| `HERMES_STREAM_STALE_TIMEOUT` | Stale stream detection timeout in seconds (default: `300`). Auto-disabled for local providers. Triggers connection kill if no chunks arrive within this window. |
+ | `HERMES_STREAM_RETRIES` | Number of mid-stream reconnect attempts on transient network errors (default: `3`). |
+-| `HERMES_AGENT_TIMEOUT` | Gateway inactivity timeout for a running agent in seconds (default: `900`). Resets on every tool call and streamed token. Set to `0` to disable. |
++| `HERMES_AGENT_TIMEOUT` | Gateway inactivity timeout for a running agent in seconds (default: `3600`). Resets on every tool call and streamed token. Set to `0` to disable. |
+ | `HERMES_AGENT_TIMEOUT_WARNING` | Gateway: send a warning message after this many seconds of inactivity (default: 75% of `HERMES_AGENT_TIMEOUT`). |
+ | `HERMES_AGENT_NOTIFY_INTERVAL` | Gateway: interval in seconds between progress notifications on long-running agent turns. |
+ | `HERMES_CHECKPOINT_TIMEOUT` | Timeout for filesystem checkpoint creation in seconds (default: `30`). |
+diff --git a/website/docs/reference/faq.md b/website/docs/reference/faq.md
+index 929b9f8bd..c233eda54 100644
+--- a/website/docs/reference/faq.md
++++ b/website/docs/reference/faq.md
+@@ -103,7 +103,7 @@ If you set a custom `num_ctx` in Ollama (e.g., `ollama run --num_ctx 16384`), ma
+ :::
+ 
+ :::tip Timeouts with local models
+-Hermes auto-detects local endpoints and relaxes streaming timeouts (read timeout raised from 120s to 1800s, stale stream detection disabled). If you still hit timeouts on very large contexts, set `HERMES_STREAM_READ_TIMEOUT=1800` in your `.env`. See the [Local LLM guide](../guides/local-llm-on-mac.md#timeouts) for details.
++Hermes auto-detects local endpoints and relaxes streaming timeouts (read timeout raised from 300s to 1800s, stale stream detection disabled). If you still hit timeouts on very large contexts, set `HERMES_STREAM_READ_TIMEOUT=1800` in your `.env`. See the [Local LLM guide](../guides/local-llm-on-mac.md#timeouts) for details.
+ :::
+ 
+ ### How much does it cost?
+diff --git a/website/docs/reference/mcp-config-reference.md b/website/docs/reference/mcp-config-reference.md
+index ecd6ad2c1..bfe4d37a6 100644
+--- a/website/docs/reference/mcp-config-reference.md
++++ b/website/docs/reference/mcp-config-reference.md
+@@ -26,7 +26,7 @@ mcp_servers:
+     headers: {}
+ 
+     enabled: true
+-    timeout: 120
++    timeout: 300
+     connect_timeout: 60
+     supports_parallel_tool_calls: false
+     tools:
+diff --git a/website/docs/user-guide/configuration.md b/website/docs/user-guide/configuration.md
+index ad63ed84c..0056b78be 100644
+--- a/website/docs/user-guide/configuration.md
++++ b/website/docs/user-guide/configuration.md
+@@ -79,7 +79,7 @@ You can set `providers.<id>.request_timeout_seconds` for a provider-wide request
+ 
+ You can also set `providers.<id>.stale_timeout_seconds` for the non-streaming stale-call detector, plus `providers.<id>.models.<model>.stale_timeout_seconds` for a model-specific override. This wins over the legacy `HERMES_API_CALL_STALE_TIMEOUT` env var.
+ 
+-Leaving these unset keeps the legacy defaults (`HERMES_API_TIMEOUT=1800`s, `HERMES_API_CALL_STALE_TIMEOUT=300`s, native Anthropic 900s). Not currently wired for AWS Bedrock (both `bedrock_converse` and AnthropicBedrock SDK paths use boto3 with its own timeout configuration). See the commented example in [`cli-config.yaml.example`](https://github.com/NousResearch/hermes-agent/blob/main/cli-config.yaml.example).
++Leaving these unset keeps the legacy defaults (`HERMES_API_TIMEOUT=1800`s, `HERMES_API_CALL_STALE_TIMEOUT=300`s, native Anthropic 1800s). Not currently wired for AWS Bedrock (both `bedrock_converse` and AnthropicBedrock SDK paths use boto3 with its own timeout configuration). See the commented example in [`cli-config.yaml.example`](https://github.com/NousResearch/hermes-agent/blob/main/cli-config.yaml.example).
+ 
+ ## Terminal Backend Configuration
+ 
+@@ -89,7 +89,7 @@ Hermes supports seven terminal backends. Each determines where the agent's shell
+ terminal:
+   backend: local    # local | docker | ssh | modal | daytona | vercel_sandbox | singularity
+   cwd: "."          # Gateway/cron working directory (CLI always uses launch dir)
+-  timeout: 180      # Per-command timeout in seconds
++  timeout: 300      # Per-command timeout in seconds
+   env_passthrough: []  # Env var names to forward to sandboxed execution (terminal + execute_code)
+   singularity_image: "docker://nikolaik/python-nodejs:python3.11-nodejs20"  # Container image for Singularity backend
+   modal_image: "nikolaik/python-nodejs:python3.11-nodejs20"                 # Container image for Modal backend
+@@ -719,8 +719,8 @@ Hermes has separate timeout layers for streaming, plus a stale detector for non-
+ 
+ | Timeout | Default | Local providers | Config / env |
+ |---------|---------|----------------|--------------|
+-| Socket read timeout | 120s | Auto-raised to 1800s | `HERMES_STREAM_READ_TIMEOUT` |
+-| Stale stream detection | 180s | Auto-disabled | `HERMES_STREAM_STALE_TIMEOUT` |
++| Socket read timeout | 300s | Auto-raised to 1800s | `HERMES_STREAM_READ_TIMEOUT` |
++| Stale stream detection | 300s | Auto-disabled | `HERMES_STREAM_STALE_TIMEOUT` |
+ | Stale non-stream detection | 300s | Auto-disabled when left implicit | `providers.<id>.stale_timeout_seconds` or `HERMES_API_CALL_STALE_TIMEOUT` |
+ | API call (non-streaming) | 1800s | Unchanged | `providers.<id>.request_timeout_seconds` / `timeout_seconds` or `HERMES_API_TIMEOUT` |
+ 
+@@ -853,8 +853,8 @@ auxiliary:
+     model: ""                  # e.g. "openai/gpt-4o", "google/gemini-2.5-flash"
+     base_url: ""               # Custom OpenAI-compatible endpoint (overrides provider)
+     api_key: ""                # API key for base_url (falls back to OPENAI_API_KEY)
+-    timeout: 120               # seconds — LLM API call timeout; vision payloads need generous timeout
+-    download_timeout: 30       # seconds — image HTTP download; increase for slow connections
++    timeout: 300               # seconds — LLM API call timeout; vision payloads need generous timeout
++    download_timeout: 60       # seconds — image HTTP download; increase for slow connections
+ 
+   # Web page summarization + browser page text extraction
+   web_extract:
+@@ -862,7 +862,7 @@ auxiliary:
+     model: ""                  # e.g. "google/gemini-2.5-flash"
+     base_url: ""
+     api_key: ""
+-    timeout: 360               # seconds (6min) — per-attempt LLM summarization
++    timeout: 600               # seconds (10min) — per-attempt LLM summarization
+ 
+   # Dangerous command approval classifier
+   approval:
+@@ -870,11 +870,11 @@ auxiliary:
+     model: ""
+     base_url: ""
+     api_key: ""
+-    timeout: 30                # seconds
++    timeout: 60                # seconds
+ 
+   # Context compression timeout (separate from compression.* config)
+   compression:
+-    timeout: 120               # seconds — compression summarizes long conversations, needs more time
++    timeout: 300               # seconds — compression summarizes long conversations, needs more time
+ 
+   # Skills hub — skill matching and search
+   skills_hub:
+@@ -902,11 +902,11 @@ auxiliary:
+     model: ""
+     base_url: ""
+     api_key: ""
+-    timeout: 120
++    timeout: 300
+ ```
+ 
+ :::tip
+-Each auxiliary task has a configurable `timeout` (in seconds). Defaults: vision 120s, web_extract 360s, approval 30s, compression 120s. Increase these if you use slow local models for auxiliary tasks. Vision also has a separate `download_timeout` (default 30s) for the HTTP image download — increase this for slow connections or self-hosted image servers.
++Each auxiliary task has a configurable `timeout` (in seconds). Defaults: vision 300s, web_extract 600s, approval 60s, compression 300s. Increase these if you use slow local models for auxiliary tasks. Vision also has a separate `download_timeout` (default 60s) for the HTTP image download — increase this for slow connections or self-hosted image servers.
+ :::
+ 
+ :::info
+@@ -1501,8 +1501,8 @@ Configure browser automation behavior:
+ 
+ ```yaml
+ browser:
+-  inactivity_timeout: 120        # Seconds before auto-closing idle sessions
+-  command_timeout: 30             # Timeout in seconds for browser commands (screenshot, navigate, etc.)
++  inactivity_timeout: 300        # Seconds before auto-closing idle sessions
++  command_timeout: 60             # Timeout in seconds for browser commands (screenshot, navigate, etc.)
+   record_sessions: false         # Auto-record browser sessions as WebM videos to ~/.hermes/browser_recordings/
+   # Optional CDP override — when set, Hermes attaches directly to your own
+   # Chromium-family browser (via /browser connect) rather than starting a headless browser.
+@@ -1670,7 +1670,7 @@ Configure the clarification prompt behavior:
+ 
+ ```yaml
+ clarify:
+-  timeout: 120                 # Seconds to wait for user clarification response
++  timeout: 900                 # Seconds to wait for user clarification response
+ ```
+ 
+ ## Context Files (SOUL.md, AGENTS.md)
+diff --git a/website/docs/user-guide/configuring-models.md b/website/docs/user-guide/configuring-models.md
+index a4ce79eea..40a46226a 100644
+--- a/website/docs/user-guide/configuring-models.md
++++ b/website/docs/user-guide/configuring-models.md
+@@ -100,9 +100,9 @@ auxiliary:
+     model: google/gemini-2.5-flash
+     base_url: ''
+     api_key: ''
+-    timeout: 120
++    timeout: 300
+     extra_body: {}
+-    download_timeout: 30
++    download_timeout: 60
+ ```
+ 
+ **Auxiliary on auto (default):**
+diff --git a/website/docs/user-guide/features/browser.md b/website/docs/user-guide/features/browser.md
+index 296572f22..14bfb1134 100644
+--- a/website/docs/user-guide/features/browser.md
++++ b/website/docs/user-guide/features/browser.md
+@@ -380,8 +380,8 @@ BROWSERBASE_KEEP_ALIVE=true
+ # Examples: 600000 (10min), 1800000 (30min)
+ BROWSERBASE_SESSION_TIMEOUT=600000
+ 
+-# Inactivity timeout before auto-cleanup in seconds (default: 120)
+-BROWSER_INACTIVITY_TIMEOUT=120
++# Inactivity timeout before auto-cleanup in seconds (default: 300)
++BROWSER_INACTIVITY_TIMEOUT=300
+ 
+ # Extra Chromium launch flags (comma- or newline-separated). Hermes auto-injects
+ # `--no-sandbox,--disable-dev-shm-usage` when it detects root or AppArmor-restricted
+@@ -628,7 +628,7 @@ If paid features aren't available on your plan, Hermes automatically falls back
+ ## Session Management
+ 
+ - Each task gets an isolated browser session via Browserbase
+-- Sessions are automatically cleaned up after inactivity (default: 2 minutes)
++- Sessions are automatically cleaned up after inactivity (default: 5 minutes)
+ - A background thread checks every 30 seconds for stale sessions
+ - Emergency cleanup runs on process exit to prevent orphaned sessions
+ - Sessions are released via the Browserbase API (`REQUEST_RELEASE` status)
+diff --git a/website/docs/user-guide/features/cron.md b/website/docs/user-guide/features/cron.md
+index 7ff0e0e31..2be3a8a63 100644
+--- a/website/docs/user-guide/features/cron.md
++++ b/website/docs/user-guide/features/cron.md
+@@ -342,7 +342,7 @@ cron:
+   script_timeout_seconds: 300   # 5 minutes
+ ```
+ 
+-Or set the `HERMES_CRON_SCRIPT_TIMEOUT` environment variable. The resolution order is: env var → config.yaml → 120s default.
++Or set the `HERMES_CRON_SCRIPT_TIMEOUT` environment variable. The resolution order is: env var → config.yaml → 300s default.
+ 
+ ## No-agent mode (script-only jobs)
+ 
+diff --git a/website/docs/user-guide/features/delegation.md b/website/docs/user-guide/features/delegation.md
+index e66d56fa2..4c66c4d46 100644
+--- a/website/docs/user-guide/features/delegation.md
++++ b/website/docs/user-guide/features/delegation.md
+@@ -175,11 +175,11 @@ delegate_task(
+ 
+ ## Child Timeout
+ 
+-Subagents are killed as stuck if they go quiet for more than `delegation.child_timeout_seconds` wall-clock seconds. The default is **600** (10 minutes) — bumped up from 300s in earlier releases because high-reasoning models on non-trivial research tasks were getting killed mid-think. Tune it per-install:
++Subagents are killed as stuck if they go quiet for more than `delegation.child_timeout_seconds` wall-clock seconds. The default is **1800** (30 minutes) because high-reasoning models on non-trivial research tasks can be silent for a long stretch mid-think. Tune it per-install:
+ 
+ ```yaml
+ delegation:
+-  child_timeout_seconds: 600   # default
++  child_timeout_seconds: 1800   # default
+ ```
+ 
+ Lower it for fast local models; raise it for slow reasoning models on hard problems. The timer resets every time the child makes an API call or tool call — only genuinely idle workers trigger the kill.
+diff --git a/website/docs/user-guide/features/tools.md b/website/docs/user-guide/features/tools.md
+index ec0d83b81..596355935 100644
+--- a/website/docs/user-guide/features/tools.md
++++ b/website/docs/user-guide/features/tools.md
+@@ -74,7 +74,7 @@ The terminal tool can execute commands in different environments:
+ terminal:
+   backend: local    # or: docker, ssh, singularity, modal, daytona, vercel_sandbox
+   cwd: "."          # Working directory
+-  timeout: 180      # Command timeout in seconds
++  timeout: 300      # Command timeout in seconds
+ ```
+ 
+ ### Docker Backend
+diff --git a/website/docs/user-guide/features/web-search.md b/website/docs/user-guide/features/web-search.md
+index 428770252..a4b79fa28 100644
+--- a/website/docs/user-guide/features/web-search.md
++++ b/website/docs/user-guide/features/web-search.md
+@@ -425,7 +425,7 @@ Switch to a self-hosted instance (see [Option A](#option-a--self-host-with-docke
+ 
+ The auxiliary model didn't finish summarizing within the configured timeout. Either:
+ 
+-- Raise `auxiliary.web_extract.timeout` in `config.yaml` (default 360s on fresh installs, 30s if the key is missing)
++- Raise `auxiliary.web_extract.timeout` in `config.yaml` (default 600s on fresh installs, 60s if the key is missing)
+ - Switch the `web_extract` auxiliary task to a faster model (e.g. `google/gemini-3-flash-preview`) — see [How `web_extract` handles long pages](#how-web_extract-handles-long-pages)
+ - For pages where summarization is the wrong tool, use `browser_navigate` instead
+ 
+diff --git a/website/docs/user-guide/skills/bundled/mcp/mcp-native-mcp.md b/website/docs/user-guide/skills/bundled/mcp/mcp-native-mcp.md
+index eeeb44d6a..e91133188 100644
+--- a/website/docs/user-guide/skills/bundled/mcp/mcp-native-mcp.md
++++ b/website/docs/user-guide/skills/bundled/mcp/mcp-native-mcp.md
+@@ -90,7 +90,7 @@ mcp_servers:
+     args: ["-y", "pkg-name"]   # (optional) command arguments, default: []
+     env:                       # (optional) environment variables for the subprocess
+       SOME_API_KEY: "value"
+-    timeout: 120               # (optional) per-tool-call timeout in seconds, default: 120
++    timeout: 300               # (optional) per-tool-call timeout in seconds, default: 300
+     connect_timeout: 60        # (optional) initial connection timeout in seconds, default: 60
+ ```
+ 
+@@ -102,7 +102,7 @@ mcp_servers:
+     url: "https://my-server.example.com/mcp"   # (required) server URL
+     headers:                                     # (optional) HTTP headers
+       Authorization: "Bearer sk-..."
+-    timeout: 180               # (optional) per-tool-call timeout in seconds, default: 120
++    timeout: 300               # (optional) per-tool-call timeout in seconds, default: 300
+     connect_timeout: 60        # (optional) initial connection timeout in seconds, default: 60
+ ```
+ 
+@@ -115,7 +115,7 @@ mcp_servers:
+ | `env`             | dict   | `{}`    | Extra environment variables for the subprocess    |
+ | `url`             | string | --      | Server URL (HTTP transport, required)             |
+ | `headers`         | dict   | `{}`    | HTTP headers sent with every request              |
+-| `timeout`         | int    | `120`   | Per-tool-call timeout in seconds                  |
++| `timeout`         | int    | `300`   | Per-tool-call timeout in seconds                  |
+ | `connect_timeout` | int    | `60`    | Timeout for initial connection and discovery      |
+ 
+ Note: A server config must have either `command` (stdio) or `url` (HTTP), not both.
+@@ -309,7 +309,7 @@ mcp_servers:
+     headers:
+       Authorization: "Bearer sk-xxxxxxxxxxxxxxxxxxxx"
+       X-Team-Id: "engineering"
+-    timeout: 180
++    timeout: 300
+     connect_timeout: 30
+ ```
+ 

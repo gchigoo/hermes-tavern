@@ -1,0 +1,40 @@
+feature: hermes-tavern-phase12-lorebook-v1
+status: implemented
+scope:
+  - local SillyTavern world-info JSON import
+  - SQLite lorebook/lorebook_entries persistence
+  - session-scoped lorebook binding
+  - deterministic keyword/regex/constant matcher
+  - prompt/debug integration
+acceptance:
+  importer:
+    status: done
+    notes: Supports entries dict/list and top-level list shapes.
+  persistence:
+    status: done
+    notes: Adds lorebooks, lorebook_entries, sessions.lorebook_id with guarded migrations.
+  runtime_commands:
+    status: done
+    commands:
+      - /rp lore import <file>
+      - /rp lore list
+      - /rp lore use <lorebook>
+      - /rp lore test <message>
+      - /rp lore debug
+  prompt_integration:
+    status: done
+    notes: Matched lore entries become PromptModule names like lore:<title>.
+verification:
+  py_compile:
+    status: passed
+    command: python -m py_compile plugins/hermes_tavern/*.py plugins/hermes_tavern/importers/*.py tests/plugins/test_hermes_tavern_*.py
+  direct_smoke:
+    status: passed
+    notes: Imported Atlas lorebook, bound it to an Alice session, /rp lore test matched Moon, and /rp debug prompt included lore:Moon.
+  pytest_lore:
+    status: blocked
+    command: python -m pytest tests/plugins/test_hermes_tavern_lore*.py -q -o 'addopts='
+    reason: Active venv currently reports 'No module named pytest'.
+risks:
+  - V1 matcher intentionally omits vector matching, recursion, timed effects, and group logic.
+  - Probability is deterministic in tests via default seeded RNG, but future runtime may need explicit random policy.

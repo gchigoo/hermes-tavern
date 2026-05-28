@@ -1,0 +1,27 @@
+feature: hermes-tavern-phase32-gateway-security-session-isolation
+tasks:
+  - action: "Add focused gateway import path regression tests"
+    exit_signal: "Card, preset, lorebook, and persona reject unattached explicit gateway paths and accept same-event attachment paths"
+    status: completed
+    result: "Added tests/plugins/test_hermes_tavern_gateway_security.py"
+  - action: "Centralize Tavern import path trust policy"
+    exit_signal: "All asset import commands use one helper for gateway attachment trust and local trusted paths"
+    status: completed
+    result: "Added plugins/hermes_tavern/import_policy.py and routed card/preset/lore/persona imports through it"
+  - action: "Scope session prefix switching"
+    exit_signal: "/rp switch resolves only sessions visible to the caller scope and reports same-scope ambiguity"
+    status: completed
+    result: "Added scoped DB prefix lookup and updated runtime session switch handling"
+checks:
+  - item: "py_compile for Tavern plugin and tests"
+    status: completed
+    result: "venv/bin/python -m py_compile plugins/hermes_tavern/*.py tests/plugins/test_hermes_tavern_*.py passed"
+  - item: "Focused gateway/security/session pytest command"
+    status: completed
+    result: "83 passed, 1 warning"
+  - item: "Full Tavern plugin pytest glob"
+    status: completed
+    result: "413 passed, 1 warning"
+  - item: "Checklist YAML validates"
+    status: completed
+    result: "Validated 1 file: 1 passed, 0 failed"

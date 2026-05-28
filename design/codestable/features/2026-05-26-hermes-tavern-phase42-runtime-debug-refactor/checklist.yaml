@@ -1,0 +1,33 @@
+feature: 2026-05-26-hermes-tavern-phase42-runtime-debug-refactor
+phase: 42
+status: implemented
+items:
+  - id: extract-debug-prompt
+    description: Extract Tavern prompt-inspection debug command handling from runtime.py into runtime_debug.py.
+    status: done
+  - id: preserve-debug-wrappers
+    description: Keep TavernRuntime _debug_prompt wrapper for compatibility with existing tests and internal callers.
+    status: done
+  - id: preserve-debug-output
+    description: Preserve /rp debug prompt pagination, macro context summary, module/history/rendered preview rows, token reporting, and no-raw-event behavior.
+    status: done
+  - id: preserve-core-pipeline
+    description: Keep DB schema, prompt/compiler/model/provider/media behavior unchanged.
+    status: done
+verification:
+  py_compile:
+    status: passed
+    command: venv/bin/python -m py_compile plugins/hermes_tavern/*.py plugins/hermes_tavern/importers/*.py tests/plugins/test_hermes_tavern_*.py
+    result: passed
+  focused:
+    status: passed
+    command: venv/bin/python -m pytest tests/plugins/test_hermes_tavern_runtime.py tests/plugins/test_hermes_tavern_content_mode.py tests/plugins/test_hermes_tavern_lore_runtime.py tests/plugins/test_hermes_tavern_memory.py tests/plugins/test_hermes_tavern_notes.py tests/plugins/test_hermes_tavern_personas.py tests/plugins/test_hermes_tavern_preset_use.py -q -o 'addopts='
+    result: "64 passed in 3.69s"
+  tavern:
+    status: passed
+    command: venv/bin/python -m pytest tests/plugins/test_hermes_tavern_*.py -q -o 'addopts='
+    result: "422 passed, 1 warning in 12.70s"
+  checklist_yaml:
+    status: passed
+    command: python .codestable/tools/validate-yaml.py --file .codestable/features/2026-05-26-hermes-tavern-phase42-runtime-debug-refactor/checklist.yaml
+    result: "Validated 1 file(s): 1 passed, 0 failed"

@@ -1,0 +1,154 @@
+feature: 2026-05-20-hermes-tavern-phase18-mobile-browse-pagination
+slug: hermes-tavern-phase18-mobile-browse-pagination
+status: done
+
+steps:
+  - id: db-helpers
+    name: "DB layer: count helpers + paginated query methods"
+    paradigm: persistence
+    status: done
+    checks:
+      - id: db-count-messages
+        description: "count_messages(session_id) returns int row count"
+        status: done
+      - id: db-get-messages-page
+        description: "get_messages_page(session_id, limit, offset) returns ASC-ordered slice"
+        status: done
+      - id: db-count-sessions
+        description: "count_sessions_for_scope(scope_key, include_all) returns int"
+        status: done
+      - id: db-list-sessions-paged
+        description: "list_sessions_for_scope accepts optional limit/offset; default behavior unchanged"
+        status: done
+      - id: db-count-memory-facts
+        description: "count_session_memory_facts(session_key) returns int"
+        status: done
+      - id: db-list-memory-facts-paged
+        description: "list_session_memory_facts accepts optional limit/offset; default behavior unchanged (returns all)"
+        status: done
+      - id: db-py-compile
+        description: "py_compile db.py exits 0"
+        status: done
+
+  - id: history-pagination
+    name: "/rp history [limit] [page] — paginated transcript"
+    paradigm: orchestration
+    status: done
+    checks:
+      - id: history-default-compat
+        description: "/rp history with no args returns page 1 (default limit 10), shows page X/Y header"
+        status: done
+      - id: history-limit-arg-compat
+        description: "/rp history <limit> with no page arg still works as page 1"
+        status: done
+      - id: history-page2-slice
+        description: "/rp history 5 2 shows messages 6-10 from a 15-message session, page 2/3 header"
+        status: done
+      - id: history-page2-hints
+        description: "page 2 shows prev hint; non-last page shows next hint; both use /rp history <limit> <page>"
+        status: done
+      - id: history-page-clamp
+        description: "/rp history 10 99 clamps to last page, shows prev hint, no next hint"
+        status: done
+      - id: history-bad-limit
+        description: "/rp history bad returns 'Usage: /rp history [limit] [page]'"
+        status: done
+      - id: history-no-session
+        description: "no active session returns 'No active Hermes Tavern session.' unchanged"
+        status: done
+      - id: history-preview-bounded
+        description: "each message preview ≤80 chars, single-line, no raw JSON"
+        status: done
+      - id: history-chronological
+        description: "page 1 = oldest messages; page N = newest messages"
+        status: done
+
+  - id: sessions-pagination
+    name: "/rp sessions [all] [limit] [page] — paginated session list"
+    paradigm: orchestration
+    status: done
+    checks:
+      - id: sessions-default-compat
+        description: "/rp sessions with no args returns page 1/1 header (small dataset)"
+        status: done
+      - id: sessions-all-compat
+        description: "/rp sessions all still works as page 1 with default limit"
+        status: done
+      - id: sessions-page2-hints
+        description: "/rp sessions 3 2 (8 sessions) shows prev and next hints without 'all'"
+        status: done
+      - id: sessions-all-page-hints
+        description: "/rp sessions all 3 2 hints include 'all': /rp sessions all 3 1 and /rp sessions all 3 3"
+        status: done
+      - id: sessions-bad-args
+        description: "/rp sessions bad and /rp sessions all bad return 'Usage: /rp sessions [all] [limit] [page]'"
+        status: done
+      - id: sessions-active-marker
+        description: "active session has * marker on its row"
+        status: done
+      - id: sessions-header-all
+        description: "header with all flag: 'Hermes Tavern sessions (all, page X/Y, N shown, M total):'"
+        status: done
+      - id: sessions-header-no-all
+        description: "header without all: 'Hermes Tavern sessions (page X/Y, N shown, M total):'"
+        status: done
+
+  - id: memory-list-pagination
+    name: "/rp memory list [limit] [page] — paginated memory facts"
+    paradigm: orchestration
+    status: done
+    checks:
+      - id: memory-default-compat
+        description: "/rp memory list with no args returns page 1/1 header"
+        status: done
+      - id: memory-page2-hints
+        description: "/rp memory list 2 2 (5 facts) shows page 2/3, prev + next hints"
+        status: done
+      - id: memory-page-clamp
+        description: "/rp memory list 2 99 (5 facts) clamps to page 3/3, prev hint, no next hint"
+        status: done
+      - id: memory-bad-args
+        description: "/rp memory list bad returns 'Usage: /rp memory list [limit] [page]'"
+        status: done
+      - id: memory-no-session
+        description: "no active session returns 'No active Hermes Tavern session.' unchanged"
+        status: done
+      - id: memory-preview-bounded
+        description: "each fact content preview ≤80 chars, single-line"
+        status: done
+      - id: memory-summary-shown
+        description: "header block shows 'summary: set' or 'summary: none'"
+        status: done
+      - id: memory-facts-header-line
+        description: "header includes 'facts (page X/Y, N shown, M total):' line"
+        status: done
+
+  - id: help-text
+    name: "Update help text and usage strings"
+    paradigm: orchestration
+    status: done
+    checks:
+      - id: help-history-updated
+        description: "help text shows '/rp history [limit] [page]'"
+        status: done
+      - id: help-sessions-updated
+        description: "help text shows '/rp sessions [all] [limit] [page]'"
+        status: done
+      - id: help-memory-updated
+        description: "help text shows '/rp memory list [limit] [page]'"
+        status: done
+
+  - id: full-suite
+    name: "Full plugin test suite green"
+    paradigm: test
+    status: done
+    checks:
+      - id: all-tavern-tests-pass
+        description: "venv/bin/python -m pytest tests/plugins/test_hermes_tavern_*.py -q -o 'addopts=' exits 0"
+        status: done
+      - id: py-compile-runtime
+        description: "py_compile plugins/hermes_tavern/runtime.py exits 0"
+        status: done
+      - id: yaml-valid
+        description: "validate-yaml.py on this checklist exits 0"
+        status: done

@@ -1,0 +1,79 @@
+feature: hermes-tavern-phase16-mobile-asset-browser-v1
+status: implemented
+created_at: '2026-05-19'
+
+scope:
+  summary: Mobile-friendly Tavern asset browsing and card rebinding commands.
+  commands:
+    - /rp assets
+    - /rp cards [limit]
+    - /rp card inspect <card>
+    - /rp card use <card>
+  out_of_scope:
+    - Telegram inline keyboards
+    - Real provider generation changes
+    - Asset import/export file delivery
+
+implementation:
+  runtime-help:
+    status: done
+    files:
+      - plugins/hermes_tavern/runtime.py
+    notes: Help now includes assets/cards/card inspect/card use commands.
+  assets-dashboard:
+    status: done
+    files:
+      - plugins/hermes_tavern/runtime.py
+    notes: Summarizes imported card/preset/lorebook counts and active session bindings.
+  card-list:
+    status: done
+    files:
+      - plugins/hermes_tavern/runtime.py
+    notes: Adds mobile-safe card list with short id, tags, preview, and next actions.
+  card-inspect:
+    status: done
+    files:
+      - plugins/hermes_tavern/runtime.py
+    notes: Summarizes character card fields without dumping raw JSON.
+  card-use:
+    status: done
+    files:
+      - plugins/hermes_tavern/runtime.py
+      - plugins/hermes_tavern/db.py
+    notes: Rebinds active session card and preserves existing messages; appends target greeting when available.
+  store-card-binding:
+    status: done
+    files:
+      - plugins/hermes_tavern/db.py
+    notes: Adds TavernStore.set_session_card(session_key, card_id).
+  tests:
+    status: done
+    files:
+      - tests/plugins/test_hermes_tavern_mobile_browsers.py
+    notes: Tests list/inspect/use/assets behavior.
+
+verification:
+  red_test:
+    status: passed
+    command: venv/bin/python -m pytest tests/plugins/test_hermes_tavern_mobile_browsers.py -q -o 'addopts='
+    result: 4 failed before implementation because commands were unknown.
+  focused_pytest:
+    status: passed
+    command: venv/bin/python -m pytest tests/plugins/test_hermes_tavern_mobile_browsers.py -q -o 'addopts='
+    result: 4 passed, 1 warning
+  py_compile:
+    status: passed
+    command: venv/bin/python -m py_compile plugins/hermes_tavern/*.py plugins/hermes_tavern/importers/*.py tests/plugins/test_hermes_tavern_*.py
+  full_hermes_tavern_pytest:
+    status: passed
+    command: venv/bin/python -m pytest tests/plugins/test_hermes_tavern_*.py -q -o 'addopts='
+    result: 185 passed, 1 warning
+  yaml_validation:
+    status: passed
+    command: python .codestable/tools/validate-yaml.py --file .codestable/features/2026-05-19-hermes-tavern-phase16-mobile-asset-browser-v1/hermes-tavern-phase16-mobile-asset-browser-v1-checklist.yaml
+    result: 1 file passed, 0 failed
+
+safety:
+  mock_first: unchanged
+  real_provider_gate: unchanged
+  secret_handling: No API keys, tokens, or credentials added or displayed.

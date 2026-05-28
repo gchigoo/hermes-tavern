@@ -1,0 +1,64 @@
+feature: hermes-tavern-phase15-session-browser-v1
+status: done
+summary: Session browser, switch, rename, archive, and clone commands for Hermes Tavern.
+
+implementation:
+  - id: schema-title-scope
+    description: Add sessions.title and sessions.scope_key migration/backfill
+    status: done
+    files:
+      - plugins/hermes_tavern/db.py
+
+  - id: store-list-sessions
+    description: Add list_sessions_for_scope with default active filtering and all-mode archived/ended visibility
+    status: done
+    files:
+      - plugins/hermes_tavern/db.py
+
+  - id: store-rename-archive
+    description: Add rename_session and archive_active_session helpers
+    status: done
+    files:
+      - plugins/hermes_tavern/db.py
+
+  - id: store-clone-switch
+    description: Add clone_session, get_session_by_id_prefix, and switch_to_session helpers
+    status: done
+    files:
+      - plugins/hermes_tavern/db.py
+
+  - id: runtime-session-browser-commands
+    description: Add /rp sessions, /rp switch, /rp rename, /rp archive, /rp clone and help text
+    status: done
+    files:
+      - plugins/hermes_tavern/runtime.py
+
+  - id: tests-session-browser
+    description: Add focused store/runtime tests for Phase 15 session browser behavior
+    status: done
+    files:
+      - tests/plugins/test_hermes_tavern_session_browser.py
+
+  - id: compatibility-fixes
+    description: Install pytest dependencies; update legacy test expectation for fake adapter response; preserve preset no-boundaries reason; fix retry greeting preservation test
+    status: done
+    files:
+      - plugins/hermes_tavern/preset_safety.py
+      - tests/plugins/test_hermes_tavern_gateway_hook.py
+      - tests/plugins/test_hermes_tavern_turn_controls.py
+
+verification:
+  py_compile:
+    command: venv/bin/python -m py_compile plugins/hermes_tavern/*.py plugins/hermes_tavern/importers/*.py tests/plugins/test_hermes_tavern_*.py
+    status: passed
+  pytest:
+    command: venv/bin/python -m pytest tests/plugins/test_hermes_tavern_*.py -q -o 'addopts='
+    status: passed
+    result: 181 passed, 1 warning
+  yaml_validation:
+    command: python .codestable/tools/validate-yaml.py --file .codestable/features/2026-05-19-hermes-tavern-phase15-session-browser-v1/hermes-tavern-phase15-session-browser-v1-checklist.yaml
+    status: passed
+
+notes:
+  - Claude Code print mode timed out at 600s after writing a mostly complete Phase 15 slice; controller finished the failing clone-order fix and verification.
+  - pytest, pytest-xdist, pytest-asyncio, and pyyaml are installed in the project venv.

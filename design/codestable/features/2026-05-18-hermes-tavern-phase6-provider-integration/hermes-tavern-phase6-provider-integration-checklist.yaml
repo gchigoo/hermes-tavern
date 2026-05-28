@@ -1,0 +1,57 @@
+feature: 2026-05-18-hermes-tavern-phase6-provider-integration
+created: 2026-05-18
+
+steps:
+  - action: "Add dependency-injectable HermesRuntimeProviderResolver with lazy resolve_runtime_provider import"
+    exit_signal: "Tests can pass fake resolve_fn and observe requested provider/model without touching real Hermes credentials"
+
+  - action: "Add provider payload sanitizer for debug/status paths"
+    exit_signal: "api_key/access_token/secret/token/password are omitted from sanitized payload"
+
+  - action: "Persist per-session adapter_mode with default fake"
+    exit_signal: "New/migrated sessions expose adapter_mode='fake'; set_session_adapter_mode accepts fake/hermes only"
+
+  - action: "Add /rp model mode commands"
+    exit_signal: "/rp model mode reports fake by default; /rp model mode hermes updates active session; /rp model status displays adapter_mode"
+
+  - action: "Wire active-message pipeline to use FakeModelAdapter unless adapter_mode is hermes"
+    exit_signal: "Fake remains default; hermes mode uses injected adapter and converts NotImplementedError into clear not-yet-wired message"
+
+checks:
+  - item: "provider_bridge.HermesRuntimeProviderResolver accepts fake resolve_fn and passes requested/target_model"
+    source: provider boundary
+    status: completed
+
+  - item: "sanitize_provider_payload strips api_key/access_token/password fields"
+    source: credential boundary
+    status: completed
+
+  - item: "sessions schema has adapter_mode default fake"
+    source: storage contract
+    status: completed
+
+  - item: "TavernStore.set_session_adapter_mode rejects invalid modes"
+    source: storage contract
+    status: completed
+
+  - item: "/rp model mode reports fake by default"
+    source: user command
+    status: completed
+
+  - item: "/rp model mode hermes updates active session and /rp model status shows adapter_mode: hermes"
+    source: user command
+    status: completed
+
+  - item: "Active message in hermes mode calls injected adapter and returns not-yet-wired message on NotImplementedError"
+    source: runtime safety
+    status: completed
+
+  - item: "Default active message path still uses FakeModelAdapter"
+    source: runtime safety
+    status: completed
+
+verification:
+  codestable_yaml_validation: passed
+  py_compile: passed
+  direct_smoke: passed
+  pytest: blocked_no_pytest_module

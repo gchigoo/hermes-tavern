@@ -1,0 +1,20 @@
+feature: hermes-tavern-phase23-mobile-export-delivery
+tasks:
+  - action: "Add failing export tests for MEDIA delivery and profile-safe path"
+    exit_signal: "Focused export tests fail because response lacks MEDIA and writes under ~/.hermes"
+    status: completed
+  - action: "Use get_hermes_home() for Tavern export directory"
+    exit_signal: "Export files are created under HERMES_HOME/hermes-agent/exports"
+    status: completed
+  - action: "Return quoted MEDIA attachment markers for markdown and st-json exports"
+    exit_signal: "Gateway-compatible MEDIA path matches exported file path, including paths with spaces"
+    status: completed
+checks:
+  - item: "Focused export tests pass"
+    status: completed
+  - item: "Full Hermes Tavern plugin test glob passes"
+    status: completed
+  - item: "py_compile passes for runtime and Tavern tests"
+    status: completed
+  - item: "Checklist YAML validates"
+    status: completed

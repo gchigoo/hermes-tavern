@@ -1,0 +1,29 @@
+feature: 2026-05-22-hermes-tavern-phase21-persona-v1
+phase: 21
+status: implemented
+items:
+  - item: Add `personas` table and guarded `sessions.persona_id` migration.
+    status: done
+  - item: Add persona import helpers for JSON and raw text files.
+    status: done
+  - item: Add DB helpers for save/list/count/get/set session persona.
+    status: done
+  - item: Add `/rp persona` runtime commands and help entries.
+    status: done
+  - item: Inject active persona as `persona:<name>` prompt module.
+    status: done
+  - item: Ensure macro expansion applies through PromptCompiler.
+    status: done
+  - item: Keep list/inspect/debug output mobile-safe with no raw JSON dumps.
+    status: done
+  - item: Add focused Persona v1 tests.
+    status: done
+verification:
+  focused:
+    command: "python -m pytest tests/plugins/test_hermes_tavern_personas.py -q -o 'addopts='"
+    status: passed
+    result: "6 passed, 1 warning"
+  tavern:
+    command: "python -m pytest tests/plugins/test_hermes_tavern_*.py -q -o 'addopts='"
+    status: passed
+    result: "364 passed, 1 warning"

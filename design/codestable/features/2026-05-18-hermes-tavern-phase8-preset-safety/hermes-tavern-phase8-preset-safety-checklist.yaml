@@ -1,0 +1,31 @@
+feature: 2026-05-18-hermes-tavern-phase8-preset-safety
+created: 2026-05-18
+
+steps:
+  - action: "Analyze ST jailbreak/no-boundaries sample as a negative safety fixture"
+    exit_signal: "Structure extracted; unsafe text not stored as an enabled preset"
+
+  - action: "Add preset_safety.py classifier"
+    exit_signal: "Classifier returns safe, adult_fiction, jailbreak, or disallowed with enable_by_default"
+
+  - action: "Add tests for safe/adult/jailbreak/disallowed modules"
+    exit_signal: "Tests assert jailbreak/disallowed modules are disabled by default"
+
+checks:
+  - item: "No jailbreak prompt text is copied into an active preset"
+    status: completed
+
+  - item: "No-boundaries/disallowed sample is classified as disallowed"
+    status: completed
+
+  - item: "Jailbreak-style override language is classified as jailbreak"
+    status: completed
+
+  - item: "Consenting-adult fiction markers are separated from jailbreak/no-boundaries prompts"
+    status: completed
+
+verification:
+  codestable_yaml_validation: passed
+  py_compile: passed
+  direct_smoke: passed
+  pytest: blocked_no_pytest_module

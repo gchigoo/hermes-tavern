@@ -1,0 +1,34 @@
+feature: 2026-05-18-hermes-tavern-phase9-st-preset-importer
+created: 2026-05-18
+
+steps:
+  - action: "Add ST preset importer for raw text and JSON prompt modules"
+    exit_signal: "Importer preserves module text, risk labels, and default enabled state after safety classification"
+
+  - action: "Add preset/module persistence helpers"
+    exit_signal: "TavernStore can save/list/get presets and list prompt modules"
+
+  - action: "Add runtime preset commands"
+    exit_signal: "/rp preset import/list/inspect work and report disabled risky modules"
+
+  - action: "Add focused tests and direct smoke"
+    exit_signal: "Jailbreak-like raw preset is importable but disabled; safe module remains enabled; disallowed module forced disabled"
+
+checks:
+  - item: "Original ST prompt text can be preserved as imported local asset"
+    status: completed
+
+  - item: "Jailbreak/disallowed modules are disabled by default"
+    status: completed
+
+  - item: "Importer does not add risky modules to active Prompt Compiler path"
+    status: completed
+
+  - item: "Runtime inspect shows risk labels and enabled/disabled state"
+    status: completed
+
+verification:
+  codestable_yaml_validation: passed
+  py_compile: passed
+  direct_smoke: passed
+  pytest: blocked_no_pytest_module

@@ -1,0 +1,31 @@
+feature: 2026-05-25-hermes-tavern-phase37-runtime-notes-refactor
+phase: 37
+status: implemented
+items:
+  - item: Extract Tavern Author's Note command handling from runtime.py into runtime_notes.py.
+    status: done
+  - item: Keep TavernRuntime note wrapper methods for compatibility with existing private method callers.
+    status: done
+  - item: Preserve note prompt injection, DB schema, command strings, and mobile-safe behavior.
+    status: done
+  - item: Keep focused coverage for note set, clear, inspect, position, frequency, and prompt injection behavior.
+    status: done
+  - item: Reconnect persona runtime wrappers to runtime_persona helpers after full-suite verification exposed stale inline persona imports.
+    status: done
+verification:
+  py_compile:
+    command: "venv/bin/python -m py_compile plugins/hermes_tavern/*.py plugins/hermes_tavern/importers/*.py tests/plugins/test_hermes_tavern_*.py"
+    status: passed
+    result: "passed"
+  focused_notes:
+    command: "venv/bin/python -m pytest tests/plugins/test_hermes_tavern_notes.py tests/plugins/test_hermes_tavern_runtime.py tests/plugins/test_hermes_tavern_personas.py tests/plugins/test_hermes_tavern_mobile_attachment_imports.py tests/plugins/test_hermes_tavern_gateway_security.py -q -o 'addopts='"
+    status: passed
+    result: "85 passed, 1 warning in 3.78s"
+  tavern:
+    command: "venv/bin/python -m pytest tests/plugins/test_hermes_tavern_*.py -q -o 'addopts='"
+    status: passed
+    result: "422 passed, 1 warning in 10.49s"
+  checklist_yaml:
+    command: "python .codestable/tools/validate-yaml.py --file .codestable/features/2026-05-25-hermes-tavern-phase37-runtime-notes-refactor/checklist.yaml"
+    status: passed
+    result: "Validated 1 file(s): 1 passed, 0 failed"

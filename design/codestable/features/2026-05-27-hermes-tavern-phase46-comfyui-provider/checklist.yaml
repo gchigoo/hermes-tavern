@@ -1,0 +1,35 @@
+feature: 2026-05-27-hermes-tavern-phase46-comfyui-provider
+phase: 46
+status: implemented
+items:
+  - id: comfyui-provider-class
+    description: "Implement ComfyUIProvider class implementing TavernImageProvider Protocol. Standard SD text-to-image workflow via CheckpointLoaderSimple, CLIPTextEncode, EmptyLatentImage, KSampler, VAEDecode, SaveImage."
+    status: done
+  - id: sampler-map
+    description: "Add _SAMPLER_MAP to translate A1111/ST-style sampler names (euler_a, dpm_2_a) to ComfyUI native names (euler_ancestral, dpm_2_ancestral)."
+    status: done
+  - id: auto-checkpoint
+    description: "Auto-detect first available checkpoint from ComfyUI /object_info when no model is configured; handle nested [[name1,...], {tooltip:...}] response format."
+    status: done
+  - id: poll-and-download
+    description: "POST /prompt -> poll GET /history/{prompt_id} (2s interval, configurable timeout) -> download via /view -> save to image_output_dir()."
+    status: done
+  - id: wire-into-factory
+    description: "Wire ComfyUIProvider into build_image_provider() and update available_image_providers() description."
+    status: done
+  - id: end-to-end-smoke
+    description: "Real ComfyUI smoke test: 512x512x8 steps on noobaiXL, 248s on macOS, valid PNG output."
+    status: done
+verification:
+  py_compile:
+    status: passed
+    command: "venv/bin/python -m py_compile plugins/hermes_tavern/images.py plugins/hermes_tavern/runtime_images.py"
+    result: passed
+  tavern:
+    status: passed
+    command: "venv/bin/python -m pytest tests/plugins/test_hermes_tavern_*.py -q -o addopts="
+    result: "424 passed, 1 warning in 14.27s"
+  smoke:
+    status: passed
+    command: "Live ComfyUI generation: 512x512, 8 steps, noobaiXL, prompt 'a cute cat, simple'"
+    result: "248.4s, 5875 byte PNG, checkpoint auto-detected"

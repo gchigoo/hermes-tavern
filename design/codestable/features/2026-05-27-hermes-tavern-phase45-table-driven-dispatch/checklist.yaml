@@ -1,0 +1,36 @@
+feature: 2026-05-27-hermes-tavern-phase45-table-driven-dispatch
+phase: 45
+status: implemented
+items:
+  - id: command-table
+    description: Define TavernCommandEntry dataclass and TAVERN_COMMAND_TABLE in commands.py with handler, help_lines, needs_command, and needs_event metadata.
+    status: done
+  - id: dispatch-function
+    description: Implement dispatch_command() in commands.py that resolves table entries, builds args, and calls handlers via getattr.
+    status: done
+  - id: help-generation
+    description: Auto-generate /rp help output from TAVERN_COMMAND_TABLE via _build_help_text().
+    status: done
+  - id: refactor-runtime
+    description: Replace 40+ if-chain _handle_command_sync with single dispatch_command() call; add _debug_command for sub-dispatches.
+    status: done
+  - id: preserve-behavior
+    description: All existing wrappers, signatures, and delegate patterns unchanged; identical test output.
+    status: done
+verification:
+  py_compile:
+    status: passed
+    command: venv/bin/python -m py_compile plugins/hermes_tavern/*.py plugins/hermes_tavern/importers/*.py tests/plugins/test_hermes_tavern_*.py
+    result: passed
+  focused:
+    status: passed
+    command: venv/bin/python -m pytest tests/plugins/test_hermes_tavern_commands.py tests/plugins/test_hermes_tavern_runtime.py tests/plugins/test_hermes_tavern_gateway_hook.py tests/plugins/test_hermes_tavern_turn_controls.py tests/plugins/test_hermes_tavern_turn_controls_mobile.py -q -o 'addopts='
+    result: "98 passed, 1 warning in 4.59s"
+  tavern:
+    status: passed
+    command: venv/bin/python -m pytest tests/plugins/test_hermes_tavern_*.py -q -o 'addopts='
+    result: "424 passed, 1 warning in 13.34s"
+  checklist_yaml:
+    status: passed
+    command: python .codestable/tools/validate-yaml.py --file .codestable/features/2026-05-27-hermes-tavern-phase45-table-driven-dispatch/checklist.yaml
+    result: "Validated 1 file(s): 1 passed, 0 failed"

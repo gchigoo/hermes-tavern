@@ -1,0 +1,35 @@
+feature: 2026-05-22-hermes-tavern-phase26-session-quick-actions-v1
+phase: 26
+status: implemented
+items:
+  - item: Add focused tests for `last` card, preset, lorebook, and persona command references.
+    status: done
+  - item: Track most recently imported card, preset, lorebook, and persona IDs in memory.
+    status: done
+  - item: Resolve `last` in TavernStore getters without changing the persistent DB schema.
+    status: done
+  - item: Return mobile-safe help when `last` is used before an import.
+    status: done
+  - item: Update architecture documentation for Phase 26 command behavior.
+    status: done
+verification:
+  focused_red:
+    command: "venv/bin/python -m pytest tests/plugins/test_hermes_tavern_mobile_attachment_imports.py -q -o addopts="
+    status: skipped
+    result: "The implementation was applied before the focused RED run; new tests pass with the implemented behavior."
+  py_compile:
+    command: "venv/bin/python -m py_compile plugins/hermes_tavern/db.py plugins/hermes_tavern/runtime.py plugins/hermes_tavern/runtime_assets.py tests/plugins/test_hermes_tavern_mobile_attachment_imports.py"
+    status: passed
+    result: "passed"
+  focused_green:
+    command: "venv/bin/python -m pytest tests/plugins/test_hermes_tavern_mobile_attachment_imports.py -q -o addopts="
+    status: passed
+    result: "17 passed, 1 warning"
+  tavern:
+    command: "venv/bin/python -m pytest tests/plugins/test_hermes_tavern_*.py -q -o addopts="
+    status: passed
+    result: "386 passed, 1 warning"
+  checklist_yaml:
+    command: "venv/bin/python .codestable/tools/validate-yaml.py --file .codestable/features/2026-05-22-hermes-tavern-phase26-session-quick-actions-v1/checklist.yaml"
+    status: passed
+    result: "Validated 1 file(s): 1 passed, 0 failed"

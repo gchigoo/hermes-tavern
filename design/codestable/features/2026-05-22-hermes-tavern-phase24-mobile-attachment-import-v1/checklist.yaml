@@ -1,0 +1,22 @@
+feature: hermes-tavern-phase24-mobile-attachment-import-v1
+tasks:
+  - action: "Add failing tests for preset/lore/persona no-path attachment imports"
+    exit_signal: "Focused tests fail because runtime still requires explicit file arguments"
+    status: completed
+  - action: "Resolve exactly one local importable attachment from event.media_urls"
+    exit_signal: "No-path imports use one local attachment and ignore remote URLs"
+    status: completed
+  - action: "Return compact mobile-safe guidance for missing or ambiguous attachments"
+    exit_signal: "Usage mentions attachable suffixes; multiple attachments produce numbered names and ask for an explicit path"
+    status: completed
+checks:
+  - item: "Focused mobile attachment import tests pass"
+    status: completed
+  - item: "Focused affected runtime/import tests pass"
+    status: completed
+  - item: "Full Hermes Tavern plugin test glob passes"
+    status: completed
+  - item: "py_compile passes for touched files"
+    status: completed
+  - item: "Checklist YAML validates"
+    status: completed

@@ -1,0 +1,33 @@
+feature: 2026-05-27-hermes-tavern-phase44-tts-speak-delivery
+phase: 44
+status: implemented
+items:
+  - id: wire-speak-tts
+    description: Replace /rp speak placeholder with Hermes TTS tool integration through an injectable renderer boundary.
+    status: done
+  - id: preserve-mobile-media
+    description: Return gateway-deliverable MEDIA tags, quote file paths with spaces, and preserve audio_as_voice for voice-compatible outputs.
+    status: done
+  - id: keep-safe-failure-envelope
+    description: Keep TTS failures concise and avoid leaking provider stack traces or secret-like error details.
+    status: done
+  - id: preserve-voice-toggle
+    description: Preserve /rp voice on/off session-scoped auto-speak behavior while using the same /rp speak delivery path.
+    status: done
+verification:
+  py_compile:
+    status: passed
+    command: venv/bin/python -m py_compile plugins/hermes_tavern/*.py plugins/hermes_tavern/importers/*.py tests/plugins/test_hermes_tavern_*.py
+    result: passed
+  focused:
+    status: passed
+    command: venv/bin/python -m pytest tests/plugins/test_hermes_tavern_plugin_hardening.py tests/plugins/test_hermes_tavern_turn_controls.py tests/plugins/test_hermes_tavern_turn_controls_mobile.py -q -o 'addopts='
+    result: "49 passed, 1 warning in 1.46s"
+  tavern:
+    status: passed
+    command: venv/bin/python -m pytest tests/plugins/test_hermes_tavern_*.py -q -o 'addopts='
+    result: "424 passed, 1 warning in 12.79s"
+  checklist_yaml:
+    status: passed
+    command: python .codestable/tools/validate-yaml.py --file .codestable/features/2026-05-27-hermes-tavern-phase44-tts-speak-delivery/checklist.yaml
+    result: "Validated 1 file(s): 1 passed, 0 failed"

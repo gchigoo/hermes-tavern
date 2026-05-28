@@ -1,0 +1,37 @@
+feature: 2026-05-22-hermes-tavern-phase25-mobile-import-followups-v1
+phase: 25
+status: implemented
+items:
+  - item: Add focused failing tests for missing import follow-up hints.
+    status: done
+  - item: Add card import inspect, use, and start hints.
+    status: done
+  - item: Add preset import use and inspect hints.
+    status: done
+  - item: Add lorebook import use and inspect hints.
+    status: done
+  - item: Add persona import inspect hint while preserving the existing use hint.
+    status: done
+  - item: Keep success replies compact and free of raw imported JSON/content dumps.
+    status: done
+verification:
+  focused_red:
+    command: "venv/bin/python -m pytest tests/plugins/test_hermes_tavern_mobile_attachment_imports.py -q -o addopts="
+    status: passed
+    result: "initial RED observed: 6 failed, 4 passed, 1 warning"
+  focused_green:
+    command: "venv/bin/python -m pytest tests/plugins/test_hermes_tavern_mobile_attachment_imports.py -q -o addopts="
+    status: passed
+    result: "10 passed, 1 warning"
+  py_compile:
+    command: "venv/bin/python -m py_compile plugins/hermes_tavern/runtime.py plugins/hermes_tavern/runtime_assets.py tests/plugins/test_hermes_tavern_mobile_attachment_imports.py"
+    status: passed
+    result: "passed"
+  tavern:
+    command: "venv/bin/python -m pytest tests/plugins/test_hermes_tavern_*.py -q -o addopts="
+    status: passed
+    result: "379 passed, 1 warning"
+  checklist_yaml:
+    command: "venv/bin/python .codestable/tools/validate-yaml.py --file .codestable/features/2026-05-22-hermes-tavern-phase25-mobile-import-followups-v1/checklist.yaml"
+    status: passed
+    result: "Validated 1 file(s): 1 passed, 0 failed"

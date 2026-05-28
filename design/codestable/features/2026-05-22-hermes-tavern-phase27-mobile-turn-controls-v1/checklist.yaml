@@ -1,0 +1,33 @@
+feature: 2026-05-22-hermes-tavern-phase27-mobile-turn-controls-v1
+phase: 27
+status: implemented
+items:
+  - item: Prefix successful `/rp retry` output and include a retry hint.
+    status: done
+  - item: Make successful `/rp undo` output specific and include an undo hint.
+    status: done
+  - item: Prefix successful `/rp edit last` output and include an edit hint.
+    status: done
+  - item: Keep turn-control error messages concise.
+    status: done
+  - item: Add focused mobile turn-control tests.
+    status: done
+  - item: Update architecture documentation for Phase 27.
+    status: done
+verification:
+  py_compile:
+    command: "venv/bin/python -m py_compile plugins/hermes_tavern/runtime.py tests/plugins/test_hermes_tavern_turn_controls_mobile.py tests/plugins/test_hermes_tavern_turn_controls.py"
+    status: passed
+    result: "passed"
+  focused_green:
+    command: "venv/bin/python -m pytest tests/plugins/test_hermes_tavern_turn_controls_mobile.py -q -o addopts="
+    status: passed
+    result: "4 passed, 1 warning"
+  tavern:
+    command: "venv/bin/python -m pytest tests/plugins/test_hermes_tavern_*.py -q -o addopts="
+    status: passed
+    result: "390 passed, 1 warning"
+  checklist_yaml:
+    command: "venv/bin/python .codestable/tools/validate-yaml.py --file .codestable/features/2026-05-22-hermes-tavern-phase27-mobile-turn-controls-v1/checklist.yaml"
+    status: passed
+    result: "Validated 1 file(s): 1 passed, 0 failed"

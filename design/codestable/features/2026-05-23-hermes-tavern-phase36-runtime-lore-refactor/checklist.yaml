@@ -1,0 +1,29 @@
+feature: 2026-05-23-hermes-tavern-phase36-runtime-lore-refactor
+phase: 36
+status: implemented
+items:
+  - item: Extract Tavern lore command handling from runtime.py into runtime_lore.py.
+    status: done
+  - item: Keep TavernRuntime lore wrapper methods for compatibility with existing private method callers.
+    status: done
+  - item: Preserve lore matching, session lore module injection, import policy, DB schema, and safety behavior.
+    status: done
+  - item: Keep focused coverage for lore import, list, inspect, use, test, debug, and mobile attachment imports.
+    status: done
+verification:
+  py_compile:
+    command: "venv/bin/python -m py_compile plugins/hermes_tavern/*.py plugins/hermes_tavern/importers/*.py tests/plugins/test_hermes_tavern_*.py"
+    status: passed
+    result: "passed"
+  focused_lore:
+    command: "venv/bin/python -m pytest tests/plugins/test_hermes_tavern_lorebooks.py tests/plugins/test_hermes_tavern_lore_runtime.py tests/plugins/test_hermes_tavern_mobile_attachment_imports.py tests/plugins/test_hermes_tavern_mobile_browsers.py -q -o 'addopts='"
+    status: passed
+    result: "76 passed, 1 warning in 2.31s"
+  tavern:
+    command: "venv/bin/python -m pytest tests/plugins/test_hermes_tavern_*.py -q -o 'addopts='"
+    status: passed
+    result: "422 passed, 1 warning in 9.18s"
+  checklist_yaml:
+    command: "python .codestable/tools/validate-yaml.py --file .codestable/features/2026-05-23-hermes-tavern-phase36-runtime-lore-refactor/checklist.yaml"
+    status: passed
+    result: "Validated 1 file(s): 1 passed, 0 failed"

@@ -1,0 +1,34 @@
+feature: 2026-05-18-hermes-tavern-phase10-preset-use-compiler
+created: 2026-05-18
+
+steps:
+  - action: "Add session preset binding"
+    exit_signal: "sessions.preset_id migration and TavernStore.set_session_preset exist"
+
+  - action: "Add /rp preset use <preset>"
+    exit_signal: "Active sessions can bind an imported preset and receive usable/risky module counts"
+
+  - action: "Wire session preset modules into Prompt Compiler"
+    exit_signal: "Active-message generation and /rp debug prompt include only allowed preset modules"
+
+  - action: "Add focused tests and direct smoke"
+    exit_signal: "Mixed ST preset safe module appears in debug prompt while jailbreak text remains absent"
+
+checks:
+  - item: "Safe preset modules can become active Prompt Compiler modules"
+    status: completed
+
+  - item: "Jailbreak/disallowed modules remain disabled and excluded"
+    status: completed
+
+  - item: "Adult-fiction modules require adult-fiction content mode before injection"
+    status: completed
+
+  - item: "Debug prompt shows bound preset id and injected module names"
+    status: completed
+
+verification:
+  codestable_yaml_validation: passed
+  py_compile: passed
+  direct_smoke: passed
+  pytest: blocked_no_pytest_module

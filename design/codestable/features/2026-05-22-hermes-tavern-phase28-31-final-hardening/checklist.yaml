@@ -1,0 +1,39 @@
+feature: 2026-05-22-hermes-tavern-phase28-31-final-hardening
+phases: [28, 30, 31]
+status: implemented
+items:
+  - item: Wrap live provider connection and timeout failures with mobile-safe retry output.
+    status: done
+  - item: Preserve the existing generic provider exception boundary.
+    status: done
+  - item: Add `/rp speak` placeholder command with a `MEDIA:` marker and no network calls.
+    status: done
+  - item: Add `/rp voice [on|off]` session flag and help entries.
+    status: done
+  - item: Add top-level `/rp` command exception boundary.
+    status: done
+  - item: Clamp `/rp history` and `/rp cards` limits to 50.
+    status: done
+  - item: Harden malformed event/session-key extraction.
+    status: done
+  - item: Add focused hardening tests.
+    status: done
+  - item: Update architecture documentation for Phases 28, 30, and 31.
+    status: done
+verification:
+  py_compile:
+    command: "venv/bin/python -m py_compile plugins/hermes_tavern/runtime.py plugins/hermes_tavern/runtime_assets.py plugins/hermes_tavern/identity.py tests/plugins/test_hermes_tavern_plugin_hardening.py"
+    status: passed
+    result: "passed"
+  focused_green:
+    command: "venv/bin/python -m pytest tests/plugins/test_hermes_tavern_plugin_hardening.py -q -o addopts="
+    status: passed
+    result: "7 passed, 1 warning in 0.61s"
+  tavern:
+    command: "venv/bin/python -m pytest tests/plugins/test_hermes_tavern_*.py -q -o addopts="
+    status: passed
+    result: "397 passed, 1 warning in 6.24s"
+  checklist_yaml:
+    command: "venv/bin/python .codestable/tools/validate-yaml.py --file .codestable/features/2026-05-22-hermes-tavern-phase28-31-final-hardening/checklist.yaml"
+    status: passed
+    result: "Validated 1 file(s): 1 passed, 0 failed"

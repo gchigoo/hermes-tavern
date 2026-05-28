@@ -1,0 +1,96 @@
+feature: 2026-05-20-hermes-tavern-phase20-macro-engine-v1
+slug: hermes-tavern-phase20-macro-engine-v1
+status: done
+
+steps:
+  - id: s1
+    name: CodeStable design and checklist
+    status: done
+    paradigm: planning
+    substeps:
+      - Create Phase 20 design.md
+      - Create Phase 20 checklist YAML
+    exit_signal: Feature docs exist and follow project naming conventions
+
+  - id: s2
+    name: Template-only macro engine
+    status: done
+    paradigm: safety
+    substeps:
+      - Add MacroContext and expand_macros() in plugins/hermes_tavern/macros.py
+      - Support common ST macros with case/whitespace tolerance
+      - Preserve unknown macros and perform one-pass non-recursive replacement
+      - Add unit tests for deterministic, safe behavior
+    exit_signal: Macro unit tests pass without network or execution semantics
+
+  - id: s3
+    name: Prompt compiler integration
+    status: done
+    paradigm: compiler
+    substeps:
+      - Add optional macro_context to PromptCompiler.compile()
+      - Expand card system text, enabled modules, history rows, and user_message
+      - Preserve module ordering and enablement behavior
+      - Extend compiler tests
+    exit_signal: Compiler tests prove all prompt surfaces expand before rendering
+
+  - id: s4
+    name: Runtime macro context wiring
+    status: done
+    paradigm: orchestration
+    substeps:
+      - Build MacroContext from card, session, and gateway event
+      - Pass event context through active-message pipeline with retry/edit fallbacks
+      - Show macro context summary in /rp debug prompt without raw event JSON
+      - Extend runtime tests
+    exit_signal: Runtime tests prove event/session macro context reaches rendered prompts
+
+  - id: s5
+    name: Architecture and verification
+    status: done
+    paradigm: verification
+    substeps:
+      - Update .codestable/architecture/ARCHITECTURE.md for Phase 20
+      - Run py_compile gate
+      - Run targeted Tavern pytest gate
+      - Run full Tavern pytest gate
+      - Validate checklist YAML
+    exit_signal: All requested validation commands pass
+
+checks:
+  - id: c1
+    ref: A1
+    desc: Basic macros char/user/time/date/datetime/weekday/content_mode/session_title expand deterministically
+    status: passed
+  - id: c2
+    ref: A2
+    desc: Macro names tolerate case and surrounding whitespace
+    status: passed
+  - id: c3
+    ref: A3
+    desc: Unknown macros remain unchanged
+    status: passed
+  - id: c4
+    ref: A4
+    desc: Macro expansion is one-pass and non-recursive
+    status: passed
+  - id: c5
+    ref: A5
+    desc: Execution-looking text is never evaluated, imported, shelled, or executed
+    status: passed
+  - id: c6
+    ref: A6
+    desc: Compiler expands card, preset/lore/memory module text, history, and user_message
+    status: passed
+  - id: c7
+    ref: A7
+    desc: Runtime active-message pipeline uses card/session/event macro context
+    status: passed
+  - id: c8
+    ref: A8
+    desc: /rp debug prompt displays macro context summary without raw event JSON
+    status: passed
+  - id: c9
+    ref: A9
+    desc: Requested py_compile, targeted pytest, full Tavern pytest, and YAML validation gates pass
+    status: passed

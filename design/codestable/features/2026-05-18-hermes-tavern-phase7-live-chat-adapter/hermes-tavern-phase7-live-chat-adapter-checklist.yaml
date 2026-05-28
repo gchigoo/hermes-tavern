@@ -1,0 +1,44 @@
+feature: 2026-05-18-hermes-tavern-phase7-live-chat-adapter
+created: 2026-05-18
+
+steps:
+  - action: "Add HermesChatCompletionAdapter with injectable OpenAI-compatible client factory"
+    exit_signal: "Adapter resolves provider payload, builds client lazily, extracts choices[0].message.content, and redacts debug metadata"
+
+  - action: "Add live_confirmed session gate"
+    exit_signal: "sessions.live_confirmed defaults to 0 and can be toggled per active session"
+
+  - action: "Add /rp model live [status|confirm|off]"
+    exit_signal: "Users must explicitly confirm live provider calls after selecting hermes mode"
+
+  - action: "Wire runtime live path"
+    exit_signal: "adapter_mode=fake remains deterministic; adapter_mode=hermes without live_confirmed does not call provider; live_confirmed uses HermesChatCompletionAdapter"
+
+  - action: "Add mock-first tests"
+    exit_signal: "Tests use injected fake clients/adapters and do not perform live network calls"
+
+checks:
+  - item: "Default sessions do not call real providers"
+    status: completed
+
+  - item: "Hermes mode without live confirmation does not call default adapter"
+    status: completed
+
+  - item: "Live confirmation is session-scoped"
+    status: completed
+
+  - item: "HermesChatCompletionAdapter can use injected fake OpenAI-compatible client"
+    status: completed
+
+  - item: "Adapter debug descriptor omits api_key/access_token/secret/token/password"
+    status: completed
+
+  - item: "Runtime catches live provider errors instead of crashing gateway hook"
+    status: completed
+
+verification:
+  codestable_yaml_validation: passed
+  py_compile: passed
+  direct_smoke: passed
+  pytest: blocked_no_pytest_module
+  live_generation: not_run_by_default
