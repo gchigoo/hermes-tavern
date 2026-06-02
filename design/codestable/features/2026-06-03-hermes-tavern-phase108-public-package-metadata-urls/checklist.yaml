@@ -1,0 +1,74 @@
+doc_type: feature-checklist
+feature: hermes-tavern-phase108-public-package-metadata-urls
+date: "2026-06-03"
+status: implemented
+
+summary: >
+  Add public package metadata URLs for Home, Repository, Issues, Changelog, and Security,
+  and add offline tests that validate URL presence, GitHub HTTPS shape, expected targets,
+  and absence of runtime/gateway or credential-sharing guidance.
+
+steps:
+  - id: S1
+    name: Add project URLs metadata entries to pyproject
+    description: >
+      Add [project.urls] in pyproject.toml for Homepage, Repository, Issues, Changelog, and
+      Security using public GitHub documentation links and issue tracker URL.
+    status: implemented
+    changed_file: "pyproject.toml"
+    verification_command: >
+      rg -n "Homepage|Repository|Issues|Changelog|Security" pyproject.toml
+    result: "IMPLEMENTED - [project.urls] now includes all five required entries."
+
+  - id: S2
+    name: Add packaging-layer offline assertions for required project URL metadata
+    description: >
+      Extend tests/test_hermes_tavern_packaging.py with assertions for required [project.urls]
+      keys, HTTPS GitHub URL shape, and expected README/CHANGELOG/SECURITY/Issues targeting.
+    status: implemented
+    changed_file: "tests/test_hermes_tavern_packaging.py"
+    verification_command: >
+      rg -n "test_pyproject_declares_package_urls_metadata|test_pyproject_urls_are_publicly_reachable_docs_and_not_operational_instructions" tests/test_hermes_tavern_packaging.py
+    result: "IMPLEMENTED - two targeted project URL tests added."
+
+  - id: S3
+    name: Add repo-hygiene offline validation for URL metadata
+    description: >
+      Extend tests/test_hermes_tavern_repo_hygiene.py to verify project.urls targets README/CHANGELOG/
+      SECURITY/Issues/Repository and reject forbidden operational/credential language in URL entries.
+    status: implemented
+    changed_file: "tests/test_hermes_tavern_repo_hygiene.py"
+    verification_command: >
+      rg -n "pyproject_urls_reference_public_docs_and_no_forbidden_content" tests/test_hermes_tavern_repo_hygiene.py
+    result: "IMPLEMENTED - doc-hygiene assertion for project.urls added."
+
+  - id: S4
+    name: Run focused package + hygiene verification
+    description: >
+      Run the requested focused test slice for offline package and repo-hygiene regressions.
+    status: verified
+    verification_command: >
+      PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_packaging.py tests/test_hermes_tavern_repo_hygiene.py -q -o "addopts="
+    result: "PASS - 48 passed in 7.67s"
+
+  - id: S5
+    name: Validate phase checklist YAML artifact
+    description: >
+      Run the repository checklist validation command for this new feature checklist.
+    status: verified
+    verification_command: >
+      PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-03-hermes-tavern-phase108-public-package-metadata-urls/checklist.yaml --yaml-only
+    result: "PASS - checklist validated: 1 passed, 0 failed"
+
+implementation_notes: |
+  - Scope stayed limited to pyproject.toml, tests, and a new feature checklist entry.
+  - No runtime/gateway/provider/credential/service/networked behavior was edited.
+  - All metadata checks are offline and string-level only.
+
+verification_notes: |
+  - Codex executor focused verification: PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_packaging.py tests/test_hermes_tavern_repo_hygiene.py -q -o "addopts=" -> 48 passed in 7.67s.
+  - Codex executor checklist YAML validation: 1 file valid, 1 passed, 0 failed.
+  - Controller reran focused package + repo hygiene tests: 48 passed in 7.21s.
+  - Controller reran checklist YAML validation: 1 file valid, 1 passed, 0 failed.
+  - Controller ran the project registry verification command `PYTHONDONTWRITEBYTECODE=1 python -m pytest -q`: 680 passed in 21.27s.
+  - Controller ran `git diff --check` with exit code 0.

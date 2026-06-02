@@ -1,6 +1,8 @@
 """Phase 90: repo hygiene release preflight checks."""
 
 import re
+import tomllib
+from urllib.parse import urlparse
 
 from pathlib import Path
 
@@ -22,6 +24,7 @@ ISSUE_TEMPLATE_CONFIG = ISSUE_TEMPLATES_ROOT / "config.yml"
 SECURITY_FILE = REPO_ROOT / "SECURITY.md"
 CODE_OF_CONDUCT_FILE = REPO_ROOT / "CODE_OF_CONDUCT.md"
 CHANGELOG_FILE = REPO_ROOT / "CHANGELOG.md"
+PYPROJECT_FILE = REPO_ROOT / "pyproject.toml"
 
 REQUIRED_GITIGNORE_PATTERNS = {
     "Python bytecode/cache": [
@@ -100,6 +103,10 @@ def _load_yaml_template(path: Path) -> dict:
     data = yaml.safe_load(_read_text(path))
     assert isinstance(data, dict), f"{path} must be YAML object mapping"
     return data
+
+
+def _load_pyproject() -> dict:
+    return tomllib.loads(PYPROJECT_FILE.read_text(encoding="utf-8"))
 
 
 def _issue_field_ids(template: dict) -> set[str]:
@@ -280,6 +287,50 @@ def test_readme_links_to_public_changelog():
     readme_text = (REPO_ROOT / "README.md").read_text(encoding="utf-8")
     assert "CHANGELOG.md" in readme_text, "README.md should link to CHANGELOG.md"
     assert "CHANGELOG" in readme_text and "(CHANGELOG.md)" in readme_text
+
+
+def test_pyproject_urls_reference_public_docs_and_no_forbidden_content():
+    """Public package metadata URLs reference docs/issue pages and contain no runtime guidance."""
+    project = _load_pyproject().get("project", {})
+    urls = project.get("urls", {})
+
+    expected_urls = {
+        "Homepage": "README.md",
+        "Repository": "github.com/gchigoo/hermes-tavern",
+        "Issues": "/issues",
+        "Changelog": "CHANGELOG.md",
+        "Security": "SECURITY.md",
+    }
+    assert set(urls) == set(expected_urls), f"project.urls mismatch: {set(urls)}"
+
+    forbidden_terms = FORBIDDEN_VALIDATION_PATTERNS + [
+        "api key",
+        "api-token",
+        "access token",
+        "bearer",
+        "share credentials",
+    ]
+
+    for key, expected_marker in expected_urls.items():
+        value = urls[key]
+        value_lower = value.lower()
+        assert expected_marker.lower() in value_lower, (
+            f"{key} URL should target expected public resource marker {expected_marker!r}: {value!r}"
+        )
+
+        if value.startswith("https://") or value.startswith("http://"):
+            parsed = urlparse(value)
+            assert parsed.scheme == "https", f"{key} must use HTTPS: {value!r}"
+            assert parsed.netloc == "github.com", f"{key} must be GitHub: {value!r}"
+        else:
+            assert value == "README.md" or value.endswith(".md"), (
+                f"{key} URL is not markdown-safe local reference: {value!r}"
+            )
+
+        for term in forbidden_terms:
+            assert term not in value_lower, (
+                f"{key} URL contains forbidden phrase {term!r}: {value!r}"
+            )
 
 
 def test_changelog_does_not_publish_gateway_service_or_credential_sharing_instructions():

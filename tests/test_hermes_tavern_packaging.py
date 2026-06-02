@@ -10,6 +10,7 @@ import tarfile
 import textwrap
 import tomllib
 from unittest.mock import ANY
+from urllib.parse import urlparse
 import venv
 import zipfile
 
@@ -679,3 +680,63 @@ def test_readme_installation_commands_match_packaging_metadata():
     assert entry_points.get(project_name) == "hermes_tavern"
     assert f"{project_name} = \"hermes_tavern\"" in readme
     assert f"hermes plugins enable {project_name}" in readme
+
+
+def test_pyproject_declares_package_urls_metadata():
+    """Public package metadata includes required project URLs for docs and issue tracking."""
+    project = _load_pyproject().get("project", {})
+    urls = project.get("urls", {})
+
+    expected = {
+        "Homepage",
+        "Repository",
+        "Issues",
+        "Changelog",
+        "Security",
+    }
+    assert expected == set(urls), f"project.urls missing or extra keys: {set(urls)}"
+
+
+def test_pyproject_urls_are_publicly_reachable_docs_and_not_operational_instructions():
+    """URL metadata must be HTTPS GitHub/docs links and not contain operational guidance."""
+    project_urls = _load_pyproject().get("project", {}).get("urls", {})
+
+    forbidden_terms = (
+        "gateway",
+        "service",
+        "restart",
+        "reload",
+        "start",
+        "stop",
+        "systemctl",
+        "docker compose",
+        "curl",
+        "api key",
+        "token",
+        "credential",
+        "password",
+    )
+    required_targets = {
+        "Homepage": "README.md",
+        "Changelog": "CHANGELOG.md",
+        "Security": "SECURITY.md",
+        "Issues": "/issues",
+    }
+
+    for key, value in project_urls.items():
+        parsed = urlparse(value)
+        assert parsed.scheme == "https", f"{key} must be https: {value!r}"
+        assert parsed.netloc == "github.com", f"{key} must be GitHub URL: {value!r}"
+
+        normalized = value.lower()
+        assert " " not in normalized, f"{key} URL contains whitespace: {value!r}"
+
+        for phrase in forbidden_terms:
+            assert phrase not in normalized, (
+                f"{key} URL contains forbidden phrase {phrase!r}: {value!r}"
+            )
+
+    for key, marker in required_targets.items():
+        assert marker.lower() in project_urls[key].lower(), (
+            f"{key} URL does not point to expected doc area: {project_urls[key]!r}"
+        )

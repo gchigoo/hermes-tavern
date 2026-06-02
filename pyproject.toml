@@ -22,6 +22,13 @@ classifiers = [
   "Operating System :: OS Independent",
 ]
 
+[project.urls]
+Homepage = "https://github.com/gchigoo/hermes-tavern/blob/main/README.md"
+Repository = "https://github.com/gchigoo/hermes-tavern"
+Issues = "https://github.com/gchigoo/hermes-tavern/issues"
+Changelog = "https://github.com/gchigoo/hermes-tavern/blob/main/CHANGELOG.md"
+Security = "https://github.com/gchigoo/hermes-tavern/blob/main/SECURITY.md"
+
 [tool.setuptools.packages.find]
 where = ["src"]
 
