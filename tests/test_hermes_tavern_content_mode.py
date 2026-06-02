@@ -77,3 +77,48 @@ def test_content_mode_controls_adult_fiction_preset_modules(tmp_path):
     )
     assert "content_mode: safe" in safe_again
     assert "preset:adult-tone" not in safe_again
+
+
+def test_content_mode_blocks_minor_sexualized_st_modules_from_debug_prompt(tmp_path):
+    preset_file = tmp_path / "minor-adult.json"
+    preset_file.write_text(
+        json.dumps(
+            {
+                "name": "minor-safe-test",
+                "prompts": [
+                    {
+                        "name": "allowed",
+                        "content": "Consenting adult fictional romance with subtle emotional intimacy.",
+                        "enabled": True,
+                    },
+                    {
+                        "name": "minor-intimate",
+                        "content": "A minor is given flirty, intimate roleplay instructions.",
+                        "enabled": True,
+                    },
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    store.save_card(CharacterCard(id="card-1", name="Alice", description="Character base."))
+    store.start_session("telegram:chat:chat-1:thread:main:user:user-1", card_id="card-1")
+    runtime = TavernRuntime(store)
+
+    runtime.handle_command_sync(
+        RPCommand("preset", ["import", str(preset_file)], "/rp preset import"), Event()
+    )
+    runtime.handle_command_sync(
+        RPCommand("preset", ["use", "minor-safe-test"], "/rp preset use minor-safe-test"), Event()
+    )
+    runtime.handle_command_sync(
+        RPCommand("content", ["mode", "adult-fiction"], "/rp content mode adult-fiction"), Event()
+    )
+
+    adult_debug = runtime.handle_command_sync(
+        RPCommand("debug", ["prompt"], "/rp debug prompt"), Event()
+    )
+
+    assert "preset:allowed" in adult_debug
+    assert "preset:minor-intimate" not in adult_debug

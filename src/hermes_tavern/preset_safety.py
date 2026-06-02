@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from enum import Enum
+import re
 
 
 class PresetRiskLevel(str, Enum):
@@ -47,6 +48,38 @@ _DISALLOWED_PATTERNS: tuple[tuple[str, str], ...] = (
     ("no content boundaries", "no-boundaries attempt to remove all content boundaries"),
 )
 
+_MINOR_TERMS = (
+    r"\bminor\b",
+    r"\bunder[- ]?age\b",
+    r"\bunderage\b",
+    r"\bteen(?:ager)?\b",
+    r"\bkids?\b",
+    r"\bchild(?:ren)?\b",
+    r"\byoung[- ]?looking\b",
+    r"\bpreteen\b",
+)
+_MINOR_SEXUAL_MARKERS = (
+    " sexual ",
+    " sexually ",
+    "sexuality",
+    "sexualized",
+    "sex",
+    "erotic",
+    "smut",
+    "dirty",
+    "flirty",
+    "intimate",
+    "intimacy",
+    "kissing",
+    "kiss",
+    "porn",
+    "breast",
+    "naked",
+    "nude",
+    "seduce",
+    "seduc",
+)
+
 _ADULT_FICTION_PATTERNS: tuple[tuple[str, str], ...] = (
     ("adult", "adult fiction marker"),
     ("erotic", "erotic writing marker"),
@@ -66,6 +99,14 @@ def classify_preset_text(text: str) -> PresetSafetyReport:
 
     lowered = text.lower()
     reasons: list[str] = []
+    minor_term_matches = [pattern for pattern in _MINOR_TERMS if re.search(pattern, lowered)]
+    if minor_term_matches and any(marker in lowered for marker in _MINOR_SEXUAL_MARKERS):
+        reasons.append("sexualized minor framing")
+        return PresetSafetyReport(
+            level=PresetRiskLevel.DISALLOWED,
+            reasons=tuple(dict.fromkeys(reasons)),
+            enable_by_default=False,
+        )
 
     for pattern, reason in _DISALLOWED_PATTERNS:
         if pattern in lowered:

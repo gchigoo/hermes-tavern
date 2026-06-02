@@ -1,0 +1,34 @@
+feature: 2026-06-03-hermes-tavern-phase116-preset-no-minors-boundary
+created: 2026-06-03
+steps:
+  - action: "Classify sexualized minor/underage framing in preset text as DISALLOWED"
+    exit_signal: "Preset safety reporter marks minor sexualized modules as disallowed"
+  - action: "Preserve compatibility for imported ST preset modules while forcing disallowed minor sexualized modules off by default"
+    exit_signal: "Preset import stores risk_level=disallowed and enabled=False"
+  - action: "Keep adult-fiction modules enabled by default for consenting-adult framing and visible under adult-fiction content mode"
+    exit_signal: "non-minor adult_fiction modules remain active in adult-fiction debug prompt"
+checks:
+  - item: "consenting-adult framing stays adult_fiction + enable_by_default"
+    status: completed
+  - item: "minor/underage/teen/child/young-looking sexualized framing is DISALLOWED"
+    status: completed
+  - item: "non-sexual minor references remain safe"
+    status: completed
+  - item: "ST-disallowed minor modules remain in DB as assets but do not appear in /rp debug prompt in adult-fiction"
+    status: completed
+verification:
+  py_compile:
+    - command: "PYTHONDONTWRITEBYTECODE=1 python -m py_compile src/hermes_tavern/preset_safety.py tests/test_hermes_tavern_preset_safety.py tests/test_hermes_tavern_preset_importer.py tests/test_hermes_tavern_content_mode.py"
+      result: "passed"
+  targeted_pytest:
+    - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_preset_safety.py tests/test_hermes_tavern_preset_importer.py tests/test_hermes_tavern_content_mode.py -q -o 'addopts='"
+      result: "14 passed in 0.17s"
+  codestable_yaml_validation:
+    - command: "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --yaml-only --file design/codestable/features/2026-06-03-hermes-tavern-phase116-preset-no-minors-boundary/checklist.yaml"
+      result: "1 passed, 0 failed"
+  full_pytest:
+    - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts='"
+      result: "708 passed in 26.35s"
+  diff_check:
+    - command: "git diff --check"
+      result: "passed"
