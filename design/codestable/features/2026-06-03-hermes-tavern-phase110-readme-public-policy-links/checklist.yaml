@@ -1,0 +1,79 @@
+doc_type: feature-checklist
+feature: hermes-tavern-phase110-readme-public-policy-links
+date: "2026-06-03"
+status: implemented
+
+summary: >
+  Add a dedicated public-policy and readiness navigation block in README linking
+  CONTRIBUTING.md, SUPPORT.md, SECURITY.md, CODE_OF_CONDUCT.md, and
+  CHANGELOG.md. Extend offline README and repo-hygiene tests to assert the block
+  exists and contains no operational/runtime/credential guidance.
+
+steps:
+  - id: S1
+    name: Add public policy navigation block to README
+    description: >
+      Update README.md with a concise contributor/public-policy link block that
+      points to CONTRIBUTING.md, SUPPORT.md, SECURITY.md, CODE_OF_CONDUCT.md,
+      and CHANGELOG.md.
+    status: implemented
+    changed_file: "README.md"
+    verification_command: >
+      rg -n "CONTRIBUTING.md|SUPPORT.md|SECURITY.md|CODE_OF_CONDUCT.md|CHANGELOG.md" README.md
+    result: "IMPLEMENTED - README development section now includes all five policy/readiness links."
+
+  - id: S2
+    name: Add README doc offline assertions for policy navigation links and safety profile
+    description: >
+      Extend tests/test_hermes_tavern_readme_docs.py with assertions that the
+      public-policy section contains all five policy links and avoids forbidden
+      operational/runtime/credential guidance language.
+    status: implemented
+    changed_file: "tests/test_hermes_tavern_readme_docs.py"
+    verification_command: >
+      PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_readme_docs.py -q -o "addopts="
+    result: "IMPLEMENTED - new README doc assertions added for required links and forbidden guidance"
+
+  - id: S3
+    name: Add repo-hygiene offline assertions for README policy navigation
+    description: >
+      Extend tests/test_hermes_tavern_repo_hygiene.py with offline checks that
+      validate README contains all required policy links and no forbidden operational/
+      runtime/credential guidance language in the governance/navigation section.
+    status: implemented
+    changed_file: "tests/test_hermes_tavern_repo_hygiene.py"
+    verification_command: >
+      PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_repo_hygiene.py -q -o "addopts="
+    result: "IMPLEMENTED - offline repo-hygiene checks now cover README policy navigation links and anti-guidance guardrails."
+
+  - id: S4
+    name: Run focused tests for phase 110
+    description: >
+      Run offline-focused verification covering README docs and repo-hygiene checks.
+    status: verified
+    verification_command: >
+      PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_readme_docs.py tests/test_hermes_tavern_repo_hygiene.py -q -o "addopts="
+    result: "PASS - focused phase tests: 48 passed in 0.07s"
+
+  - id: S5
+    name: Validate phase checklist YAML artifact
+    description: >
+      Validate this checklist file with the offline YAML validator using yaml-only mode.
+    status: verified
+    verification_command: >
+      PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --yaml-only --file design/codestable/features/2026-06-03-hermes-tavern-phase110-readme-public-policy-links/checklist.yaml
+    result: "PASS - 1 file(s) valid, 0 failed (use --file argument)"
+
+implementation_notes: |
+  - Scope was restricted to docs/tests only.
+  - No changes were made to runtime, gateway, provider, model, credential, or network
+    behavior, and no network or secrets were introduced.
+
+verification_notes: |
+  - Codex executor ran focused README/repo-hygiene pytest: 48 passed in 0.07s.
+  - Codex executor first tried the YAML validator without `--file`; the tool rejected the invocation, then passed with the corrected `--file` invocation: 1 passed, 0 failed.
+  - Controller reran focused README/repo-hygiene pytest: 48 passed in 0.07s.
+  - Controller reran checklist YAML validation: 1 passed, 0 failed.
+  - Controller ran the project registry verification command `PYTHONDONTWRITEBYTECODE=1 python -m pytest -q`: 689 passed in 21.95s.
+  - Controller ran `git diff --check` with exit code 0.
+  - No runtime, gateway, provider, model, credential, network, ComfyUI, TTS, Telegram, or service lifecycle behavior was changed.

@@ -170,3 +170,49 @@ def test_readme_card_import_format_docs_are_accurate():
     assert "json, png, webp" not in card_import_docs
     assert "json, png, jpeg" not in card_import_docs
     assert "json, png, jpg" not in card_import_docs
+
+
+def _readme_public_policy_text() -> str:
+    text = _readme_text()
+    marker = "## Development"
+    assert marker in text
+    development = text.split(marker, maxsplit=1)[1]
+    return development.split("\n## ", maxsplit=1)[0]
+
+
+def test_readme_public_policy_navigation_block_has_required_links():
+    public_policy = _readme_public_policy_text()
+    required_links = [
+        "[CONTRIBUTING.md](CONTRIBUTING.md)",
+        "[SUPPORT.md](SUPPORT.md)",
+        "[SECURITY.md](SECURITY.md)",
+        "[CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)",
+        "[CHANGELOG.md](CHANGELOG.md)",
+    ]
+
+    for link in required_links:
+        assert link in public_policy
+
+
+def test_readme_public_policy_navigation_block_has_no_forbidden_operational_runtime_or_credential_guidance():
+    public_policy = _readme_public_policy_text().lower()
+
+    forbidden_guidance = [
+        "gateway start",
+        "gateway restart",
+        "gateway reload",
+        "gateway kill",
+        "systemctl",
+        "docker compose",
+        "service start",
+        "service restart",
+        "curl ",
+        "api key",
+        "secret",
+        "credential",
+        "paste",
+        "provide",
+    ]
+
+    for phrase in forbidden_guidance:
+        assert phrase not in public_policy

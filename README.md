@@ -116,12 +116,14 @@ Expected behavior:
 
 ## Development
 
-See the contributor onboarding guide in [CONTRIBUTING.md](CONTRIBUTING.md) for
-public contributor guardrails, safe validation rules, and scope guidance.
-For non-security support handling and issue routing, see
-[SUPPORT.md](SUPPORT.md).
-Public readiness notes live in the [CHANGELOG](CHANGELOG.md) including v0.1.0
-public beta and offline release preflight.
+For contributor onboarding and issue routing, use the dedicated public policy
+documents:
+
+- [CONTRIBUTING.md](CONTRIBUTING.md)
+- [SUPPORT.md](SUPPORT.md)
+- [SECURITY.md](SECURITY.md)
+- [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)
+- [CHANGELOG.md](CHANGELOG.md)
 
 ```bash
 python -m pip install -r requirements-test.txt

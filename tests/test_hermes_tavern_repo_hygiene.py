@@ -601,3 +601,42 @@ def test_github_templates_do_not_contain_operational_runtime_or_secret_sharing_i
 
         for regex in SECRET_SHARING_PATTERNS:
             assert not regex.search(text), f"{template} appears to ask for credential-like sharing"
+
+
+def test_readme_public_policy_block_links_all_policy_documents():
+    text = (REPO_ROOT / "README.md").read_text(encoding="utf-8")
+    required_links = [
+        "[CONTRIBUTING.md](CONTRIBUTING.md)",
+        "[SUPPORT.md](SUPPORT.md)",
+        "[SECURITY.md](SECURITY.md)",
+        "[CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)",
+        "[CHANGELOG.md](CHANGELOG.md)",
+    ]
+
+    for link in required_links:
+        assert link in text
+
+
+def test_readme_public_policy_block_has_no_forbidden_runtime_or_credential_guidance():
+    text = (REPO_ROOT / "README.md").read_text(encoding="utf-8")
+    marker = "## Development"
+    assert marker in text
+    public_policy = text.split(marker, maxsplit=1)[1].split("\n## ", maxsplit=1)[0].lower()
+
+    forbidden = [
+        "gateway start",
+        "gateway restart",
+        "gateway reload",
+        "gateway kill",
+        "systemctl",
+        "docker compose",
+        "service start",
+        "service restart",
+        "curl ",
+        "api key",
+        "credential",
+        "token",
+    ]
+
+    for phrase in forbidden:
+        assert phrase not in public_policy
