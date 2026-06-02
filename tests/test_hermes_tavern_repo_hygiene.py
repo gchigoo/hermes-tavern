@@ -72,6 +72,25 @@ def test_workflow_has_no_publish_or_deploy_or_secrets_commands():
         assert marker not in workflow_text, f"found forbidden workflow marker: {marker}"
 
 
+def test_workflow_installs_release_preflight_dependencies_in_runner_env():
+    """Public CI installs every test/build dependency needed from a clean runner."""
+    workflow_text = WORKFLOW_FILE.read_text(encoding="utf-8").lower()
+
+    required_dependencies = [
+        "setuptools>=68",
+        "wheel",
+        "build",
+        "pytest",
+        "pytest-asyncio",
+        "pyyaml",
+    ]
+    for dependency in required_dependencies:
+        assert dependency in workflow_text, f"missing CI dependency: {dependency}"
+
+    assert "--user" not in workflow_text
+    assert "force_javascript_actions_to_node24" in workflow_text
+
+
 def test_patch_placeholder_contains_no_real_sk_secret_pattern():
     patch_text = PATCH_FILE.read_text(encoding="utf-8")
     assert "sk-" not in patch_text, "found sk- secret-pattern text in patch file"

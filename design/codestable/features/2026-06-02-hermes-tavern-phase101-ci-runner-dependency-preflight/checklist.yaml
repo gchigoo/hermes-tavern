@@ -1,0 +1,121 @@
+doc_type: feature-checklist
+feature: hermes-tavern-phase101-ci-runner-dependency-preflight
+date: "2026-06-02"
+status: implemented
+
+summary: >
+  Repair the first public GitHub Actions run after publication by making the
+  workflow install the clean-runner dependencies needed by the existing
+  release-preflight gates. This phase is CI/test/checklist-only and does not
+  change runtime, gateway, provider, model, credential, network, service,
+  package metadata, or command-table behavior.
+
+steps:
+  - id: S1
+    name: Diagnose public CI failure
+    description: >
+      Inspect the first public GitHub Actions run and reproduce the clean-runner
+      dependency gap in a fresh local venv.
+    status: implemented
+    result: >
+      IMPLEMENTED - Actions showed both Python jobs failed. A fresh venv with
+      only pytest/build reproduced missing PyYAML plus missing setuptools>=68 and
+      wheel for no-isolation packaging builds; full glob also warned about missing
+      pytest-asyncio marks.
+
+  - id: S2
+    name: Install required CI dependencies in runner environment
+    description: >
+      Update the workflow to install setuptools>=68, wheel, build, pytest,
+      pytest-asyncio, and PyYAML directly in the runner environment, then install
+      the package editable without --user.
+    status: implemented
+    changed_file: ".github/workflows/test.yml"
+    result: "IMPLEMENTED - workflow dependency install now matches clean-runner release-preflight needs"
+
+  - id: S3
+    name: Opt runner JavaScript actions into Node 24
+    description: >
+      Set FORCE_JAVASCRIPT_ACTIONS_TO_NODE24 to avoid the public Actions Node 20
+      deprecation warning for checkout/setup-python JavaScript actions.
+    status: implemented
+    changed_file: ".github/workflows/test.yml"
+    result: "IMPLEMENTED - workflow env opts JavaScript actions into Node 24"
+
+  - id: S4
+    name: Add CI dependency regression
+    description: >
+      Extend repo hygiene tests so the workflow must keep clean-runner test/build
+      dependencies, avoid --user installs, and retain the Node 24 opt-in.
+    status: implemented
+    changed_file: "tests/test_hermes_tavern_repo_hygiene.py"
+    result: "IMPLEMENTED - repo hygiene test now locks CI dependency coverage"
+
+  - id: S4b
+    name: Keep standalone tests self-contained
+    description: >
+      Add conftest-only compatibility shims for the tiny hermes_cli.config and
+      gateway.platforms.base surfaces used by tests when hermes-agent itself is
+      absent on a clean public runner.
+    status: implemented
+    changed_file: "conftest.py"
+    result: >
+      IMPLEMENTED - clean-runner full Tavern pytest now passes without relying
+      on the adjacent hermes-agent checkout.
+
+  - id: S5
+    name: Focused repo hygiene pytest
+    description: >
+      Run repo hygiene tests for the workflow dependency regression.
+    verification_command: >
+      PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_repo_hygiene.py -q -o 'addopts='
+    status: passed
+    result: "PASSED - 5 repo hygiene tests passed in 0.01s"
+
+  - id: S6
+    name: Clean-runner local smoke
+    description: >
+      Recreate a clean venv, install the same workflow dependencies, install the
+      package editable, and run README docs, packaging, py_compile, and full
+      Tavern pytest glob.
+    verification_command: >
+      python3.11 -m venv <tmp>/venv
+      <tmp>/venv/bin/python -m pip install --upgrade pip
+      <tmp>/venv/bin/python -m pip install --upgrade "setuptools>=68" wheel build pytest pytest-asyncio pyyaml
+      <tmp>/venv/bin/python -m pip install --editable .
+      <tmp>/venv/bin/python -m py_compile conftest.py plugins/__init__.py plugins/hermes_tavern/__init__.py src/hermes_tavern/*.py src/hermes_tavern/importers/*.py tests/test_hermes_tavern_*.py
+      <tmp>/venv/bin/python -m pytest tests/test_hermes_tavern_readme_docs.py -q -o 'addopts='
+      <tmp>/venv/bin/python -m pytest tests/test_hermes_tavern_packaging.py -q -o 'addopts='
+      <tmp>/venv/bin/python -m pytest tests/test_hermes_tavern_*.py -q -o 'addopts='
+    status: passed
+    result: >
+      PASSED - clean venv runner smoke passed: README docs 11 passed,
+      packaging 20 passed, full Tavern glob 655 passed, and py_compile passed.
+
+  - id: S7
+    name: Checklist YAML validation
+    description: >
+      Validate this CodeStable checklist with the project YAML validator.
+    verification_command: >
+      PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-02-hermes-tavern-phase101-ci-runner-dependency-preflight/checklist.yaml --yaml-only
+    status: passed
+    result: "PASSED - YAML validator accepted this checklist"
+
+implementation_notes: |
+  - Scope is restricted to .github/workflows/test.yml, conftest.py,
+    tests/test_hermes_tavern_repo_hygiene.py, and this checklist.
+  - No production runtime behavior, command dispatch behavior, command table entries,
+    pyproject.toml metadata, plugin.yaml metadata, Gateway behavior, provider
+    routing, model calls, network calls, service management, dependency policy,
+    version metadata, or credential handling are changed. conftest.py shims are
+    test-only and activate only when hermes-agent modules are absent.
+  - The workflow remains test-only and contains no publish, deploy, release,
+    token, or secret-use steps.
+
+verification_notes: |
+  - Public Actions failure was reproduced locally in a clean venv before the fix.
+  - After CI dependency and standalone test-shim fixes, a clean venv with the
+    same dependency list passed py_compile, README docs tests, packaging tests,
+    and the full tests/test_hermes_tavern_*.py glob.
+  - Focused repo hygiene, packaging, py_compile, and checklist YAML validation
+    were rerun controller-side after editing the checklist.
