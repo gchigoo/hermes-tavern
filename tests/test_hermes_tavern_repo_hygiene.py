@@ -640,3 +640,51 @@ def test_readme_public_policy_block_has_no_forbidden_runtime_or_credential_guida
 
     for phrase in forbidden:
         assert phrase not in public_policy
+
+
+def test_security_policy_has_supported_versions_for_public_beta():
+    text = SECURITY_FILE.read_text(encoding="utf-8").lower()
+    assert "supported versions" in text
+    assert "0.1.0" in text
+    assert "public beta" in text
+
+
+def test_security_policy_keeps_redaction_and_private_reporting_language():
+    text = SECURITY_FILE.read_text(encoding="utf-8").lower()
+    required_phrases = [
+        "redact",
+        "redacted",
+        "private disclosure channel",
+        "if and when enabled",
+    ]
+
+    for phrase in required_phrases:
+        assert phrase in text
+
+
+def test_security_policy_has_no_operational_provider_network_or_credential_sharing_guidance():
+    text = SECURITY_FILE.read_text(encoding="utf-8").lower()
+
+    forbidden_phrases = [
+        "gateway start",
+        "gateway restart",
+        "gateway reload",
+        "gateway kill",
+        "gateway manage",
+        "systemctl",
+        "docker compose",
+        "service start",
+        "service restart",
+        "service stop",
+        "curl ",
+        "private endpoint",
+        "credential sharing",
+    ]
+
+    for phrase in forbidden_phrases:
+        assert phrase not in text, f"SECURITY.md contains forbidden phrase: {phrase}"
+
+    assert not re.search(r"https?://", text), "SECURITY.md must not contain private endpoint URLs"
+
+    for regex in SECRET_SHARING_PATTERNS:
+        assert not regex.search(text), "SECURITY.md appears to ask for credential-like sharing"

@@ -9,6 +9,15 @@ and project packaging in this repository.
 It does not authorize runtime, provider, gateway, model, credential, or network
 behavior changes.
 
+## Supported versions
+
+Current public-beta support scope is:
+
+- Project version `0.1.0` only.
+
+For versions outside this scope, please raise a private report instead of asking for
+runtime or operational support.
+
 ## What to report
 
 Please report suspected issues in these areas:

@@ -1,0 +1,54 @@
+doc_type: feature-checklist
+feature: hermes-tavern-phase111-security-supported-versions
+date: "2026-06-03"
+status: implemented
+
+summary: >
+  Add a public-safe Supported versions section to SECURITY.md for the current beta
+  scope and extend repo-hygiene checks to enforce offline security-policy wording
+  for supported version, redaction/private disclosure language, and absence of
+  forbidden operational/provider/network/credential-sharing guidance.
+
+steps:
+  - id: S1
+    name: Add supported versions scope to SECURITY.md
+    description: >
+      Document that the current public beta security-support scope is version 0.1.0
+      in a concise Supported versions section with only public-safe content.
+    status: implemented
+    changed_file: "SECURITY.md"
+    verification_command: >
+      rg -n "## Supported versions|0.1.0|public beta" SECURITY.md
+    result: "IMPLEMENTED - SECURITY.md now contains the supported versions section and beta/version language."
+
+  - id: S2
+    name: Add repo-hygiene offline security-policy assertions
+    description: >
+      Extend tests/test_hermes_tavern_repo_hygiene.py with offline assertions that
+      SECURITY.md includes version/scope and redaction/private-reporting language, and
+      does not include forbidden operational, provider/network, or credential-sharing guidance.
+    status: verified
+    changed_file: "tests/test_hermes_tavern_repo_hygiene.py"
+    verification_command: >
+      PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_repo_hygiene.py -q -o "addopts="
+    result: "PASS - focused repository hygiene test file run: 35 passed."
+
+  - id: S3
+    name: Validate new phase checklist YAML
+    description: >
+      Run YAML-only validation for this checklist artifact to ensure schema-safe
+      formatting and offline-safe syntax.
+    status: verified
+    verification_command: >
+      PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --yaml-only --file design/codestable/features/2026-06-03-hermes-tavern-phase111-security-supported-versions/checklist.yaml
+    result: "PASS - YAML validator accepted the checklist file (1 passed, 0 failed)."
+
+verification_notes: |
+  - Scope restricted to SECURITY.md, repo-hygiene tests, and CodeStable artifact.
+  - Codex executor ran focused repo-hygiene pytest: 35 passed in 0.06s.
+  - Codex executor ran checklist YAML validation: 1 passed, 0 failed.
+  - Controller reran focused repo-hygiene pytest: 35 passed in 0.05s.
+  - Controller reran checklist YAML validation: 1 passed, 0 failed.
+  - Controller ran project registry verification command `PYTHONDONTWRITEBYTECODE=1 python -m pytest -q`: 692 passed in 22.41s.
+  - Controller ran `git diff --check` with exit code 0.
+  - No runtime, gateway, provider, model, credential, network, ComfyUI, TTS, Telegram, packaging, or service lifecycle behavior was changed.
