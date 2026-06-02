@@ -117,6 +117,7 @@ Expected behavior:
 ## Development
 
 ```bash
+python -m pip install -r requirements-test.txt
 python -m pip install -e . --no-deps
 python -m py_compile conftest.py plugins/__init__.py plugins/hermes_tavern/__init__.py src/hermes_tavern/*.py src/hermes_tavern/importers/*.py tests/test_hermes_tavern_*.py
 python -m pytest tests/test_hermes_tavern_*.py -q -o 'addopts='
@@ -127,6 +128,7 @@ python -m pytest tests/test_hermes_tavern_*.py -q -o 'addopts='
 Run these offline checks before release, so we can catch regressions without
 restarting the Gateway or touching runtime services:
 
+- `python -m pip install -r requirements-test.txt`
 - `python -m py_compile conftest.py plugins/__init__.py plugins/hermes_tavern/__init__.py src/hermes_tavern/*.py src/hermes_tavern/importers/*.py tests/test_hermes_tavern_*.py`
 - `python -m pytest tests/test_hermes_tavern_readme_docs.py -q -o 'addopts='`
 - `python -m pytest tests/test_hermes_tavern_packaging.py -q -o 'addopts='`

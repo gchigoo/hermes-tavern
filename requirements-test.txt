@@ -1,0 +1,6 @@
+setuptools>=68
+wheel
+build
+pytest
+pytest-asyncio
+PyYAML

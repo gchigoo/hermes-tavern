@@ -56,6 +56,7 @@ def test_readme_release_preflight_has_offline_gates():
 
     offline_gates = [
         "python -m py_compile",
+        "python -m pip install -r requirements-test.txt",
         "python -m pytest tests/test_hermes_tavern_readme_docs.py -q -o 'addopts='",
         "python -m pytest tests/test_hermes_tavern_packaging.py -q -o 'addopts='",
         "python -m pytest tests/test_hermes_tavern_*.py -q -o 'addopts='",
@@ -72,6 +73,12 @@ def test_readme_release_preflight_has_offline_gates():
     assert "curl " not in preflight
     assert "docker compose" not in preflight
     assert "systemctl" not in preflight
+
+
+def test_readme_release_preflight_mentions_requirements_test():
+    preflight = _readme_release_preflight_text().lower()
+    assert "requirements-test.txt" in preflight
+    assert "python -m pip install -r requirements-test.txt" in preflight
 
 
 def test_readme_release_preflight_is_offline_only():

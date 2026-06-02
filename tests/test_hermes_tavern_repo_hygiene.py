@@ -8,6 +8,7 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 LICENSE_FILE = REPO_ROOT / "LICENSE"
 WORKFLOW_FILE = REPO_ROOT / ".github/workflows/test.yml"
 PATCH_FILE = REPO_ROOT / "patches/hermes-agent-core-changes.patch"
+REQUIREMENTS_TEST_FILE = REPO_ROOT / "requirements-test.txt"
 
 REQUIRED_GITIGNORE_PATTERNS = {
     "Python bytecode/cache": [
@@ -84,11 +85,39 @@ def test_workflow_installs_release_preflight_dependencies_in_runner_env():
         "pytest-asyncio",
         "pyyaml",
     ]
+    requirements_text = REQUIREMENTS_TEST_FILE.read_text(encoding="utf-8").lower()
     for dependency in required_dependencies:
-        assert dependency in workflow_text, f"missing CI dependency: {dependency}"
+        assert dependency in requirements_text, f"missing dependency in requirements-test.txt: {dependency}"
+
+    assert "python -m pip install --upgrade -r requirements-test.txt" in workflow_text
+    assert "pip install --upgrade \"setuptools>=68\"" not in workflow_text
+    assert "pip install --upgrade setuptools>=68" not in workflow_text
+    assert "pip install --upgrade pyyaml" not in workflow_text
+    assert "pip install --upgrade pytest-asyncio" not in workflow_text
 
     assert "--user" not in workflow_text
     assert "force_javascript_actions_to_node24" in workflow_text
+
+
+def test_requirements_test_file_exists_and_has_expected_dependencies():
+    assert REQUIREMENTS_TEST_FILE.is_file()
+
+    expected_dependencies = {
+        "setuptools>=68",
+        "wheel",
+        "build",
+        "pytest",
+        "pytest-asyncio",
+        "pyyaml",
+    }
+
+    observed_dependencies = {
+        line.strip().lower()
+        for line in REQUIREMENTS_TEST_FILE.read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    }
+
+    assert observed_dependencies == expected_dependencies
 
 
 def test_patch_placeholder_contains_no_real_sk_secret_pattern():

@@ -1,0 +1,131 @@
+doc_type: feature-checklist
+feature: hermes-tavern-phase102-public-test-dependency-bootstrap
+date: "2026-06-02"
+status: implemented
+
+summary: >
+  Introduce a single public test dependency bootstrap file for clean runners and
+  local release-preflight checks. CI now installs test/build/runtime-check
+  dependencies from requirements-test.txt, README documents the bootstrap step
+  before editable install and release checks, and repo/doc hygiene tests assert
+  this dependency policy.
+
+steps:
+  - id: S1
+    name: Add requirements-test.txt
+    description: >
+      Add a dedicated test/build dependency bootstrap file containing exactly the
+      dependencies required by CI and local release preflight: setuptools>=68,
+      wheel, build, pytest, pytest-asyncio, and PyYAML.
+    status: implemented
+    changed_file: "requirements-test.txt"
+    result: "IMPLEMENTED - requirements-test.txt added with six expected packages"
+
+  - id: S2
+    name: Shift CI install source to requirements-test.txt
+    description: >
+      Update .github/workflows/test.yml to install test/build dependencies using
+      python -m pip install --upgrade -r requirements-test.txt instead of
+      duplicating the dependency list inline.
+    status: implemented
+    changed_file: ".github/workflows/test.yml"
+    result: "IMPLEMENTED - inline list removed; requirements file is the primary source"
+
+  - id: S3
+    name: Update public development/release docs
+    description: >
+      Update README.md Development and Release preflight sections so public
+      contributors install test dependencies from requirements-test.txt before
+      editable install and check gates.
+    status: implemented
+    changed_file: "README.md"
+    result: "IMPLEMENTED - docs now reference the single bootstrap file"
+
+  - id: S4
+    name: Add hygiene coverage for dependency bootstrap
+    description: >
+      Extend README doc tests and repo-hygiene tests to assert the bootstrap
+      file exists, contains expected entries, and CI installs from it as the
+      single public setup source.
+    status: implemented
+    changed_files:
+      - "tests/test_hermes_tavern_readme_docs.py"
+      - "tests/test_hermes_tavern_repo_hygiene.py"
+    result: "IMPLEMENTED - coverage now guards bootstrap contract"
+
+  - id: S5
+    name: Focused docs/hygiene verification
+    description: >
+      Run README docs and repo hygiene tests to verify the public bootstrap
+      documentation and CI dependency contract.
+    verification_command: >
+      PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_repo_hygiene.py tests/test_hermes_tavern_readme_docs.py -q -o 'addopts='
+    status: verified
+    result: "PASS - controller run returned 18 passed in 0.03s"
+
+  - id: S6
+    name: Focused packaging verification
+    description: >
+      Run packaging tests to ensure dependency docs remain aligned with build,
+      wheel/sdist, isolated install, entry point, and payload-boundary behavior.
+    verification_command: >
+      PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_packaging.py -q -o 'addopts='
+    status: verified
+    result: "PASS - controller run returned 20 passed in 7.14s"
+
+  - id: S7
+    name: Full py_compile gate
+    description: >
+      Compile the compatibility shim, standalone plugin source, importers, and
+      Tavern test modules without writing pycache files into the repo.
+    verification_command: >
+      PYTHONPYCACHEPREFIX=/private/tmp/hermes-tavern-phase102-pycache python -m py_compile conftest.py plugins/__init__.py plugins/hermes_tavern/__init__.py src/hermes_tavern/*.py src/hermes_tavern/importers/*.py tests/test_hermes_tavern_*.py
+    status: verified
+    result: "PASS - controller run exited 0 with no compile output"
+
+  - id: S8
+    name: Full Tavern pytest gate
+    description: >
+      Run the complete Hermes Tavern test glob after the docs/CI bootstrap
+      change, without managing Gateway or calling real providers.
+    verification_command: >
+      PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_*.py -q -o 'addopts='
+    status: verified
+    result: "PASS - controller rerun returned 657 passed in 22.45s"
+
+  - id: S9
+    name: Checklist YAML validation
+    description: >
+      Validate this CodeStable checklist with the project YAML validator.
+    verification_command: >
+      PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-02-hermes-tavern-phase102-public-test-dependency-bootstrap/checklist.yaml --yaml-only
+    status: verified
+    result: "PASS - validated 1 file: 1 passed, 0 failed"
+
+  - id: S10
+    name: Sensitive-information scan
+    description: >
+      Scan the publishable working tree for common token shapes and generic
+      secret-looking assignments, excluding build/cache/venv directories and
+      known runtime env lookup false positives.
+    verification_command: "custom Python public secret scan"
+    status: verified
+    result: "PASS - PUBLIC_SECRET_SCAN_ACTUAL_HITS 0"
+
+implementation_notes: |
+  - Scope remains limited to requirements-test.txt, README.md,
+    .github/workflows/test.yml, tests/test_hermes_tavern_repo_hygiene.py,
+    tests/test_hermes_tavern_readme_docs.py, and this checklist.
+  - No runtime source, lifecycle, provider/model/network/Telegram/ComfyUI/TTS/
+    Gateway, credential, or package metadata files were changed.
+  - The workflow remains test-only and still has no publish, deploy, release,
+    token, or secret-use steps.
+
+verification_notes: |
+  - Codex executor initially reported a full-glob transient image-provider
+    failure path (8 failed, 649 passed); the controller reran the full Tavern
+    glob and it passed cleanly: 657 passed in 22.45s.
+  - Controller reran focused docs/hygiene, packaging, py_compile, full pytest,
+    checklist YAML validation, and a public secret scan.
+  - No Gateway/service/model/provider/network/Telegram/ComfyUI/TTS/credential
+    endpoints were started, reloaded, killed, managed, or called.
