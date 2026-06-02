@@ -1,0 +1,58 @@
+name: Docs / tests / public readiness
+description: Report docs, test, CI, or public-readiness status for a public contribution.
+labels: [documentation, tests, public-readiness]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Before submitting, follow [CONTRIBUTING.md](CONTRIBUTING.md) for required offline checks.
+
+  - type: dropdown
+    id: changed_area
+    attributes:
+      label: Changed area
+      options:
+        - Docs-only
+        - Tests-only
+        - Tests + docs
+        - Docs + tests + CI
+        - Other
+      description: Choose the area this report covers.
+    validations:
+      required: true
+
+  - type: textarea
+    id: docs_tests_scope
+    attributes:
+      label: Docs / tests scope
+      description: Summarize what docs and tests were changed.
+      placeholder: Describe changed files and sections.
+    validations:
+      required: true
+
+  - type: textarea
+    id: ci_readiness
+    attributes:
+      label: CI readiness
+      description: Report any CI impact, expected status, and mitigation.
+      placeholder: Include whether the change touches public CI checks.
+    validations:
+      required: true
+
+  - type: textarea
+    id: public_readiness
+    attributes:
+      label: Public-readiness report
+      description: Note whether the public contribution contract is met.
+      placeholder: Include docs/test consistency, onboarding, and review notes.
+    validations:
+      required: true
+
+  - type: textarea
+    id: safety_and_secrets
+    attributes:
+      label: Safety and secret handling
+      description: Confirm no credentials/secrets were added and that any logs are redacted.
+      placeholder: Confirm secret handling and redaction.
+    validations:
+      required: true

@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Contribution guide
+    url: https://github.com/gchigoo/hermes-tavern/blob/main/CONTRIBUTING.md
+    about: Follow CONTRIBUTING.md before filing an issue.

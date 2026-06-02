@@ -1,0 +1,63 @@
+name: Bug report
+description: Report observed behavior that is incorrect and can be reproduced.
+title: "[Bug] "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Before filing, review [CONTRIBUTING.md](CONTRIBUTING.md) for offline-only validation and secret-handling rules.
+
+  - type: textarea
+    id: actual_behavior
+    attributes:
+      label: Actual behavior
+      description: What happened, as observed.
+      placeholder: Describe the unexpected behavior.
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected_behavior
+    attributes:
+      label: Expected behavior
+      description: What should happen instead.
+      placeholder: Describe the expected result clearly.
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction
+      description: Steps to reproduce the issue.
+      placeholder: |
+        1. ...
+        2. ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment_context
+    attributes:
+      label: Environment and context
+      description: OS, Python version, install mode, and relevant command history.
+      placeholder: Python 3.12, Linux/macOS/Windows, etc.
+    validations:
+      required: true
+
+  - type: textarea
+    id: offline_validation
+    attributes:
+      label: Safe offline validation
+      description: Offline tests/checks you ran (e.g., pytest commands, lint/compile checks).
+    validations:
+      required: true
+
+  - type: textarea
+    id: attachments_and_logs
+    attributes:
+      label: Attachments / logs
+      description: >
+        Attach logs or traces only if they help. Redact and remove credentials,
+        API keys, tokens, secrets, passwords, and any provider/account identifiers.

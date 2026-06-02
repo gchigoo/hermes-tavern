@@ -1,0 +1,154 @@
+doc_type: feature-checklist
+feature: hermes-tavern-phase104-public-github-collaboration-templates
+date: "2026-06-02"
+status: implemented
+
+summary: >
+  Add public GitHub collaboration templates (PR template and issue forms), update
+  repo-hygiene regression coverage for template integrity and safe offline
+  contribution behavior, and keep all validation offline and non-operational.
+
+steps:
+  - id: S1
+    name: Add pull request template for scoped, safe contributions
+    description: >
+      Add `.github/pull_request_template.md` with required scope, area-type,
+      offline validation, side effects, secret handling, and CONTRIBUTING.md link
+      prompts.
+    status: implemented
+    changed_file: ".github/pull_request_template.md"
+    result: "IMPLEMENTED - PR template added and includes required contribution prompts"
+
+  - id: S2
+    name: Add bug report issue form
+    description: >
+      Add `.github/ISSUE_TEMPLATE/bug_report.yml` with required fields for
+      actual behavior, expected behavior, reproduction, environment/context,
+      offline validation, and attachments/logs with redaction guidance.
+    status: implemented
+    changed_file: ".github/ISSUE_TEMPLATE/bug_report.yml"
+    result: "IMPLEMENTED - bug report form added with expected fields and redaction language"
+
+  - id: S3
+    name: Add docs/tests/CI/public-readiness issue form
+    description: >
+      Add `.github/ISSUE_TEMPLATE/docs_tests_readiness.yml` as a compact
+      reporting form for docs, test, CI, and public-readiness status with
+      safety/secret confirmation.
+    status: implemented
+    changed_file: ".github/ISSUE_TEMPLATE/docs_tests_readiness.yml"
+    result: "IMPLEMENTED - docs/tests readiness form added"
+
+  - id: S4
+    name: Add issue template configuration
+    description: >
+      Add `.github/ISSUE_TEMPLATE/config.yml` with blank issues enabled and a
+      CONTRIBUTING.md contact link.
+    status: implemented
+    changed_file: ".github/ISSUE_TEMPLATE/config.yml"
+    result: "IMPLEMENTED - config enables blank issues and links CONTRIBUTING.md"
+
+  - id: S5
+    name: Add repository-hygiene assertions for collaboration templates
+    description: >
+      Extend tests to assert required template concepts exist, issue templates are
+      valid YAML, required fields are present, CONTRIBUTING.md is referenced, and
+      forbidden operational patterns are absent.
+    status: implemented
+    changed_file: "tests/test_hermes_tavern_repo_hygiene.py"
+    result: "IMPLEMENTED - template validations and anti-pattern checks added"
+
+  - id: S6
+    name: Run focused repo-hygiene verification
+    description: >
+      Run the focused repo-hygiene test file to validate collaboration template
+      and repository policy checks.
+    verification_command: >
+      PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_repo_hygiene.py -q -o 'addopts='
+    status: verified
+    result: "PASS - controller rerun returned 15 passed in 0.03s"
+
+  - id: S7
+    name: Run public docs + packaging verification
+    description: >
+      Run public-readiness docs and packaging checks for cross-phase compatibility.
+    verification_command: >
+      PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_readme_docs.py tests/test_hermes_tavern_packaging.py -q -o 'addopts='
+    status: verified
+    result: "PASS - controller run returned 33 passed in 7.49s"
+
+  - id: S8
+    name: Run py_compile verification
+    description: >
+      Compile source and tests with an isolated pycache directory.
+    verification_command: >
+      PYTHONPYCACHEPREFIX=/private/tmp/hermes-tavern-phase104-pycache python -m py_compile conftest.py plugins/__init__.py plugins/hermes_tavern/__init__.py src/hermes_tavern/*.py src/hermes_tavern/importers/*.py tests/test_hermes_tavern_*.py
+    status: verified
+    result: "PASS - controller run exited 0 with no compile output"
+
+  - id: S9
+    name: Run full tavern tests
+    description: >
+      Run the full Tavern test glob to ensure no regressions outside scope.
+    verification_command: >
+      PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_*.py -q -o 'addopts='
+    status: verified
+    result: "PASS - controller run returned 667 passed in 20.25s"
+
+  - id: S10
+    name: Validate checklist YAML
+    description: >
+      Validate this checklist with the project YAML validation helper.
+    verification_command: >
+      PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-02-hermes-tavern-phase104-public-github-collaboration-templates/checklist.yaml --yaml-only
+    status: verified
+    result: "PASS - validated 1 file: 1 passed, 0 failed"
+
+  - id: S11
+    name: Run public secret scan
+    description: >
+      Scan publishable project files for leaked token-like values and generic
+      secret-looking assignments.
+    verification_command: "custom Python public secret scan"
+    status: verified
+    result: "PASS - PUBLIC_SECRET_SCAN_ACTUAL_HITS 0"
+
+  - id: S12
+    name: Diff and identity hygiene checks
+    description: >
+      Ensure no trailing whitespace or malformed patch hunks remain, and confirm
+      the forbidden identifier does not appear in git history or publishable
+      content.
+    verification_command: "git diff --check; git log/git grep forbidden-identifier scan"
+    status: verified
+    result: "PASS - git diff --check exited 0; forbidden-identifier scan returned no hits"
+
+implementation_notes: |
+  - Scope is limited to `.github/pull_request_template.md`,
+    `.github/ISSUE_TEMPLATE/bug_report.yml`,
+    `.github/ISSUE_TEMPLATE/docs_tests_readiness.yml`,
+    `.github/ISSUE_TEMPLATE/config.yml`,
+    `tests/test_hermes_tavern_repo_hygiene.py`,
+    and this checklist.
+  - No runtime, provider, gateway, model, credential handling behavior,
+    network endpoint, workflow, README, CONTRIBUTING, pyproject, plugin metadata,
+    source, or package metadata behavior was changed.
+  - GitHub templates intentionally ask for offline validation and redacted logs
+    only; they avoid service lifecycle commands, external endpoint calls, and
+    credential-sharing instructions.
+
+verification_notes: |
+  - Codex executor ran focused repo hygiene once: 15 passed in 0.04s.
+  - Controller reran focused repo hygiene after whitespace cleanup: 15 passed in
+    0.03s.
+  - Controller ran README docs + packaging regression tests: 33 passed in 7.49s.
+  - Controller py_compile gate passed with exit code 0 and no output; pycache
+    output was redirected to /private/tmp/hermes-tavern-phase104-pycache.
+  - Controller full Tavern pytest glob passed: 667 passed in 20.25s.
+  - Checklist YAML validation passed: 1 file passed, 0 failed.
+  - Public secret scan passed with 0 actual hits.
+  - git diff --check passed after removing a trailing whitespace line introduced
+    in the hygiene test import block.
+  - git log/git grep scan found no forbidden identifier hits.
+  - No Gateway/service/model/provider/network/Telegram/ComfyUI/TTS/credential
+    endpoints were started, reloaded, killed, managed, or called.
