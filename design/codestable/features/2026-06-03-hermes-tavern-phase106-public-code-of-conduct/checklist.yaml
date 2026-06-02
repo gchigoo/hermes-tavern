@@ -1,0 +1,85 @@
+doc_type: feature-checklist
+feature: hermes-tavern-phase106-public-code-of-conduct
+date: "2026-06-03"
+status: implemented
+
+summary: >
+  Add a public Code of Conduct document, connect contributor and issue-template
+  discovery links, and extend repository-hygiene checks to assert CoC presence,
+  required phrasing, safe linking, and absence of operational/credential-sharing
+  language.
+
+steps:
+  - id: S1
+    name: Add public Code of Conduct document
+    description: >
+      Add `CODE_OF_CONDUCT.md` with concise expectations for respectful,
+      harassment-free community behavior and safe redaction guidance for sensitive
+      details in public contribution channels.
+    status: implemented
+    changed_file: "CODE_OF_CONDUCT.md"
+    result: "IMPLEMENTED - code of conduct added with constructive participation and safe disclosure expectations"
+
+  - id: S2
+    name: Add Code of Conduct handoff to contributor guide
+    description: >
+      Update `CONTRIBUTING.md` with a short Code of Conduct handoff so contributors
+      are directed to read it before filing issues or pull requests.
+    status: implemented
+    changed_file: "CONTRIBUTING.md"
+    result: "IMPLEMENTED - contributor guide now links to CODE_OF_CONDUCT.md"
+
+  - id: S3
+    name: Wire Code of Conduct into issue template config
+    description: >
+      Add a GitHub issue template contact link to `CODE_OF_CONDUCT.md` so all
+      contribution channels surface the conduct expectations.
+    status: implemented
+    changed_file: ".github/ISSUE_TEMPLATE/config.yml"
+    result: "IMPLEMENTED - issue template config now links to CODE_OF_CONDUCT.md"
+
+  - id: S4
+    name: Extend repo-hygiene checks for CoC and anti-patterns
+    description: >
+      Extend `tests/test_hermes_tavern_repo_hygiene.py` with offline checks for
+      Code of Conduct file existence, required content markers, contribution and
+      issue-template linking, and forbidden operational/secret-sharing language
+      checks.
+    status: implemented
+    changed_file: "tests/test_hermes_tavern_repo_hygiene.py"
+    result: "IMPLEMENTED - all requested CoC checks added to repository hygiene suite"
+
+  - id: S5
+    name: Focused repository-hygiene verification
+    description: >
+      Run the updated hygiene suite to validate the new Code of Conduct wiring and
+      anti-pattern checks.
+    verification_command: >
+      PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_repo_hygiene.py -q -o 'addopts='
+    status: verified
+    result: "PASS - updated hygiene test returned 22 passed in 0.05s"
+
+  - id: S6
+    name: Validate checklist YAML
+    description: >
+      Validate the new CodeStable phase checklist with project YAML validator.
+    verification_command: >
+      PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-03-hermes-tavern-phase106-public-code-of-conduct/checklist.yaml --yaml-only
+    status: verified
+    result: "PASS - validate-yaml returned 1 passed, 0 failed"
+
+implementation_notes: |
+  - Scope is limited to `CODE_OF_CONDUCT.md`, `CONTRIBUTING.md`,
+    `.github/ISSUE_TEMPLATE/config.yml`, `tests/test_hermes_tavern_repo_hygiene.py`,
+    and this checklist.
+  - This phase intentionally does not modify runtime code, provider, gateway,
+    model, credential, or service management logic.
+
+verification_notes: |
+  - Codex executor first ran focused repo hygiene, fixed one required-phrase
+    mismatch, then passed with 22 passed in 0.05s.
+  - Codex executor validated this checklist YAML with 1 passed, 0 failed.
+  - Controller reran focused repo hygiene, README docs + packaging regression,
+    py_compile, full Tavern pytest, checklist YAML validation, and git diff --check.
+  - No Gateway/service/provider/model/network/ComfyUI/TTS/Telegram/credential
+    endpoint lifecycle commands were added or executed.

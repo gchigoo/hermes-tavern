@@ -3,6 +3,9 @@ contact_links:
   - name: Contribution guide
     url: https://github.com/gchigoo/hermes-tavern/blob/main/CONTRIBUTING.md
     about: Follow CONTRIBUTING.md before filing an issue.
+  - name: Code of Conduct
+    url: https://github.com/gchigoo/hermes-tavern/blob/main/CODE_OF_CONDUCT.md
+    about: Review Code of Conduct expectations before opening an issue.
   - name: Security reporting policy
     url: https://github.com/gchigoo/hermes-tavern/blob/main/SECURITY.md
     about: Read SECURITY.md before reporting suspected sensitive issues.

@@ -20,6 +20,7 @@ BUG_REPORT_TEMPLATE = ISSUE_TEMPLATES_ROOT / "bug_report.yml"
 DOCS_TESTS_READINESS_TEMPLATE = ISSUE_TEMPLATES_ROOT / "docs_tests_readiness.yml"
 ISSUE_TEMPLATE_CONFIG = ISSUE_TEMPLATES_ROOT / "config.yml"
 SECURITY_FILE = REPO_ROOT / "SECURITY.md"
+CODE_OF_CONDUCT_FILE = REPO_ROOT / "CODE_OF_CONDUCT.md"
 
 REQUIRED_GITIGNORE_PATTERNS = {
     "Python bytecode/cache": [
@@ -77,6 +78,16 @@ SECURITY_REQUIRED_PHRASES = {
     "security reporting",
     "private disclosure channel",
     "if and when enabled",
+}
+
+CODE_OF_CONDUCT_REQUIRED_PHRASES = {
+    "code of conduct",
+    "respectful",
+    "inclusive",
+    "harass",
+    "discriminat",
+    "credentials",
+    "redact",
 }
 
 
@@ -254,6 +265,12 @@ def test_contributing_links_to_security_policy():
     assert "security issues" in text
 
 
+def test_contributing_links_to_code_of_conduct():
+    text = CONTRIBUTING_FILE.read_text(encoding="utf-8").lower()
+    assert "code of conduct" in text
+    assert "code_of_conduct.md" in text
+
+
 def test_pull_request_template_exists_and_includes_phase104_fields():
     assert PR_TEMPLATE_FILE.is_file(), "pull request template is missing"
 
@@ -356,6 +373,10 @@ def test_issue_template_config_keeps_blank_issues_enabled_and_links_contributing
         for url in urls
     ), "config.yml must link to CONTRIBUTING.md"
     assert any(
+        "code_of_conduct.md" in url and url.startswith("https://github.com/")
+        for url in urls
+    ), "config.yml must link to CODE_OF_CONDUCT.md"
+    assert any(
         "security.md" in url and url.startswith("https://github.com/")
         for url in urls
     ), "config.yml must link to SECURITY.md"
@@ -375,6 +396,35 @@ def test_security_policy_and_issue_template_config_have_no_sensitive_reporting_i
 
         for regex in SECRET_SHARING_PATTERNS:
             assert not regex.search(text), f"{target} appears to ask for credential-like sharing"
+
+
+def test_code_of_conduct_exists_and_has_expected_content():
+    assert CODE_OF_CONDUCT_FILE.is_file(), "CODE_OF_CONDUCT.md is required"
+    text = CODE_OF_CONDUCT_FILE.read_text(encoding="utf-8").lower()
+
+    for phrase in CODE_OF_CONDUCT_REQUIRED_PHRASES:
+        assert phrase in text, f"Code of Conduct missing required phrase: {phrase}"
+
+
+def test_code_of_conduct_is_referenced_from_contributing_and_issue_links():
+    contributing_text = CONTRIBUTING_FILE.read_text(encoding="utf-8").lower()
+    assert "code_of_conduct.md" in contributing_text
+
+    issue_data = _load_yaml_template(ISSUE_TEMPLATE_CONFIG)
+    links = issue_data.get("contact_links")
+    assert isinstance(links, list) and links, "config.yml must define at least one contact link"
+    urls = [str(link.get("url", "")).lower() for link in links if isinstance(link, dict)]
+    assert any("code_of_conduct.md" in url for url in urls)
+
+
+def test_code_of_conduct_has_no_forbidden_language():
+    text = CODE_OF_CONDUCT_FILE.read_text(encoding="utf-8").lower()
+
+    for pattern in FORBIDDEN_VALIDATION_PATTERNS:
+        assert pattern not in text, f"CODE_OF_CONDUCT.md contains forbidden operational pattern: {pattern}"
+
+    for regex in SECRET_SHARING_PATTERNS:
+        assert not regex.search(text), "CODE_OF_CONDUCT.md appears to ask for credential-like sharing"
 
 
 def test_github_templates_do_not_contain_operational_runtime_or_secret_sharing_instructions():

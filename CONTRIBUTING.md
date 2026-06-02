@@ -53,3 +53,9 @@ supported reporting scope and the private reporting path.
 
 When possible, include tests and docs updates with each change, and explicitly note
 whether the change is safe from external side effects.
+
+## Code of Conduct
+
+Before opening issues or PRs, please read and follow
+[`CODE_OF_CONDUCT.md`](./CODE_OF_CONDUCT.md).
+All contribution workflows should remain respectful and constructive.
