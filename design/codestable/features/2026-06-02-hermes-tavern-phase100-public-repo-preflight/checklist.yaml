@@ -1,0 +1,166 @@
+doc_type: feature-checklist
+feature: hermes-tavern-phase100-public-repo-preflight
+date: "2026-06-02"
+status: implemented
+
+summary: >
+  Prepare Hermes Tavern for publication as a public GitHub repository with a
+  license, public-facing README notes, non-deploying CI, patch-placeholder secret
+  hygiene, public-readiness tests, and a controller-owned sensitive-information
+  scan. This phase does not change runtime, gateway, provider, model, credential,
+  network, service, package metadata, or command-table behavior.
+
+steps:
+  - id: S1
+    name: Add MIT license
+    description: >
+      Add a standard MIT LICENSE file for the public repository.
+    status: implemented
+    changed_file: "LICENSE"
+    result: "IMPLEMENTED - LICENSE added with holder Hermes Tavern contributors"
+
+  - id: S2
+    name: Update README public positioning and safety notes
+    description: >
+      State beta/experimental status, explain the public positioning as a
+      SillyTavern-compatible RP/novel runtime for Hermes Agent gateways, and add
+      a publication note that fictional workflows do not bypass provider/platform
+      safety and real credentials must not be committed.
+    status: implemented
+    changed_file: "README.md"
+    result: "IMPLEMENTED - public status, positioning, safety/publication note, and release preflight remain documented"
+
+  - id: S3
+    name: Add public CI workflow
+    description: >
+      Add a GitHub Actions workflow for push and pull_request that runs on Python
+      3.11 and 3.12, installs test/build dependencies, and runs README docs,
+      packaging, py_compile, and full Tavern tests without deploy/publish steps.
+    status: implemented
+    changed_file: ".github/workflows/test.yml"
+    result: "IMPLEMENTED - non-deploying test workflow added"
+
+  - id: S4
+    name: Remove secret-looking placeholder from patch artifact
+    description: >
+      Replace the sk-* looking Authorization placeholder in the preserved Hermes
+      core patch with an unmistakable non-secret placeholder while preserving the
+      patch intent.
+    status: implemented
+    changed_file: "patches/hermes-agent-core-changes.patch"
+    result: "IMPLEMENTED - placeholder changed to a redacted non-secret token marker"
+
+  - id: S5
+    name: Extend public-readiness regression tests
+    description: >
+      Extend README docs and repo hygiene tests to assert public status/safety
+      notes, LICENSE existence, CI workflow safety, offline release preflight
+      constraints, and absence of remaining sk-* placeholders in the patch.
+    status: implemented
+    changed_files:
+      - "tests/test_hermes_tavern_readme_docs.py"
+      - "tests/test_hermes_tavern_repo_hygiene.py"
+    result: "IMPLEMENTED - focused public-readiness regressions added"
+
+  - id: S6
+    name: Focused public-readiness pytest
+    description: >
+      Run README docs plus repo hygiene tests after Phase100 changes.
+    verification_command: >
+      PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_readme_docs.py tests/test_hermes_tavern_repo_hygiene.py -q -o 'addopts='
+    status: verified
+    result: "PASS - controller rerun returned 15 passed in 0.02s"
+
+  - id: S7
+    name: Focused packaging pytest
+    description: >
+      Run packaging tests to keep public release preflight aligned with actual
+      wheel/sdist, isolated install, entrypoint, and payload-boundary behavior.
+    verification_command: >
+      PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_packaging.py -q -o 'addopts='
+    status: verified
+    result: "PASS - controller rerun returned 20 passed in 7.52s"
+
+  - id: S8
+    name: Full py_compile gate
+    description: >
+      Compile the compatibility shim, standalone plugin source, importers, and
+      Tavern test modules without writing pycache files into the repo.
+    verification_command: >
+      PYTHONPYCACHEPREFIX=/private/tmp/hermes-tavern-phase100-pycache python -m py_compile conftest.py plugins/__init__.py plugins/hermes_tavern/__init__.py src/hermes_tavern/*.py src/hermes_tavern/importers/*.py tests/test_hermes_tavern_*.py
+    status: verified
+    result: "PASS - exited 0 with no compile output"
+
+  - id: S9
+    name: Full Tavern pytest gate
+    description: >
+      Run the complete Hermes Tavern test glob after public-repo preflight
+      changes, without managing Gateway or calling real providers.
+    verification_command: >
+      PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_*.py -q -o 'addopts='
+    status: verified
+    result: "PASS - controller rerun returned 654 passed in 22.45s"
+
+  - id: S10
+    name: Checklist YAML validation
+    description: >
+      Validate this CodeStable checklist with the project YAML validator.
+    verification_command: >
+      PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-02-hermes-tavern-phase100-public-repo-preflight/checklist.yaml --yaml-only
+    status: verified
+    result: "PASS - validated 1 file: 1 passed, 0 failed"
+
+  - id: S11
+    name: Sensitive-information scan
+    description: >
+      Scan the publishable working tree for OpenAI sk-* tokens, GitHub PAT
+      patterns, GitHub ghp_* tokens, AWS access keys, and generic secret-looking
+      assignments while excluding build/cache/venv directories and known empty
+      runtime env lookups.
+    verification_command: >
+      python - <<'PY'
+      from pathlib import Path
+      import re
+      skip={'.git','__pycache__','.pytest_cache','.mypy_cache','dist','build','.venv','venv'}
+      regexes=[('openai_sk',re.compile(r'sk-[A-Za-z0-9_-]{20,}')),('github_pat',re.compile(r'github_pat_[A-Za-z0-9_]{20,}')),('bare_pat',re.compile(r'(?<![A-Za-z0-9])_pat_[A-Za-z0-9_]{20,}')),('ghp',re.compile(r'ghp_[A-Za-z0-9_]{20,}')),('aws_access_key',re.compile(r'AKIA[0-9A-Z]{16}')),('generic_secret_value',re.compile(r'(?i)(api[_-]?key|access[_-]?token|secret|password)\s*[:=]\s*["\']([^"\'\s]{16,})["\']?'))]
+      hits=[]
+      for p in Path('.').rglob('*'):
+          if any(part in skip for part in p.parts) or not p.is_file(): continue
+          try: txt=p.read_text(errors='ignore')
+          except Exception: continue
+          for i,line in enumerate(txt.splitlines(),1):
+              if 'get_env_value(' in line and ' or ""' in line: continue
+              for name,rx in regexes:
+                  if rx.search(line): hits.append((name,str(p),i,line[:160]))
+      print('PUBLIC_SECRET_SCAN_ACTUAL_HITS',len(hits))
+      raise SystemExit(1 if hits else 0)
+      PY
+    status: verified
+    result: "PASS - PUBLIC_SECRET_SCAN_ACTUAL_HITS 0"
+
+implementation_notes: |
+  - Scope is restricted to LICENSE, README.md, .github/workflows/test.yml,
+    patches/hermes-agent-core-changes.patch, README/repo-hygiene tests, and this
+    checklist.
+  - No runtime behavior, command dispatch behavior, command table entries,
+    pyproject.toml metadata, plugin.yaml metadata, Gateway behavior, provider
+    routing, model calls, network calls, service management, dependency policy,
+    version metadata, or credential handling are changed.
+  - The GitHub Actions workflow is test-only and contains no publish, deploy,
+    release, token, or secret-use steps.
+
+verification_notes: |
+  - Codex executor reported an initial focused README/repo-hygiene pytest pass:
+    15 passed in 0.04s.
+  - Controller reran focused public-readiness pytest: 15 passed in 0.02s.
+  - Controller reran focused packaging pytest: 20 passed in 7.52s.
+  - Controller py_compile gate passed with exit code 0 and no output; pycache
+    output was redirected to /private/tmp/hermes-tavern-phase100-pycache.
+  - Controller full Tavern pytest glob passed: 654 passed in 22.45s.
+  - Checklist YAML validation passed: 1 file passed, 0 failed.
+  - Sensitive-information scan passed with 0 actual hits. A broader first-pass
+    regex saw the empty runtime assignment in provider_bridge.py
+    (`api_key = get_env_value(...) or ""`) as a false positive; it is code that
+    reads an environment variable, not a committed credential.
+  - No Gateway/service/model/provider/network/Telegram/ComfyUI/TTS/credential
+    endpoints were started, reloaded, killed, managed, or called.

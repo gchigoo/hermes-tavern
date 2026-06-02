@@ -1,0 +1,79 @@
+doc_type: feature-checklist
+feature: hermes-tavern-phase79-gateway-import-path-trust
+date: "2026-05-29"
+status: implemented
+
+summary: >
+  Add focused regression coverage for gateway import path trust. Gateway
+  explicit import paths must be attachment-first: normalized path spelling may
+  vary when it resolves to a same-event local attachment, but arbitrary local
+  files and remote URLs remain rejected without echoing sensitive paths.
+
+steps:
+  - id: S1
+    name: "Add direct import policy trust regressions"
+    description: >
+      Extend tests/test_hermes_tavern_import_policy.py with coverage for
+      normalized gateway explicit path matches, existing allowed-suffix local
+      files with no same-event attachment, sanitized rejection text, and
+      preservation of local/trusted explicit path behavior.
+    status: verified
+    changed_file: "tests/test_hermes_tavern_import_policy.py"
+    result: "PASS - Codex focused Phase79 import policy regressions passed"
+
+  - id: S2
+    name: "Add runtime gateway import trust regressions"
+    description: >
+      Extend tests/test_hermes_tavern_gateway_security.py with command-layer
+      coverage proving normalized same-event attachment imports remain accepted
+      for card, preset, lore, and persona, while /rp card import with a
+      different attachment rejects without echoing either full path or
+      filename.
+    status: verified
+    changed_file: "tests/test_hermes_tavern_gateway_security.py"
+    result: "PASS - Codex focused Phase79 gateway security regressions passed"
+
+  - id: S3
+    name: "Focused import policy and gateway security pytest"
+    description: >
+      Run the focused direct import policy and runtime gateway security test
+      files after the Phase79 regressions.
+    verification_command: >
+      python -m pytest tests/test_hermes_tavern_import_policy.py tests/test_hermes_tavern_gateway_security.py -q -o 'addopts='
+    status: verified
+    result: "PASS - controller rerun 2026-05-29; 45 passed in 0.44s"
+
+  - id: S4
+    name: "Full py_compile gate"
+    description: >
+      Compile the standalone plugin source, importers, compatibility shim, and
+      Tavern test modules.
+    verification_command: >
+      python -m py_compile conftest.py plugins/__init__.py plugins/hermes_tavern/__init__.py src/hermes_tavern/*.py src/hermes_tavern/importers/*.py tests/test_hermes_tavern_*.py
+    status: verified
+    result: "PASS - controller rerun 2026-05-29; no compile errors"
+
+  - id: S5
+    name: "Full Tavern pytest gate"
+    description: >
+      Run the complete Hermes Tavern test glob after the gateway import path
+      trust regressions.
+    verification_command: >
+      python -m pytest tests/test_hermes_tavern_*.py -q -o 'addopts='
+    status: verified
+    result: "PASS - controller rerun 2026-05-29; 611 passed in 11.79s"
+
+  - id: S6
+    name: "Checklist YAML validation"
+    description: >
+      Validate this CodeStable checklist with the project YAML validator.
+    verification_command: >
+      python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-05-29-hermes-tavern-phase79-gateway-import-path-trust/checklist.yaml
+    status: verified
+    result: "PASS - controller rerun 2026-05-29; 1 file passed, 0 failed"
+
+implementation_notes: |
+  - This phase is test-only; no source/runtime/provider code changed.
+  - The regressions use local temporary files and sqlite stores only. They do
+    not introduce secrets, real provider calls, model calls, network calls, or
+    production imports from plugins.hermes_tavern under src/hermes_tavern/.

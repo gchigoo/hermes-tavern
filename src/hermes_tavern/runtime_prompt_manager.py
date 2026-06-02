@@ -5,9 +5,9 @@ from __future__ import annotations
 import json
 from typing import Any
 
-from plugins.hermes_tavern.commands import RPCommand
-from plugins.hermes_tavern.identity import session_key_from_event
-from plugins.hermes_tavern.runtime_utils import mobile_preview, module_risk_counts_db
+from hermes_tavern.commands import RPCommand
+from hermes_tavern.identity import session_key_from_event
+from hermes_tavern.runtime_utils import mobile_preview, module_risk_counts_db
 
 _USAGE = (
     "Usage: /rp prompt list | /rp prompt inspect <module> | "

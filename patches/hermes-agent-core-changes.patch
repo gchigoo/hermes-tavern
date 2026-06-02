@@ -633,8 +633,8 @@ index 0f641a5c1..2545a740d 100644
      anthropic = pytest.importorskip("anthropic")  # skip if optional SDK missing
      from agent.anthropic_adapter import build_anthropic_client
 @@ -140,10 +140,10 @@ def test_anthropic_adapter_honors_timeout_kwarg():
-     c_custom = build_anthropic_client("sk-ant-dummy", None, timeout=45.0)
-     c_invalid = build_anthropic_client("sk-ant-dummy", None, timeout=-1)
+     c_custom = build_anthropic_client("REDACTED_TEST_PLACEHOLDER", None, timeout=45.0)
+     c_invalid = build_anthropic_client("REDACTED_TEST_PLACEHOLDER", None, timeout=-1)
  
 -    # Default stays at 900s; custom overrides; invalid falls back to default
 -    assert c_default.timeout.read == 900.0
@@ -1414,7 +1414,7 @@ index eeeb44d6a..e91133188 100644
 @@ -102,7 +102,7 @@ mcp_servers:
      url: "https://my-server.example.com/mcp"   # (required) server URL
      headers:                                     # (optional) HTTP headers
-       Authorization: "Bearer sk-..."
+      Authorization: "Bearer [REDACTED_TEST_PLACEHOLDER]"
 -    timeout: 180               # (optional) per-tool-call timeout in seconds, default: 120
 +    timeout: 300               # (optional) per-tool-call timeout in seconds, default: 300
      connect_timeout: 60        # (optional) initial connection timeout in seconds, default: 60
@@ -1431,7 +1431,7 @@ index eeeb44d6a..e91133188 100644
  Note: A server config must have either `command` (stdio) or `url` (HTTP), not both.
 @@ -309,7 +309,7 @@ mcp_servers:
      headers:
-       Authorization: "Bearer sk-xxxxxxxxxxxxxxxxxxxx"
+      Authorization: "Bearer [REDACTED_TEST_PLACEHOLDER]"
        X-Team-Id: "engineering"
 -    timeout: 180
 +    timeout: 300

@@ -1,0 +1,127 @@
+doc_type: feature-checklist
+feature: hermes-tavern-phase97-readme-command-surface-sync
+date: "2026-06-01"
+status: implemented
+
+summary: >
+  Synchronize the README Core commands surface with the current top-level
+  TAVERN_COMMAND_TABLE entries, add an import-only README regression that keeps
+  future command-table additions visible in operator docs, and record the
+  docs/tests/checklist-only verification gates for Phase97. This phase must not
+  change runtime behavior or the command table, must not start, reload, kill, or
+  manage Gateway, and must not call provider/model/network/ComfyUI/TTS or
+  credential endpoints.
+
+steps:
+  - id: S1
+    name: "Sync README core command surface"
+    description: >
+      Update README.md Core commands so every top-level /rp command from
+      src/hermes_tavern/commands.py::TAVERN_COMMAND_TABLE is mentioned at least
+      once without dumping raw help output, while preserving the Phase96
+      JSON/PNG and WebP/JPEG card-import wording.
+    status: implemented
+    changed_file: "README.md"
+    result: "IMPLEMENTED - Core commands now compactly mentions each current top-level /rp command and keeps JSON/PNG plus WebP/JPEG unsupported-format wording"
+
+  - id: S2
+    name: "Add README command-table regression"
+    description: >
+      Extend tests/test_hermes_tavern_readme_docs.py with pure file-reading and
+      import-only coverage that imports TAVERN_COMMAND_TABLE, asserts each
+      top-level command has a README Core commands mention, and preserves
+      compact operator anchors for model, prompt, content, assets, cards, and
+      debug commands.
+    status: implemented
+    changed_file: "tests/test_hermes_tavern_readme_docs.py"
+    result: "IMPLEMENTED - README docs tests now import the command table and check command coverage plus compact UX anchors"
+
+  - id: S3
+    name: "Record Phase97 checklist"
+    description: >
+      Add this CodeStable checklist for the README command-surface sync and
+      track implementation plus verification gates.
+    status: implemented
+    changed_file: "design/codestable/features/2026-06-01-hermes-tavern-phase97-readme-command-surface-sync/checklist.yaml"
+    result: "IMPLEMENTED - checklist created with docs/test/checklist scope and verification gates"
+
+  - id: S4
+    name: "Focused README docs pytest"
+    description: >
+      Run only the README docs regression module.
+    verification_command: >
+      PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_readme_docs.py -q -o 'addopts='
+    status: verified
+    result: "PASS - 6 passed in 0.01s"
+
+  - id: S5
+    name: "Full py_compile gate"
+    description: >
+      Compile the compatibility shim, standalone plugin source, importers, and
+      Tavern test modules without writing pycache files into the repo.
+    verification_command: >
+      PYTHONPYCACHEPREFIX=/private/tmp/hermes-tavern-phase97-pycache python -m py_compile conftest.py plugins/__init__.py plugins/hermes_tavern/__init__.py src/hermes_tavern/*.py src/hermes_tavern/importers/*.py tests/test_hermes_tavern_*.py
+    status: verified
+    result: "PASS - exited 0 with no compile output"
+
+  - id: S6
+    name: "Full Tavern pytest gate"
+    description: >
+      Run the complete Hermes Tavern test glob after the README docs/test
+      change, without managing Gateway or calling real providers.
+    verification_command: >
+      PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_*.py -q -o 'addopts='
+    status: verified
+    result: >
+      PASS - controller rerun returned 645 passed in 19.31s. Codex's earlier
+      full-glob attempt saw a transient image-provider mock failure, but the
+      controller rerun after inspection passed cleanly.
+
+  - id: S7
+    name: "Checklist YAML validation"
+    description: >
+      Validate this CodeStable checklist with the project YAML validator.
+    verification_command: >
+      PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-01-hermes-tavern-phase97-readme-command-surface-sync/checklist.yaml --yaml-only
+    status: verified
+    result: "PASS - validated 1 file: 1 passed, 0 failed"
+
+  - id: S8
+    name: "Scoped diff whitespace check"
+    description: >
+      Check only the files allowed for this phase for whitespace errors. Use
+      plain scoped git diff --check for tracked diffs and no-index --check for
+      untracked allowed files because the sandbox blocks the temporary-index
+      object write required by git add -N.
+    verification_command: >
+      git diff --check -- README.md tests/test_hermes_tavern_readme_docs.py design/codestable/features/2026-06-01-hermes-tavern-phase97-readme-command-surface-sync/checklist.yaml
+      git diff --no-index --check -- /dev/null tests/test_hermes_tavern_readme_docs.py
+      git diff --no-index --check -- /dev/null design/codestable/features/2026-06-01-hermes-tavern-phase97-readme-command-surface-sync/checklist.yaml
+    status: verified
+    result: >
+      PASS - scoped git diff --check exited 0 with no output; no-index
+      whitespace checks for the two untracked allowed files also exited cleanly
+      after normalizing the expected no-index diff exit code.
+
+implementation_notes: |
+  - Scope is restricted to README.md,
+    tests/test_hermes_tavern_readme_docs.py, and this checklist.
+  - No runtime behavior, dispatch behavior, parser behavior, or command table
+    entries are changed.
+  - No Gateway/service/provider/model/network/ComfyUI/TTS/credential endpoints
+    are called by this phase.
+
+verification_notes: |
+  - Focused README docs pytest passed: 6 passed in 0.01s.
+  - py_compile passed with exit code 0 and no output; pycache output was
+    redirected to /private/tmp/hermes-tavern-phase97-pycache.
+  - Controller full Tavern pytest glob passed: 645 passed in 19.31s.
+  - Codex's earlier full-glob attempt saw a transient image-provider mock
+    failure (8 failed, 637 passed), but the controller rerun after inspection
+    passed cleanly.
+  - Checklist YAML validation passed: 1 file passed, 0 failed.
+  - Scoped git diff whitespace checks passed for README.md and the two
+    untracked allowed files.
+
+  - No Gateway/service/model/provider/network/Telegram/ComfyUI/TTS/credential
+    endpoints were started, reloaded, killed, managed, or called.

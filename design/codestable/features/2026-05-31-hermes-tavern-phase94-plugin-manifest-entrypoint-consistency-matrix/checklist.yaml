@@ -1,0 +1,118 @@
+doc_type: feature-checklist
+feature: hermes-tavern-phase94-plugin-manifest-entrypoint-consistency-matrix
+date: "2026-05-31"
+status: implemented
+
+summary: >
+  Add a small packaging/release preflight consistency matrix that keeps the
+  Hermes Tavern pyproject metadata, plugin manifest, canonical import package,
+  entry point declarations, and README packaging references aligned. This phase
+  must not start, reload, restart, kill, or manage Gateway, and must not call
+  provider/model, network, ComfyUI, TTS, or credential endpoints.
+
+steps:
+  - id: S1
+    name: "Add consistency matrix test"
+    description: >
+      Extend the packaging test module with an offline in-process matrix that
+      parses pyproject.toml and src/hermes_tavern/plugin.yaml, imports the
+      current hermes_tavern package version, and asserts the distribution name,
+      plugin name, version, entry point string, entry point group metadata,
+      hyphen-to-underscore naming boundary, and README packaging references all
+      agree.
+    status: implemented
+    changed_file: "tests/test_hermes_tavern_packaging.py"
+    result: "IMPLEMENTED - added focused manifest/entrypoint consistency matrix and small metadata parsing helpers"
+
+  - id: S2
+    name: "Record Phase94 checklist"
+    description: >
+      Add this CodeStable checklist for the plugin manifest and entry point
+      consistency matrix slice, keeping the packaging/release validation gates
+      explicit and scoped.
+    status: implemented
+    changed_file: "design/codestable/features/2026-05-31-hermes-tavern-phase94-plugin-manifest-entrypoint-consistency-matrix/checklist.yaml"
+    result: "IMPLEMENTED - checklist created with focused packaging, compile, pytest, YAML, and diff gates"
+
+  - id: S3
+    name: "Focused packaging pytest"
+    description: >
+      Run only the Hermes Tavern packaging regression module after adding the
+      consistency matrix test.
+    verification_command: >
+      python -m pytest tests/test_hermes_tavern_packaging.py -q -o 'addopts='
+    status: verified
+    result: "PASS - controller rerun returned 19 passed in 6.44s"
+
+  - id: S4
+    name: "Full py_compile gate"
+    description: >
+      Compile the compatibility shim, standalone plugin source, importers, and
+      Tavern test modules.
+    verification_command: >
+      python -m py_compile conftest.py plugins/__init__.py plugins/hermes_tavern/__init__.py src/hermes_tavern/*.py src/hermes_tavern/importers/*.py tests/test_hermes_tavern_*.py
+    status: verified
+    result: "PASS - controller rerun exited 0 with no compile output"
+
+  - id: S5
+    name: "Focused image pytest rerun"
+    description: >
+      Rerun image tests separately when Codex full-suite verification hits the
+      known transient image mock/provider failure path.
+    verification_command: >
+      python -m pytest tests/test_hermes_tavern_images.py -q -o 'addopts='
+    status: verified
+    result: "PASS - controller rerun returned 20 passed in 0.59s"
+
+  - id: S6
+    name: "Full Tavern pytest gate"
+    description: >
+      Run the complete Hermes Tavern test glob after the consistency matrix
+      change, without managing Gateway or calling real providers.
+    verification_command: >
+      python -m pytest tests/test_hermes_tavern_*.py -q -o 'addopts='
+    status: verified
+    result: "PASS - controller rerun returned 632 passed in 19.89s"
+
+  - id: S7
+    name: "Checklist YAML validation"
+    description: >
+      Validate this CodeStable checklist with the project YAML validator.
+    verification_command: >
+      python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-05-31-hermes-tavern-phase94-plugin-manifest-entrypoint-consistency-matrix/checklist.yaml
+    status: verified
+    result: "PASS - controller rerun validated 1 file: 1 passed, 0 failed"
+
+  - id: S8
+    name: "Scoped diff whitespace check"
+    description: >
+      Check only the files touched by this phase for whitespace errors.
+    verification_command: >
+      git diff --check -- tests/test_hermes_tavern_packaging.py design/codestable/features/2026-05-31-hermes-tavern-phase94-plugin-manifest-entrypoint-consistency-matrix/checklist.yaml
+    status: verified
+    result: "PASS - controller rerun exited 0 with no whitespace errors"
+
+implementation_notes: |
+  - This phase is packaging/release preflight only.
+  - The matrix test is offline and in-process: it reads local metadata files,
+    imports the current hermes_tavern package, and checks README strings.
+  - The pyproject entry point group is required to contain the exact
+    hermes-tavern = "hermes_tavern" mapping without overconstraining unrelated
+    future entry points in that group.
+  - The matrix keeps the hyphenated distribution/plugin name (`hermes-tavern`)
+    and underscored import package (`hermes_tavern`) boundary explicit.
+  - Existing dirty worktree changes outside the packaging test and this
+    checklist are not modified by this phase.
+
+verification_notes: |
+  - Codex focused packaging pytest passed: 19 passed in 6.52s.
+  - Codex py_compile passed with exit code 0 and no output.
+  - Codex full Tavern pytest glob stopped on the known transient image
+    mock/provider failure path: 8 failed, 624 passed in 17.21s.
+  - Controller reran focused image tests first: 20 passed in 0.59s.
+  - Controller reran focused packaging pytest: 19 passed in 6.44s.
+  - Controller reran py_compile: exit 0 with no compile output.
+  - Controller reran full Tavern glob: 632 passed in 19.89s.
+  - Controller reran checklist YAML validation: 1 passed, 0 failed.
+  - Controller reran scoped diff whitespace check: exit 0 with no output.
+  - No Gateway/service/model/provider/ComfyUI/TTS calls were made.

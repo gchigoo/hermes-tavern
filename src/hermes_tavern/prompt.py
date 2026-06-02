@@ -5,11 +5,11 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 
-from plugins.hermes_tavern.macros import MacroContext, expand_macros
-from plugins.hermes_tavern.utils import estimate_tokens
+from hermes_tavern.macros import MacroContext, expand_macros
+from hermes_tavern.utils import estimate_tokens
 
 if TYPE_CHECKING:
-    from plugins.hermes_tavern.importers.cards import CharacterCard
+    from hermes_tavern.importers.cards import CharacterCard
 
 
 @dataclass(frozen=True)

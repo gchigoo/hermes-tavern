@@ -1,0 +1,92 @@
+doc_type: feature-checklist
+feature: hermes-tavern-phase49-packaging-polish
+date: "2026-05-29"
+status: implemented
+
+summary: >
+  Close the Phase 48 isolation gap and polish packaging metadata. Adds a subprocess-
+  based editable-install smoke test (proves import works without conftest.py sys.path
+  injection), enriches pyproject.toml with readme/authors/license, adds entry_point
+  to plugin.yaml for Hermes plugin auto-discovery, and documents install steps in
+  README. No new runtime behavior; verification-only and metadata changes only.
+
+steps:
+  - id: S1
+    name: "Add entry_point to plugin.yaml"
+    description: >
+      Add entry_point: "hermes_tavern:register" to plugin.yaml so Hermes Gateway
+      plugin auto-discovery can call the register function without hard-coding the
+      module path. This is the standard Hermes plugin contract.
+    status: verified
+    changed_file: "src/hermes_tavern/plugin.yaml"
+    result: "PASS — 2026-05-29; entry_point: hermes_tavern:register added; test_plugin_yaml_declares_entry_point confirms"
+
+  - id: S2
+    name: "Enrich pyproject.toml metadata"
+    description: >
+      Add readme = "README.md", license = {text = "MIT"}, and authors fields to
+      [project] in pyproject.toml. These are standard PEP 621 fields; setuptools
+      uses them for wheel metadata and PyPI upload. No functional changes.
+    status: verified
+    changed_file: "pyproject.toml"
+    result: "PASS — 2026-05-29; readme, license, authors added to [project] table"
+
+  - id: S3
+    name: "Add subprocess isolation smoke test"
+    description: >
+      Add test_editable_install_isolation_smoke in tests/test_hermes_tavern_packaging.py.
+      The test launches sys.executable as a subprocess with PYTHONPATH="" and verifies
+      that hermes_tavern can be imported and register() runs without conftest.py's
+      sys.path injection active. This closes the gap where Phase 48 tested in-process
+      (conftest already injected src/) rather than through the editable install path.
+    status: verified
+    changed_file: "tests/test_hermes_tavern_packaging.py"
+    result: "PASS — 2026-05-29; subprocess with PYTHONPATH='' can import hermes_tavern, call register(), read plugin.yaml entry_point"
+
+  - id: S4
+    name: "Update README with installation section"
+    description: >
+      Add a ## Installation section to README.md documenting pip install -e .,
+      the editable install workflow, and the Hermes plugin discovery contract
+      (entry_point in plugin.yaml). Keep it short: ~15 lines.
+    status: verified
+    changed_file: "README.md"
+    result: "PASS — 2026-05-29; Installation + Development sections added to README.md"
+
+  - id: S5
+    name: "py_compile smoke check"
+    description: >
+      Compile all shim, source, importer, and test files to confirm no syntax errors.
+    status: verified
+    verification_command: >
+      python -m py_compile conftest.py plugins/__init__.py plugins/hermes_tavern/__init__.py src/hermes_tavern/*.py src/hermes_tavern/importers/*.py tests/test_hermes_tavern_*.py
+    result: "PASS — 2026-05-29; no syntax errors"
+
+  - id: S6
+    name: "Full test suite"
+    description: >
+      Run the full standalone Tavern pytest glob to verify no regressions.
+    status: verified
+    verification_command: >
+      python -m pytest tests/test_hermes_tavern_*.py -q -o 'addopts='
+    result: "PASS — 2026-05-29; 447 passed in 9.47s (was 445; +2 new packaging tests)"
+
+  - id: S7
+    name: "Checklist YAML validation"
+    description: >
+      Validate this checklist with the project YAML validator.
+    status: verified
+    verification_command: >
+      python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-05-29-hermes-tavern-phase49-packaging-polish/checklist.yaml
+    result: "PASS — 2026-05-29; 1 file passed, 0 failed"
+
+implementation_notes: |
+  - S3 isolation smoke: subprocess with PYTHONPATH="" bypasses conftest.py's sys.path
+    injection, so import must succeed via the editable .pth file in site-packages.
+    Phase 48 claimed this was verified but the test was actually in-process (conftest
+    had already injected src/); this step proves the packaging is genuinely self-contained.
+  - entry_point in plugin.yaml follows the standard Hermes plugin contract; the value
+    "hermes_tavern:register" is the dotted-module:callable form.
+  - pyproject.toml PEP 621 fields (readme, license, authors) are metadata-only; no
+    runtime or import behavior is affected.
+  - No runtime source files were modified; all changes are metadata, tests, and docs.

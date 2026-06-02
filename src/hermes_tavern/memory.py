@@ -10,8 +10,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
-from plugins.hermes_tavern.prompt import PromptModule
-from plugins.hermes_tavern.utils import estimate_tokens
+from hermes_tavern.prompt import PromptModule
+from hermes_tavern.utils import estimate_tokens
 
 
 @dataclass(frozen=True)

@@ -1,0 +1,133 @@
+doc_type: feature-checklist
+feature: hermes-tavern-phase99-readme-release-preflight
+date: "2026-06-02"
+status: implemented
+
+summary: >
+  Add a README docs-only release-preflight section and README regression coverage
+  for offline gates and release-readiness documentation requirements without
+  changing runtime, gateway, provider, model, credential, network, service, or
+  command-table code.
+
+steps:
+  - id: S1
+    name: Add Release preflight README section
+    description: >
+      Add a compact "## Release preflight" section under README development notes
+      documenting offline pytest/compile gates plus release artifact readiness
+      checks: wheel/sdist inspection, isolated wheel install, entry-point metadata,
+      and wheel payload boundary coverage.
+    status: implemented
+    changed_file: "README.md"
+    result: "IMPLEMENTED - section added with required coverage topics and offline gates"
+
+  - id: S2
+    name: Extend README regression coverage for release preflight
+    description: >
+      Add tests in tests/test_hermes_tavern_readme_docs.py to require the Release
+      preflight section, assert required offline commands, assert required coverage
+      topics, and reject Gateway/service/network command patterns.
+    status: implemented
+    changed_file: "tests/test_hermes_tavern_readme_docs.py"
+    result: "IMPLEMENTED - added 3 tests covering section, offline gate strings, and forbidden command exclusions"
+
+  - id: S3
+    name: Record phase99 CodeStable checklist
+    description: >
+      Add this checklist file under the phase99 feature directory with
+      docs/test/checklist-only scope.
+    status: implemented
+    changed_file: "design/codestable/features/2026-06-02-hermes-tavern-phase99-readme-release-preflight/checklist.yaml"
+    result: "IMPLEMENTED - checklist created and updated with controller verification results"
+
+  - id: S4
+    name: Focused README/docs regression verification
+    description: >
+      Run the focused README docs pytest module to confirm all README regression
+      checks pass.
+    verification_command: >
+      PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_readme_docs.py -q -o 'addopts='
+    status: verified
+    result: "PASS - controller rerun returned 9 passed in 0.01s"
+
+  - id: S5
+    name: Focused packaging pytest verification
+    description: >
+      Run the packaging module to keep release preflight docs aligned with actual
+      packaging, wheel install, entry point, and payload-boundary coverage.
+    verification_command: >
+      PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_packaging.py -q -o 'addopts='
+    status: verified
+    result: "PASS - controller rerun returned 20 passed in 7.33s"
+
+  - id: S6
+    name: Full py_compile gate
+    description: >
+      Compile the compatibility shim, standalone plugin source, importers, and
+      Tavern test modules without writing pycache files into the repo.
+    verification_command: >
+      PYTHONPYCACHEPREFIX=/private/tmp/hermes-tavern-phase99-pycache python -m py_compile conftest.py plugins/__init__.py plugins/hermes_tavern/__init__.py src/hermes_tavern/*.py src/hermes_tavern/importers/*.py tests/test_hermes_tavern_*.py
+    status: verified
+    result: "PASS - exited 0 with no compile output"
+
+  - id: S7
+    name: Full Tavern pytest gate
+    description: >
+      Run the complete Hermes Tavern test glob after the README docs/test change,
+      without managing Gateway or calling real providers.
+    verification_command: >
+      PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_*.py -q -o 'addopts='
+    status: verified
+    result: "PASS - controller rerun returned 649 passed in 20.24s"
+
+  - id: S8
+    name: Checklist YAML validation
+    description: >
+      Validate this CodeStable checklist with the project YAML validator.
+    verification_command: >
+      PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-02-hermes-tavern-phase99-readme-release-preflight/checklist.yaml --yaml-only
+    status: verified
+    result: "PASS - validated 1 file: 1 passed, 0 failed"
+
+  - id: S9
+    name: Scoped diff whitespace check
+    description: >
+      Check only the files allowed for this phase for whitespace errors. Use
+      plain scoped git diff --check for tracked diffs and no-index --check for
+      untracked allowed files.
+    verification_command: >
+      git diff --check -- README.md tests/test_hermes_tavern_readme_docs.py design/codestable/features/2026-06-02-hermes-tavern-phase99-readme-release-preflight/checklist.yaml
+      git diff --no-index --check -- /dev/null README.md
+      git diff --no-index --check -- /dev/null tests/test_hermes_tavern_readme_docs.py
+      git diff --no-index --check -- /dev/null design/codestable/features/2026-06-02-hermes-tavern-phase99-readme-release-preflight/checklist.yaml
+    status: verified
+    result: >
+      PASS - scoped git diff --check exited 0 with no output; no-index
+      whitespace checks for the allowed README/test/checklist files also produced
+      no whitespace-error output after normalizing the expected no-index diff
+      exit code.
+
+implementation_notes: |
+  - Scope is restricted to README.md, tests/test_hermes_tavern_readme_docs.py,
+    and this checklist file.
+  - No runtime behavior, command dispatch behavior, command table entries,
+    pyproject.toml metadata, plugin.yaml metadata, Gateway behavior, provider
+    routing, model calls, network calls, service management, or credential
+    handling are changed.
+  - The README release-preflight section documents offline gates only and records
+    the current release-readiness coverage: wheel/sdist artifact inspection,
+    isolated wheel install, entry point metadata, and wheel payload boundary.
+
+verification_notes: |
+  - Codex executor reported an initial focused README docs pytest pass: 9 passed
+    in 0.01s.
+  - Controller reran focused README docs pytest: 9 passed in 0.01s.
+  - Controller reran focused packaging pytest: 20 passed in 7.33s.
+  - Controller py_compile gate passed with exit code 0 and no output; pycache
+    output was redirected to /private/tmp/hermes-tavern-phase99-pycache.
+  - Controller full Tavern pytest glob passed: 649 passed in 20.24s.
+  - Checklist YAML validation passed: 1 file passed, 0 failed.
+  - Scoped git diff whitespace checks passed for README.md,
+    tests/test_hermes_tavern_readme_docs.py, and this checklist.
+  - No Gateway/service/model/provider/network/Telegram/ComfyUI/TTS/credential
+    endpoints were started, reloaded, killed, managed, or called.

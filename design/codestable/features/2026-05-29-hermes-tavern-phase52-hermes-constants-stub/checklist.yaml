@@ -1,0 +1,83 @@
+doc_type: feature-checklist
+feature: hermes-tavern-phase52-hermes-constants-stub
+date: "2026-05-29"
+status: implemented
+
+summary: >
+  Add a hermes_constants stub to conftest.py so the standalone test suite can run
+  without hermes-agent installed. Three source files (db.py, images.py,
+  runtime_lifecycle.py) import hermes_constants.get_hermes_home at module level;
+  without the stub the entire test suite fails collection in a clean Python
+  environment. The stub is injected only when the real module is absent (try/except
+  guard), so environments with hermes-agent active continue to use the real module
+  unchanged. Adds one test that contracts get_hermes_home() returns a Path.
+
+steps:
+  - id: S1
+    name: "Add hermes_constants stub injection to conftest.py"
+    description: >
+      After the src/ sys.path injection, add a try/except ModuleNotFoundError block
+      that creates a minimal types.ModuleType stub for hermes_constants.  The stub
+      provides get_hermes_home() returning Path(os.environ.get("HERMES_HOME",
+      str(Path.home() / ".hermes"))). Inject only when the real module is absent;
+      skip entirely when hermes-agent is active.
+    status: verified
+    changed_file: "conftest.py"
+    result: "PASS — 2026-05-29; stub block added; py_compile clean; no regressions"
+
+  - id: S2
+    name: "Add test_hermes_constants_importable_for_standalone_tests"
+    description: >
+      Add test_hermes_constants_importable_for_standalone_tests to
+      tests/test_hermes_tavern_packaging.py. The test imports hermes_constants,
+      calls get_hermes_home(), and asserts the return type is pathlib.Path.
+      This contracts both the real module and the stub satisfy the same interface,
+      and documents why the stub exists.
+    status: verified
+    changed_file: "tests/test_hermes_tavern_packaging.py"
+    result: "PASS — 2026-05-29; test_hermes_constants_importable_for_standalone_tests passes"
+
+  - id: S3
+    name: "py_compile smoke check"
+    description: >
+      Compile all shim, source, importer, and test files to confirm no syntax errors.
+    status: verified
+    verification_command: >
+      python -m py_compile conftest.py plugins/__init__.py plugins/hermes_tavern/__init__.py src/hermes_tavern/*.py src/hermes_tavern/importers/*.py tests/test_hermes_tavern_*.py
+    result: "PASS — 2026-05-29; no syntax errors"
+
+  - id: S4
+    name: "Full standalone test suite"
+    description: >
+      Run the full standalone Tavern pytest glob to verify no regressions.
+      Expect 450 passed (was 449; +1 new hermes_constants stub contract test).
+    status: verified
+    verification_command: >
+      python -m pytest tests/test_hermes_tavern_*.py -q -o 'addopts='
+    result: "PASS — 2026-05-29; 450 passed in 10.03s (was 449; +1 new test)"
+
+  - id: S5
+    name: "Checklist YAML validation"
+    description: >
+      Validate this CodeStable checklist with the project YAML validator.
+    status: verified
+    verification_command: >
+      python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-05-29-hermes-tavern-phase52-hermes-constants-stub/checklist.yaml
+    result: "PASS — 2026-05-29; 1 file passed, 0 failed"
+
+implementation_notes: |
+  - The stub is guarded by a try/except ModuleNotFoundError so it never shadows
+    the real hermes_constants when hermes-agent is installed.  The del at the end
+    of the except block cleans up the temporary names (_types, _stub) from the
+    conftest module namespace.
+  - Only get_hermes_home is stubbed because that is the only hermes_constants
+    attribute imported anywhere in src/hermes_tavern/ (confirmed by grep).
+    Other attributes (set_hermes_home_override, reset_hermes_home_override) are
+    not needed by the plugin source.
+  - The stub returns a real pathlib.Path so all downstream callers that append
+    subpaths with / operator work correctly (e.g. get_hermes_home() / "plugins").
+  - HERMES_HOME env var override mirrors the spirit of hermes_constants's own
+    override mechanism, letting CI point to a temp directory if desired.
+  - This change makes the standalone repo genuinely self-contained: a fresh
+    checkout + pip install -e . + pytest should now collect and run without
+    hermes-agent in the Python path.

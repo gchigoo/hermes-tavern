@@ -8,8 +8,8 @@ import re
 from dataclasses import dataclass, field
 from typing import Any
 
-from plugins.hermes_tavern.prompt import PromptModule
-from plugins.hermes_tavern.utils import estimate_tokens
+from hermes_tavern.prompt import PromptModule
+from hermes_tavern.utils import estimate_tokens
 
 
 @dataclass(frozen=True)

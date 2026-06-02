@@ -3,3 +3,4 @@ version: 0.1.0
 description: "SillyTavern-compatible RP/novel runtime for Hermes Gateway."
 author: Hermes Agent
 kind: backend
+entry_point: "hermes_tavern:register"

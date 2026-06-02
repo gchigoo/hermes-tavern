@@ -4,11 +4,11 @@ from __future__ import annotations
 
 from typing import Any
 
-from plugins.hermes_tavern.adapters import HermesChatCompletionAdapter
-from plugins.hermes_tavern.commands import RPCommand
-from plugins.hermes_tavern.identity import session_key_from_event
-from plugins.hermes_tavern.model_router import ModelRouter
-from plugins.hermes_tavern.provider_bridge import (
+from hermes_tavern.adapters import HermesChatCompletionAdapter
+from hermes_tavern.commands import RPCommand
+from hermes_tavern.identity import session_key_from_event
+from hermes_tavern.model_router import ModelRouter
+from hermes_tavern.provider_bridge import (
     APIYI_BASE_URL,
     APIYI_CONTEXT_WINDOW,
     APIYI_DEFAULT_MODEL,

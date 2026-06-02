@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 from typing import Any
 
-from plugins.hermes_tavern.macros import MacroContext
+from hermes_tavern.macros import MacroContext
 
 
 def mobile_preview(text: str, limit: int = 120) -> str:
@@ -58,7 +58,7 @@ def module_risk_counts(modules: Any) -> dict[str, int]:
 
 def card_row_to_obj(card_row: dict[str, Any]) -> Any:
     """Reconstruct a minimal CharacterCard-like object from a DB row."""
-    from plugins.hermes_tavern.importers.cards import CharacterCard
+    from hermes_tavern.importers.cards import CharacterCard
 
     data = json.loads(card_row["data_json"])
     return CharacterCard(

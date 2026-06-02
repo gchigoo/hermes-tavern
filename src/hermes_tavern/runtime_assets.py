@@ -8,12 +8,12 @@ from types import SimpleNamespace
 from typing import Any
 from pathlib import Path
 
-from plugins.hermes_tavern.commands import RPCommand
-from plugins.hermes_tavern.identity import session_key_from_event
-from plugins.hermes_tavern.import_policy import is_gateway_event, resolve_import_path
-from plugins.hermes_tavern.importers.cards import UnsupportedCardFormat, load_card_file
-from plugins.hermes_tavern.importers.lorebooks import import_embedded_lorebook_from_card
-from plugins.hermes_tavern.runtime_utils import mobile_preview
+from hermes_tavern.commands import RPCommand
+from hermes_tavern.identity import session_key_from_event
+from hermes_tavern.import_policy import is_gateway_event, resolve_import_path
+from hermes_tavern.importers.cards import UnsupportedCardFormat, load_card_file
+from hermes_tavern.importers.lorebooks import import_embedded_lorebook_from_card
+from hermes_tavern.runtime_utils import mobile_preview
 
 
 def assets(runtime: Any, event: Any) -> str:

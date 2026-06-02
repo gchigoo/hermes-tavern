@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from typing import Any
 
-from plugins.hermes_tavern.adapters import HermesChatCompletionAdapter
-from plugins.hermes_tavern.provider_bridge import HermesRuntimeProviderResolver
+from hermes_tavern.adapters import HermesChatCompletionAdapter
+from hermes_tavern.provider_bridge import HermesRuntimeProviderResolver
 
 
 def generate_with_session_adapter(

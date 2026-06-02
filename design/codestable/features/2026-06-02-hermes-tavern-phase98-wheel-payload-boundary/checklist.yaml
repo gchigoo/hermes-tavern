@@ -1,0 +1,115 @@
+doc_type: feature-checklist
+feature: hermes-tavern-phase98-wheel-payload-boundary
+date: "2026-06-02"
+status: implemented
+
+summary: >
+  Add a release-readiness packaging boundary test that inspects built wheel
+  contents to ensure only intended package payload and metadata are shipped, while
+  repository-root helper files/directories are excluded from the wheel payload.
+  This phase is packaging-test/checklist only and must not change runtime,
+  gateway, provider, model, credential, service, or network behavior.
+
+steps:
+  - id: S1
+    name: Add wheel payload boundary packaging assertion
+    description: >
+      Extend the packaging test module with a focused wheel archive assertion that
+      reuses _build_package_artifacts(tmp_path), checks required hermes_tavern
+      files, validates dist-info entry points, and forbids repo-root artifact
+      payloads (plugins/, tests/, design/, patches/, conftest.py,
+      smoke_turn_controls.py, __pycache__/, .pyc).
+    status: implemented
+    changed_file: "tests/test_hermes_tavern_packaging.py"
+    result: >
+      IMPLEMENTED - added
+      test_wheel_payload_boundary_excludes_repo_root_artifacts using the existing
+      wheel build helper and zipfile archive inspection.
+
+  - id: S2
+    name: Record phase98 CodeStable checklist
+    description: >
+      Add this checklist file under the phase98 feature directory with release
+      packaging scope only.
+    status: implemented
+    changed_file: "design/codestable/features/2026-06-02-hermes-tavern-phase98-wheel-payload-boundary/checklist.yaml"
+    result: "IMPLEMENTED - checklist created and updated with controller verification results"
+
+  - id: S3
+    name: Focused packaging pytest
+    description: >
+      Execute the focused packaging test module to verify the new wheel payload
+      boundary test passes with offline artifact build logic.
+    verification_command: >
+      PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_packaging.py -q -o 'addopts='
+    status: verified
+    result: "PASS - controller rerun returned 20 passed in 7.58s"
+
+  - id: S4
+    name: Full py_compile gate
+    description: >
+      Compile the compatibility shim, standalone plugin source, importers, and
+      Tavern test modules without writing pycache files into the repo.
+    verification_command: >
+      PYTHONPYCACHEPREFIX=/private/tmp/hermes-tavern-phase98-pycache python -m py_compile conftest.py plugins/__init__.py plugins/hermes_tavern/__init__.py src/hermes_tavern/*.py src/hermes_tavern/importers/*.py tests/test_hermes_tavern_*.py
+    status: verified
+    result: "PASS - exited 0 with no compile output"
+
+  - id: S5
+    name: Full Tavern pytest gate
+    description: >
+      Run the complete Hermes Tavern test glob after the packaging boundary
+      assertion, without managing Gateway or calling real providers.
+    verification_command: >
+      PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_*.py -q -o 'addopts='
+    status: verified
+    result: "PASS - controller rerun returned 646 passed in 20.50s"
+
+  - id: S6
+    name: Checklist YAML validation
+    description: >
+      Validate this CodeStable checklist with the project YAML validator.
+    verification_command: >
+      PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-02-hermes-tavern-phase98-wheel-payload-boundary/checklist.yaml --yaml-only
+    status: verified
+    result: "PASS - validated 1 file: 1 passed, 0 failed"
+
+  - id: S7
+    name: Scoped diff whitespace check
+    description: >
+      Check only the files allowed for this phase for whitespace errors. Use
+      plain scoped git diff --check for tracked diffs and no-index --check for
+      untracked allowed files.
+    verification_command: >
+      git diff --check -- tests/test_hermes_tavern_packaging.py design/codestable/features/2026-06-02-hermes-tavern-phase98-wheel-payload-boundary/checklist.yaml
+      git diff --no-index --check -- /dev/null tests/test_hermes_tavern_packaging.py
+      git diff --no-index --check -- /dev/null design/codestable/features/2026-06-02-hermes-tavern-phase98-wheel-payload-boundary/checklist.yaml
+    status: verified
+    result: >
+      PASS - scoped git diff --check exited 0 with no output; no-index
+      whitespace checks for the untracked packaging test module and checklist
+      also produced no whitespace-error output after normalizing the expected
+      no-index diff exit code.
+
+implementation_notes: |
+  - Scope is restricted to tests/test_hermes_tavern_packaging.py and this
+    checklist.
+  - No runtime behavior, command dispatch behavior, README content,
+    pyproject.toml metadata, plugin.yaml metadata, or command table entries are
+    changed.
+  - The new assertion directly inspects the wheel archive to lock the release
+    payload boundary: package files and entry point metadata are included, while
+    repo-root shims, tests, design docs, patch directories, smoke scripts,
+    pycache, and bytecode are excluded.
+
+verification_notes: |
+  - Codex executor reported an initial focused packaging pytest pass: 20 passed
+    in 8.04s.
+  - Controller reran focused packaging pytest: 20 passed in 7.58s.
+  - Controller py_compile gate passed with exit code 0 and no output; pycache
+    output was redirected to /private/tmp/hermes-tavern-phase98-pycache.
+  - Controller full Tavern pytest glob passed: 646 passed in 20.50s.
+  - Checklist YAML validation passed: 1 file passed, 0 failed.
+  - Scoped git diff whitespace check passed with exit code 0 and no output.
+  - No Gateway/service/model/provider/network/Telegram/ComfyUI/TTS/credential
+    endpoints were started, reloaded, killed, managed, or called.

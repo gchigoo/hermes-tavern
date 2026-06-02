@@ -38,6 +38,21 @@ class EventUser2:
 SESSION_KEY_USER2 = "telegram:chat:chat-1:thread:main:user:user-2"
 
 
+class SourcePlatform2:
+    platform = "discord"
+    chat_id = "chat-1"
+    thread_id = None
+    user_id = "user-1"
+
+
+class EventPlatform2:
+    source = SourcePlatform2()
+    text = ""
+
+
+SESSION_KEY_PLATFORM2 = "discord:chat:chat-1:thread:main:user:user-1"
+
+
 def _make_runtime(tmp_path):
     store = TavernStore(tmp_path / "tavern.sqlite3")
     store.migrate()
@@ -47,6 +62,12 @@ def _make_runtime(tmp_path):
         )
     )
     return TavernRuntime(store), store
+
+
+def _save_scope_leak_card(store, name="ScopeLeakBob", first_mes="Other secret hello."):
+    return store.save_card(
+        parse_character_card({"name": name, "description": "Hidden", "first_mes": first_mes})
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -352,6 +373,142 @@ def test_switch_back_to_archived_session_restores_it(tmp_path):
 
 
 # ---------------------------------------------------------------------------
+# /rp start command
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_rp_start_reuses_caller_active_session_and_appends_greeting(tmp_path):
+    runtime, store = _make_runtime(tmp_path)
+    bob_id = store.save_card(
+        parse_character_card({"name": "Bob", "description": "Bard", "first_mes": "Bob greets you."})
+    )
+    await runtime.handle_command(RPCommand("start", ["Alice"], "/rp start Alice"), Event())
+    first = store.get_active_session(SESSION_KEY)
+
+    response = await runtime.handle_command(RPCommand("start", ["Bob"], "/rp start Bob"), Event())
+
+    active = store.get_active_session(SESSION_KEY)
+    messages = store.get_recent_messages(active["id"], limit=10)
+    assert active["id"] == first["id"]
+    assert active["card_id"] == bob_id
+    assert len(store.list_sessions_for_scope(SESSION_KEY)) == 1
+    assert "Started Hermes Tavern session with Bob." in response
+    assert "Bob greets you." in response
+    assert any(message["content"] == "Bob greets you." for message in messages)
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "other_session_key",
+    [
+        SESSION_KEY_USER2,
+        SESSION_KEY_PLATFORM2,
+    ],
+)
+async def test_rp_start_creates_caller_active_without_mutating_other_active_scope(
+    tmp_path, other_session_key
+):
+    runtime, store = _make_runtime(tmp_path)
+    other_card_id = _save_scope_leak_card(store)
+    other_session = store.start_session(other_session_key, other_card_id)
+    store.rename_session(other_session["id"], "Other Active")
+
+    response = await runtime.handle_command(RPCommand("start", ["Alice"], "/rp start Alice"), Event())
+
+    caller_session = store.get_active_session(SESSION_KEY)
+    other_active = store.get_active_session(other_session_key)
+    assert caller_session["id"] != other_session["id"]
+    assert caller_session["card_name"] == "Alice"
+    assert other_active["id"] == other_session["id"]
+    assert other_active["card_id"] == other_card_id
+    assert store.get_paused_session(other_session_key) is None
+    assert "Started Hermes Tavern session with Alice." in response
+    assert "Hello there." in response
+    assert other_session["id"] not in response
+    assert other_session["id"][:8] not in response
+    assert other_session_key not in response
+    assert "Other Active" not in response
+    assert "ScopeLeakBob" not in response
+    assert "Other secret hello." not in response
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "other_session_key",
+    [
+        SESSION_KEY_USER2,
+        SESSION_KEY_PLATFORM2,
+    ],
+)
+async def test_rp_start_creates_caller_active_without_mutating_other_paused_scope(
+    tmp_path, other_session_key
+):
+    runtime, store = _make_runtime(tmp_path)
+    other_card_id = _save_scope_leak_card(store)
+    other_session = store.start_session(other_session_key, other_card_id)
+    store.rename_session(other_session["id"], "Other Paused")
+    assert store.pause_session(other_session_key) is True
+
+    response = await runtime.handle_command(RPCommand("start", ["Alice"], "/rp start Alice"), Event())
+
+    caller_session = store.get_active_session(SESSION_KEY)
+    other_paused = store.get_paused_session(other_session_key)
+    assert caller_session["id"] != other_session["id"]
+    assert caller_session["card_name"] == "Alice"
+    assert store.get_active_session(other_session_key) is None
+    assert other_paused["id"] == other_session["id"]
+    assert other_paused["card_id"] == other_card_id
+    assert "Started Hermes Tavern session with Alice." in response
+    assert "Hello there." in response
+    assert other_session["id"] not in response
+    assert other_session["id"][:8] not in response
+    assert other_session_key not in response
+    assert "Other Paused" not in response
+    assert "ScopeLeakBob" not in response
+    assert "Other secret hello." not in response
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("other_status", ["active", "paused"])
+async def test_rp_start_restarting_caller_does_not_mutate_other_scope(
+    tmp_path, other_status
+):
+    runtime, store = _make_runtime(tmp_path)
+    caller_bob_id = store.save_card(
+        parse_character_card({"name": "CallerBob", "first_mes": "Caller Bob hello."})
+    )
+    other_card_id = _save_scope_leak_card(store)
+    await runtime.handle_command(RPCommand("start", ["Alice"], "/rp start Alice"), Event())
+    caller_first = store.get_active_session(SESSION_KEY)
+    other_session = store.start_session(SESSION_KEY_USER2, other_card_id)
+    store.rename_session(other_session["id"], f"Other {other_status.title()}")
+    if other_status == "paused":
+        assert store.pause_session(SESSION_KEY_USER2) is True
+
+    response = await runtime.handle_command(
+        RPCommand("start", ["CallerBob"], "/rp start CallerBob"), Event()
+    )
+
+    caller_second = store.get_active_session(SESSION_KEY)
+    assert caller_second["id"] == caller_first["id"]
+    assert caller_second["card_id"] == caller_bob_id
+    if other_status == "active":
+        other_current = store.get_active_session(SESSION_KEY_USER2)
+        assert store.get_paused_session(SESSION_KEY_USER2) is None
+    else:
+        other_current = store.get_paused_session(SESSION_KEY_USER2)
+        assert store.get_active_session(SESSION_KEY_USER2) is None
+    assert other_current["id"] == other_session["id"]
+    assert other_current["card_id"] == other_card_id
+    assert other_session["id"] not in response
+    assert other_session["id"][:8] not in response
+    assert SESSION_KEY_USER2 not in response
+    assert "ScopeLeakBob" not in response
+    assert "Other secret hello." not in response
+
+
+# ---------------------------------------------------------------------------
 # /rp sessions command
 # ---------------------------------------------------------------------------
 
@@ -404,6 +561,183 @@ async def test_rp_sessions_shows_short_id(tmp_path):
         RPCommand("sessions", [], "/rp sessions"), Event()
     )
     assert "[" in response and "]" in response
+
+
+# ---------------------------------------------------------------------------
+# /rp session info command
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_rp_session_info_active_uses_current_scope_only(tmp_path):
+    runtime, store = _make_runtime(tmp_path)
+    bob_id = store.save_card(
+        parse_character_card({"name": "ScopeLeakBob", "first_mes": "Other hello."})
+    )
+    await runtime.handle_command(RPCommand("start", ["Alice"], "/rp start Alice"), Event())
+    await runtime.handle_command(
+        RPCommand("rename", ["Caller", "Visible"], "/rp rename Caller Visible"),
+        Event(),
+    )
+    await runtime.handle_command(RPCommand("start", ["ScopeLeakBob"], "/rp start ScopeLeakBob"), EventUser2())
+    await runtime.handle_command(
+        RPCommand("rename", ["Other", "Active"], "/rp rename Other Active"),
+        EventUser2(),
+    )
+    store.add_session_memory_fact(SESSION_KEY_USER2, "ScopeLeakBob knows the hidden cellar.")
+    store.set_session_summary(SESSION_KEY_USER2, "ScopeLeakBob mapped the cellar.")
+    caller_session = store.get_active_session(SESSION_KEY)
+    other_session = store.get_active_session(SESSION_KEY_USER2)
+    assert other_session["card_id"] == bob_id
+
+    response = await runtime.handle_command(
+        RPCommand("session", ["info"], "/rp session info"), Event()
+    )
+
+    assert caller_session["id"][:8] in response
+    assert "Caller Visible" in response
+    assert "Alice" in response
+    assert "(active)" in response
+    assert other_session["id"] not in response
+    assert other_session["id"][:8] not in response
+    assert "Other Active" not in response
+    assert "ScopeLeakBob" not in response
+    assert "hidden cellar" not in response
+    assert "mapped the cellar" not in response
+    assert SESSION_KEY_USER2 not in response
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("other_event", "other_session_key", "pause_other"),
+    [
+        (EventUser2(), SESSION_KEY_USER2, False),
+        (EventPlatform2(), SESSION_KEY_PLATFORM2, True),
+    ],
+)
+async def test_rp_session_info_no_active_caller_does_not_reveal_other_scope(
+    tmp_path, other_event, other_session_key, pause_other
+):
+    runtime, store = _make_runtime(tmp_path)
+    store.save_card(
+        parse_character_card({"name": "ScopeLeakBob", "first_mes": "Other hello."})
+    )
+    await runtime.handle_command(
+        RPCommand("start", ["ScopeLeakBob"], "/rp start ScopeLeakBob"), other_event
+    )
+    await runtime.handle_command(
+        RPCommand("rename", ["Other", "Visible"], "/rp rename Other Visible"),
+        other_event,
+    )
+    store.add_session_memory_fact(other_session_key, "ScopeLeakBob guards the amber vault.")
+    store.set_session_summary(other_session_key, "ScopeLeakBob opened the amber vault.")
+    other_session = store.get_active_session(other_session_key)
+    if pause_other:
+        assert store.pause_session(other_session_key) is True
+
+    response = await runtime.handle_command(
+        RPCommand("session", ["info"], "/rp session info"), Event()
+    )
+
+    assert response == "No active Hermes Tavern session."
+    assert other_session["id"] not in response
+    assert other_session["id"][:8] not in response
+    assert "Other Visible" not in response
+    assert "ScopeLeakBob" not in response
+    assert "amber vault" not in response
+    assert other_session_key not in response
+    assert "paused" not in response
+
+
+@pytest.mark.asyncio
+async def test_rp_session_info_paused_same_scope_behavior_unchanged(tmp_path):
+    runtime, store = _make_runtime(tmp_path)
+    await runtime.handle_command(RPCommand("start", ["Alice"], "/rp start Alice"), Event())
+    session = store.get_active_session(SESSION_KEY)
+    assert store.pause_session(SESSION_KEY) is True
+
+    response = await runtime.handle_command(
+        RPCommand("session", ["info"], "/rp session info"), Event()
+    )
+
+    assert session["id"][:8] in response
+    assert "paused" in response
+    assert "Alice" in response
+    assert "/rp resume" in response
+
+
+@pytest.mark.asyncio
+async def test_rp_sessions_lists_only_current_scope(tmp_path):
+    runtime, store = _make_runtime(tmp_path)
+    bob_id = store.save_card(
+        parse_character_card({"name": "ScopeLeakBob", "first_mes": "Other hello."})
+    )
+    await runtime.handle_command(RPCommand("start", ["Alice"], "/rp start Alice"), Event())
+    await runtime.handle_command(
+        RPCommand("rename", ["Caller", "Visible"], "/rp rename Caller Visible"),
+        Event(),
+    )
+    await runtime.handle_command(RPCommand("start", ["ScopeLeakBob"], "/rp start ScopeLeakBob"), EventUser2())
+    await runtime.handle_command(
+        RPCommand("rename", ["Other", "Active"], "/rp rename Other Active"),
+        EventUser2(),
+    )
+    caller_session = store.get_active_session(SESSION_KEY)
+    other_session = store.get_active_session(SESSION_KEY_USER2)
+    assert other_session["card_id"] == bob_id
+
+    response = await runtime.handle_command(
+        RPCommand("sessions", [], "/rp sessions"), Event()
+    )
+
+    assert caller_session["id"][:8] in response
+    assert "Caller Visible" in response
+    assert other_session["id"] not in response
+    assert other_session["id"][:8] not in response
+    assert "Other Active" not in response
+    assert "ScopeLeakBob" not in response
+    assert SESSION_KEY_USER2 not in response
+
+
+@pytest.mark.asyncio
+async def test_rp_sessions_all_lists_only_current_scope_with_other_statuses(tmp_path):
+    runtime, store = _make_runtime(tmp_path)
+    bob_id = store.save_card(
+        parse_character_card({"name": "ScopeLeakBob", "first_mes": "Other hello."})
+    )
+    caller_active = store.start_session(SESSION_KEY, "alice")
+    caller_archived = store.clone_session(
+        caller_active["id"], SESSION_KEY, title="Caller Archived"
+    )
+    store.archive_active_session(caller_archived["session_key"])
+    other_active = store.start_session(SESSION_KEY_USER2, bob_id)
+    store.rename_session(other_active["id"], "Other Active")
+    other_archived = store.clone_session(
+        other_active["id"], SESSION_KEY_USER2, title="Other Archived"
+    )
+    store.archive_active_session(other_archived["session_key"])
+    other_ended = store.clone_session(
+        other_active["id"], SESSION_KEY_USER2, title="Other Ended"
+    )
+    store.end_session(other_ended["session_key"])
+
+    response = await runtime.handle_command(
+        RPCommand("sessions", ["all"], "/rp sessions all"), Event()
+    )
+
+    assert caller_active["id"][:8] in response
+    assert caller_archived["id"][:8] in response
+    assert "Caller Archived" in response
+    assert "*" in response
+    assert "page 1/1" in response
+    for other_session in (other_active, other_archived, other_ended):
+        assert other_session["id"] not in response
+        assert other_session["id"][:8] not in response
+    assert "Other Active" not in response
+    assert "Other Archived" not in response
+    assert "Other Ended" not in response
+    assert "ScopeLeakBob" not in response
+    assert SESSION_KEY_USER2 not in response
 
 
 # ---------------------------------------------------------------------------
@@ -465,6 +799,183 @@ async def test_rp_archive_archives_active_session(tmp_path):
     )
     assert "archived" in response.lower()
     assert store.get_active_session(SESSION_KEY) is None
+
+
+@pytest.mark.asyncio
+async def test_rp_pause_pauses_only_current_scope(tmp_path):
+    runtime, store = _make_runtime(tmp_path)
+    caller_session = store.start_session(SESSION_KEY, "alice")
+    other_session = store.start_session(SESSION_KEY_USER2, "alice")
+
+    response = await runtime.handle_command(
+        RPCommand("pause", [], "/rp pause"), Event()
+    )
+
+    assert "paused" in response.lower()
+    assert other_session["id"] not in response
+    assert SESSION_KEY_USER2 not in response
+    assert store.get_active_session(SESSION_KEY) is None
+    assert store.get_paused_session(SESSION_KEY)["id"] == caller_session["id"]
+    assert store.get_active_session(SESSION_KEY_USER2)["id"] == other_session["id"]
+    assert store.get_paused_session(SESSION_KEY_USER2) is None
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "other_session_key",
+    [
+        SESSION_KEY_USER2,
+        SESSION_KEY_PLATFORM2,
+    ],
+)
+async def test_rp_pause_no_active_caller_does_not_reveal_or_mutate_other_scope(
+    tmp_path, other_session_key
+):
+    runtime, store = _make_runtime(tmp_path)
+    other_session = store.start_session(other_session_key, "alice")
+    store.rename_session(other_session["id"], "Other Active")
+
+    response = await runtime.handle_command(
+        RPCommand("pause", [], "/rp pause"), Event()
+    )
+
+    assert response == "No active Hermes Tavern session to pause."
+    assert other_session["id"] not in response
+    assert other_session["id"][:8] not in response
+    assert other_session_key not in response
+    assert "Other Active" not in response
+    assert store.get_active_session(SESSION_KEY) is None
+    assert store.get_active_session(other_session_key)["id"] == other_session["id"]
+    assert store.get_paused_session(other_session_key) is None
+
+
+@pytest.mark.asyncio
+async def test_rp_resume_resumes_only_current_scope(tmp_path):
+    runtime, store = _make_runtime(tmp_path)
+    caller_session = store.start_session(SESSION_KEY, "alice")
+    other_session = store.start_session(SESSION_KEY_USER2, "alice")
+    assert store.pause_session(SESSION_KEY) is True
+    assert store.pause_session(SESSION_KEY_USER2) is True
+
+    response = await runtime.handle_command(
+        RPCommand("resume", [], "/rp resume"), Event()
+    )
+
+    assert "resumed" in response.lower()
+    assert other_session["id"] not in response
+    assert SESSION_KEY_USER2 not in response
+    assert store.get_active_session(SESSION_KEY)["id"] == caller_session["id"]
+    assert store.get_paused_session(SESSION_KEY) is None
+    assert store.get_active_session(SESSION_KEY_USER2) is None
+    assert store.get_paused_session(SESSION_KEY_USER2)["id"] == other_session["id"]
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "other_session_key",
+    [
+        SESSION_KEY_USER2,
+        SESSION_KEY_PLATFORM2,
+    ],
+)
+async def test_rp_resume_no_paused_caller_does_not_reveal_or_mutate_other_scope(
+    tmp_path, other_session_key
+):
+    runtime, store = _make_runtime(tmp_path)
+    other_session = store.start_session(other_session_key, "alice")
+    store.rename_session(other_session["id"], "Other Paused")
+    assert store.pause_session(other_session_key) is True
+
+    response = await runtime.handle_command(
+        RPCommand("resume", [], "/rp resume"), Event()
+    )
+
+    assert response == "No paused Hermes Tavern session to resume."
+    assert other_session["id"] not in response
+    assert other_session["id"][:8] not in response
+    assert other_session_key not in response
+    assert "Other Paused" not in response
+    assert store.get_active_session(SESSION_KEY) is None
+    assert store.get_active_session(other_session_key) is None
+    assert store.get_paused_session(other_session_key)["id"] == other_session["id"]
+
+
+@pytest.mark.asyncio
+async def test_rp_pause_resume_same_scope_behavior_unchanged(tmp_path):
+    runtime, store = _make_runtime(tmp_path)
+    session = store.start_session(SESSION_KEY, "alice")
+
+    pause_response = await runtime.handle_command(
+        RPCommand("pause", [], "/rp pause"), Event()
+    )
+    resume_response = await runtime.handle_command(
+        RPCommand("resume", [], "/rp resume"), Event()
+    )
+
+    assert "paused" in pause_response.lower()
+    assert "resumed" in resume_response.lower()
+    assert store.get_active_session(SESSION_KEY)["id"] == session["id"]
+    assert store.get_paused_session(SESSION_KEY) is None
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("command_name", "raw_command"),
+    [
+        ("end", "/rp end"),
+        ("archive", "/rp archive"),
+    ],
+)
+async def test_rp_stop_like_commands_do_not_mutate_other_user_scope(
+    tmp_path, command_name, raw_command
+):
+    runtime, store = _make_runtime(tmp_path)
+    await runtime.handle_command(RPCommand("start", ["Alice"], "/rp start Alice"), Event())
+    await runtime.handle_command(RPCommand("start", ["Alice"], "/rp start Alice"), EventUser2())
+    caller_session = store.get_active_session(SESSION_KEY)
+    other_session = store.get_active_session(SESSION_KEY_USER2)
+
+    response = await runtime.handle_command(
+        RPCommand(command_name, [], raw_command), Event()
+    )
+
+    assert other_session["id"] not in response
+    assert store.get_active_session(SESSION_KEY) is None
+    assert store.get_active_session(SESSION_KEY_USER2)["id"] == other_session["id"]
+    same_scope_sessions = store.list_sessions_for_scope(SESSION_KEY, include_all=True)
+    caller_status = next(
+        row["status"] for row in same_scope_sessions if row["id"] == caller_session["id"]
+    )
+    if command_name == "end":
+        assert caller_status == "ended"
+    else:
+        assert caller_status == "archived"
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("command_name", "raw_command"),
+    [
+        ("end", "/rp end"),
+        ("archive", "/rp archive"),
+    ],
+)
+async def test_rp_stop_like_commands_no_active_caller_do_not_reveal_other_scope(
+    tmp_path, command_name, raw_command
+):
+    runtime, store = _make_runtime(tmp_path)
+    await runtime.handle_command(RPCommand("start", ["Alice"], "/rp start Alice"), EventUser2())
+    other_session = store.get_active_session(SESSION_KEY_USER2)
+
+    response = await runtime.handle_command(
+        RPCommand(command_name, [], raw_command), Event()
+    )
+
+    assert "No active" in response
+    assert other_session["id"] not in response
+    assert SESSION_KEY_USER2 not in response
+    assert store.get_active_session(SESSION_KEY) is None
+    assert store.get_active_session(SESSION_KEY_USER2)["id"] == other_session["id"]
 
 
 # ---------------------------------------------------------------------------
@@ -567,6 +1078,44 @@ async def test_rp_switch_does_not_cross_user_scope(tmp_path):
 
     assert "not found" in response.lower()
     assert store.get_active_session(SESSION_KEY)["id"] == user_a["id"]
+
+
+@pytest.mark.asyncio
+async def test_rp_switch_does_not_cross_user_scope_by_full_id(tmp_path):
+    runtime, store = _make_runtime(tmp_path)
+    await runtime.handle_command(RPCommand("start", ["Alice"], "/rp start Alice"), Event())
+    await runtime.handle_command(RPCommand("start", ["Alice"], "/rp start Alice"), EventUser2())
+    user_a = store.get_active_session(SESSION_KEY)
+    user_b = store.get_active_session(SESSION_KEY_USER2)
+
+    response = await runtime.handle_command(
+        RPCommand("switch", [user_b["id"]], f"/rp switch {user_b['id']}"), Event()
+    )
+
+    assert "not found" in response.lower()
+    assert store.get_active_session(SESSION_KEY)["id"] == user_a["id"]
+    assert store.get_active_session(SESSION_KEY_USER2)["id"] == user_b["id"]
+
+
+@pytest.mark.asyncio
+async def test_rp_switch_does_not_cross_platform_scope_by_prefix_or_full_id(tmp_path):
+    runtime, store = _make_runtime(tmp_path)
+    await runtime.handle_command(RPCommand("start", ["Alice"], "/rp start Alice"), Event())
+    await runtime.handle_command(RPCommand("start", ["Alice"], "/rp start Alice"), EventPlatform2())
+    user_a = store.get_active_session(SESSION_KEY)
+    platform_b = store.get_active_session(SESSION_KEY_PLATFORM2)
+
+    prefix_response = await runtime.handle_command(
+        RPCommand("switch", [platform_b["id"][:8]], f"/rp switch {platform_b['id'][:8]}"), Event()
+    )
+    full_id_response = await runtime.handle_command(
+        RPCommand("switch", [platform_b["id"]], f"/rp switch {platform_b['id']}"), Event()
+    )
+
+    assert "not found" in prefix_response.lower()
+    assert "not found" in full_id_response.lower()
+    assert store.get_active_session(SESSION_KEY)["id"] == user_a["id"]
+    assert store.get_active_session(SESSION_KEY_PLATFORM2)["id"] == platform_b["id"]
 
 
 @pytest.mark.asyncio

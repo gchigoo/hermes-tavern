@@ -11,7 +11,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-from plugins.hermes_tavern.preset_safety import PresetRiskLevel, classify_preset_text
+from hermes_tavern.preset_safety import PresetRiskLevel, classify_preset_text
 
 
 @dataclass(frozen=True)

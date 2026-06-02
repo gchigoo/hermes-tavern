@@ -1,0 +1,98 @@
+doc_type: feature-checklist
+feature: hermes-tavern-phase55-import-policy-utils-tests
+date: "2026-05-29"
+status: implemented
+
+summary: >
+  import_policy.py (is_local_media_path, is_gateway_event, resolve_import_path)
+  and utils.py (estimate_tokens) were the last two source modules with zero test
+  coverage. import_policy.py is security-critical: it controls the gateway trust
+  policy for attachment file imports, determining whether an event is a gateway
+  event vs. a trusted local caller and whether explicit import paths must be
+  pre-verified against event attachments. This phase adds
+  tests/test_hermes_tavern_import_policy.py (24 tests) and
+  tests/test_hermes_tavern_utils.py (6 tests), covering all public functions
+  and key trust-policy branches.
+
+steps:
+  - id: S1
+    name: "Add tests/test_hermes_tavern_import_policy.py"
+    description: >
+      Create a new test module that directly imports from
+      hermes_tavern.import_policy and tests:
+        is_local_media_path: bare filename, absolute path, relative path,
+          tilde path → True; http/https/double-slash URLs → False.
+        is_gateway_event: no media_urls attr → False; platform/chat_id/user_id
+          set → True; all identity fields None → False; nested source.platform
+          set → True; nested source all None → False.
+        resolve_import_path: no explicit + no attachments → error with tip;
+          no explicit + one matching attachment → returns path; no explicit +
+          multiple attachments → error with list; no explicit + wrong suffix
+          attachment → error; explicit + local trusted caller → returns path;
+          explicit + gateway event not in attachments → rejected; explicit +
+          gateway event in attachments → accepted; explicit remote URL +
+          gateway event → rejected; explicit remote URL + local trusted +
+          allow_remote_urls=True → accepted; explicit wrong suffix + gateway
+          event → rejected.
+      24 tests total.
+    status: verified
+    changed_file: "tests/test_hermes_tavern_import_policy.py"
+    result: "PASS — 2026-05-29; 24 passed in 0.03s"
+
+  - id: S2
+    name: "Add tests/test_hermes_tavern_utils.py"
+    description: >
+      Create a new test module that directly imports estimate_tokens from
+      hermes_tavern.utils and tests: empty string → 1; single char → 1;
+      four chars → 1; eight chars → 2; 100 chars → 25; never returns 0 for
+      short inputs (parametrized).
+      6 tests total.
+    status: verified
+    changed_file: "tests/test_hermes_tavern_utils.py"
+    result: "PASS — 2026-05-29; 6 passed in 0.03s"
+
+  - id: S3
+    name: "py_compile smoke check"
+    description: >
+      Compile all shim, source, importer, and test files to confirm no syntax errors.
+    status: verified
+    verification_command: >
+      python -m py_compile conftest.py plugins/__init__.py plugins/hermes_tavern/__init__.py src/hermes_tavern/*.py src/hermes_tavern/importers/*.py tests/test_hermes_tavern_*.py
+    result: "PASS — 2026-05-29; no syntax errors"
+
+  - id: S4
+    name: "Full standalone test suite"
+    description: >
+      Run the full standalone Tavern pytest glob to verify no regressions.
+      Expect 505 passed (was 475; +24 import_policy + 6 utils = +30 new tests).
+    status: verified
+    verification_command: >
+      python -m pytest tests/test_hermes_tavern_*.py -q -o 'addopts='
+    result: "PASS — 2026-05-29; 505 passed in 9.45s (was 475; +30 new tests)"
+
+  - id: S5
+    name: "Checklist YAML validation"
+    description: >
+      Validate this CodeStable checklist with the project YAML validator.
+    status: verified
+    verification_command: >
+      python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-05-29-hermes-tavern-phase55-import-policy-utils-tests/checklist.yaml
+    result: "PASS — 2026-05-29; 1 file passed, 0 failed"
+
+implementation_notes: |
+  - import_policy.py uses duck-typed event objects — tests use
+    types.SimpleNamespace to build minimal fake events without needing a
+    real Hermes event class.  The gateway-event detection checks for a
+    media_urls attribute + at least one non-empty identity field
+    (platform / chat_id / user_id), either directly on the event or on a
+    nested source object.
+  - resolve_import_path's gateway trust check compares Path.resolve(strict=False)
+    of the explicit value against the resolved paths of all event attachments.
+    On macOS, /tmp is a symlink to /private/tmp, so tests that compare
+    resolved paths use tmp_path (pytest fixture) to ensure the attachment path
+    and explicit path both start with the same real base directory.
+  - estimate_tokens uses max(1, len(text) // 4) so the minimum return value
+    is always 1 regardless of input length.  The test_estimate_tokens_never_zero
+    parametrized test documents this contract explicitly.
+  - No source files were modified; only two new test files were added.
+  - test count: 475 (phase 54 baseline) + 30 (this phase) = 505.

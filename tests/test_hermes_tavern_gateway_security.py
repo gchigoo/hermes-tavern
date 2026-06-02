@@ -31,6 +31,13 @@ def _runtime(tmp_path):
     return TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
 
 
+def _write_import_file(path, payload):
+    if isinstance(payload, str):
+        path.write_text(payload, encoding="utf-8")
+    else:
+        path.write_text(json.dumps(payload), encoding="utf-8")
+
+
 @pytest.mark.parametrize(
     ("command", "args", "filename", "payload", "rejected"),
     [
@@ -48,10 +55,7 @@ def _runtime(tmp_path):
 )
 def test_gateway_explicit_unattached_local_path_is_rejected(tmp_path, command, args, filename, payload, rejected):
     import_file = tmp_path / filename
-    if isinstance(payload, str):
-        import_file.write_text(payload, encoding="utf-8")
-    else:
-        import_file.write_text(json.dumps(payload), encoding="utf-8")
+    _write_import_file(import_file, payload)
     runtime = _runtime(tmp_path)
 
     result = runtime.handle_command_sync(
@@ -80,10 +84,7 @@ def test_gateway_explicit_unattached_local_path_is_rejected(tmp_path, command, a
 )
 def test_gateway_explicit_path_matching_attachment_is_accepted(tmp_path, command, filename, payload, imported):
     import_file = tmp_path / filename
-    if isinstance(payload, str):
-        import_file.write_text(payload, encoding="utf-8")
-    else:
-        import_file.write_text(json.dumps(payload), encoding="utf-8")
+    _write_import_file(import_file, payload)
     runtime = _runtime(tmp_path)
 
     result = runtime.handle_command_sync(
@@ -108,12 +109,43 @@ def test_gateway_explicit_path_matching_attachment_is_accepted(tmp_path, command
         ("persona", "persona.txt", "I am a local persona.", "Imported Hermes Tavern persona: persona"),
     ],
 )
+def test_gateway_explicit_path_normalized_attachment_match_is_accepted(
+    tmp_path, monkeypatch, command, filename, payload, imported
+):
+    import_file = tmp_path / filename
+    _write_import_file(import_file, payload)
+    monkeypatch.chdir(tmp_path)
+    runtime = _runtime(tmp_path)
+
+    result = runtime.handle_command_sync(
+        RPCommand(
+            command,
+            ["import", f"./{filename}"],
+            f"/rp {command} import ./{filename}",
+        ),
+        GatewayEvent([str(import_file.resolve())]),
+    )
+
+    assert imported in result
+
+
+@pytest.mark.parametrize(
+    ("command", "filename", "payload", "imported"),
+    [
+        ("card", "alice.json", {"name": "Alice"}, "Imported card: Alice"),
+        ("preset", "preset.txt", "Keep replies concise.", "Imported ST preset: preset"),
+        (
+            "lore",
+            "lore.json",
+            {"name": "Atlas", "entries": [{"comment": "Moon", "content": "The moon.", "keys": ["moon"]}]},
+            "Imported ST lorebook: Atlas",
+        ),
+        ("persona", "persona.txt", "I am a local persona.", "Imported Hermes Tavern persona: persona"),
+    ],
+)
 def test_local_explicit_path_import_still_works(tmp_path, command, filename, payload, imported):
     import_file = tmp_path / filename
-    if isinstance(payload, str):
-        import_file.write_text(payload, encoding="utf-8")
-    else:
-        import_file.write_text(json.dumps(payload), encoding="utf-8")
+    _write_import_file(import_file, payload)
     runtime = _runtime(tmp_path)
 
     result = runtime.handle_command_sync(
@@ -134,6 +166,32 @@ def test_gateway_explicit_sensitive_path_is_rejected_without_echoing_full_path(t
 
     assert "Card import rejected" in result
     assert "/etc/passwd" not in result
+
+
+def test_gateway_card_import_with_different_attachment_rejects_without_path_echo(tmp_path):
+    sensitive_file = tmp_path / "sensitive" / "alice.json"
+    sensitive_file.parent.mkdir()
+    _write_import_file(sensitive_file, {"name": "Alice"})
+    attachment = tmp_path / "attached" / "other.json"
+    attachment.parent.mkdir()
+    _write_import_file(attachment, {"name": "Other"})
+    runtime = _runtime(tmp_path)
+
+    result = runtime.handle_command_sync(
+        RPCommand(
+            "card",
+            ["import", str(sensitive_file)],
+            f"/rp card import {sensitive_file}",
+        ),
+        GatewayEvent([str(attachment)]),
+    )
+
+    assert "Card import rejected" in result
+    assert "attach the file" in result
+    assert str(sensitive_file) not in result
+    assert str(attachment) not in result
+    assert sensitive_file.name not in result
+    assert attachment.name not in result
 
 
 def test_gateway_explicit_remote_url_is_rejected(tmp_path):

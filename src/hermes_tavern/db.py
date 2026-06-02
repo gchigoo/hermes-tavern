@@ -9,8 +9,8 @@ from pathlib import Path
 from typing import Any
 from uuid import uuid4
 
-from hermes_constants import get_hermes_home
-from plugins.hermes_tavern.db_utils import (
+from hermes_tavern.hermes_home import get_hermes_home
+from hermes_tavern.db_utils import (
     assert_no_secret_keys as _assert_no_secret_keys,
     row_to_dict as _row_to_dict,
     utc_now as _utc_now,
@@ -325,7 +325,7 @@ class TavernStore:
         self._migrated = True
 
         # Seed ST-inspired image style presets if the table is empty.
-        from plugins.hermes_tavern.images import seed_image_styles as _seed
+        from hermes_tavern.images import seed_image_styles as _seed
         _seed(self)
 
     def get_active_session(self, session_key: str) -> dict[str, Any] | None:

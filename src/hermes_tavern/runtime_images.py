@@ -5,9 +5,9 @@ from __future__ import annotations
 import json
 from typing import Any
 
-from plugins.hermes_tavern.commands import RPCommand
-from plugins.hermes_tavern.identity import session_key_from_event
-from plugins.hermes_tavern.images import (
+from hermes_tavern.commands import RPCommand
+from hermes_tavern.identity import session_key_from_event
+from hermes_tavern.images import (
     DEFAULT_IMAGE_SETTINGS,
     IMAGE_PROVIDER_FAILURE_ERROR,
     IMAGE_PROVIDER_FAILURE_REPLY,
@@ -23,7 +23,7 @@ from plugins.hermes_tavern.images import (
     normalize_image_safety,
     normalize_image_settings,
 )
-from plugins.hermes_tavern.runtime_utils import card_row_to_obj as _card_row_to_obj
+from hermes_tavern.runtime_utils import card_row_to_obj as _card_row_to_obj
 
 def image_command(runtime, command: RPCommand, event: Any) -> str:
     session_key = session_key_from_event(event)

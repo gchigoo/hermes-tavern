@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from unittest.mock import Mock
+
 import pytest
 
 from plugins.hermes_tavern.commands import RPCommand
@@ -38,8 +40,42 @@ class FakeEvent:
     text = ""
 
 
+class MinimalTelegramSource:
+    platform = "telegram"
+    chat_id = "chat-1"
+
+
+class MinimalTelegramEvent:
+    source = MinimalTelegramSource()
+    text = ""
+
+
+class UnmatchedPlatformSource:
+    platform = "matrix"
+    chat_id = "room-1"
+    thread_id = None
+    user_id = "user-1"
+
+
+class UnmatchedPlatformEvent:
+    source = UnmatchedPlatformSource()
+    text = ""
+
+
 def _make_event(text: str = "") -> FakeEvent:
     event = FakeEvent()
+    event.text = text
+    return event
+
+
+def _make_minimal_telegram_event(text: str = "") -> MinimalTelegramEvent:
+    event = MinimalTelegramEvent()
+    event.text = text
+    return event
+
+
+def _make_unmatched_platform_event(text: str = "") -> UnmatchedPlatformEvent:
+    event = UnmatchedPlatformEvent()
     event.text = text
     return event
 
@@ -61,14 +97,52 @@ def test_pre_gateway_dispatch_rp_command_skips(tmp_path):
     assert result["reason"] == "hermes-tavern"
 
 
+def test_pre_gateway_dispatch_rp_command_sends_safe_string_with_minimal_event(tmp_path):
+    """A minimal mobile gateway event is enough to dispatch /rp and emit text."""
+    gateway = FakeGateway()
+
+    result = pre_gateway_dispatch(
+        event=_make_minimal_telegram_event("/rp help"),
+        gateway=gateway,
+        store=_make_store(tmp_path / "tavern.sqlite3"),
+    )
+
+    assert result == {"action": "skip", "reason": "hermes-tavern"}
+    assert gateway.adapters["telegram"].sent
+    chat_id, content = gateway.adapters["telegram"].sent[-1]
+    assert chat_id == "chat-1"
+    assert isinstance(content, str)
+    assert content.strip()
+    assert "/rp start <card>" in content
+
+
 def test_pre_gateway_dispatch_non_rp_without_active_session_allows(tmp_path):
     """Non-/rp messages without active session fall through to normal Hermes."""
+    gateway = FakeGateway()
+
     result = pre_gateway_dispatch(
         event=_make_event("hello"),
-        gateway=FakeGateway(),
+        gateway=gateway,
         store=_make_store(tmp_path / "tavern.sqlite3"),
     )
     assert result["action"] == "allow"
+    assert gateway.adapters["telegram"].sent == []
+
+
+def test_pre_gateway_dispatch_unmatched_platform_non_rp_allows_without_send(tmp_path):
+    """Non-/rp messages from platforms without adapters fall through without delivery."""
+    gateway = FakeGateway()
+    gateway._deliver_media_from_response = Mock()
+
+    result = pre_gateway_dispatch(
+        event=_make_unmatched_platform_event("hello from another platform"),
+        gateway=gateway,
+        store=_make_store(tmp_path / "tavern.sqlite3"),
+    )
+
+    assert result == {"action": "allow"}
+    assert gateway.adapters["telegram"].sent == []
+    gateway._deliver_media_from_response.assert_not_called()
 
 
 def test_pre_gateway_dispatch_active_session_routes_message(tmp_path):
@@ -145,9 +219,13 @@ def test_pre_gateway_dispatch_pause_resume_controls_active_routing(tmp_path):
 
 
 def test_pre_gateway_dispatch_no_event_allows(tmp_path):
-    """Missing event falls through."""
-    result = pre_gateway_dispatch(gateway=FakeGateway(), store=_make_store(tmp_path / "tavern.sqlite3"))
-    assert result["action"] == "allow"
+    """Missing event falls through without sending gateway output."""
+    gateway = FakeGateway()
+
+    result = pre_gateway_dispatch(gateway=gateway, store=_make_store(tmp_path / "tavern.sqlite3"))
+
+    assert result == {"action": "allow"}
+    assert gateway.adapters["telegram"].sent == []
 
 
 def test_pre_gateway_dispatch_empty_text_with_active_session(tmp_path):

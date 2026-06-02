@@ -1,0 +1,92 @@
+doc_type: feature-checklist
+feature: hermes-tavern-phase56-runtime-utils-tests
+date: "2026-05-29"
+status: implemented
+
+summary: >
+  runtime_utils.py is the shared helper module imported by ~10 other runtime
+  command modules (runtime_debug, runtime_assets, runtime_presets, runtime_notes,
+  runtime_persona, runtime_prompt_manager, runtime_prompt_modules, etc.) yet had
+  zero direct test coverage. Its eight public functions — mobile_preview,
+  safe_macro_value, event_user_name, usable_module_counts, module_risk_counts_db,
+  module_risk_counts, build_macro_context, card_row_to_obj — are all pure or
+  nearly-pure helpers that can be tested without mocking a full runtime. This
+  phase adds tests/test_hermes_tavern_runtime_utils.py with 44 focused unit
+  tests covering all eight helpers and their key edge cases.
+
+steps:
+  - id: S1
+    name: "Add tests/test_hermes_tavern_runtime_utils.py"
+    description: >
+      Create a new test module that directly imports from
+      hermes_tavern.runtime_utils and tests all eight public helpers:
+        mobile_preview: empty, short, exact limit, over limit (ellipsis),
+          multiline collapse, excess spaces, None input.
+        safe_macro_value: None → ""; empty → ""; short → unchanged;
+          long > limit → truncated; multiline → collapses; trailing space
+          not left at truncation boundary.
+        event_user_name: user_name attr → returned; sender_name fallback;
+          user_name priority over sender_name; source.user_name fallback;
+          no attrs → "User"; None user_name falls back; empty user_name falls back.
+        usable_module_counts: empty list; safe enabled; adult_fiction in safe mode
+          (not counted); adult_fiction in adult-fiction mode (counted); jailbreak
+          → disabled_risky; disallowed → disabled_risky; disabled safe not counted.
+        module_risk_counts_db: empty; safe enabled; adult_fiction enabled;
+          jailbreak → risky_disabled; adult_fiction disabled not counted.
+        module_risk_counts: empty → {}; single module; mixed risks; missing
+          risk_level defaults to "safe".
+        build_macro_context: returns MacroContext; char_name from card; content_mode
+          from session; user_name from event; user_name defaults to "User".
+        card_row_to_obj: returns CharacterCard; name and id preserved; data fields
+          extracted correctly.
+      44 tests total.
+    status: verified
+    changed_file: "tests/test_hermes_tavern_runtime_utils.py"
+    result: "PASS — 2026-05-29; 44 passed in 0.04s"
+
+  - id: S2
+    name: "py_compile smoke check"
+    description: >
+      Compile all shim, source, importer, and test files to confirm no syntax errors.
+    status: verified
+    verification_command: >
+      python -m py_compile conftest.py plugins/__init__.py plugins/hermes_tavern/__init__.py src/hermes_tavern/*.py src/hermes_tavern/importers/*.py tests/test_hermes_tavern_*.py
+    result: "PASS — 2026-05-29; no syntax errors"
+
+  - id: S3
+    name: "Full standalone test suite"
+    description: >
+      Run the full standalone Tavern pytest glob to verify no regressions.
+      Expect 549 passed (was 505; +44 new runtime_utils unit tests).
+    status: verified
+    verification_command: >
+      python -m pytest tests/test_hermes_tavern_*.py -q -o 'addopts='
+    result: "PASS — 2026-05-29; 549 passed in 9.63s (was 505; +44 new tests)"
+
+  - id: S4
+    name: "Checklist YAML validation"
+    description: >
+      Validate this CodeStable checklist with the project YAML validator.
+    status: verified
+    verification_command: >
+      python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-05-29-hermes-tavern-phase56-runtime-utils-tests/checklist.yaml
+    result: "PASS — 2026-05-29; 1 file passed, 0 failed"
+
+implementation_notes: |
+  - All eight functions in runtime_utils.py are tested. No source files were
+    modified; only one new test file was added.
+  - event_user_name uses types.SimpleNamespace to build minimal fake event objects,
+    matching the same duck-typing pattern used in import_policy tests (phase 55).
+  - usable_module_counts and module_risk_counts_db take dicts with raw_json (a JSON
+    string) and enabled fields; tests use a _make_db_module helper that builds the
+    correct shape so test bodies stay readable.
+  - module_risk_counts takes objects with a risk_level attribute (not dicts); the
+    test for the missing-attribute case (defaults to "safe") documents the getattr
+    fallback contract: getattr(module, "risk_level", "safe").
+  - card_row_to_obj constructs a real CharacterCard via the importers.cards module;
+    no mocking needed — it's a pure data transformation.
+  - build_macro_context delegates user_name resolution to event_user_name, so the
+    five build_macro_context tests only verify the integration (card → char_name,
+    session → content_mode, event → user_name); the detailed fallback logic is
+    covered by the seven event_user_name tests.
+  - test count: 505 (phase 55 baseline) + 44 (this phase) = 549.

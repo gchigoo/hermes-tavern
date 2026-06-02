@@ -1,0 +1,88 @@
+doc_type: feature-checklist
+feature: hermes-tavern-phase57-command-dispatch-contract-tests
+date: "2026-05-29"
+status: implemented
+
+summary: >
+  Add direct contract tests for the /rp command dispatcher. The command table is
+  the mobile/gateway routing boundary for every Tavern command family, but its
+  argument-shaping behavior was only indirectly exercised by runtime tests. This
+  phase locks down default command+event dispatch, command-only/event-only/no-arg
+  handlers, case-insensitive lookup, special help entries, and mobile-safe unknown
+  command previews.
+
+steps:
+  - id: S1
+    name: "Add dispatch_command imports"
+    description: >
+      Extend tests/test_hermes_tavern_commands.py imports to include
+      TavernCommandEntry and dispatch_command so command dispatch can be tested
+      directly without constructing TavernRuntime.
+    status: verified
+    changed_file: "tests/test_hermes_tavern_commands.py"
+    result: "PASS — imports resolve in focused pytest"
+
+  - id: S2
+    name: "Cover dispatcher argument shaping"
+    description: >
+      Add a lightweight RecordingRuntime and tests proving default command+event
+      calls, needs_command=False, needs_event=False, and no-arg handlers are
+      invoked with the intended positional arguments.
+    status: verified
+    changed_file: "tests/test_hermes_tavern_commands.py"
+    result: "PASS — focused command tests pass"
+
+  - id: S3
+    name: "Cover help, case-insensitive lookup, and unknown command preview"
+    description: >
+      Add tests for uppercase command lookup, handlerless help entries returning
+      _build_help_text(), and unknown commands using mobile_preview so a long or
+      weird command name cannot produce noisy mobile output.
+    status: verified
+    changed_file: "tests/test_hermes_tavern_commands.py"
+    result: "PASS — focused command tests pass"
+
+  - id: S4
+    name: "Focused command test run"
+    description: >
+      Run only tests/test_hermes_tavern_commands.py to verify the new contract
+      tests and existing parser/help tests.
+    status: verified
+    verification_command: >
+      python -m pytest tests/test_hermes_tavern_commands.py -q -o 'addopts='
+    result: "PASS — 16 passed in 0.02s"
+
+  - id: S5
+    name: "py_compile smoke check"
+    description: >
+      Compile all standalone shim, source, importer, and Tavern test files.
+    status: verified
+    verification_command: >
+      python -m py_compile conftest.py plugins/__init__.py plugins/hermes_tavern/__init__.py src/hermes_tavern/*.py src/hermes_tavern/importers/*.py tests/test_hermes_tavern_*.py
+    result: "PASS — 2026-05-29; no syntax errors"
+
+  - id: S6
+    name: "Full Tavern test suite"
+    description: >
+      Run the full standalone Tavern pytest glob to ensure command dispatcher
+      contract tests do not regress any runtime/gateway behavior.
+    status: verified
+    verification_command: >
+      python -m pytest tests/test_hermes_tavern_*.py -q -o 'addopts='
+    result: "PASS — 2026-05-29; 554 passed in 9.76s"
+
+  - id: S7
+    name: "Checklist YAML validation"
+    description: >
+      Validate this checklist with the project YAML validator.
+    status: verified
+    verification_command: >
+      python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-05-29-hermes-tavern-phase57-command-dispatch-contract-tests/checklist.yaml
+    result: "PASS — 2026-05-29; 1 file passed, 0 failed"
+
+implementation_notes: |
+  - This phase is test-only; no runtime behavior changed.
+  - The tests intentionally use a tiny fake runtime so they lock down the generic
+    dispatch boundary without coupling to the large TavernRuntime implementation.
+  - Unknown command output remains bounded via mobile_preview, preserving narrow
+    mobile chat ergonomics.

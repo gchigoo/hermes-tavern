@@ -41,6 +41,11 @@ TAVERN_COMMAND_TABLE: dict[str, TavernCommandEntry] = {
         help_lines=["/rp status"],
         needs_command=False,
     ),
+    "doctor": TavernCommandEntry(
+        handler="_doctor",
+        help_lines=["/rp doctor"],
+        needs_command=False,
+    ),
     "start": TavernCommandEntry(
         handler="_start",
         help_lines=["/rp start <card>"],
@@ -279,7 +284,7 @@ def dispatch_command(table: dict[str, TavernCommandEntry], runtime: object, comm
     """
     entry = table.get(command.name.lower())
     if entry is None:
-        from plugins.hermes_tavern.runtime_utils import mobile_preview
+        from hermes_tavern.runtime_utils import mobile_preview
 
         return f"Unknown /rp command: {mobile_preview(command.name, 80)}"
     if not entry.handler:

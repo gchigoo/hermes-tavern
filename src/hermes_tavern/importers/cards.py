@@ -13,7 +13,7 @@ from urllib.parse import urlparse
 from urllib.request import Request, urlopen
 from uuid import NAMESPACE_URL, uuid5
 
-from plugins.hermes_tavern.provider_bridge import validate_provider_base_url
+from hermes_tavern.provider_bridge import validate_provider_base_url
 
 
 class UnsupportedCardFormat(ValueError):

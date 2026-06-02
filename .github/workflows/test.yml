@@ -1,0 +1,40 @@
+name: test
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12"]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install test/build dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install --user --upgrade pytest build
+          if [ -f requirements-test.txt ]; then
+            python -m pip install --user --upgrade -r requirements-test.txt
+          elif [ -f requirements/dev.txt ]; then
+            python -m pip install --user --upgrade -r requirements/dev.txt
+          fi
+
+      - name: Run release-readiness checks
+        run: |
+          python -m pip install --user --editable .
+          python -m py_compile conftest.py plugins/__init__.py plugins/hermes_tavern/__init__.py src/hermes_tavern/*.py src/hermes_tavern/importers/*.py tests/test_hermes_tavern_*.py
+          python -m pytest tests/test_hermes_tavern_readme_docs.py -q -o 'addopts='
+          python -m pytest tests/test_hermes_tavern_packaging.py -q -o 'addopts='
+          python -m pytest tests/test_hermes_tavern_*.py -q -o 'addopts='

@@ -12,7 +12,7 @@ from ipaddress import ip_address
 from urllib.parse import urlparse
 from typing import Any, Callable
 
-from plugins.hermes_tavern.model_router import ModelProfileDescriptor
+from hermes_tavern.model_router import ModelProfileDescriptor
 
 APIYI_PROVIDER = "apiyi"
 APIYI_BASE_URL = "https://api.apiyi.com/v1"

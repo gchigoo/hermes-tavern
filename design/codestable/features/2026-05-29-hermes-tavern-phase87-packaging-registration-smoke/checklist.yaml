@@ -1,0 +1,84 @@
+doc_type: feature-checklist
+feature: hermes-tavern-phase87-packaging-registration-smoke
+date: "2026-05-29"
+status: implemented
+
+summary: >
+  Harden standalone packaging and registration smoke behavior before real Hermes
+  Gateway installation. Editable installs should be importable from outside the
+  repository root, expose plugin.yaml as package data, and allow register(ctx) to
+  wire the canonical pre_gateway_dispatch hook even when hermes-agent's
+  hermes_constants module is not installed in the temporary smoke environment.
+
+steps:
+  - id: S1
+    name: "Add Hermes home compatibility helper"
+    description: >
+      Add hermes_tavern.hermes_home.get_hermes_home() so runtime modules use the
+      real Hermes helper when available and fall back to HERMES_HOME or ~/.hermes
+      for standalone import/registration smoke tests.
+    status: verified
+    changed_file: "src/hermes_tavern/hermes_home.py"
+    result: "PASS - helper added and db/images/runtime_lifecycle imports redirected"
+
+  - id: S2
+    name: "Document install and Telegram smoke path"
+    description: >
+      Expand README installation, gateway/mobile smoke, command overview, and
+      packaging smoke instructions for the v0.1 handoff.
+    status: verified
+    changed_file: "README.md"
+    result: "PASS - README now includes editable install, Telegram loop smoke, command list, and package smoke"
+
+  - id: S3
+    name: "External editable install registration smoke"
+    description: >
+      Create a fresh temporary venv, pip install -e . --no-deps, cd outside the
+      repo root, import hermes_tavern, read plugin.yaml through
+      importlib.resources, and call register(ctx).
+    verification_command: >
+      SMOKE=$(mktemp -d /tmp/hermes-tavern-smoke.XXXXXX) && python -m venv "$SMOKE/venv" && "$SMOKE/venv/bin/python" -m pip install -q --upgrade pip setuptools wheel && "$SMOKE/venv/bin/python" -m pip install -q -e . --no-deps && cd /tmp && "$SMOKE/venv/bin/python" - <<'PY'
+      import importlib.resources as resources
+      import hermes_tavern
+      class Ctx:
+          def __init__(self): self.hooks=[]
+          def register_hook(self, name, fn): self.hooks.append((name, fn.__module__, fn.__name__))
+      plugin_yaml = resources.files('hermes_tavern').joinpath('plugin.yaml').read_text(encoding='utf-8')
+      ctx = Ctx(); hermes_tavern.register(ctx)
+      assert 'version: 0.1.0' in plugin_yaml
+      assert 'entry_point: "hermes_tavern:register"' in plugin_yaml
+      assert ctx.hooks == [('pre_gateway_dispatch', 'hermes_tavern.gateway_hook', 'pre_gateway_dispatch')]
+      PY
+    status: verified
+    result: "PASS - controller rerun 2026-05-29; temp venv editable install from /tmp registered pre_gateway_dispatch"
+
+  - id: S4
+    name: "Full py_compile gate"
+    description: >
+      Compile standalone source, importers, compatibility shim, and Tavern tests.
+    verification_command: >
+      python -m py_compile conftest.py plugins/__init__.py plugins/hermes_tavern/__init__.py src/hermes_tavern/*.py src/hermes_tavern/importers/*.py tests/test_hermes_tavern_*.py
+    status: verified
+    result: "PASS - controller rerun 2026-05-29; no compile errors"
+
+  - id: S5
+    name: "Full Tavern pytest gate"
+    description: >
+      Run the complete Hermes Tavern test glob after the packaging smoke change.
+    verification_command: >
+      python -m pytest tests/test_hermes_tavern_*.py -q -o 'addopts='
+    status: verified
+    result: "PASS - controller rerun 2026-05-29; 619 passed in 12.17s"
+
+  - id: S6
+    name: "Checklist YAML validation"
+    description: >
+      Validate this CodeStable checklist with the project YAML validator.
+    verification_command: >
+      python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-05-29-hermes-tavern-phase87-packaging-registration-smoke/checklist.yaml
+    status: verified
+    result: "PASS - controller rerun 2026-05-29; 1 file passed, 0 failed"
+
+implementation_notes: |
+  - This phase changes path-resolution compatibility only; no provider/model/network calls are introduced.
+  - The fallback is intentionally limited to Hermes home path discovery and does not emulate Hermes Agent's plugin loader or gateway runtime.

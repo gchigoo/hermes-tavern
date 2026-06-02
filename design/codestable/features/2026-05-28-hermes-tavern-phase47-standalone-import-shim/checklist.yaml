@@ -1,0 +1,122 @@
+doc_type: feature-checklist
+feature: hermes-tavern-phase47-standalone-import-shim
+date: "2026-05-28"
+status: implemented
+
+summary: >
+  Restore standalone test/import compatibility in the hermes-tavern repo by
+  adding a thin MetaPathFinder shim (conftest.py) so imports of
+  plugins.hermes_tavern.* resolve to src/hermes_tavern.* during tests/dev.
+  Real source stays in src/hermes_tavern/; shim does not copy or duplicate code.
+
+steps:
+  - id: S1
+    name: "Create src/ sys.path injection"
+    description: >
+      In conftest.py, insert src/ at the front of sys.path so that
+      `import hermes_tavern` resolves to src/hermes_tavern/__init__.py.
+    status: done
+    notes: "conftest.py line 20-21; uses Path(__file__).parent / 'src'"
+
+  - id: S2
+    name: "Install MetaPathFinder for plugins.hermes_tavern.*"
+    description: >
+      Define _HermesTavernShimFinder (MetaPathFinder) in conftest.py.
+      For any fullname starting with plugins.hermes_tavern, strip the
+      plugins. prefix and delegate to the real hermes_tavern.* module.
+      Copies submodule_search_locations so packages are recognised as such.
+    status: done
+    notes: "conftest.py _HermesTavernShimFinder; inserted at sys.meta_path[0]"
+
+  - id: S3
+    name: "Alias loader for identity safety"
+    description: >
+      _AliasLoader.exec_module replaces sys.modules[shim_name] with the
+      real module object so isinstance and identity checks work correctly
+      regardless of import path used.
+    status: done
+    notes: "conftest.py _AliasLoader; exec_module replaces sys.modules entry"
+
+  - id: S4
+    name: "Create plugins/ compatibility namespace"
+    description: >
+      Add plugins/__init__.py and plugins/hermes_tavern/__init__.py so legacy
+      imports also work in standalone dev scripts outside pytest. The subpackage
+      injects src/ into sys.path, delegates package attributes to hermes_tavern,
+      and exposes the real package __path__ for submodule imports.
+    status: verified
+    notes: "plugins/__init__.py marker plus plugins/hermes_tavern/__init__.py thin compatibility package; no source duplication"
+    verification_command: >
+      python3 - <<'PY'
+      import plugins.hermes_tavern as p
+      import plugins.hermes_tavern.adapters as a
+      import hermes_tavern as h
+      assert p.register is h.register
+      assert hasattr(a, 'FakeModelAdapter')
+      PY
+    result: "PASS — 2026-05-28; legacy package and submodule imports work outside pytest"
+
+  - id: S5
+    name: "py_compile smoke check"
+    description: >
+      Run python -m py_compile on all src/ modules and test files to confirm
+      no syntax errors were introduced.
+    status: verified
+    verification_command: >
+      python -m py_compile conftest.py plugins/__init__.py plugins/hermes_tavern/__init__.py src/hermes_tavern/*.py src/hermes_tavern/importers/*.py tests/test_hermes_tavern_*.py
+    result: "PASS — 2026-05-28; all shim, source, and test files compile cleanly"
+
+  - id: S6
+    name: "pytest import compatibility"
+    description: >
+      Run a representative focused pytest (plugin entry point + adapters) to
+      confirm both `from plugins.hermes_tavern import X` and
+      `from plugins import hermes_tavern` work end-to-end.
+    status: verified
+    verification_command: >
+      python -m pytest tests/test_hermes_tavern_plugin.py tests/test_hermes_tavern_adapters.py tests/test_hermes_tavern_cards.py -v
+    result: "PASS — 2026-05-28; 39 passed in 0.07s (all card fixture tests included)"
+
+  - id: S7
+    name: "Fix fixture path in test_hermes_tavern_cards.py"
+    description: >
+      tests/test_hermes_tavern_cards.py used Path(__file__).parent.parent / fixtures/cards
+      (a monorepo-era path). In the standalone repo the fixtures sit at
+      tests/fixtures/cards/, one level shallower. Remove one .parent.
+    status: verified
+    changed_file: "tests/test_hermes_tavern_cards.py line 33"
+    result: "PASS — 2026-05-28; test_parse_fixture_st_v2 and test_parse_fixture_direct now pass"
+
+  - id: S8
+    name: "Full test suite"
+    description: >
+      Run the full standalone Tavern pytest glob to verify no ModuleNotFoundError
+      during collection and no behavior regressions across all test files.
+    status: verified
+    verification_command: >
+      python -m pytest tests/test_hermes_tavern_*.py -q -o 'addopts='
+    result: "PASS — 2026-05-28; 442 passed in 9.55s"
+
+  - id: S9
+    name: "Checklist YAML validation"
+    description: >
+      Validate this CodeStable checklist with the project YAML validator.
+    status: verified
+    verification_command: >
+      python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-05-28-hermes-tavern-phase47-standalone-import-shim/checklist.yaml
+    result: "PASS — 2026-05-28; 1 file passed, 0 failed"
+
+implementation_notes: |
+  - conftest.py keeps pytest imports identity-safe by mapping
+    plugins.hermes_tavern.* to the canonical hermes_tavern.* modules.
+  - plugins/hermes_tavern/__init__.py also supports standalone dev scripts
+    outside pytest by delegating the legacy package to src/hermes_tavern.
+  - The pytest shim is safe to leave installed because _HermesTavernShimFinder
+    only acts on plugins.hermes_tavern.* prefixes, leaving all other imports
+    untouched.
+  - No source files were copied or modified; src/hermes_tavern/ is unchanged.
+  - If hermes-agent adds a real `plugins` package to sys.path before conftest.py
+    runs, the standard importer will satisfy `plugins` and our finder still
+    handles plugins.hermes_tavern.* because it sits at meta_path[0].
+  - Fixture path fix (S7): monorepo had tests nested one level deeper; standalone
+    repo places test files directly in tests/ so only one .parent is needed.

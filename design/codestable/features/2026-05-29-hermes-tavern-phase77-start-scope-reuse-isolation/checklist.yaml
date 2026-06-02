@@ -1,0 +1,90 @@
+doc_type: feature-checklist
+feature: hermes-tavern-phase77-start-scope-reuse-isolation
+date: "2026-05-29"
+status: implemented
+
+summary: >
+  Add focused regression coverage for /rp start scope reuse isolation. Starting
+  a card in the caller's scope must reuse the caller's existing active session,
+  must not mutate active or paused sessions in other user/platform scopes, and
+  must not disclose other-scope identifiers or unique card/session details in
+  the start response.
+
+steps:
+  - id: S1
+    name: "Add start scope isolation regressions"
+    description: >
+      Extend tests/test_hermes_tavern_session_browser.py with command-level
+      coverage for /rp start. Re-starting in the caller scope must reuse the
+      same active session and append the greeting, while starts with other
+      active or paused scopes present must leave those other sessions unchanged
+      and keep other ids, short ids, titles, scope keys, card names, and unique
+      greetings out of the response.
+    status: verified
+    changed_file: "tests/test_hermes_tavern_session_browser.py"
+    result: "PASS - Codex focused Phase77 /rp start regressions passed"
+
+  - id: S2
+    name: "Add direct session store reuse regression"
+    description: >
+      Extend tests/test_hermes_tavern_sessions.py with direct TavernStore
+      coverage proving start_session reuses only the active row for the
+      matching scope and leaves other active and paused scopes untouched.
+    status: verified
+    changed_file: "tests/test_hermes_tavern_sessions.py"
+    result: "PASS - Codex focused Phase77 start_session regression passed"
+
+  - id: S3
+    name: "Focused start pytest"
+    description: >
+      Run the focused session browser and direct session store tests selected by
+      start coverage.
+    verification_command: >
+      python -m pytest tests/test_hermes_tavern_session_browser.py tests/test_hermes_tavern_sessions.py -q -o 'addopts=' -k 'start'
+    status: verified
+    result: "PASS - Codex run 2026-05-29; 13 passed, 71 deselected in 0.44s"
+
+  - id: S4
+    name: "Focused session isolation pytest"
+    description: >
+      Run the session browser and direct session store test files after the
+      Phase77 regressions.
+    verification_command: >
+      python -m pytest tests/test_hermes_tavern_session_browser.py tests/test_hermes_tavern_sessions.py -q -o 'addopts='
+    status: verified
+    result: "PASS - controller rerun 2026-05-29; 84 passed in 2.09s"
+
+  - id: S5
+    name: "Full py_compile gate"
+    description: >
+      Compile the standalone plugin source, importers, compatibility shim, and
+      Tavern test modules.
+    verification_command: >
+      python -m py_compile conftest.py plugins/__init__.py plugins/hermes_tavern/__init__.py src/hermes_tavern/*.py src/hermes_tavern/importers/*.py tests/test_hermes_tavern_*.py
+    status: verified
+    result: "PASS - controller rerun 2026-05-29; no compile errors"
+
+  - id: S6
+    name: "Full Tavern pytest gate"
+    description: >
+      Run the complete Hermes Tavern test glob after the start scope reuse
+      isolation regressions.
+    verification_command: >
+      python -m pytest tests/test_hermes_tavern_*.py -q -o 'addopts='
+    status: verified
+    result: "PASS - controller rerun 2026-05-29; 597 passed in 10.04s"
+
+  - id: S7
+    name: "Checklist YAML validation"
+    description: >
+      Validate this CodeStable checklist with the project YAML validator.
+    verification_command: >
+      python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-05-29-hermes-tavern-phase77-start-scope-reuse-isolation/checklist.yaml
+    status: verified
+    result: "PASS - controller rerun 2026-05-29; 1 file passed, 0 failed"
+
+implementation_notes: |
+  - This phase is test-only; no source/runtime/provider code changed.
+  - The regressions use local sqlite stores and do not introduce secrets, real
+    provider calls, model calls, network calls, or production imports from
+    plugins.hermes_tavern under src/hermes_tavern/.

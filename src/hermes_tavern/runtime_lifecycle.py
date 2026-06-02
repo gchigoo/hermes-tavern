@@ -6,11 +6,11 @@ import datetime
 import json
 from typing import Any
 
-from hermes_constants import get_hermes_home
-from plugins.hermes_tavern.commands import RPCommand
-from plugins.hermes_tavern.identity import session_key_from_event
-from plugins.hermes_tavern.importers.cards import parse_character_card
-from plugins.hermes_tavern.importers.lorebooks import import_embedded_lorebook_from_card
+from hermes_tavern.hermes_home import get_hermes_home
+from hermes_tavern.commands import RPCommand
+from hermes_tavern.identity import session_key_from_event
+from hermes_tavern.importers.cards import parse_character_card
+from hermes_tavern.importers.lorebooks import import_embedded_lorebook_from_card
 
 
 def _last_asset_help(asset_type: str) -> str:

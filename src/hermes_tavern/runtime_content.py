@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from typing import Any
 
-from plugins.hermes_tavern.commands import RPCommand
-from plugins.hermes_tavern.identity import session_key_from_event
+from hermes_tavern.commands import RPCommand
+from hermes_tavern.identity import session_key_from_event
 
 
 def content_command(runtime: Any, command: RPCommand, event: Any) -> str:

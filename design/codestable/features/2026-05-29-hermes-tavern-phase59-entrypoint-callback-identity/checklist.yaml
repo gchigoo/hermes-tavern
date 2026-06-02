@@ -1,0 +1,79 @@
+doc_type: feature-checklist
+feature: hermes-tavern-phase59-entrypoint-callback-identity
+date: "2026-05-29"
+status: implemented
+
+summary: >
+  Add package-entrypoint regression tests proving both the canonical standalone
+  package and the legacy plugins/ shim register the exact canonical
+  hermes_tavern.gateway_hook.pre_gateway_dispatch callback object. This keeps
+  plugin loading independent from legacy import aliases while preserving the
+  compatibility namespace.
+
+steps:
+  - id: S1
+    name: "Add canonical register callback identity test"
+    description: >
+      Extend tests/test_hermes_tavern_packaging.py so hermes_tavern.register is
+      verified to register the exact hermes_tavern.gateway_hook.pre_gateway_dispatch
+      function object with the expected hook name and module path.
+    status: verified
+    changed_file: "tests/test_hermes_tavern_packaging.py"
+    result: "PASS - focused packaging test run passed"
+
+  - id: S2
+    name: "Add legacy shim callback identity test"
+    description: >
+      Verify plugins.hermes_tavern.register continues to delegate to the canonical
+      package and wires the same pre_gateway_dispatch object, not a legacy alias.
+    status: verified
+    changed_file: "tests/test_hermes_tavern_packaging.py"
+    result: "PASS - focused packaging test run passed"
+
+  - id: S3
+    name: "Focused packaging test run"
+    description: >
+      Run packaging tests to verify the new callback identity tests and existing
+      entrypoint/version/metadata checks together.
+    status: verified
+    verification_command: >
+      python -m pytest tests/test_hermes_tavern_packaging.py -q -o 'addopts='
+    result: "PASS — controller rerun 2026-05-29; 12 passed in 0.12s"
+
+  - id: S4
+    name: "py_compile smoke check"
+    description: >
+      Compile all standalone shim, source, importer, and Tavern test files.
+    status: verified
+    verification_command: >
+      python -m py_compile conftest.py plugins/__init__.py plugins/hermes_tavern/__init__.py src/hermes_tavern/*.py src/hermes_tavern/importers/*.py tests/test_hermes_tavern_*.py
+    result: "PASS — controller rerun 2026-05-29; no syntax errors"
+
+  - id: S5
+    name: "Full Tavern test suite"
+    description: >
+      Run the full standalone Tavern pytest glob to ensure the package-entrypoint
+      test hardening does not regress runtime/gateway behavior.
+    status: verified
+    verification_command: >
+      python -m pytest tests/test_hermes_tavern_*.py -q -o 'addopts='
+    result: >
+      PASS — controller rerun 2026-05-29; 557 passed in 9.32s. Codex's own
+      subprocess previously reported 8 transient image-test failures, but the
+      controller-owned rerun is the source of truth and is green.
+
+  - id: S6
+    name: "Checklist YAML validation"
+    description: >
+      Validate this checklist with the project YAML validator.
+    status: verified
+    verification_command: >
+      python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-05-29-hermes-tavern-phase59-entrypoint-callback-identity/checklist.yaml
+    result: "PASS — controller rerun 2026-05-29; 1 file passed, 0 failed"
+
+implementation_notes: |
+  - This phase is test-only; no runtime behavior changed.
+  - The legacy plugins/ shim remains covered and intentionally delegates to
+    hermes_tavern.register.
+  - The callback identity assertions guard against accidental re-export aliases
+    or shim-local hook functions.

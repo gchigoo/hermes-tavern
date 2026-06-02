@@ -1,0 +1,121 @@
+doc_type: feature-checklist
+feature: hermes-tavern-phase93-hermes-plugin-entrypoint-offline-smoke
+date: "2026-05-31"
+status: implemented
+
+summary: >
+  Add a narrow packaging/release preflight smoke that builds the Hermes Tavern
+  wheel, installs it into an isolated temporary virtualenv, and verifies a
+  Hermes-style plugin loader can discover and load the hermes-tavern entry point
+  from installed distribution metadata without relying on repository path
+  injection. This phase must not start, reload, restart, kill, or manage Gateway,
+  and must not call provider/model, network, ComfyUI, TTS, or credential
+  endpoints.
+
+steps:
+  - id: S1
+    name: "Add entry point metadata loader smoke"
+    description: >
+      Extend the packaging test module with an offline wheel build, temporary
+      virtualenv creation, no-index/no-deps wheel install, and an outside-repo
+      script that uses importlib.metadata.entry_points for the
+      hermes_agent.plugins group to find hermes-tavern, load the entry point,
+      call register(ctx), and verify the pre_gateway_dispatch callback comes
+      from hermes_tavern.gateway_hook.
+    status: implemented
+    changed_file: "tests/test_hermes_tavern_packaging.py"
+    result: "IMPLEMENTED - added installed distribution entry point metadata loader smoke and reused the isolated wheel install helper"
+
+  - id: S2
+    name: "Record Phase93 checklist"
+    description: >
+      Add this CodeStable checklist for the Hermes plugin entry point offline
+      smoke slice, keeping packaging/release validation steps explicit and
+      scoped.
+    status: implemented
+    changed_file: "design/codestable/features/2026-05-31-hermes-tavern-phase93-hermes-plugin-entrypoint-offline-smoke/checklist.yaml"
+    result: "IMPLEMENTED - checklist created with focused packaging, compile, pytest, YAML, and diff gates"
+
+  - id: S3
+    name: "Focused packaging pytest"
+    description: >
+      Run only the Hermes Tavern packaging regression module after adding the
+      installed entry point metadata loader smoke.
+    verification_command: >
+      python -m pytest tests/test_hermes_tavern_packaging.py -q -o 'addopts='
+    status: verified
+    result: "PASS - controller rerun returned 18 passed in 6.71s"
+
+  - id: S4
+    name: "Full py_compile gate"
+    description: >
+      Compile the compatibility shim, standalone plugin source, importers, and
+      Tavern test modules.
+    verification_command: >
+      python -m py_compile conftest.py plugins/__init__.py plugins/hermes_tavern/__init__.py src/hermes_tavern/*.py src/hermes_tavern/importers/*.py tests/test_hermes_tavern_*.py
+    status: verified
+    result: "PASS - controller rerun exited 0 with no compile output"
+
+  - id: S5
+    name: "Focused image pytest rerun"
+    description: >
+      Rerun image tests separately when Codex full-suite verification hits the
+      known transient image mock/provider failure path.
+    verification_command: >
+      python -m pytest tests/test_hermes_tavern_images.py -q -o 'addopts='
+    status: verified
+    result: "PASS - controller rerun returned 20 passed in 0.54s"
+
+  - id: S6
+    name: "Full Tavern pytest gate"
+    description: >
+      Run the complete Hermes Tavern test glob after the entry point metadata
+      smoke change, without managing Gateway or calling real providers.
+    verification_command: >
+      python -m pytest tests/test_hermes_tavern_*.py -q -o 'addopts='
+    status: verified
+    result: "PASS - controller rerun returned 631 passed in 19.43s"
+
+  - id: S7
+    name: "Checklist YAML validation"
+    description: >
+      Validate this CodeStable checklist with the project YAML validator.
+    verification_command: >
+      python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-05-31-hermes-tavern-phase93-hermes-plugin-entrypoint-offline-smoke/checklist.yaml
+    status: verified
+    result: "PASS - controller rerun validated 1 file: 1 passed, 0 failed"
+
+  - id: S8
+    name: "Scoped diff whitespace check"
+    description: >
+      Check only the files touched by this phase for whitespace errors.
+    verification_command: >
+      git diff --check -- tests/test_hermes_tavern_packaging.py design/codestable/features/2026-05-31-hermes-tavern-phase93-hermes-plugin-entrypoint-offline-smoke/checklist.yaml
+    status: verified
+    result: "PASS - controller rerun exited 0 with no whitespace errors"
+
+implementation_notes: |
+  - This phase is packaging/release preflight only.
+  - The entry point metadata smoke creates a temporary venv under pytest tmp_path
+    and installs the locally built wheel with pip --no-index --no-deps.
+  - The subprocess smoke runs from tmp_path/outside with PYTHONPATH cleared and
+    PYTHONNOUSERSITE=1, then asserts repo-root paths are absent from cwd,
+    sys.path, and the loaded hermes_tavern module file.
+  - The smoke discovers `hermes-tavern` via installed distribution metadata in
+    the `hermes_agent.plugins` entry point group and loads/calls the register
+    contract without importing from the repository checkout.
+  - Existing dirty worktree changes outside the packaging test and this
+    checklist are not modified by this phase.
+
+verification_notes: |
+  - Codex focused packaging pytest passed: 18 passed in 7.14s.
+  - Codex py_compile passed with exit code 0 and no output.
+  - Codex full Tavern pytest glob stopped on the known transient image
+    mock/provider failure path: 8 failed, 623 passed in 16.99s.
+  - Controller reran focused image tests first: 20 passed in 0.54s.
+  - Controller reran focused packaging pytest: 18 passed in 6.71s.
+  - Controller reran py_compile: exit 0 with no compile output.
+  - Controller reran full Tavern glob: 631 passed in 19.43s.
+  - Controller reran checklist YAML validation: 1 passed, 0 failed.
+  - Controller reran scoped diff whitespace check: exit 0 with no output.
+  - No Gateway/service/model/provider/ComfyUI/TTS calls were made.

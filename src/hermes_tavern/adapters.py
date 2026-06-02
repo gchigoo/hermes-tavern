@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any, Callable, Protocol
 
-from plugins.hermes_tavern.provider_bridge import sanitize_provider_payload, validate_provider_base_url
+from hermes_tavern.provider_bridge import sanitize_provider_payload, validate_provider_base_url
 
 
 def _message_content(response: Any) -> str:

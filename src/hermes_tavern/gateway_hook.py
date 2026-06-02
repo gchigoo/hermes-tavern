@@ -9,9 +9,9 @@ from typing import Any
 
 log = logging.getLogger(__name__)
 
-from plugins.hermes_tavern.commands import parse_rp_command
-from plugins.hermes_tavern.db import TavernStore
-from plugins.hermes_tavern.runtime import TavernRuntime
+from hermes_tavern.commands import parse_rp_command
+from hermes_tavern.db import TavernStore
+from hermes_tavern.runtime import TavernRuntime
 
 
 def _platform_key(platform: Any) -> Any:

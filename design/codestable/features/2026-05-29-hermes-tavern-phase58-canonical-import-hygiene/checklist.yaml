@@ -1,0 +1,74 @@
+doc_type: feature-checklist
+feature: hermes-tavern-phase58-canonical-import-hygiene
+date: "2026-05-29"
+status: implemented
+
+summary: >
+  Add a standalone packaging regression test that scans production source under
+  src/hermes_tavern/ and fails if canonical hermes_tavern.* imports regress to
+  legacy plugins.hermes_tavern imports. The legacy plugins/ namespace remains
+  available for old callers and tests, but production source must stay independent
+  of the repo-root compatibility shim so editable/wheel installs remain clean.
+
+steps:
+  - id: S1
+    name: "Add pathlib import for source-tree scan"
+    description: >
+      Import pathlib.Path in tests/test_hermes_tavern_packaging.py so the test can
+      locate src/hermes_tavern relative to the test file without relying on cwd.
+    status: verified
+    changed_file: "tests/test_hermes_tavern_packaging.py"
+    result: "PASS — packaging focused tests import successfully"
+
+  - id: S2
+    name: "Add canonical import hygiene test"
+    description: >
+      Add test_source_uses_canonical_hermes_tavern_imports, scanning every .py file
+      in src/hermes_tavern/ and reporting any production source that imports from
+      plugins or plugins.hermes_tavern.
+    status: verified
+    changed_file: "tests/test_hermes_tavern_packaging.py"
+    result: "PASS — no legacy plugins imports found under src/hermes_tavern/"
+
+  - id: S3
+    name: "Focused packaging test run"
+    description: >
+      Run packaging tests to prove the new source-scan regression test and existing
+      entrypoint/version/metadata checks pass together.
+    status: verified
+    verification_command: >
+      python -m pytest tests/test_hermes_tavern_packaging.py -q -o 'addopts='
+    result: "PASS — 10 passed in 0.12s"
+
+  - id: S4
+    name: "py_compile smoke check"
+    description: >
+      Compile all standalone shim, source, importer, and Tavern test files.
+    status: verified
+    verification_command: >
+      python -m py_compile conftest.py plugins/__init__.py plugins/hermes_tavern/__init__.py src/hermes_tavern/*.py src/hermes_tavern/importers/*.py tests/test_hermes_tavern_*.py
+    result: "PASS — 2026-05-29; no syntax errors"
+
+  - id: S5
+    name: "Full Tavern test suite"
+    description: >
+      Run the full standalone Tavern pytest glob to ensure the packaging hygiene
+      test does not break any runtime/gateway behavior.
+    status: verified
+    verification_command: >
+      python -m pytest tests/test_hermes_tavern_*.py -q -o 'addopts='
+    result: "PASS — 2026-05-29; 555 passed in 9.41s"
+
+  - id: S6
+    name: "Checklist YAML validation"
+    description: >
+      Validate this checklist with the project YAML validator.
+    status: verified
+    verification_command: >
+      python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-05-29-hermes-tavern-phase58-canonical-import-hygiene/checklist.yaml
+    result: "PASS — 2026-05-29; 1 file passed, 0 failed"
+
+implementation_notes: |
+  - This phase is test-only; no runtime behavior changed.
+  - Tests may continue importing plugins.hermes_tavern to preserve legacy compatibility,
+    but src/hermes_tavern/ production modules must use hermes_tavern.* imports.

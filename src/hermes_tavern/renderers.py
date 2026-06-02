@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from plugins.hermes_tavern.prompt import CompiledContext
+    from hermes_tavern.prompt import CompiledContext
 
 
 class ChatRenderer:

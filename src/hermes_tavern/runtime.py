@@ -5,20 +5,20 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
-from plugins.hermes_tavern.adapters import (
+from hermes_tavern.adapters import (
     FakeModelAdapter,
     HermesProviderAdapter,
 )
-from plugins.hermes_tavern.commands import RPCommand, TAVERN_COMMAND_TABLE, dispatch_command
-from plugins.hermes_tavern.db import TavernStore
-from plugins.hermes_tavern.identity import session_key_from_event
-from plugins.hermes_tavern.import_policy import resolve_import_path
+from hermes_tavern.commands import RPCommand, TAVERN_COMMAND_TABLE, dispatch_command
+from hermes_tavern.db import TavernStore
+from hermes_tavern.identity import session_key_from_event
+from hermes_tavern.import_policy import resolve_import_path
 
-from plugins.hermes_tavern.images import MockImageProvider, TavernImageProvider
-from plugins.hermes_tavern.model_router import ModelRouter
-from plugins.hermes_tavern.prompt import PromptCompiler, PromptModule
-from plugins.hermes_tavern.renderers import ChatRenderer
-from plugins.hermes_tavern import (
+from hermes_tavern.images import MockImageProvider, TavernImageProvider
+from hermes_tavern.model_router import ModelRouter
+from hermes_tavern.prompt import PromptCompiler, PromptModule
+from hermes_tavern.renderers import ChatRenderer
+from hermes_tavern import (
     runtime_assets,
     runtime_content,
     runtime_debug,
@@ -36,7 +36,7 @@ from plugins.hermes_tavern import (
     runtime_sessions,
     runtime_turns,
 )
-from plugins.hermes_tavern.runtime_utils import (
+from hermes_tavern.runtime_utils import (
     build_macro_context as _build_macro_context,
     card_row_to_obj as _card_row_to_obj,
     mobile_preview as _mobile_preview,
@@ -198,6 +198,9 @@ class TavernRuntime:
 
     def _debug_swipes(self, event: Any) -> str:
         return runtime_turns.debug_swipes(self, event)
+
+    def _doctor(self, event: Any) -> str:
+        return runtime_debug.doctor(self, event)
 
     def _assets(self, event: Any) -> str:
         return runtime_assets.assets(self, event)

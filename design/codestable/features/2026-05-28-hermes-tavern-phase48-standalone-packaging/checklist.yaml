@@ -1,0 +1,80 @@
+doc_type: feature-checklist
+feature: hermes-tavern-phase48-standalone-packaging
+date: "2026-05-28"
+status: implemented
+
+summary: >
+  Make the standalone hermes-tavern project installable/editable with standard
+  Python packaging metadata, and harden the plugin register entrypoint so it no
+  longer depends on the legacy plugins.hermes_tavern import path. Preserve the
+  Phase 47 compatibility package for old imports.
+
+steps:
+  - id: S1
+    name: "Add pyproject metadata"
+    description: >
+      Add a minimal pyproject.toml using setuptools with src/ package discovery,
+      Python >=3.11, and package data for hermes_tavern/plugin.yaml.
+    status: verified
+    changed_file: "pyproject.toml"
+    result: "PASS — pyproject.toml exists and declares package data for plugin.yaml"
+
+  - id: S2
+    name: "Use standalone package imports internally"
+    description: >
+      Change src/hermes_tavern/__init__.py so register(ctx) imports
+      hermes_tavern.gateway_hook directly, then replace internal
+      plugins.hermes_tavern.* imports across src/hermes_tavern/ with the
+      standalone hermes_tavern.* package path. This keeps editable installs
+      independent of the legacy namespace while preserving the Phase 47 shim.
+    status: verified
+    changed_file: "src/hermes_tavern/*.py and src/hermes_tavern/importers/*.py"
+    result: "PASS — editable-install smoke from /tmp can import hermes_tavern, read plugin.yaml, and register pre_gateway_dispatch"
+
+  - id: S3
+    name: "Add packaging and entrypoint tests"
+    description: >
+      Add focused tests covering direct register(ctx), importlib.resources access
+      to plugin.yaml, and legacy plugins.hermes_tavern.register delegation.
+    status: verified
+    changed_file: "tests/test_hermes_tavern_packaging.py"
+    verification_command: >
+      python -m pytest tests/test_hermes_tavern_packaging.py tests/test_hermes_tavern_plugin.py tests/test_hermes_tavern_cards.py -q -o 'addopts='
+    result: "PASS — 34 passed in 0.05s"
+
+  - id: S4
+    name: "py_compile smoke check"
+    description: >
+      Compile all shim, source, importer, and Tavern test files to catch syntax errors.
+    status: verified
+    verification_command: >
+      python -m py_compile conftest.py plugins/__init__.py plugins/hermes_tavern/__init__.py src/hermes_tavern/*.py src/hermes_tavern/importers/*.py tests/test_hermes_tavern_*.py
+    result: "PASS — 2026-05-28; no syntax errors"
+
+  - id: S5
+    name: "Full standalone Tavern test suite"
+    description: >
+      Run the full standalone Tavern pytest glob to verify packaging changes do
+      not break runtime, gateway, prompt, model, image, TTS, or importer behavior.
+    status: verified
+    verification_command: >
+      python -m pytest tests/test_hermes_tavern_*.py -q -o 'addopts='
+    result: "PASS — 2026-05-28; 445 passed in 9.21s"
+
+  - id: S6
+    name: "Checklist YAML validation"
+    description: >
+      Validate this CodeStable checklist with the project YAML validator.
+    status: verified
+    verification_command: >
+      python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-05-28-hermes-tavern-phase48-standalone-packaging/checklist.yaml
+    result: "PASS — 2026-05-28; 1 file passed, 0 failed"
+
+implementation_notes: |
+  - pyproject.toml intentionally stays minimal: no release automation, no broad
+    dependency pinning, and no core Hermes edits.
+  - The direct entrypoint import is the production path; the Phase 47
+    plugins/hermes_tavern package remains as a compatibility layer for legacy
+    tests and import paths.
+  - plugin.yaml is included as package data so Hermes plugin metadata remains
+    available after editable or wheel installs.

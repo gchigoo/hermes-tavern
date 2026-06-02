@@ -1,0 +1,75 @@
+doc_type: feature-checklist
+feature: hermes-tavern-phase54-db-utils-direct-tests
+date: "2026-05-29"
+status: implemented
+
+summary: >
+  db_utils.py (utc_now, row_to_dict, assert_no_secret_keys) had no direct test
+  coverage — only indirect coverage through db.py integration tests.  The
+  security-critical assert_no_secret_keys guard (blocks api_key, access_token,
+  secret, token, password from being persisted) especially needed explicit tests
+  to contract its exact behaviour: case-insensitive matching, nested dict
+  traversal, and list traversal.  This phase adds
+  tests/test_hermes_tavern_db_utils.py with 24 focused unit tests covering all
+  three helpers.
+
+steps:
+  - id: S1
+    name: "Add tests/test_hermes_tavern_db_utils.py"
+    description: >
+      Create a new test module that directly imports from
+      hermes_tavern.db_utils and tests:
+        utc_now: returns non-empty string, parses as ISO datetime, timezone is UTC.
+        row_to_dict: None → None; sqlite3.Row → dict; all columns preserved.
+        assert_no_secret_keys: passes empty/clean/nested/list inputs; raises on
+          all five blocked field names (api_key, access_token, secret, token,
+          password); case-insensitive (API_KEY also blocked); nested secret
+          blocked; secret inside list blocked; error message contains field path.
+      24 tests total (3 utc_now + 3 row_to_dict + 5 + 11 assert_no_secret_keys).
+    status: verified
+    changed_file: "tests/test_hermes_tavern_db_utils.py"
+    result: "PASS — 2026-05-29; 24 passed in 0.02s"
+
+  - id: S2
+    name: "py_compile smoke check"
+    description: >
+      Compile all shim, source, importer, and test files to confirm no syntax errors.
+    status: verified
+    verification_command: >
+      python -m py_compile conftest.py plugins/__init__.py plugins/hermes_tavern/__init__.py src/hermes_tavern/*.py src/hermes_tavern/importers/*.py tests/test_hermes_tavern_*.py
+    result: "PASS — 2026-05-29; no syntax errors"
+
+  - id: S3
+    name: "Full standalone test suite"
+    description: >
+      Run the full standalone Tavern pytest glob to verify no regressions.
+      Expect 475 passed (was 451; +24 new db_utils unit tests).
+    status: verified
+    verification_command: >
+      python -m pytest tests/test_hermes_tavern_*.py -q -o 'addopts='
+    result: "PASS — 2026-05-29; 475 passed in 9.82s (was 451; +24 new tests)"
+
+  - id: S4
+    name: "Checklist YAML validation"
+    description: >
+      Validate this CodeStable checklist with the project YAML validator.
+    status: verified
+    verification_command: >
+      python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-05-29-hermes-tavern-phase54-db-utils-direct-tests/checklist.yaml
+    result: "PASS — 2026-05-29; 1 file passed, 0 failed"
+
+implementation_notes: |
+  - assert_no_secret_keys uses key.lower() comparison against
+    {"api_key", "access_token", "secret", "token", "password"}, so
+    uppercase variants like API_KEY are also blocked.  The parametrized
+    test_assert_no_secret_keys_is_case_insensitive test documents this
+    explicitly so a future refactor does not accidentally switch to case-
+    sensitive matching.
+  - row_to_dict wraps dict(row) — sqlite3.Row supports dict() conversion
+    since Python 3.x; the helper is a one-liner but is tested to contract
+    the None-safe wrapper that db.py relies on in every query return path.
+  - utc_now() uses datetime.now(timezone.utc).isoformat() so the UTC
+    offset is always +00:00 in the ISO string.  The test_utc_now_is_utc
+    test parses the string back to a datetime and checks utcoffset().
+  - No source files were modified; only a new test file was added.
+  - test count: 451 (phase 53 baseline) + 24 (this phase) = 475.

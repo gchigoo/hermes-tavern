@@ -23,8 +23,8 @@ from pathlib import Path
 from typing import Any, Protocol
 from uuid import uuid4
 
-from hermes_constants import get_hermes_home
-from plugins.hermes_tavern.utils import estimate_tokens
+from hermes_tavern.hermes_home import get_hermes_home
+from hermes_tavern.utils import estimate_tokens
 
 
 # SillyTavern-inspired generation modes, mapped to mobile-safe commands.

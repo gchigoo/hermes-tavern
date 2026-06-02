@@ -4,9 +4,9 @@ from __future__ import annotations
 
 from typing import Any
 
-from plugins.hermes_tavern.commands import RPCommand
-from plugins.hermes_tavern.identity import session_key_from_event
-from plugins.hermes_tavern.runtime_utils import mobile_preview as _mobile_preview
+from hermes_tavern.commands import RPCommand
+from hermes_tavern.identity import session_key_from_event
+from hermes_tavern.runtime_utils import mobile_preview as _mobile_preview
 
 _NOTE_USAGE = (
     "Usage: /rp note set <text> | /rp note clear | /rp note inspect | "

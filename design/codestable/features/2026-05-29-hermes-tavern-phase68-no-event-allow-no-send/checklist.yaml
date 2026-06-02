@@ -1,0 +1,68 @@
+doc_type: feature-checklist
+feature: hermes-tavern-phase68-no-event-allow-no-send
+date: "2026-05-29"
+status: implemented
+
+summary: >
+  Strengthen the no-event gateway dispatch contract so calling
+  pre_gateway_dispatch without an event returns allow and does not send text or
+  media through the Telegram/mobile adapter path.
+
+steps:
+  - id: S1
+    name: "Strengthen no-event allow no-send regression"
+    description: >
+      Extend the existing no-event pre_gateway_dispatch test to keep a fake
+      gateway instance, assert the exact allow response, and assert the
+      Telegram adapter recorded no sends.
+    status: verified
+    changed_file: "tests/test_hermes_tavern_gateway.py"
+    result: "PASS - focused no-event gateway dispatch contract passed"
+
+  - id: S2
+    name: "Focused gateway tests"
+    description: >
+      Run the gateway dispatch and gateway hook modules to verify the
+      strengthened no-event no-send contract and existing Telegram/mobile
+      gateway behavior.
+    verification_command: >
+      python -m pytest tests/test_hermes_tavern_gateway.py tests/test_hermes_tavern_gateway_hook.py -q -o 'addopts='
+    status: verified
+    result: "PASS — controller rerun 2026-05-29; 20 passed in 0.45s"
+
+  - id: S3
+    name: "py_compile smoke check"
+    description: >
+      Compile the standalone shim, source modules, importer modules, and Tavern
+      tests without changing runtime/provider behavior.
+    verification_command: >
+      python -m py_compile conftest.py plugins/__init__.py plugins/hermes_tavern/__init__.py src/hermes_tavern/*.py src/hermes_tavern/importers/*.py tests/test_hermes_tavern_*.py
+    status: verified
+    result: "PASS — controller rerun 2026-05-29; no syntax errors"
+
+  - id: S4
+    name: "Full Tavern test suite"
+    description: >
+      Run the full standalone Tavern pytest glob and record any transient image
+      failures honestly without changing unrelated runtime/provider code.
+    verification_command: >
+      python -m pytest tests/test_hermes_tavern_*.py -q -o 'addopts='
+    status: verified
+    result: >
+      PASS — controller rerun 2026-05-29; 566 passed in 9.25s. Codex's own
+      subprocess previously reported 8 transient image-test failures, but the
+      controller-owned rerun is green.
+
+  - id: S5
+    name: "Checklist YAML validation"
+    description: >
+      Validate this checklist with the project YAML validator.
+    verification_command: >
+      python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-05-29-hermes-tavern-phase68-no-event-allow-no-send/checklist.yaml
+    status: verified
+    result: "PASS — controller rerun 2026-05-29; 1 file passed, 0 failed"
+
+implementation_notes: |
+  - This phase is test-only; no production runtime behavior changed.
+  - The strengthened regression uses fake in-process gateway objects only.
+  - No secrets, real provider calls, or network calls are introduced.

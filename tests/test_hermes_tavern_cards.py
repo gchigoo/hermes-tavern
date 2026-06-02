@@ -30,7 +30,7 @@ def _make_png_with_chara(card_json: dict) -> bytes:
         + chunk(b"IEND", b"")
     )
 
-FIXTURES = Path(__file__).parent.parent / "fixtures" / "cards"
+FIXTURES = Path(__file__).parent / "fixtures" / "cards"
 
 
 def test_parse_v2_character_card_preserves_core_fields():

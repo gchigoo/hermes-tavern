@@ -1,0 +1,69 @@
+doc_type: feature-checklist
+feature: hermes-tavern-phase65-missing-chat-id-skip
+date: "2026-05-29"
+status: implemented
+
+summary: >
+  Add a low-risk, test-only gateway hook regression proving that /rp command
+  interception still returns the Tavern skip contract when a Telegram/mobile
+  event source has no usable chat_id. This preserves runtime behavior while
+  guarding the no-delivery path from crashes or accidental adapter sends.
+
+steps:
+  - id: S1
+    name: "Add missing-chat-id /rp skip regression"
+    description: >
+      Extend tests/test_hermes_tavern_gateway_hook.py with /rp help events whose
+      source omits chat_id, sets chat_id to null, or sets chat_id to an empty
+      string. The regression asserts pre_gateway_dispatch returns skip and the
+      fake Telegram adapter send method is not called.
+    status: verified
+    changed_file: "tests/test_hermes_tavern_gateway_hook.py"
+    result: "PASS - focused gateway hook test passed"
+
+  - id: S2
+    name: "Focused gateway tests"
+    description: >
+      Run the gateway hook and gateway dispatch test modules to verify the new
+      regression and existing Telegram/mobile gateway contracts.
+    verification_command: >
+      python -m pytest tests/test_hermes_tavern_gateway_hook.py tests/test_hermes_tavern_gateway.py -q -o 'addopts='
+    status: verified
+    result: "PASS — controller rerun 2026-05-29; 19 passed in 0.43s"
+
+  - id: S3
+    name: "py_compile smoke check"
+    description: >
+      Compile the standalone shim, source modules, importer modules, and Tavern
+      tests without changing runtime behavior.
+    verification_command: >
+      python -m py_compile conftest.py plugins/__init__.py plugins/hermes_tavern/__init__.py src/hermes_tavern/*.py src/hermes_tavern/importers/*.py tests/test_hermes_tavern_*.py
+    status: verified
+    result: "PASS — controller rerun 2026-05-29; no syntax errors"
+
+  - id: S4
+    name: "Full Tavern test suite"
+    description: >
+      Run the full standalone Tavern pytest glob and record any transient image
+      failures without changing unrelated runtime code.
+    verification_command: >
+      python -m pytest tests/test_hermes_tavern_*.py -q -o 'addopts='
+    status: verified
+    result: >
+      PASS — controller rerun 2026-05-29; 565 passed in 9.46s. Codex's own
+      subprocess previously reported 8 transient image-test failures, but the
+      controller-owned rerun is green.
+
+  - id: S5
+    name: "Checklist YAML validation"
+    description: >
+      Validate this checklist with the project YAML validator.
+    verification_command: >
+      python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-05-29-hermes-tavern-phase65-missing-chat-id-skip/checklist.yaml
+    status: verified
+    result: "PASS — controller rerun 2026-05-29; 1 file passed, 0 failed"
+
+implementation_notes: |
+  - This phase is test-only; no runtime behavior changed.
+  - The new test uses fake in-process gateway objects only.
+  - No secrets, real provider calls, or network calls are introduced.

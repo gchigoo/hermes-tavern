@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "hermes-tavern"
+version = "0.1.0"
+description = "SillyTavern-compatible RP/novel runtime for Hermes Gateway."
+readme = "README.md"
+license = {text = "MIT"}
+authors = [{name = "Hermes Agent"}]
+requires-python = ">=3.11"
+dependencies = []
+keywords = ["sillyTavern", "roleplay", "novel", "chat", "hermes", "gateway", "plugin"]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Operating System :: OS Independent",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+hermes_tavern = ["plugin.yaml"]
+
+[project.entry-points."hermes_agent.plugins"]
+hermes-tavern = "hermes_tavern"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = ""

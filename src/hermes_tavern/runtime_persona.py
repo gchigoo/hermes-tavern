@@ -5,11 +5,11 @@ from __future__ import annotations
 import math
 from typing import Any
 
-from plugins.hermes_tavern.commands import RPCommand
-from plugins.hermes_tavern.identity import session_key_from_event
-from plugins.hermes_tavern.import_policy import resolve_import_path
-from plugins.hermes_tavern.importers.personas import import_persona_file, import_raw_persona_text
-from plugins.hermes_tavern.runtime_utils import mobile_preview
+from hermes_tavern.commands import RPCommand
+from hermes_tavern.identity import session_key_from_event
+from hermes_tavern.import_policy import resolve_import_path
+from hermes_tavern.importers.personas import import_persona_file, import_raw_persona_text
+from hermes_tavern.runtime_utils import mobile_preview
 
 _IMPORTABLE_PERSONA_SUFFIXES = {".json", ".txt"}
 

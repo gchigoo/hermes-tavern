@@ -1,0 +1,70 @@
+doc_type: feature-checklist
+feature: hermes-tavern-phase75-session-info-scope-isolation
+date: "2026-05-29"
+status: implemented
+
+summary: >
+  Add focused command-level regression coverage for /rp session info scope
+  isolation. Session info must only inspect the caller's active or paused
+  session, and a caller with no active or paused session must receive the
+  ordinary no-active response even when another user or platform has a
+  session.
+
+steps:
+  - id: S1
+    name: "Add session info isolation regressions"
+    description: >
+      Extend tests/test_hermes_tavern_session_browser.py with cross-user and
+      cross-platform coverage for /rp session info. The response must include
+      same-scope active and paused session details while excluding other-scope
+      full ids, short ids, titles, scope keys, card names, memory facts,
+      summaries, and paused status.
+    status: verified
+    changed_file: "tests/test_hermes_tavern_session_browser.py"
+    result: "PASS - focused Phase75 regressions passed"
+
+  - id: S2
+    name: "Focused session info/isolation pytest"
+    description: >
+      Run session browser, mobile browser, and direct session store tests covering
+      /rp session info, /rp sessions, /rp archive, /rp end, /rp switch, and scoped
+      lookup boundaries.
+    verification_command: >
+      python -m pytest tests/test_hermes_tavern_session_browser.py tests/test_hermes_tavern_mobile_browsers.py tests/test_hermes_tavern_sessions.py -q -o 'addopts='
+    status: verified
+    result: "PASS - controller rerun 2026-05-29; 115 passed in 2.85s"
+
+  - id: S3
+    name: "Full py_compile gate"
+    description: >
+      Compile the standalone plugin source, importers, compatibility shim, and
+      Tavern test modules.
+    verification_command: >
+      python -m py_compile conftest.py plugins/__init__.py plugins/hermes_tavern/__init__.py src/hermes_tavern/*.py src/hermes_tavern/importers/*.py tests/test_hermes_tavern_*.py
+    status: verified
+    result: "PASS - controller rerun 2026-05-29; no compile errors"
+
+  - id: S4
+    name: "Full Tavern pytest gate"
+    description: >
+      Run the complete Hermes Tavern test glob after the session info scope
+      isolation regressions.
+    verification_command: >
+      python -m pytest tests/test_hermes_tavern_*.py -q -o 'addopts='
+    status: verified
+    result: "PASS - controller rerun 2026-05-29; 582 passed in 9.65s"
+
+  - id: S5
+    name: "Checklist YAML validation"
+    description: >
+      Validate this CodeStable checklist with the project YAML validator.
+    verification_command: >
+      python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-05-29-hermes-tavern-phase75-session-info-scope-isolation/checklist.yaml
+    status: verified
+    result: "PASS - controller rerun 2026-05-29; 1 file passed, 0 failed"
+
+implementation_notes: |
+  - This phase is test-only; no source/runtime/provider code changed.
+  - The regressions use local sqlite stores and do not introduce secrets, real
+    provider calls, model calls, network calls, or production imports from
+    plugins.hermes_tavern under src/hermes_tavern/.

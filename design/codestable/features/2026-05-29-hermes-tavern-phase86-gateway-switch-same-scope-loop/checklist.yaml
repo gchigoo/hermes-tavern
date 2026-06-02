@@ -1,0 +1,74 @@
+doc_type: feature-checklist
+feature: hermes-tavern-phase86-gateway-switch-same-scope-loop
+date: "2026-05-29"
+status: implemented
+
+summary: >
+  Add a gateway hook regression for /rp switch within one caller scope. The
+  hook should switch from the caller's active session to another same-scope
+  archived session by short id, leave a tempting other-scope session untouched,
+  store later ordinary messages only in the newly active same-scope session, and
+  avoid exposing other-scope identifiers or card/title details in the switch
+  response.
+
+steps:
+  - id: S1
+    name: "Add gateway switch same-scope loop regression"
+    description: >
+      Extend tests/test_hermes_tavern_gateway_hook.py with a two-user,
+      same-chat gateway loop that creates an active caller session, an archived
+      same-scope switch target, and a tempting other-scope active session. Switch
+      the caller by short id through pre_gateway_dispatch, assert only the
+      caller scope active session changes, assert the other scope remains active,
+      assert post-switch ordinary messages are stored only in the switched-to
+      session, and assert the switch response does not expose other-scope id,
+      scope key, card name, or title details.
+    status: verified
+    changed_file: "tests/test_hermes_tavern_gateway_hook.py"
+    result: "PASS - Codex Phase86 regression added"
+
+  - id: S2
+    name: "Focused gateway hook pytest"
+    description: >
+      Run the gateway hook test file after the Phase86 switch same-scope loop
+      regression.
+    verification_command: >
+      python -m pytest tests/test_hermes_tavern_gateway_hook.py -q -o 'addopts='
+    status: verified
+    result: "PASS - controller rerun 2026-05-29; 22 passed in 1.07s"
+
+  - id: S3
+    name: "Full py_compile gate"
+    description: >
+      Compile the standalone plugin source, importers, compatibility shim, and
+      Tavern test modules.
+    verification_command: >
+      python -m py_compile conftest.py plugins/__init__.py plugins/hermes_tavern/__init__.py src/hermes_tavern/*.py src/hermes_tavern/importers/*.py tests/test_hermes_tavern_*.py
+    status: verified
+    result: "PASS - controller rerun 2026-05-29; no compile errors"
+
+  - id: S4
+    name: "Full Tavern pytest gate"
+    description: >
+      Run the complete Hermes Tavern test glob after the gateway switch
+      same-scope loop regression.
+    verification_command: >
+      python -m pytest tests/test_hermes_tavern_*.py -q -o 'addopts='
+    status: verified
+    result: "PASS - controller rerun 2026-05-29; 619 passed in 12.85s"
+
+  - id: S5
+    name: "Checklist YAML validation"
+    description: >
+      Validate this CodeStable checklist with the project YAML validator.
+    verification_command: >
+      python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-05-29-hermes-tavern-phase86-gateway-switch-same-scope-loop/checklist.yaml
+    status: verified
+    result: "PASS - controller rerun 2026-05-29; 1 file passed, 0 failed"
+
+implementation_notes: |
+  - This phase is test-only; no source/runtime/provider code changed.
+  - The regression uses local in-memory events, a mock platform adapter, and a
+    temporary sqlite store only. It does not introduce secrets, real provider
+    calls, model calls, network calls, or production imports from
+    plugins.hermes_tavern under src/hermes_tavern/.

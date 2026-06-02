@@ -5,13 +5,13 @@ from __future__ import annotations
 import json
 from typing import Any
 
-from plugins.hermes_tavern.lorebook import match_lorebook_entries, modules_from_lore_matches
-from plugins.hermes_tavern.memory import (
+from hermes_tavern.lorebook import match_lorebook_entries, modules_from_lore_matches
+from hermes_tavern.memory import (
     TavernMemoryContext,
     TavernMemoryFact,
     build_memory_modules,
 )
-from plugins.hermes_tavern.prompt import PromptModule
+from hermes_tavern.prompt import PromptModule
 
 
 def session_preset_modules(runtime, session: dict[str, Any]) -> list[PromptModule]:

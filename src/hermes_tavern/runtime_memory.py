@@ -4,11 +4,11 @@ from __future__ import annotations
 
 from typing import Any
 
-from plugins.hermes_tavern.commands import RPCommand
-from plugins.hermes_tavern.identity import session_key_from_event
-from plugins.hermes_tavern.memory import summarize_recent_messages
-from plugins.hermes_tavern.model_router import ModelRouter
-from plugins.hermes_tavern.runtime_utils import mobile_preview
+from hermes_tavern.commands import RPCommand
+from hermes_tavern.identity import session_key_from_event
+from hermes_tavern.memory import summarize_recent_messages
+from hermes_tavern.model_router import ModelRouter
+from hermes_tavern.runtime_utils import mobile_preview
 
 
 def memory_command(runtime: Any, command: RPCommand, event: Any) -> str:
