@@ -7,6 +7,7 @@ from plugins.hermes_tavern.commands import RPCommand
 from plugins.hermes_tavern.db import TavernStore
 from plugins.hermes_tavern.importers.cards import parse_character_card
 from plugins.hermes_tavern.importers.personas import import_persona_file
+from plugins.hermes_tavern.importers import MAX_LOCAL_IMPORT_BYTES
 from plugins.hermes_tavern.runtime import TavernRuntime
 
 
@@ -85,6 +86,23 @@ def test_persona_import_supports_raw_text(tmp_path):
     assert persona.content == "I am {{user}}, a patient traveler."
     assert persona.source_path == str(path)
     assert persona.raw_json["format"] == "raw_text"
+
+
+def test_persona_import_rejects_oversize_json(tmp_path):
+    path = tmp_path / "oversize-persona.json"
+    payload = {"name": "Pilot", "persona": "A" * (MAX_LOCAL_IMPORT_BYTES + 1)}
+    path.write_text(json.dumps(payload), encoding="utf-8")
+
+    with pytest.raises(ValueError, match="too large"):
+        import_persona_file(path)
+
+
+def test_persona_import_rejects_oversize_text(tmp_path):
+    path = tmp_path / "oversize-persona.txt"
+    path.write_text("A" * (MAX_LOCAL_IMPORT_BYTES + 1), encoding="utf-8")
+
+    with pytest.raises(ValueError, match="too large"):
+        import_persona_file(path)
 
 
 @pytest.mark.asyncio

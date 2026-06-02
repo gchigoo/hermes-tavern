@@ -8,6 +8,8 @@ from pathlib import Path
 from typing import Any
 from uuid import NAMESPACE_URL, uuid5
 
+from hermes_tavern.importers import assert_local_import_size
+
 
 @dataclass(frozen=True)
 class ImportedPersona:
@@ -20,6 +22,10 @@ class ImportedPersona:
 
 def import_persona_file(path: str | Path) -> ImportedPersona:
     persona_path = Path(path)
+    assert_local_import_size(
+        persona_path,
+        label="Persona file",
+    )
     text = persona_path.read_text(encoding="utf-8")
     try:
         parsed = json.loads(text)

@@ -11,6 +11,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
+from hermes_tavern.importers import assert_local_import_size
 from hermes_tavern.preset_safety import PresetRiskLevel, classify_preset_text
 
 
@@ -37,6 +38,10 @@ class ImportedPreset:
 
 def import_preset_file(path: str | Path) -> ImportedPreset:
     preset_path = Path(path)
+    assert_local_import_size(
+        preset_path,
+        label="Preset file",
+    )
     text = preset_path.read_text(encoding="utf-8")
     try:
         parsed = json.loads(text)

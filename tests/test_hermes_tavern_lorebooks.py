@@ -1,7 +1,14 @@
 import json
 
+import pytest
+
 from plugins.hermes_tavern.db import TavernStore
-from plugins.hermes_tavern.importers.lorebooks import import_embedded_lorebook_from_card, import_st_lorebook_json
+from plugins.hermes_tavern.importers import MAX_LOCAL_IMPORT_BYTES
+from plugins.hermes_tavern.importers.lorebooks import (
+    import_embedded_lorebook_from_card,
+    import_st_lorebook_json,
+    import_lorebook_file,
+)
 from plugins.hermes_tavern.importers.cards import parse_character_card
 from plugins.hermes_tavern.lorebook import match_lorebook_entries, modules_from_lore_matches
 
@@ -146,6 +153,17 @@ def test_lorebook_store_round_trips_entries(tmp_path):
     assert stored["name"] == "Atlas"
     assert entries[0]["title"] == "Moon"
     assert json.loads(entries[0]["keys_json"]) == ["moon"]
+
+
+def test_lorebook_importer_rejects_oversize_json(tmp_path):
+    path = tmp_path / "oversize-lorebook.json"
+    path.write_text(
+        json.dumps({"name": "Atlas", "entries": [{"comment": "Moon", "content": "A" * (MAX_LOCAL_IMPORT_BYTES + 1)}]}),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError, match="too large"):
+        import_lorebook_file(path)
 
 
 def test_lorebook_matcher_reports_matches_and_exclusions():

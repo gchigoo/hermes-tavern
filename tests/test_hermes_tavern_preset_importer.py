@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import json
+import pytest
 
+from plugins.hermes_tavern.importers import MAX_LOCAL_IMPORT_BYTES
 from plugins.hermes_tavern.db import TavernStore
 from plugins.hermes_tavern.importers.presets import import_preset_file, import_raw_preset_text, import_st_preset_json
 
@@ -50,3 +52,19 @@ def test_store_preset_and_modules_keep_risk_metadata(tmp_path):
     assert modules[0]["enabled"] == 0
     raw = json.loads(modules[0]["raw_json"])
     assert raw["risk_level"] == "jailbreak"
+
+
+def test_preset_import_rejects_oversize_json(tmp_path):
+    path = tmp_path / "oversize-preset.json"
+    path.write_text(json.dumps({"name": "Huge", "prompts": "A" * (MAX_LOCAL_IMPORT_BYTES + 1)}), encoding="utf-8")
+
+    with pytest.raises(ValueError, match="too large"):
+        import_preset_file(path)
+
+
+def test_preset_import_rejects_oversize_text(tmp_path):
+    path = tmp_path / "oversize-preset.txt"
+    path.write_text("A" * (MAX_LOCAL_IMPORT_BYTES + 1), encoding="utf-8")
+
+    with pytest.raises(ValueError, match="too large"):
+        import_preset_file(path)

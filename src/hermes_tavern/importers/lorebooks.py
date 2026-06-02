@@ -8,6 +8,8 @@ from pathlib import Path
 from typing import Any
 from uuid import uuid5, NAMESPACE_URL
 
+from hermes_tavern.importers import assert_local_import_size
+
 
 @dataclass(frozen=True)
 class ImportedLorebookEntry:
@@ -37,6 +39,10 @@ class ImportedLorebook:
 
 def import_lorebook_file(path: str | Path) -> ImportedLorebook:
     lore_path = Path(path)
+    assert_local_import_size(
+        lore_path,
+        label="Lorebook file",
+    )
     data = json.loads(lore_path.read_text(encoding="utf-8"))
     return import_st_lorebook_json(data, default_name=lore_path.stem, source=str(lore_path))
 

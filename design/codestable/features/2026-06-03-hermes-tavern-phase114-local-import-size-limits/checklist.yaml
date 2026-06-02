@@ -1,0 +1,85 @@
+---
+doc_type: feature-checklist
+feature: hermes-tavern-phase114-local-import-size-limits
+date: "2026-06-03"
+status: implemented
+
+summary: >
+  Add bounded local file-size enforcement for character card, preset, lorebook,
+  and persona imports using shared importer helpers. Keep remote character-card
+  size limiting unchanged and maintain importer-facing security/privacy-safe errors.
+
+steps:
+  - id: S1
+    name: Add shared local import size helpers
+    description: >
+      Add shared max size constants and reusable local file-size guard helper in
+      `src/hermes_tavern/importers/__init__.py` for user-facing, path-safe errors.
+    status: implemented
+    changed_file: src/hermes_tavern/importers/__init__.py
+
+  - id: S2
+    name: Enforce local card size guard
+    description: >
+      Enforce local size checks in character card importer before reading `.json` and
+      `.png` card files, while preserving remote import behavior and limits.
+    status: implemented
+    changed_file: src/hermes_tavern/importers/cards.py
+
+  - id: S3
+    name: Enforce local persona/preset/lorebook size guards
+    description: >
+      Add local file-size checks before text reads for persona, preset, and
+      lorebook importers via shared helper, using `ValueError` with bounded and
+      non-path-revealing messages on overflow.
+    status: implemented
+    changed_file: |
+      - src/hermes_tavern/importers/personas.py
+      - src/hermes_tavern/importers/presets.py
+      - src/hermes_tavern/importers/lorebooks.py
+
+  - id: S4
+    name: Add focused importer oversize coverage
+    description: >
+      Add focused tests for local oversized payloads across importers (card JSON,
+      card PNG, preset JSON/text, persona JSON/text, lorebook JSON).
+    status: implemented
+    changed_file: |
+      - tests/test_hermes_tavern_cards.py
+      - tests/test_hermes_tavern_preset_importer.py
+      - tests/test_hermes_tavern_personas.py
+      - tests/test_hermes_tavern_lorebooks.py
+
+  - id: S5
+    name: Run targeted pytest modules
+    description: >
+      Run focused importer-focused tests covering cards, presets, personas,
+      and lorebooks.
+    status: verified
+    verification_command: >
+      PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_cards.py tests/test_hermes_tavern_preset_importer.py tests/test_hermes_tavern_personas.py tests/test_hermes_tavern_lorebooks.py -q -o 'addopts='
+    result: "PASS - imported focused pytest modules passed: 59 passed in 0.51s."
+
+  - id: S6
+    name: Validate phase checklist artifact
+    description: >
+      Validate this checklist YAML using repository validator with yaml-only mode.
+    status: verified
+    verification_command: >
+      PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --yaml-only --file design/codestable/features/2026-06-03-hermes-tavern-phase114-local-import-size-limits/checklist.yaml
+    result: "PASS - validator output: 1 passed, 0 failed."
+
+implementation_notes: |
+  - Scope is restricted to `src/hermes_tavern/importers/*.py`, focused tests,
+    and this feature checklist file.
+  - No changes were made to run-agent, CLI, gateway runtime/gateway.run,
+    provider behavior, credentials, or service lifecycle code.
+
+verification_notes: |
+  - Codex executor ran focused importer pytest: 59 passed in 0.51s.
+  - Codex executor ran checklist YAML validation: 1 passed, 0 failed.
+  - Controller reviewed the diff and confirmed local-file guards run before full local reads; remote card behavior remains on the existing `_MAX_REMOTE_CARD_BYTES` path.
+  - Controller reran focused importer pytest: 59 passed in 0.49s.
+  - Controller reran checklist YAML validation: 1 passed, 0 failed.
+  - Controller ran project registry verification command `PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts='`: 704 passed in 25.73s.
+  - Controller ran `git diff --check` with exit code 0.

@@ -11,6 +11,7 @@ from plugins.hermes_tavern.importers.cards import (
     load_card_file,
     parse_character_card,
 )
+from plugins.hermes_tavern.importers import MAX_LOCAL_IMPORT_BYTES
 
 
 def _make_png_with_chara(card_json: dict) -> bytes:
@@ -262,6 +263,17 @@ def test_load_card_file_invalid_json_raises_value_error(tmp_path):
         load_card_file(bad_file)
 
 
+def test_load_card_file_rejects_oversize_json_local(tmp_path):
+    card_file = tmp_path / "oversize.json"
+    payload = {"name": "Alice", "description": "A" * (MAX_LOCAL_IMPORT_BYTES + 1)}
+    payload_text = json.dumps(payload)
+    assert len(payload_text.encode("utf-8")) > MAX_LOCAL_IMPORT_BYTES
+    card_file.write_text(payload_text, encoding="utf-8")
+
+    with pytest.raises(UnsupportedCardFormat, match="too large"):
+        load_card_file(card_file)
+
+
 def test_load_card_file_raw_invalid_json_raises_value_error():
     with pytest.raises(ValueError, match="Invalid JSON"):
         load_card_file("{not valid json}")
@@ -276,6 +288,15 @@ def test_load_card_file_png_with_chara_returns_card(tmp_path):
     assert card.name == "Alice"
     assert card.description == "Scholar"
     assert card.source_path == str(png_path)
+
+
+def test_load_card_file_rejects_oversize_png_local(tmp_path):
+    png_path = tmp_path / "oversize.png"
+    signature = b"\x89PNG\r\n\x1a\n"
+    png_path.write_bytes(signature + b"0" * (MAX_LOCAL_IMPORT_BYTES + 1 - len(signature)))
+
+    with pytest.raises(UnsupportedCardFormat, match="too large"):
+        load_card_file(png_path)
 
 
 def test_load_card_file_png_with_chara_v2_returns_card(tmp_path):
@@ -437,4 +458,3 @@ def test_load_card_file_unknown_extension_raises_unsupported(tmp_path):
 def test_load_card_file_missing_file_raises_file_not_found(tmp_path):
     with pytest.raises(FileNotFoundError):
         load_card_file(tmp_path / "nonexistent.json")
-

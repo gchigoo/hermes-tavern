@@ -13,6 +13,7 @@ from urllib.parse import urlparse
 from urllib.request import Request, urlopen
 from uuid import NAMESPACE_URL, uuid5
 
+from hermes_tavern.importers import assert_local_import_size
 from hermes_tavern.provider_bridge import validate_provider_base_url
 
 
@@ -258,6 +259,11 @@ def load_card_file(source: str | Path) -> CharacterCard:
     if suffix == ".png":
         if not path.exists():
             raise FileNotFoundError(f"Card file not found: {path}")
+        assert_local_import_size(
+            path,
+            label="Character card file",
+            error_type=UnsupportedCardFormat,
+        )
         card = _load_card_bytes(path.read_bytes(), suffix, path.name)
         return replace(card, source_path=str(path))
 
@@ -273,6 +279,11 @@ def load_card_file(source: str | Path) -> CharacterCard:
 
     if not path.exists():
         raise FileNotFoundError(f"Card file not found: {path}")
+    assert_local_import_size(
+        path,
+        label="Character card file",
+        error_type=UnsupportedCardFormat,
+    )
 
     try:
         raw = json.loads(path.read_text(encoding="utf-8"))
@@ -281,4 +292,3 @@ def load_card_file(source: str | Path) -> CharacterCard:
 
     card = parse_character_card(raw)
     return replace(card, source_path=str(path))
-
