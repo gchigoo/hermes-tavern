@@ -44,6 +44,11 @@ Do not commit secrets, API keys, tokens, service credentials, or any other
 sensitive runtime material. If one is discovered, remove it immediately and reopen
 history if needed.
 
+## Security issues
+
+For suspected security findings, follow [`SECURITY.md`](./SECURITY.md) for the
+supported reporting scope and the private reporting path.
+
 ## What to include in PRs
 
 When possible, include tests and docs updates with each change, and explicitly note

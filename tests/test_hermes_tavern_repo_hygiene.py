@@ -19,6 +19,7 @@ PR_TEMPLATE_FILE = REPO_ROOT / ".github" / "pull_request_template.md"
 BUG_REPORT_TEMPLATE = ISSUE_TEMPLATES_ROOT / "bug_report.yml"
 DOCS_TESTS_READINESS_TEMPLATE = ISSUE_TEMPLATES_ROOT / "docs_tests_readiness.yml"
 ISSUE_TEMPLATE_CONFIG = ISSUE_TEMPLATES_ROOT / "config.yml"
+SECURITY_FILE = REPO_ROOT / "SECURITY.md"
 
 REQUIRED_GITIGNORE_PATTERNS = {
     "Python bytecode/cache": [
@@ -61,6 +62,22 @@ SECRET_SHARING_PATTERNS = [
     re.compile(r"\bprovide\s+(?:your\s+)?(?:api[_\\s-]*key|api[_\\s-]*token|secret|credential|password|token|pat)\b", re.I),
     re.compile(r"\bpaste\s+(?:your\s+)?(?:api[_\\s-]*key|api[_\\s-]*token|secret|credential|password|token|pat)\b", re.I),
 ]
+
+
+SECURITY_REQUIRED_PHRASES = {
+    "public beta",
+    "public security reporting policy",
+    "credential leaks",
+    "sensitive data",
+    "unsafe import-path",
+    "provider/account",
+    "session-isolation",
+    "redact",
+    "do not post",
+    "security reporting",
+    "private disclosure channel",
+    "if and when enabled",
+}
 
 
 def _read_text(path: Path) -> str:
@@ -224,6 +241,19 @@ def test_contributing_guide_prohibits_gateway_and_external_endpoint_calls():
         assert pattern not in text, f"found forbidden operational pattern in CONTRIBUTING: {pattern}"
 
 
+def test_security_policy_exists_and_documents_public_reporting_scope():
+    assert SECURITY_FILE.is_file(), "SECURITY.md is required"
+    text = SECURITY_FILE.read_text(encoding="utf-8").lower()
+    for phrase in SECURITY_REQUIRED_PHRASES:
+        assert phrase in text, f"missing SECURITY.md phrase: {phrase}"
+
+
+def test_contributing_links_to_security_policy():
+    text = CONTRIBUTING_FILE.read_text(encoding="utf-8").lower()
+    assert "security.md" in text
+    assert "security issues" in text
+
+
 def test_pull_request_template_exists_and_includes_phase104_fields():
     assert PR_TEMPLATE_FILE.is_file(), "pull request template is missing"
 
@@ -320,11 +350,31 @@ def test_issue_template_config_keeps_blank_issues_enabled_and_links_contributing
 
     contact_links = data.get("contact_links")
     assert isinstance(contact_links, list) and contact_links, "config.yml must define at least one contact link"
+    urls = [str(link.get("url", "")).lower() for link in contact_links if isinstance(link, dict)]
     assert any(
-        "contributing.md" in str(link.get("url", "")).lower() and link.get("url", "").startswith("https://github.com/")
-        for link in contact_links
-        if isinstance(link, dict)
+        "contributing.md" in url and url.startswith("https://github.com/")
+        for url in urls
     ), "config.yml must link to CONTRIBUTING.md"
+    assert any(
+        "security.md" in url and url.startswith("https://github.com/")
+        for url in urls
+    ), "config.yml must link to SECURITY.md"
+
+
+def test_security_policy_and_issue_template_config_have_no_sensitive_reporting_instructions():
+    template_targets = [
+        SECURITY_FILE,
+        ISSUE_TEMPLATE_CONFIG,
+    ]
+
+    for target in template_targets:
+        text = target.read_text(encoding="utf-8").lower()
+
+        for pattern in FORBIDDEN_VALIDATION_PATTERNS:
+            assert pattern not in text, f"{target} contains forbidden operational phrase: {pattern}"
+
+        for regex in SECRET_SHARING_PATTERNS:
+            assert not regex.search(text), f"{target} appears to ask for credential-like sharing"
 
 
 def test_github_templates_do_not_contain_operational_runtime_or_secret_sharing_instructions():

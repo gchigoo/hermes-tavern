@@ -1,0 +1,138 @@
+doc_type: feature-checklist
+feature: hermes-tavern-phase105-public-security-reporting-policy
+date: "2026-06-02"
+status: implemented
+
+summary: >
+  Add a public security reporting policy, route security-sensitive reports from
+  CONTRIBUTING.md and issue templates, and extend repository-hygiene checks to
+  verify policy presence, links, and offline-safe language.
+
+steps:
+  - id: S1
+    name: Add SECURITY.md reporting policy
+    description: >
+      Add a public SECURITY.md policy covering current public-beta scope, what to
+      report, safe/public-vs-sensitive reporting paths, offline validation
+      expectations, redaction guidance, and no private vulnerability reporting
+      promises unless explicitly available.
+    status: implemented
+    changed_file: "SECURITY.md"
+    result: "IMPLEMENTED - SECURITY.md added"
+
+  - id: S2
+    name: Link CONTRIBUTING.md to SECURITY.md
+    description: >
+      Update CONTRIBUTING.md to reference SECURITY.md in a dedicated security
+      handling section and direct sensitive reporters there.
+    status: implemented
+    changed_file: "CONTRIBUTING.md"
+    result: "IMPLEMENTED - CONTRIBUTING.md includes security reporting handoff"
+
+  - id: S3
+    name: Add security policy contact link in issue template config
+    description: >
+      Update .github/ISSUE_TEMPLATE/config.yml to add a SECURITY.md contact link
+      while preserving blank issues and CONTRIBUTING.md link.
+    status: implemented
+    changed_file: ".github/ISSUE_TEMPLATE/config.yml"
+    result: "IMPLEMENTED - issue template config now includes SECURITY.md"
+
+  - id: S4
+    name: Extend repo hygiene tests for public security policy
+    description: >
+      Add assertions for SECURITY.md existence and required concepts, CONTRIBUTING
+      and config contact-link wiring, and ensure policy/config files do not include
+      operational runtime command patterns or credential-sharing instructions.
+    status: implemented
+    changed_file: "tests/test_hermes_tavern_repo_hygiene.py"
+    result: "IMPLEMENTED - policy coverage and anti-pattern checks added"
+
+  - id: S5
+    name: Run focused repo-hygiene verification
+    description: >
+      Run the focused repo-hygiene pytest suite that now covers this phase's
+      policy assertions.
+    verification_command: >
+      PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_repo_hygiene.py -q -o 'addopts='
+    status: verified
+    result: "PASS - controller rerun returned 18 passed in 0.05s"
+
+  - id: S6
+    name: Run public docs + packaging verification
+    description: >
+      Re-run public docs and packaging checks for cross-phase readiness.
+    verification_command: >
+      PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_readme_docs.py tests/test_hermes_tavern_packaging.py -q -o 'addopts='
+    status: verified
+    result: "PASS - controller run returned 33 passed in 7.82s"
+
+  - id: S7
+    name: Run py_compile gate
+    description: >
+      Compile source and test modules with an isolated pycache location.
+    verification_command: >
+      PYTHONPYCACHEPREFIX=/private/tmp/hermes-tavern-phase105-pycache python -m py_compile conftest.py plugins/__init__.py plugins/hermes_tavern/__init__.py src/hermes_tavern/*.py src/hermes_tavern/importers/*.py tests/test_hermes_tavern_*.py
+    status: verified
+    result: "PASS - controller run exited 0 with no compile output"
+
+  - id: S8
+    name: Run full tavern pytest gate
+    description: >
+      Run the full Tavern tests for this phase without service/lifecycle commands.
+    verification_command: >
+      PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_*.py -q -o 'addopts='
+    status: verified
+    result: "PASS - controller rerun returned 670 passed in 21.76s"
+
+  - id: S9
+    name: Validate checklist YAML
+    description: >
+      Validate this checklist artifact with the project YAML validation helper.
+    verification_command: >
+      PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-02-hermes-tavern-phase105-public-security-policy/checklist.yaml --yaml-only
+    status: verified
+    result: "PASS - validated 1 file: 1 passed, 0 failed"
+
+  - id: S10
+    name: Run sensitive-information scan
+    description: >
+      Re-run public sensitive-information scan to ensure no token-like values were
+      introduced in security/issue-policy documentation files.
+    verification_command: "custom Python public secret scan"
+    status: verified
+    result: "PASS - PUBLIC_SECRET_SCAN_ACTUAL_HITS 0"
+
+  - id: S11
+    name: Run diff and forbidden-identifier hygiene checks
+    description: >
+      Run whitespace and forbidden-identifier verification for the new phase
+      changes.
+    verification_command: "git diff --check and forbidden-identifier scan"
+    status: verified
+    result: "PASS - git diff --check exited 0; forbidden-identifier scan returned no hits"
+
+implementation_notes: |
+  - Scope is limited to SECURITY.md, CONTRIBUTING.md,
+    .github/ISSUE_TEMPLATE/config.yml, tests/test_hermes_tavern_repo_hygiene.py,
+    and this checklist.
+  - This phase does not change runtime, provider, gateway, model, network,
+    credential behavior, package metadata, plugin/runtime code, workflows,
+    README.md, or pyproject.toml.
+  - SECURITY.md does not promise GitHub private vulnerability reporting is already
+    enabled; it explains the current public-beta reporting path and redaction
+    expectations.
+
+verification_notes: |
+  - Codex executor first ran focused repo hygiene and fixed one required-phrase
+    mismatch, then got 18 passed in 0.04s.
+  - Codex executor's full Tavern glob hit the known transient image-provider
+    failure mode; controller reran the full Tavern glob and it passed cleanly:
+    670 passed in 21.76s.
+  - Controller reran focused repo hygiene, README docs + packaging, py_compile,
+    full pytest, checklist YAML validation, public secret scan, git diff --check,
+    and forbidden-identifier scan.
+  - Public secret scan found zero actual hits.
+  - Forbidden-identifier scan found no hits in git history or publishable content.
+  - No Gateway/service/model/provider/network/Telegram/ComfyUI/TTS/credential
+    endpoints were started, reloaded, killed, managed, or called.
