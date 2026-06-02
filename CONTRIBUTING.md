@@ -49,6 +49,11 @@ history if needed.
 For suspected security findings, follow [`SECURITY.md`](./SECURITY.md) for the
 supported reporting scope and the private reporting path.
 
+## Support
+
+For non-security help and public process questions, use the support guidance in
+[`SUPPORT.md`](./SUPPORT.md).
+
 ## What to include in PRs
 
 When possible, include tests and docs updates with each change, and explicitly note

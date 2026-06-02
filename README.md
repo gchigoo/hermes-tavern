@@ -118,6 +118,8 @@ Expected behavior:
 
 See the contributor onboarding guide in [CONTRIBUTING.md](CONTRIBUTING.md) for
 public contributor guardrails, safe validation rules, and scope guidance.
+For non-security support handling and issue routing, see
+[SUPPORT.md](SUPPORT.md).
 Public readiness notes live in the [CHANGELOG](CHANGELOG.md) including v0.1.0
 public beta and offline release preflight.
 

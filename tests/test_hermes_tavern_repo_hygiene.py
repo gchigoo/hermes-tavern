@@ -24,6 +24,7 @@ ISSUE_TEMPLATE_CONFIG = ISSUE_TEMPLATES_ROOT / "config.yml"
 SECURITY_FILE = REPO_ROOT / "SECURITY.md"
 CODE_OF_CONDUCT_FILE = REPO_ROOT / "CODE_OF_CONDUCT.md"
 CHANGELOG_FILE = REPO_ROOT / "CHANGELOG.md"
+SUPPORT_FILE = REPO_ROOT / "SUPPORT.md"
 PYPROJECT_FILE = REPO_ROOT / "pyproject.toml"
 
 REQUIRED_GITIGNORE_PATTERNS = {
@@ -92,6 +93,17 @@ CODE_OF_CONDUCT_REQUIRED_PHRASES = {
     "discriminat",
     "credentials",
     "redact",
+}
+
+
+SUPPORT_REQUIRED_PHRASES = {
+    "public beta",
+    "support policy",
+    "non-security",
+    "github issue",
+    "redact",
+    "security.md",
+    "offline validation",
 }
 
 
@@ -524,6 +536,44 @@ def test_code_of_conduct_is_referenced_from_contributing_and_issue_links():
     assert isinstance(links, list) and links, "config.yml must define at least one contact link"
     urls = [str(link.get("url", "")).lower() for link in links if isinstance(link, dict)]
     assert any("code_of_conduct.md" in url for url in urls)
+
+
+def test_support_policy_exists_and_has_expected_content():
+    assert SUPPORT_FILE.is_file(), "SUPPORT.md is required for public support policy"
+    text = SUPPORT_FILE.read_text(encoding="utf-8").lower()
+
+    for phrase in SUPPORT_REQUIRED_PHRASES:
+        assert phrase in text, f"SUPPORT.md missing required phrase: {phrase}"
+
+
+def test_support_policy_is_referenced_from_readme_contributing_and_issue_links():
+    readme_text = (REPO_ROOT / "README.md").read_text(encoding="utf-8").lower()
+    contributing_text = CONTRIBUTING_FILE.read_text(encoding="utf-8").lower()
+    assert "support.md" in readme_text, "README.md must link to SUPPORT.md"
+    assert "support.md" in contributing_text, "CONTRIBUTING.md must link to SUPPORT.md"
+
+    issue_data = _load_yaml_template(ISSUE_TEMPLATE_CONFIG)
+    links = issue_data.get("contact_links")
+    assert isinstance(links, list) and links, "config.yml must define at least one contact link"
+    urls = [str(link.get("url", "")).lower() for link in links if isinstance(link, dict)]
+    assert any("support.md" in url for url in urls)
+
+
+def test_support_policy_has_no_forbidden_operational_or_secret_sharing_language():
+    text = SUPPORT_FILE.read_text(encoding="utf-8").lower()
+
+    for pattern in FORBIDDEN_VALIDATION_PATTERNS:
+        assert pattern not in text, f"SUPPORT.md contains forbidden operational phrase: {pattern}"
+
+    for regex in SECRET_SHARING_PATTERNS:
+        assert not regex.search(text), "SUPPORT.md appears to ask for credential-like sharing"
+
+
+def test_support_policy_mentions_redaction_and_security_escalation():
+    text = SUPPORT_FILE.read_text(encoding="utf-8").lower()
+    assert "redact" in text
+    assert "security.md" in text
+    assert "security escalation" in text
 
 
 def test_code_of_conduct_has_no_forbidden_language():

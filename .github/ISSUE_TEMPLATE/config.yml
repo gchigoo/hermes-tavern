@@ -9,3 +9,6 @@ contact_links:
   - name: Security reporting policy
     url: https://github.com/gchigoo/hermes-tavern/blob/main/SECURITY.md
     about: Read SECURITY.md before reporting suspected sensitive issues.
+  - name: Public support
+    url: https://github.com/gchigoo/hermes-tavern/blob/main/SUPPORT.md
+    about: Read SUPPORT.md for non-security help and issue-routing expectations.

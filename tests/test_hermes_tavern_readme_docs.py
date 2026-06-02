@@ -116,6 +116,14 @@ def test_readme_development_links_to_contributing_guide():
     assert "CONTRIBUTING.md" in development
 
 
+def test_readme_development_links_to_support_guide():
+    text = _readme_text()
+    marker = "## Development"
+    assert marker in text
+    development = text.split(marker, maxsplit=1)[1].split("\n## ", maxsplit=1)[0]
+    assert "SUPPORT.md" in development
+
+
 def test_readme_core_commands_cover_command_table():
     core_commands = _readme_core_commands_text()
     missing = [

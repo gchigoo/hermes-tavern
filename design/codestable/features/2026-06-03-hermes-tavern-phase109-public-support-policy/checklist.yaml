@@ -1,0 +1,93 @@
+doc_type: feature-checklist
+feature: hermes-tavern-phase109-public-support-policy
+date: "2026-06-03"
+status: implemented
+
+summary: >
+  Add a concise public support policy for non-security help and issue routing,
+  link SUPPORT.md from contributor docs and issue contacts, and expand offline
+  repo/readme hygiene checks to enforce policy presence, safe redaction rules, and
+  security escalation to SECURITY.md.
+
+steps:
+  - id: S1
+    name: Add public support policy document
+    description: >
+      Add `SUPPORT.md` with clear public beta support scope, non-security help
+      guidance, GitHub issue routing, safe redaction guidance, offline
+      validation expectations, and explicit security escalation path to
+      `SECURITY.md`.
+    status: implemented
+    changed_file: "SUPPORT.md"
+    result: "IMPLEMENTED - SUPPORT.md added with public beta scope, non-security support scope, issue routing, redaction rules, offline validation expectations, and security escalation."
+
+  - id: S2
+    name: Link support policy from README
+    description: >
+      Add a concise `SUPPORT.md` link from the README development and onboarding
+      section so contributors can quickly discover support guidance.
+    status: implemented
+    changed_file: "README.md"
+    result: "IMPLEMENTED - README development section now links to SUPPORT.md."
+
+  - id: S3
+    name: Link support policy from CONTRIBUTING
+    description: >
+      Update `CONTRIBUTING.md` with a non-security support handoff section and
+      support-policy link.
+    status: implemented
+    changed_file: "CONTRIBUTING.md"
+    result: "IMPLEMENTED - CONTRIBUTING.md includes a support handoff to SUPPORT.md."
+
+  - id: S4
+    name: Add support policy to issue template contact links
+    description: >
+      Add a public-support contact link for `SUPPORT.md` in
+      `.github/ISSUE_TEMPLATE/config.yml`.
+    status: implemented
+    changed_file: ".github/ISSUE_TEMPLATE/config.yml"
+    result: "IMPLEMENTED - Issue template config now includes SUPPORT.md contact link."
+
+  - id: S5
+    name: Extend offline repo/readme hygiene tests
+    description: >
+      Extend offline verification tests in
+      `tests/test_hermes_tavern_repo_hygiene.py` and
+      `tests/test_hermes_tavern_readme_docs.py` to assert support-policy file
+      presence, required coverage, issue-routing, offline language expectations,
+      and no operational/runtime/credential-sharing guidance.
+    status: implemented
+    changed_file:
+      - "tests/test_hermes_tavern_repo_hygiene.py"
+      - "tests/test_hermes_tavern_readme_docs.py"
+    result: "IMPLEMENTED - Added support-policy assertions for file presence, linking, offline validation expectations, and anti-pattern checks."
+
+  - id: S6
+    name: Run focused support-policy verification
+    description: >
+      Run focused repo hygiene and README-hygiene checks that cover the new
+      support policy assertions.
+    status: verified
+    verification_command: >
+      PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_repo_hygiene.py tests/test_hermes_tavern_readme_docs.py -q -o 'addopts='
+    result: "PASS - focused support-policy tests passed: 44 passed."
+
+  - id: S7
+    name: Validate phase109 checklist YAML
+    description: >
+      Validate the new checklist artifact with the project YAML schema checker.
+    status: verified
+    verification_command: >
+      PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-03-hermes-tavern-phase109-public-support-policy/checklist.yaml --yaml-only
+    result: "PASS - validated 1 file(s): 1 passed, 0 failed."
+
+verification_notes: |
+  - Scope is bounded to support-policy docs, contributor docs, issue contact links,
+    and offline docs/repo hygiene tests.
+  - Codex executor ran focused support-policy pytest after one wording fix: 44 passed in 0.07s.
+  - Codex executor validated this checklist YAML: 1 passed, 0 failed.
+  - Controller reran focused support-policy pytest: 44 passed in 0.08s.
+  - Controller reran checklist YAML validation: 1 passed, 0 failed.
+  - Controller ran the project registry verification command `PYTHONDONTWRITEBYTECODE=1 python -m pytest -q`: 685 passed in 22.41s.
+  - Controller ran `git diff --check` with exit code 0.
+  - No runtime, gateway, provider, model, credential, or network behavior was changed.
