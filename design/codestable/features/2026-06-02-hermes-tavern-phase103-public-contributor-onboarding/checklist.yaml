@@ -1,0 +1,124 @@
+doc_type: feature-checklist
+feature: hermes-tavern-phase103-public-contributor-onboarding
+date: "2026-06-02"
+status: implemented
+
+summary: >
+  Add a public contributor onboarding guide with offline-safe setup/validation
+  commands, contribution-scope rules, secret handling guidance, and explicit
+  guardrails to keep ordinary contributions from touching Gateway/service
+  lifecycle or provider-style external endpoints.
+
+steps:
+  - id: S1
+    name: Add public CONTRIBUTING.md
+    description: >
+      Add a top-level contributor onboarding guide documenting requirements-test
+      bootstrap, editable install, offline verification commands, scope rules,
+      secret handling, and safe validation rules.
+    status: implemented
+    changed_file: "CONTRIBUTING.md"
+    result: "IMPLEMENTED - CONTRIBUTING.md added with required onboarding guardrails"
+
+  - id: S2
+    name: Link README development docs to CONTRIBUTING
+    description: >
+      Update README Development section to link to CONTRIBUTING.md so contributors
+      are directed to onboarding guardrails before making changes.
+    status: implemented
+    changed_file: "README.md"
+    result: "IMPLEMENTED - Development section now includes a link to CONTRIBUTING.md"
+
+  - id: S3
+    name: Add contributor guide regression coverage
+    description: >
+      Extend repo-hygiene tests to assert CONTRIBUTING.md exists, required setup
+      and verification commands are documented, scope/secret language exists,
+      and Gateway/service lifecycle command patterns are absent.
+    status: implemented
+    changed_file: "tests/test_hermes_tavern_repo_hygiene.py"
+    result: "IMPLEMENTED - added doc existence, phrase, and forbidden-pattern checks"
+
+  - id: S4
+    name: Add README link regression coverage
+    description: >
+      Extend README docs tests to assert the Development section links to the
+      contributor guide.
+    status: implemented
+    changed_file: "tests/test_hermes_tavern_readme_docs.py"
+    result: "IMPLEMENTED - added development-section CONTRIBUTING.md link test"
+
+  - id: S5
+    name: Focused docs/hygiene verification
+    description: >
+      Run focused repo hygiene and README docs tests for the contributor
+      onboarding doc contract and repository policy assertions.
+    verification_command: >
+      PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_repo_hygiene.py tests/test_hermes_tavern_readme_docs.py -q -o 'addopts='
+    status: verified
+    result: "PASS - controller run returned 22 passed in 0.08s"
+
+  - id: S6
+    name: Packaging verification
+    description: >
+      Run packaging regression tests to keep onboarding docs aligned with
+      packaging checks.
+    verification_command: >
+      PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_packaging.py -q -o 'addopts='
+    status: verified
+    result: "PASS - controller run returned 20 passed in 15.17s"
+
+  - id: S7
+    name: Full py_compile gate
+    description: >
+      Compile source and test shims with an isolated pycache location.
+    verification_command: >
+      PYTHONPYCACHEPREFIX=/private/tmp/hermes-tavern-phase103-pycache python -m py_compile conftest.py plugins/__init__.py plugins/hermes_tavern/__init__.py src/hermes_tavern/*.py src/hermes_tavern/importers/*.py tests/test_hermes_tavern_*.py
+    status: verified
+    result: "PASS - controller run exited 0 with no compile output"
+
+  - id: S8
+    name: Full Tavern pytest gate
+    description: >
+      Run full Tavern test glob without Gateway/provider/service/runtime
+      invocation.
+    verification_command: >
+      PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_*.py -q -o 'addopts='
+    status: verified
+    result: "PASS - controller rerun returned 661 passed in 25.73s"
+
+  - id: S9
+    name: Checklist YAML validation
+    description: >
+      Validate this checklist artifact with the project CodeStable YAML validator.
+    verification_command: >
+      PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-02-hermes-tavern-phase103-public-contributor-onboarding/checklist.yaml --yaml-only
+    status: verified
+    result: "PASS - validated 1 file: 1 passed, 0 failed"
+
+  - id: S10
+    name: Sensitive-information scan
+    description: >
+      Scan the publishable working tree for common token shapes and generic
+      secret-looking assignments, excluding build/cache/venv directories and
+      known runtime env lookup false positives.
+    verification_command: "custom Python public secret scan"
+    status: verified
+    result: "PASS - PUBLIC_SECRET_SCAN_ACTUAL_HITS 0"
+
+implementation_notes: |
+  - Scope remains limited to CONTRIBUTING.md, README.md,
+    tests/test_hermes_tavern_repo_hygiene.py,
+    tests/test_hermes_tavern_readme_docs.py, and this checklist.
+  - No runtime source, provider/model/network/ComfyUI/TTS/Telegram/service/
+    Gateway, credential, or package metadata files were changed.
+  - CONTRIBUTING.md intentionally documents side-effect-free verification only.
+
+verification_notes: |
+  - Codex executor initially reported a full-glob transient image-provider
+    failure path (8 failed, 653 passed); controller reran the full Tavern glob
+    and it passed cleanly: 661 passed in 25.73s.
+  - Controller reran focused docs/hygiene, packaging, py_compile, full pytest,
+    checklist YAML validation, and a public secret scan.
+  - No Gateway/service/model/provider/network/Telegram/ComfyUI/TTS/credential
+    endpoints were started, reloaded, killed, managed, or called.

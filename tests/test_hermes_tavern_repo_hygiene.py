@@ -9,6 +9,7 @@ LICENSE_FILE = REPO_ROOT / "LICENSE"
 WORKFLOW_FILE = REPO_ROOT / ".github/workflows/test.yml"
 PATCH_FILE = REPO_ROOT / "patches/hermes-agent-core-changes.patch"
 REQUIREMENTS_TEST_FILE = REPO_ROOT / "requirements-test.txt"
+CONTRIBUTING_FILE = REPO_ROOT / "CONTRIBUTING.md"
 
 REQUIRED_GITIGNORE_PATTERNS = {
     "Python bytecode/cache": [
@@ -120,6 +121,55 @@ def test_requirements_test_file_exists_and_has_expected_dependencies():
     assert observed_dependencies == expected_dependencies
 
 
+def test_contributing_guide_exists():
+    assert CONTRIBUTING_FILE.is_file()
+
+
 def test_patch_placeholder_contains_no_real_sk_secret_pattern():
     patch_text = PATCH_FILE.read_text(encoding="utf-8")
     assert "sk-" not in patch_text, "found sk- secret-pattern text in patch file"
+
+
+def test_contributing_guide_has_required_commands_and_scope_rules():
+    text = CONTRIBUTING_FILE.read_text(encoding="utf-8").lower()
+    required_phrases = [
+        "requirements-test.txt",
+        "python -m pip install -r requirements-test.txt",
+        "python -m pip install -e . --no-deps",
+        "py_compile",
+        "tests/test_hermes_tavern_repo_hygiene.py",
+        "tests/test_hermes_tavern_readme_docs.py",
+        "tests/test_hermes_tavern_packaging.py",
+        "tests/test_hermes_tavern_*.py",
+        "scope",
+        "contribution",
+        "secret handling",
+        "safe validation rules",
+        "ordinary contributions",
+    ]
+
+    for phrase in required_phrases:
+        assert phrase in text, f"missing contributing guide phrase: {phrase}"
+
+
+def test_contributing_guide_prohibits_gateway_and_external_endpoint_calls():
+    text = CONTRIBUTING_FILE.read_text(encoding="utf-8").lower()
+    forbidden_patterns = [
+        "hermes gateway start",
+        "hermes gateway restart",
+        "hermes gateway reload",
+        "hermes gateway kill",
+        "hermes gateway manage",
+        "gateway start",
+        "gateway restart",
+        "gateway reload",
+        "gateway kill",
+        "gateway manage",
+        "systemctl start",
+        "systemctl restart",
+        "docker compose",
+        "service start",
+    ]
+
+    for pattern in forbidden_patterns:
+        assert pattern not in text, f"found forbidden operational pattern in CONTRIBUTING: {pattern}"

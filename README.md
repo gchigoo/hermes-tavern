@@ -116,6 +116,9 @@ Expected behavior:
 
 ## Development
 
+See the contributor onboarding guide in [CONTRIBUTING.md](CONTRIBUTING.md) for
+public contributor guardrails, safe validation rules, and scope guidance.
+
 ```bash
 python -m pip install -r requirements-test.txt
 python -m pip install -e . --no-deps

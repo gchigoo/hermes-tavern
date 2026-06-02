@@ -108,6 +108,14 @@ def test_readme_keeps_install_or_enablement_guidance():
     assert has_package_install or has_plugin_enablement
 
 
+def test_readme_development_links_to_contributing_guide():
+    text = _readme_text()
+    marker = "## Development"
+    assert marker in text
+    development = text.split(marker, maxsplit=1)[1].split("\n## ", maxsplit=1)[0]
+    assert "CONTRIBUTING.md" in development
+
+
 def test_readme_core_commands_cover_command_table():
     core_commands = _readme_core_commands_text()
     missing = [
