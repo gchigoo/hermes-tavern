@@ -185,8 +185,8 @@ def _load_remote_card(source: str) -> CharacterCard:
     try:
         with urlopen(request, timeout=20) as response:
             data = response.read(_MAX_REMOTE_CARD_BYTES + 1)
-    except Exception as exc:
-        raise UnsupportedCardFormat(f"Could not download card URL: {exc}") from exc
+    except Exception:
+        raise UnsupportedCardFormat("Could not download card URL: download failed") from None
     if len(data) > _MAX_REMOTE_CARD_BYTES:
         raise UnsupportedCardFormat("Remote card is too large; maximum supported size is 10 MB.")
 

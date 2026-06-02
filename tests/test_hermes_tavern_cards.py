@@ -412,6 +412,22 @@ def test_load_card_file_https_json_url(monkeypatch):
     assert card.source_path == "https://example.com/cards/alice.json"
 
 
+def test_load_card_file_https_url_download_error_does_not_leak_secret(monkeypatch):
+    def fake_urlopen(request, timeout):
+        raise RuntimeError("TLS handshake failed for https://example.com/cards/alice.json?token=SECRET")
+
+    monkeypatch.setattr("plugins.hermes_tavern.importers.cards.urlopen", fake_urlopen)
+
+    with pytest.raises(UnsupportedCardFormat) as exc_info:
+        load_card_file("https://example.com/cards/alice.json?token=SECRET")
+
+    msg = str(exc_info.value)
+    assert msg == "Could not download card URL: download failed"
+    assert "SECRET" not in msg
+    assert "token=SECRET" not in msg
+    assert "https://example.com/cards/alice.json" not in msg
+
+
 def test_load_card_file_https_png_url(monkeypatch):
     payload = _make_png_with_chara({"name": "Remote Bob", "first_mes": "Hi"})
 

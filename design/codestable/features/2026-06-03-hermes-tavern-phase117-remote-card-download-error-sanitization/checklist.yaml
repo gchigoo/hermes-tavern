@@ -1,0 +1,33 @@
+feature: 2026-06-03-hermes-tavern-phase117-remote-card-download-error-sanitization
+created: 2026-06-03
+steps:
+  - action: "Bound remote card download exceptions to a bounded UnsupportedCardFormat message"
+    exit_signal: "Remote urlopen failures now raise a fixed download-failed message with exception chaining suppressed"
+  - action: "Add regression test for secret/query redaction when remote download fails"
+    exit_signal: "Card importer test asserts the full URL/query token from a failing download is absent from the raised message"
+checks:
+  - item: "card importer preserves parsing/validation behavior for remote JSON/PNG and unsupported formats"
+    status: completed
+  - item: "no query string or URL-sensitive details are emitted on remote download failure"
+    status: completed
+  - item: "no unrelated code paths (run_agent.py, cli.py, gateway/run.py) are modified"
+    status: completed
+verification:
+  py_compile:
+    - command: "PYTHONDONTWRITEBYTECODE=1 python -m py_compile tests/test_hermes_tavern_cards.py src/hermes_tavern/importers/cards.py"
+      result: "passed"
+  yaml_validation:
+    - command: "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --yaml-only --file design/codestable/features/2026-06-03-hermes-tavern-phase117-remote-card-download-error-sanitization/checklist.yaml"
+      result: "passed - 1 passed, 0 failed"
+  targeted_pytest:
+    - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_cards.py -q -o 'addopts='"
+      result: "passed - 33 passed in 0.10s (Codex), 33 passed in 0.10s (controller)"
+  full_pytest:
+    - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts='"
+      result: "passed - 709 passed in 26.11s"
+  diff_check:
+    - command: "git diff --check"
+      result: "passed"
+implementation_notes: |
+  - Scope is restricted to `src/hermes_tavern/importers/cards.py`, `tests/test_hermes_tavern_cards.py`, and this CodeStable checklist.
+  - No changes were made to run_agent.py, cli.py, gateway/run.py, gateway hooks, model routing, provider credentials, or adult-fiction/no-minors policy code.
