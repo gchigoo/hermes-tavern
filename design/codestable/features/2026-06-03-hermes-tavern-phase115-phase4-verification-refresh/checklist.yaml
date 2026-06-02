@@ -1,0 +1,37 @@
+doc_type: feature-checklist
+feature: hermes-tavern-phase115-phase4-verification-refresh
+date: "2026-06-03"
+status: implemented
+
+summary: >
+  Refresh Phase 4 prompt compiler verification now that pytest is available under
+  tests/ (instead of tests/plugins/).
+
+steps:
+  - id: S1
+    name: Update Phase 4 checklist pytest outcome for refreshed test paths
+    description: >
+      Update the existing Phase 4 checklist to mark pytest verification as passed
+      and point verification evidence to tests/. This is a docs-only CodeStable
+      evidence refresh.
+    status: verified
+    changed_file: design/codestable/features/2026-05-18-hermes-tavern-phase4-prompt-compiler/hermes-tavern-phase4-prompt-compiler-checklist.yaml
+    verification_command: |
+      PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_compiler.py tests/test_hermes_tavern_model_router.py tests/test_hermes_tavern_renderers.py tests/test_hermes_tavern_runtime.py -q -o addopts=
+    result: "PASS"
+
+implementation_notes: |
+  - Scope is intentionally limited to CodeStable documentation artifacts under
+    design/codestable/features.
+  - No runtime or test source files were changed.
+
+verification:
+  codestable_yaml_validation: passed
+  py_compile: not_applicable_docs_only
+  direct_smoke: not_applicable_docs_only
+  pytest: passed
+
+verification_notes: |
+  - PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_compiler.py tests/test_hermes_tavern_model_router.py tests/test_hermes_tavern_renderers.py tests/test_hermes_tavern_runtime.py -q -o addopts= (59 passed in 3.30s)
+  - PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o addopts= (704 passed in 25.20s)
+  - PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --yaml-only --file design/codestable/features/2026-06-03-hermes-tavern-phase115-phase4-verification-refresh/checklist.yaml (1 passed, 0 failed)

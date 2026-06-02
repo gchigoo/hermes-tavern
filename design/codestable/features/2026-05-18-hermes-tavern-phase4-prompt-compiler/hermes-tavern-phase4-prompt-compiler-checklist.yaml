@@ -80,4 +80,7 @@ verification:
   codestable_yaml_validation: passed
   py_compile: passed
   direct_smoke: passed
-  pytest: blocked_no_pytest_module
+  pytest: passed
+verification_notes: |
+  - PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_compiler.py tests/test_hermes_tavern_model_router.py tests/test_hermes_tavern_renderers.py tests/test_hermes_tavern_runtime.py -q -o addopts= passed.
+  - PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o addopts= passed.
