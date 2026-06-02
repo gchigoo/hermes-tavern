@@ -1,0 +1,68 @@
+doc_type: feature-checklist
+feature: hermes-tavern-phase113-readme-compatibility-disclosure
+date: "2026-06-03"
+status: implemented
+
+summary: >
+  Add a public-safe Compatibility section to README with explicit runtime and
+  compatibility contract details and a friendly disclosure for unsupported
+  WebP/JPEG card imports. Add offline README-doc assertions for required wording
+  and forbidden operational guidance.
+
+steps:
+  - id: S1
+    name: Add compatibility section to README
+    description: >
+      Add a concise `## Compatibility` section in README.md that states Python 3.11+,
+      Hermes Agent Gateway plugin runtime, SillyTavern-compatible JSON/PNG character
+      card import, and unsupported WebP/JPEG import with a friendly error.
+    status: implemented
+    changed_file: README.md
+    verification_command: >
+      rg -n "## Compatibility|Python 3.11\+|Hermes Agent Gateway|SillyTavern|JSON/PNG|WebP/JPEG|friendly" README.md
+
+  - id: S2
+    name: Add offline README docs assertions
+    description: >
+      Extend tests/test_hermes_tavern_readme_docs.py with offline assertions for
+      required Compatibility section wording and forbidden operational/provider/
+      network/credential guidance.
+    status: implemented
+    changed_file: tests/test_hermes_tavern_readme_docs.py
+    verification_command: >
+      rg -n "compatibility_section|test_readme_compatibility|unsupported-format|forbidden_operational" tests/test_hermes_tavern_readme_docs.py
+
+  - id: S3
+    name: Run targeted README docs tests
+    description: >
+      Execute only the README docs test module to verify compatibility disclosure
+      wording and guardrails offline.
+    status: verified
+    verification_command: >
+      PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_readme_docs.py -q -o 'addopts='
+    result: "PASS - targeted README docs test module passed: 21 passed in 0.03s."
+
+  - id: S4
+    name: Validate phase checklist artifact
+    description: >
+      Validate this checklist YAML in yaml-only mode using the repo's artifact
+      validator.
+    status: verified
+    verification_command: >
+      PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --yaml-only --file design/codestable/features/2026-06-03-hermes-tavern-phase113-readme-compatibility-disclosure/checklist.yaml
+    result: "PASS - checklist valid: 1 passed, 0 failed."
+
+implementation_notes: |
+  - Scope is restricted to README.md, tests/test_hermes_tavern_readme_docs.py, and the new checklist.
+  - No changes were made to runtime, gateway hooks, provider/runtime code paths, network behavior, credentials, CLI, or run/pipes.
+
+verification_notes: |
+  - Codex executor ran focused README docs pytest: 21 passed in 0.03s.
+  - Codex executor ran checklist YAML validation: 1 passed, 0 failed.
+  - Controller reviewed the diff and confirmed scope is README/docs-test/checklist only.
+  - Controller reran focused README docs pytest: 21 passed in 0.03s.
+  - Controller reran checklist YAML validation: 1 passed, 0 failed.
+  - Controller ran the project registry verification command `PYTHONDONTWRITEBYTECODE=1 python -m pytest -q`: 697 passed in 26.01s.
+  - Controller ran `git diff --check` with exit code 0.
+  - No runtime, gateway hook, provider, model, credential, network, service lifecycle, run_agent.py, cli.py, or gateway/run.py behavior was changed.
+

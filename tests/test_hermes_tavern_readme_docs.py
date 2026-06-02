@@ -40,6 +40,51 @@ def test_readme_mentions_rp_doctor():
     assert "/rp doctor" in _readme_text()
 
 
+def test_readme_has_compatibility_section():
+    assert "## Compatibility" in _readme_text()
+
+
+def test_readme_compatibility_wiring_is_public_safe():
+    compatibility = _readme_section_text("Compatibility").lower()
+
+    assert "python 3.11" in compatibility
+    assert "hermes agent gateway" in compatibility
+    assert "plugin" in compatibility
+    assert "sillytavern" in compatibility
+    assert "json/png" in compatibility
+    assert "character cards" in compatibility
+    assert "webp/jpeg" in compatibility
+    assert "unsupported" in compatibility
+    assert "friendly" in compatibility
+    assert "unsupported-format" in compatibility
+
+
+def test_readme_compatibility_has_no_operational_provider_network_or_credential_guidance():
+    compatibility = _readme_section_text("Compatibility").lower()
+
+    forbidden_guidance = [
+        "gateway start",
+        "gateway restart",
+        "gateway reload",
+        "gateway kill",
+        "systemctl",
+        "docker compose",
+        "service start",
+        "service restart",
+        "curl ",
+        "provider",
+        "network",
+        "api key",
+        "secret",
+        "credential",
+        "paste",
+        "provide",
+    ]
+
+    for phrase in forbidden_guidance:
+        assert phrase not in compatibility
+
+
 def test_readme_has_public_status_and_positioning():
     readme = _readme_text().lower()
 

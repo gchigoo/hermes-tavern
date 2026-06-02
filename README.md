@@ -14,6 +14,13 @@ This repository is for fictional roleplay and creative writing workflows only.
 It does not bypass, weaken, or replace provider/platform safety mechanisms.
 No real API keys or credentials should be committed.
 
+## Compatibility
+
+Hermes Tavern targets Python 3.11+ and runs as a Hermes Agent Gateway plugin.
+It is compatible with the SillyTavern card JSON/PNG import surface for character cards.
+WebP/JPEG character-card imports are not supported yet and return a friendly
+unsupported-format error message.
+
 ## Structure
 
 ```
