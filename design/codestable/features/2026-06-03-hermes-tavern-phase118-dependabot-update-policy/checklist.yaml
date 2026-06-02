@@ -1,0 +1,59 @@
+doc_type: feature-checklist
+feature: hermes-tavern-phase118-dependabot-update-policy
+date: "2026-06-03"
+status: implemented
+
+summary: >
+  Add a repository hygiene slice that introduces Dependabot update policy for
+  Python dependencies and GitHub Actions, with conservative pull request limits
+  and offline validation in the existing repo-hygiene test suite.
+
+steps:
+  - id: S1
+    name: "Add Dependabot update policy"
+    description: >
+      Add `.github/dependabot.yml` with one root pip update entry covering
+      `pyproject.toml` and `requirements-test.txt`, plus `github-actions` updates
+      on a weekly interval.
+    status: implemented
+    changed_file: ".github/dependabot.yml"
+  - id: S2
+    name: "Extend repo-hygiene tests for dependabot policy"
+    description: >
+      Add offline tests for Dependabot YAML shape, ecosystems, root directories,
+      weekly schedule interval, and conservative open PR limits.
+    status: implemented
+    changed_file: "tests/test_hermes_tavern_repo_hygiene.py"
+  - id: S3
+    name: "Record phase checklist and verification placeholders"
+    description: >
+      Add this feature checklist documenting checks and verification commands.
+    status: implemented
+    changed_file: "design/codestable/features/2026-06-03-hermes-tavern-phase118-dependabot-update-policy/checklist.yaml"
+
+checks:
+  - id: C1
+    item: "Dependabot config parses as valid YAML with expected top-level structure."
+    status: implemented
+  - id: C2
+    item: "Dependabot updates include pip and github-actions ecosystems with target manifests."
+    status: implemented
+  - id: C3
+    item: "Dependabot schedule uses a weekly cadence and limits PR concurrency conservatively."
+    status: implemented
+
+verification:
+  targeted_repo_hygiene_pytest:
+    - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_repo_hygiene.py -k dependabot -q -o 'addopts='"
+      result: "passed - 4 passed, 35 deselected in 0.05s (Codex); controller rerun passed - 4 passed, 35 deselected in 0.04s"
+  yaml_validation:
+    - command: "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --file .github/dependabot.yml --yaml-only"
+      result: "passed - 1 passed, 0 failed"
+    - command: "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --yaml-only --file design/codestable/features/2026-06-03-hermes-tavern-phase118-dependabot-update-policy/checklist.yaml"
+      result: "passed - 1 passed, 0 failed (Codex); controller rerun passed - 1 passed, 0 failed"
+  diff_check:
+    - command: "git diff --check -- .github/dependabot.yml tests/test_hermes_tavern_repo_hygiene.py design/codestable/features/2026-06-03-hermes-tavern-phase118-dependabot-update-policy/checklist.yaml"
+      result: "passed"
+  full_pytest:
+    - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts='"
+      result: "passed - 713 passed in 26.24s"

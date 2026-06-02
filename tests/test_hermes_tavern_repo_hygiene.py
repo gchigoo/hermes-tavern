@@ -14,6 +14,7 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 LICENSE_FILE = REPO_ROOT / "LICENSE"
 WORKFLOW_FILE = REPO_ROOT / ".github/workflows/test.yml"
 PATCH_FILE = REPO_ROOT / "patches/hermes-agent-core-changes.patch"
+DEPENDABOT_FILE = REPO_ROOT / ".github" / "dependabot.yml"
 REQUIREMENTS_TEST_FILE = REPO_ROOT / "requirements-test.txt"
 CONTRIBUTING_FILE = REPO_ROOT / "CONTRIBUTING.md"
 ISSUE_TEMPLATES_ROOT = REPO_ROOT / ".github" / "ISSUE_TEMPLATE"
@@ -106,6 +107,9 @@ SUPPORT_REQUIRED_PHRASES = {
     "offline validation",
 }
 
+DEPENDABOT_EXPECTED_INTERVAL = "weekly"
+DEPENDABOT_MAX_OPEN_PRS = 3
+
 
 def _read_text(path: Path) -> str:
     return path.read_text(encoding="utf-8")
@@ -129,6 +133,12 @@ def _issue_field_ids(template: dict) -> set[str]:
         for field in body
         if isinstance(field, dict) and "id" in field
     }
+
+
+def _load_dependabot_config() -> dict:
+    data = yaml.safe_load(DEPENDABOT_FILE.read_text(encoding="utf-8"))
+    assert isinstance(data, dict), f"{DEPENDABOT_FILE} must be a YAML mapping"
+    return data
 
 
 def _gitignore_patterns() -> set[str]:
@@ -195,6 +205,60 @@ def test_workflow_installs_release_preflight_dependencies_in_runner_env():
 
     assert "--user" not in workflow_text
     assert "force_javascript_actions_to_node24" in workflow_text
+
+
+def test_dependabot_config_exists_with_expected_schema_shape():
+    """Dependabot config must define version and updates payload in expected YAML shape."""
+    assert DEPENDABOT_FILE.is_file(), ".github/dependabot.yml is required"
+    config = _load_dependabot_config()
+
+    assert config.get("version") == 2
+    updates = config.get("updates")
+    assert isinstance(updates, list) and updates, "dependabot updates must be a non-empty list"
+    assert all(isinstance(update, dict) for update in updates)
+
+
+def test_dependabot_updates_cover_pip_manifests_and_github_actions():
+    """Dependabot should cover root pip manifests and github-actions updates."""
+    config = _load_dependabot_config()
+    updates = config.get("updates")
+    ecosystems = {update.get("package-ecosystem") for update in updates}
+    assert ecosystems == {"pip", "github-actions"}
+
+    pip_updates = [update for update in updates if update.get("package-ecosystem") == "pip"]
+    assert len(pip_updates) == 1
+    assert pip_updates[0].get("directory") == "/"
+    assert "manifest-file" not in pip_updates[0]
+    assert PYPROJECT_FILE.is_file()
+    assert REQUIREMENTS_TEST_FILE.is_file()
+
+    github_updates = [update for update in updates if update.get("package-ecosystem") == "github-actions"]
+    assert len(github_updates) == 1
+    assert github_updates[0].get("directory") == "/"
+
+
+def test_dependabot_updates_use_weekly_schedule():
+    """Dependabot updates in this policy should be conservative and predictable."""
+    config = _load_dependabot_config()
+    updates = config.get("updates")
+
+    for update in updates:
+        schedule = update.get("schedule")
+        assert isinstance(schedule, dict)
+        assert schedule.get("interval") == DEPENDABOT_EXPECTED_INTERVAL
+
+
+def test_dependabot_updates_use_conservative_open_pr_limits():
+    """Open PR limits should remain conservative to reduce automation noise."""
+    config = _load_dependabot_config()
+    updates = config.get("updates")
+
+    limits = {update.get("open-pull-requests-limit") for update in updates}
+    assert None not in limits
+    assert all(
+        isinstance(limit, int) and 1 <= limit <= DEPENDABOT_MAX_OPEN_PRS
+        for limit in limits
+    )
 
 
 def test_requirements_test_file_exists_and_has_expected_dependencies():
