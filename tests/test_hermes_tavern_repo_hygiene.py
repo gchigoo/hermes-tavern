@@ -21,6 +21,7 @@ DOCS_TESTS_READINESS_TEMPLATE = ISSUE_TEMPLATES_ROOT / "docs_tests_readiness.yml
 ISSUE_TEMPLATE_CONFIG = ISSUE_TEMPLATES_ROOT / "config.yml"
 SECURITY_FILE = REPO_ROOT / "SECURITY.md"
 CODE_OF_CONDUCT_FILE = REPO_ROOT / "CODE_OF_CONDUCT.md"
+CHANGELOG_FILE = REPO_ROOT / "CHANGELOG.md"
 
 REQUIRED_GITIGNORE_PATTERNS = {
     "Python bytecode/cache": [
@@ -257,6 +258,63 @@ def test_security_policy_exists_and_documents_public_reporting_scope():
     text = SECURITY_FILE.read_text(encoding="utf-8").lower()
     for phrase in SECURITY_REQUIRED_PHRASES:
         assert phrase in text, f"missing SECURITY.md phrase: {phrase}"
+
+
+def test_changelog_exists_and_contains_public_readiness_topics():
+    assert CHANGELOG_FILE.is_file(), "CHANGELOG.md is required for public readiness"
+    text = CHANGELOG_FILE.read_text(encoding="utf-8").lower()
+
+    required_phrases = [
+        "v0.1.0",
+        "public beta",
+        "offline release preflight",
+        "safety",
+        "credential redaction",
+    ]
+
+    for phrase in required_phrases:
+        assert phrase in text, f"missing changelog phrase: {phrase}"
+
+
+def test_readme_links_to_public_changelog():
+    readme_text = (REPO_ROOT / "README.md").read_text(encoding="utf-8")
+    assert "CHANGELOG.md" in readme_text, "README.md should link to CHANGELOG.md"
+    assert "CHANGELOG" in readme_text and "(CHANGELOG.md)" in readme_text
+
+
+def test_changelog_does_not_publish_gateway_service_or_credential_sharing_instructions():
+    text = CHANGELOG_FILE.read_text(encoding="utf-8").lower()
+
+    forbidden_gateway_commands = [
+        "gateway start",
+        "gateway restart",
+        "gateway reload",
+        "gateway kill",
+        "service start",
+        "service stop",
+        "service restart",
+        "systemctl",
+        "docker compose",
+    ]
+
+    forbidden_credential_share = [
+        "share your api key",
+        "share api key",
+        "provide your api key",
+        "provide api key",
+        "paste your api key",
+        "paste api key",
+        "share your token",
+        "provide your token",
+        "paste your token",
+        "credential sharing",
+    ]
+
+    for phrase in forbidden_gateway_commands:
+        assert phrase not in text, f"changelog should not include gateway/service command guidance: {phrase}"
+
+    for phrase in forbidden_credential_share:
+        assert phrase not in text, f"changelog should not include credential-sharing instructions: {phrase}"
 
 
 def test_contributing_links_to_security_policy():

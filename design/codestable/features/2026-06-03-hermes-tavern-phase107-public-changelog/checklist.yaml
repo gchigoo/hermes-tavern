@@ -1,0 +1,77 @@
+doc_type: feature-checklist
+feature: hermes-tavern-phase107-public-changelog
+date: "2026-06-03"
+status: implemented
+
+summary: >
+  Add a concise public changelog for v0.1.0 public beta, link it from the
+  README release-readiness area, and extend repo-hygiene tests with offline
+  assertions for changelog presence, coverage, and prohibited operational or
+  credential-sharing guidance.
+
+steps:
+  - id: S1
+    name: Add v0.1.0 public-beta changelog
+    description: >
+      Add CHANGELOG.md with a concise v0.1.0 entry capturing public beta scope,
+      offline release preflight posture, safety posture, and credential-redaction
+      concepts.
+    status: implemented
+    changed_file: "CHANGELOG.md"
+    verification_command: >
+      test -f CHANGELOG.md && rg -n "v0.1.0|public beta|offline release preflight|safety|credential redaction" CHANGELOG.md
+    result: "IMPLEMENTED - changelog created and contains v0.1.0/public beta/offline preflight/safety/credential-redaction phrases"
+
+  - id: S2
+    name: Link README to changelog for release preflight context
+    description: >
+      Link CHANGELOG.md from README development/release preflight documentation so
+      contributors can quickly find public release-readiness notes.
+    status: implemented
+    changed_file: "README.md"
+    result: "IMPLEMENTED - README references CHANGELOG.md from development and release preflight context"
+
+  - id: S3
+    name: Extend repo-hygiene checks for changelog preflight assertions
+    description: >
+      Add offline assertions in tests/test_hermes_tavern_repo_hygiene.py to require
+      changelog existence and content topics, assert README link coverage, and
+      explicitly reject operational Gateway/service and credential-sharing
+      instructions in changelog text.
+    status: implemented
+    changed_file: "tests/test_hermes_tavern_repo_hygiene.py"
+    result: "IMPLEMENTED - new tests added for changelog presence, content, and forbidden guidance guards"
+
+  - id: S4
+    name: Focused repo-hygiene verification
+    description: >
+      Run the dedicated repository-hygiene test module that covers the new changelog
+      preflight checks.
+    verification_command: >
+      PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_repo_hygiene.py -q -o 'addopts='
+    status: verified
+    result: "PASS - controller returned 25 passed in 0.05s"
+
+  - id: S5
+    name: Checklist YAML validation
+    description: >
+      Validate this checklist artifact with the project YAML schema checker.
+    verification_command: >
+      PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-03-hermes-tavern-phase107-public-changelog/checklist.yaml --yaml-only
+    status: verified
+    result: "PASS - validated 1 file(s): 1 passed, 0 failed"
+
+implementation_notes: |
+  - Scope remained bounded to docs and repo-hygiene tests only.
+  - No runtime code paths, provider/model/gateway logic, credentials, services,
+    package metadata, or network behavior were modified.
+  - The new changelog explicitly avoids operational Gateway/service command recipes
+    and credential-sharing instructions.
+
+verification_notes: |
+  - Codex executor ran focused repo-hygiene pytest: 25 passed in 0.05s.
+  - Codex executor validated checklist YAML: 1 file(s) valid with 1 passed and 0 failed.
+  - Controller reran focused repo-hygiene pytest: 25 passed in 0.04s.
+  - Controller reran checklist YAML validation: 1 file(s) valid with 1 passed and 0 failed.
+  - Controller ran the project registry verification command `PYTHONDONTWRITEBYTECODE=1 python -m pytest -q`: 677 passed in 23.82s.
+  - Controller ran `git diff --check` with exit code 0.

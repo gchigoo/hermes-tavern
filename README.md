@@ -118,6 +118,8 @@ Expected behavior:
 
 See the contributor onboarding guide in [CONTRIBUTING.md](CONTRIBUTING.md) for
 public contributor guardrails, safe validation rules, and scope guidance.
+Public readiness notes live in the [CHANGELOG](CHANGELOG.md) including v0.1.0
+public beta and offline release preflight.
 
 ```bash
 python -m pip install -r requirements-test.txt
@@ -127,6 +129,8 @@ python -m pytest tests/test_hermes_tavern_*.py -q -o 'addopts='
 ```
 
 ## Release preflight
+
+For public-release context, see [CHANGELOG](CHANGELOG.md) before running checks.
 
 Run these offline checks before release, so we can catch regressions without
 restarting the Gateway or touching runtime services:
