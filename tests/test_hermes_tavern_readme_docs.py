@@ -28,6 +28,14 @@ def _readme_release_preflight_text() -> str:
     return section.split("\n## ", maxsplit=1)[0]
 
 
+def _readme_section_text(section_name: str) -> str:
+    marker = f"## {section_name}"
+    text = _readme_text()
+    assert marker in text
+    section = text.split(marker, maxsplit=1)[1]
+    return section.split("\n## ", maxsplit=1)[0]
+
+
 def test_readme_mentions_rp_doctor():
     assert "/rp doctor" in _readme_text()
 
@@ -173,11 +181,7 @@ def test_readme_card_import_format_docs_are_accurate():
 
 
 def _readme_public_policy_text() -> str:
-    text = _readme_text()
-    marker = "## Development"
-    assert marker in text
-    development = text.split(marker, maxsplit=1)[1]
-    return development.split("\n## ", maxsplit=1)[0]
+    return _readme_section_text("Development")
 
 
 def test_readme_public_policy_navigation_block_has_required_links():
@@ -216,3 +220,37 @@ def test_readme_public_policy_navigation_block_has_no_forbidden_operational_runt
 
     for phrase in forbidden_guidance:
         assert phrase not in public_policy
+
+
+def test_readme_license_section_has_mit_link_and_mit_wording():
+    license_section = _readme_section_text("License").lower()
+
+    assert "[mit license](license)" in license_section
+    assert "mit" in license_section
+    assert "license" in license_section
+
+
+def test_readme_license_section_has_no_forbidden_operational_provider_network_or_credential_guidance():
+    license_section = _readme_section_text("License").lower()
+
+    forbidden_guidance = [
+        "gateway start",
+        "gateway restart",
+        "gateway reload",
+        "gateway kill",
+        "provider",
+        "network",
+        "service start",
+        "service restart",
+        "systemctl",
+        "docker compose",
+        "curl ",
+        "api key",
+        "secret",
+        "credential",
+        "paste",
+        "provide",
+    ]
+
+    for phrase in forbidden_guidance:
+        assert phrase not in license_section

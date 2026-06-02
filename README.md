@@ -132,6 +132,10 @@ python -m py_compile conftest.py plugins/__init__.py plugins/hermes_tavern/__ini
 python -m pytest tests/test_hermes_tavern_*.py -q -o 'addopts='
 ```
 
+## License
+
+This project is licensed under the [MIT License](LICENSE).
+
 ## Release preflight
 
 For public-release context, see [CHANGELOG](CHANGELOG.md) before running checks.
