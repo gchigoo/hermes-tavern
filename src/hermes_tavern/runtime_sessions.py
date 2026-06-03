@@ -6,6 +6,7 @@ from typing import Any
 
 from hermes_tavern.commands import RPCommand
 from hermes_tavern.identity import session_key_from_event
+from hermes_tavern.runtime_utils import parse_pagination
 
 
 def session_command(runtime: Any, command: RPCommand, event: Any) -> str:
@@ -68,18 +69,10 @@ def sessions(runtime: Any, command: RPCommand, event: Any) -> str:
     include_all = bool(args and args[0].lower() == "all")
     if include_all:
         args = args[1:]
-    limit = 10
-    page = 1
-    if args:
-        try:
-            limit = max(1, min(25, int(args[0])))
-        except ValueError:
-            return "Usage: /rp sessions [all] [limit] [page]"
-    if len(args) > 1:
-        try:
-            page = max(1, int(args[1]))
-        except ValueError:
-            return "Usage: /rp sessions [all] [limit] [page]"
+    parsed = parse_pagination(args, default_limit=10, max_limit=25)
+    if parsed is None:
+        return "Usage: /rp sessions [all] [limit] [page]"
+    limit, page = parsed
     session_key = session_key_from_event(event)
     total = runtime.store.count_sessions_for_scope(session_key, include_all=include_all)
     total_pages = max(1, -(-total // limit))

@@ -1,7 +1,7 @@
 """Direct unit tests for hermes_tavern.runtime_utils.
 
-Covers all eight public helpers: mobile_preview, safe_macro_value,
-event_user_name, usable_module_counts, module_risk_counts_db,
+Covers all nine public helpers: mobile_preview, safe_macro_value,
+event_user_name, parse_pagination, usable_module_counts, module_risk_counts_db,
 module_risk_counts, build_macro_context, card_row_to_obj.
 """
 
@@ -17,6 +17,7 @@ from hermes_tavern.runtime_utils import (
     card_row_to_obj,
     event_user_name,
     mobile_preview,
+    parse_pagination,
     module_risk_counts,
     module_risk_counts_db,
     safe_macro_value,
@@ -88,6 +89,33 @@ class TestSafeMacroValue:
         text = "a" * 119 + " " + "b" * 81
         result = safe_macro_value(text, limit=120)
         assert not result.endswith(" ")
+
+
+# ---------------------------------------------------------------------------
+# parse_pagination
+# ---------------------------------------------------------------------------
+
+class TestParsePagination:
+    def test_defaults(self):
+        assert parse_pagination([], default_limit=10, max_limit=50) == (10, 1)
+
+    def test_limit_clamped_to_min_max(self):
+        assert parse_pagination(["999"], default_limit=10, max_limit=50) == (50, 1)
+        assert parse_pagination(["0"], default_limit=10, max_limit=50) == (1, 1)
+        assert parse_pagination(["-3"], default_limit=10, max_limit=50) == (1, 1)
+
+    def test_page_clamped_to_minimum_one(self):
+        assert parse_pagination(["10", "0"], default_limit=10, max_limit=50) == (10, 1)
+        assert parse_pagination(["10", "-2"], default_limit=10, max_limit=50) == (10, 1)
+
+    def test_invalid_limit_returns_none(self):
+        assert parse_pagination(["bad"], default_limit=10, max_limit=50) is None
+
+    def test_invalid_page_returns_none(self):
+        assert parse_pagination(["10", "bad"], default_limit=10, max_limit=50) is None
+
+    def test_ignores_extra_args(self):
+        assert parse_pagination(["3", "2", "ignored"], default_limit=10, max_limit=50) == (3, 2)
 
 
 # ---------------------------------------------------------------------------

@@ -7,7 +7,10 @@ from typing import Any
 
 from hermes_tavern.commands import RPCommand
 from hermes_tavern.identity import session_key_from_event
-from hermes_tavern.runtime_utils import mobile_preview as _mobile_preview
+from hermes_tavern.runtime_utils import (
+    parse_pagination,
+    mobile_preview as _mobile_preview,
+)
 
 
 def active_card_data(runtime, event: Any) -> tuple[dict[str, Any] | None, dict[str, Any] | None, dict[str, Any] | None]:
@@ -169,18 +172,10 @@ def history(runtime, command: RPCommand, event: Any) -> str:
     session = runtime.store.get_active_session(session_key)
     if session is None:
         return "No active Hermes Tavern session."
-    limit = 10
-    page = 1
-    if command.args:
-        try:
-            limit = max(1, min(50, int(command.args[0])))
-        except ValueError:
-            return "Usage: /rp history [limit] [page]"
-    if len(command.args) > 1:
-        try:
-            page = max(1, int(command.args[1]))
-        except ValueError:
-            return "Usage: /rp history [limit] [page]"
+    parsed = parse_pagination(command.args, default_limit=10, max_limit=50)
+    if parsed is None:
+        return "Usage: /rp history [limit] [page]"
+    limit, page = parsed
     total = runtime.store.count_messages(session["id"])
     total_pages = max(1, -(-total // limit))  # ceil division
     page = min(page, total_pages)

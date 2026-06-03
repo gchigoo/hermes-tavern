@@ -1,0 +1,77 @@
+---
+doc_type: refactor-checklist
+refactor: 2026-06-03-shared-pagination-helper
+status: implemented
+
+steps:
+  - id: S1
+    name: Add helper characterization tests
+    status: completed
+    completed_at: "2026-06-03"
+    files:
+      - tests/test_hermes_tavern_runtime_utils.py
+    checks:
+      - status: passed
+        description: Tests cover default args, limit clamp, page clamp, invalid limit, invalid page, and ignored trailing args.
+
+  - id: S2
+    name: Add parse_pagination helper
+    status: completed
+    completed_at: "2026-06-03"
+    files:
+      - src/hermes_tavern/runtime_utils.py
+    checks:
+      - status: passed
+        description: Helper returns `(limit, page)` on success and `None` on parse failure.
+
+  - id: S3
+    name: Migrate plain pagination callers
+    status: completed
+    completed_at: "2026-06-03"
+    files:
+      - src/hermes_tavern/runtime_assets.py
+      - src/hermes_tavern/runtime_turns.py
+      - src/hermes_tavern/runtime_sessions.py
+      - src/hermes_tavern/runtime_memory.py
+      - src/hermes_tavern/runtime_persona.py
+      - src/hermes_tavern/runtime_debug.py
+    checks:
+      - status: passed
+        description: Existing usage strings, navigation strings, total-page clamping, and output text remain unchanged.
+
+  - id: S4
+    name: Write apply note
+    status: completed
+    completed_at: "2026-06-03"
+    files:
+      - design/codestable/refactors/2026-06-03-shared-pagination-helper/apply-note.md
+    checks:
+      - status: passed
+        description: Apply note records changed files, command results, deviations, and confirms executor left checklist statuses pending before controller finalization.
+
+  - id: S5
+    name: Run validation
+    status: completed
+    completed_at: "2026-06-03"
+    validation_commands:
+      - PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_runtime_utils.py tests/test_hermes_tavern_mobile_browsers.py tests/test_hermes_tavern_personas.py::test_persona_pagination_and_inspect_do_not_emit_raw_json tests/test_hermes_tavern_runtime.py::test_runtime_debug_prompt_paginates_mobile_rows -q -o 'addopts='
+      - PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_*.py -q -o 'addopts='
+      - PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --yaml-only --file design/codestable/refactors/2026-06-03-shared-pagination-helper/checklist.yaml
+      - git diff --check
+    checks:
+      - status: passed
+        description: All commands passed in controller rerun before commit.
+
+verification:
+  focused_pytest:
+    command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_runtime_utils.py tests/test_hermes_tavern_mobile_browsers.py tests/test_hermes_tavern_personas.py::test_persona_pagination_and_inspect_do_not_emit_raw_json tests/test_hermes_tavern_runtime.py::test_runtime_debug_prompt_paginates_mobile_rows -q -o 'addopts='"
+    result: "passed; 98 passed in 1.61s (controller final rerun)"
+  full_tavern_pytest:
+    command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_*.py -q -o 'addopts='"
+    result: "passed; 751 passed in 29.02s (controller final rerun)"
+  checklist_yaml_validation:
+    command: "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --yaml-only --file design/codestable/refactors/2026-06-03-shared-pagination-helper/checklist.yaml"
+    result: "passed; 1 passed, 0 failed (controller final rerun)"
+  diff_check:
+    command: "git diff --check"
+    result: "passed (controller final rerun)"

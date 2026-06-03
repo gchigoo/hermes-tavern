@@ -16,6 +16,35 @@ def mobile_preview(text: str, limit: int = 120) -> str:
     return compact[: max(0, limit - 1)].rstrip() + "…"
 
 
+def parse_pagination(
+    args: list[str],
+    *,
+    default_limit: int,
+    max_limit: int,
+) -> tuple[int, int] | None:
+    """Parse `[limit] [page]` from command args.
+
+    Returns `(limit, page)` on success and `None` on parse failure.
+    Keeps behavior consistent with existing command parsers:
+    - `limit` is clamped to `[1, max_limit]`
+    - `page` defaults to 1 and clamps to at least 1
+    - extra args are ignored
+    """
+    limit = default_limit
+    page = 1
+    if args:
+        try:
+            limit = max(1, min(max_limit, int(args[0])))
+        except ValueError:
+            return None
+    if len(args) > 1:
+        try:
+            page = max(1, int(args[1]))
+        except ValueError:
+            return None
+    return limit, page
+
+
 def usable_module_counts(modules: list[dict[str, Any]], content_mode: str) -> dict[str, int]:
     counts = {"safe": 0, "adult_fiction": 0, "disabled_risky": 0}
     for module in modules:

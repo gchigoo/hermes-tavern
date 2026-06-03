@@ -11,6 +11,7 @@ from hermes_tavern.identity import session_key_from_event
 from hermes_tavern.prompt import PromptCompiler
 from hermes_tavern.renderers import ChatRenderer
 from hermes_tavern.runtime_utils import (
+    parse_pagination,
     build_macro_context as _build_macro_context,
     card_row_to_obj as _card_row_to_obj,
     mobile_preview as _mobile_preview,
@@ -28,19 +29,11 @@ def debug_prompt(runtime, command: RPCommand, event: Any) -> str:
     if session is None:
         return "No active Hermes Tavern session."
 
-    limit = 8
-    page = 1
     prompt_args = command.args[1:] if command.args and command.args[0].lower() == "prompt" else command.args
-    if prompt_args:
-        try:
-            limit = max(1, min(30, int(prompt_args[0])))
-        except ValueError:
-            return "Usage: /rp debug prompt [limit] [page]"
-    if len(prompt_args) > 1:
-        try:
-            page = max(1, int(prompt_args[1]))
-        except ValueError:
-            return "Usage: /rp debug prompt [limit] [page]"
+    parsed = parse_pagination(prompt_args, default_limit=8, max_limit=30)
+    if parsed is None:
+        return "Usage: /rp debug prompt [limit] [page]"
+    limit, page = parsed
 
     history = runtime.store.get_recent_messages(session["id"], limit=20)
 

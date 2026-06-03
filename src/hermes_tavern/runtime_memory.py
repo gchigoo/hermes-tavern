@@ -8,7 +8,7 @@ from hermes_tavern.commands import RPCommand
 from hermes_tavern.identity import session_key_from_event
 from hermes_tavern.memory import summarize_recent_messages
 from hermes_tavern.model_router import ModelRouter
-from hermes_tavern.runtime_utils import mobile_preview
+from hermes_tavern.runtime_utils import mobile_preview, parse_pagination
 
 
 def memory_command(runtime: Any, command: RPCommand, event: Any) -> str:
@@ -43,19 +43,11 @@ def memory_list(runtime: Any, command: RPCommand, event: Any) -> str:
     session_key = session_key_from_event(event)
     if runtime.store.get_active_session(session_key) is None:
         return "No active Hermes Tavern session."
-    limit = 10
-    page = 1
     extra_args = command.args[1:] if command.args else []
-    if extra_args:
-        try:
-            limit = max(1, min(25, int(extra_args[0])))
-        except ValueError:
-            return "Usage: /rp memory list [limit] [page]"
-    if len(extra_args) > 1:
-        try:
-            page = max(1, int(extra_args[1]))
-        except ValueError:
-            return "Usage: /rp memory list [limit] [page]"
+    parsed = parse_pagination(extra_args, default_limit=10, max_limit=25)
+    if parsed is None:
+        return "Usage: /rp memory list [limit] [page]"
+    limit, page = parsed
     total = runtime.store.count_session_memory_facts(session_key)
     total_pages = max(1, -(-total // limit))
     page = min(page, total_pages)

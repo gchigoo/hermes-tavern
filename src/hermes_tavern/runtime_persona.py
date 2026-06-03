@@ -9,7 +9,7 @@ from hermes_tavern.commands import RPCommand
 from hermes_tavern.identity import session_key_from_event
 from hermes_tavern.import_policy import resolve_import_path
 from hermes_tavern.importers.personas import import_persona_file, import_raw_persona_text
-from hermes_tavern.runtime_utils import mobile_preview
+from hermes_tavern.runtime_utils import mobile_preview, parse_pagination
 
 _IMPORTABLE_PERSONA_SUFFIXES = {".json", ".txt"}
 
@@ -93,19 +93,11 @@ def persona_new(runtime: Any, command: RPCommand) -> str:
 
 
 def persona_list(runtime: Any, command: RPCommand) -> str:
-    limit = 10
-    page = 1
     args = command.args[1:] if command.args else []
-    if args:
-        try:
-            limit = max(1, min(25, int(args[0])))
-        except ValueError:
-            return "Usage: /rp persona list [limit] [page]"
-    if len(args) > 1:
-        try:
-            page = max(1, int(args[1]))
-        except ValueError:
-            return "Usage: /rp persona list [limit] [page]"
+    parsed = parse_pagination(args, default_limit=10, max_limit=25)
+    if parsed is None:
+        return "Usage: /rp persona list [limit] [page]"
+    limit, page = parsed
     total = runtime.store.count_personas()
     total_pages = max(1, math.ceil(total / limit))
     page = min(page, total_pages)

@@ -13,7 +13,7 @@ from hermes_tavern.identity import session_key_from_event
 from hermes_tavern.import_policy import is_gateway_event, resolve_import_path
 from hermes_tavern.importers.cards import UnsupportedCardFormat, load_card_file
 from hermes_tavern.importers.lorebooks import import_embedded_lorebook_from_card
-from hermes_tavern.runtime_utils import mobile_preview
+from hermes_tavern.runtime_utils import mobile_preview, parse_pagination
 
 
 def assets(runtime: Any, event: Any) -> str:
@@ -46,18 +46,10 @@ def assets(runtime: Any, event: Any) -> str:
 
 
 def cards(runtime: Any, command: RPCommand) -> str:
-    limit = 10
-    page = 1
-    if command.args:
-        try:
-            limit = max(1, min(50, int(command.args[0])))
-        except ValueError:
-            return "Usage: /rp cards [limit] [page]"
-        if len(command.args) >= 2:
-            try:
-                page = max(1, int(command.args[1]))
-            except ValueError:
-                return "Usage: /rp cards [limit] [page]"
+    parsed = parse_pagination(command.args, default_limit=10, max_limit=50)
+    if parsed is None:
+        return "Usage: /rp cards [limit] [page]"
+    limit, page = parsed
     all_cards = runtime.store.list_cards()
     total = len(all_cards)
     if total == 0:
