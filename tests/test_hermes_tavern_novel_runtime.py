@@ -8,6 +8,9 @@ from plugins.hermes_tavern.commands import RPCommand
 from plugins.hermes_tavern.importers.cards import parse_character_card
 from plugins.hermes_tavern.importers.presets import import_st_preset_json
 from plugins.hermes_tavern.runtime_utils import mobile_preview as _mobile_preview
+from hermes_tavern.identity import session_key_from_event
+from hermes_tavern.prompt import PromptModule
+from hermes_tavern import runtime_prompt_modules
 
 
 class Source:
@@ -986,3 +989,145 @@ def test_novel_help_does_not_list_import_commands(tmp_path):
 
     assert "project import" not in response
     assert "novel import" not in response
+
+
+def test_project_style_module_shows_in_debug_prompt_for_linked_scene(tmp_path, monkeypatch):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    card = runtime.store.save_card(
+        parse_character_card(
+            {
+                "name": "Alice",
+                "description": "Scholar",
+                "first_mes": "Hello.",
+            }
+        )
+    )
+    session = runtime.store.start_session(session_key_from_event(Event()), card_id=card)
+
+    project = runtime.store.create_project("Skyline")
+    chapter = runtime.store.create_chapter(project["id"], "Opening")
+    scene = runtime.store.create_scene(chapter["id"], "Dawn")
+    runtime.store.link_scene_session(scene["id"], session["id"])
+
+    runtime.store.set_project_style_guide(project["id"], "Use close third-person prose.")
+    runtime.store.create_canon(project["id"], "World", "Rain taps windowpanes.")
+
+    monkeypatch.setattr(
+        runtime_prompt_modules,
+        "session_preset_modules",
+        lambda _runtime, _session: [
+            PromptModule(
+                name="preset:Tone",
+                role="system",
+                content="Preset: keep suspense.",
+                position="before_char",
+                insertion_order=10,
+                enabled=True,
+            )
+        ],
+    )
+
+    modules = runtime._session_prompt_modules(session, "", [])
+    style_module = next(m for m in modules if m.name == "project_style:Skyline")
+    assert style_module.role == "system"
+    assert style_module.content == "Project style guide:\nUse close third-person prose."
+    assert style_module.position == "before_char"
+    assert style_module.insertion_order == -30
+    assert style_module.enabled is True
+
+    names = [m.name for m in modules]
+    assert names.index("project_style:Skyline") < names.index("canon:World")
+
+    prompt = runtime.handle_command_sync(RPCommand("debug", ["prompt"], "/rp debug prompt"), Event())
+    assert "Hermes Tavern prompt debug" in prompt
+    assert "system/project_style:Skyline" in prompt
+    assert "Project style guide:" in prompt
+    assert "Use close third-person prose." in prompt
+    assert (
+        prompt.find("system/project_style:Skyline")
+        < prompt.find("system/canon:World")
+        < prompt.find("system/preset:Tone")
+    )
+
+
+def test_project_style_module_not_shown_for_unlinked_session(tmp_path):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    card = runtime.store.save_card(
+        parse_character_card(
+            {
+                "name": "Alice",
+                "description": "Scholar",
+                "first_mes": "Hello.",
+            }
+        )
+    )
+    session = runtime.store.start_session(session_key_from_event(Event()), card_id=card)
+
+    project = runtime.store.create_project("Skyline")
+    runtime.store.set_project_style_guide(project["id"], "Use close third-person prose.")
+    runtime.store.create_canon(project["id"], "World", "Rain taps windowpanes.")
+
+    prompt = runtime.handle_command_sync(RPCommand("debug", ["prompt"], "/rp debug prompt"), Event())
+    assert "Hermes Tavern prompt debug" in prompt
+    assert "system/project_style:Skyline" not in prompt
+    assert "Project style guide:" not in prompt
+    assert "Use close third-person prose." not in prompt
+
+
+def test_project_style_module_skips_missing_or_blank_style_text(tmp_path):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    card = runtime.store.save_card(
+        parse_character_card(
+            {
+                "name": "Alice",
+                "description": "Scholar",
+                "first_mes": "Hello.",
+            }
+        )
+    )
+    session = runtime.store.start_session("scope-blank", card_id=card)
+
+    project = runtime.store.create_project("Skyline")
+    chapter = runtime.store.create_chapter(project["id"], "Opening")
+    scene = runtime.store.create_scene(chapter["id"], "Dawn")
+    runtime.store.link_scene_session(scene["id"], session["id"])
+
+    assert not any(
+        m.name == "project_style:Skyline" for m in runtime._session_prompt_modules(session, "", [])
+    )
+
+    runtime.store.set_project_style_guide(project["id"], "   ")
+    assert not any(
+        m.name == "project_style:Skyline" for m in runtime._session_prompt_modules(session, "", [])
+    )
+
+
+def test_project_style_module_skips_only_style_on_db_error(tmp_path, monkeypatch):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    card = runtime.store.save_card(
+        parse_character_card(
+            {
+                "name": "Alice",
+                "description": "Scholar",
+                "first_mes": "Hello.",
+            }
+        )
+    )
+    session = runtime.store.start_session(session_key_from_event(Event()), card_id=card)
+
+    project = runtime.store.create_project("Skyline")
+    chapter = runtime.store.create_chapter(project["id"], "Opening")
+    scene = runtime.store.create_scene(chapter["id"], "Dawn")
+    runtime.store.link_scene_session(scene["id"], session["id"])
+    runtime.store.set_project_style_guide(project["id"], "Use close third-person prose.")
+    runtime.store.create_canon(project["id"], "World", "Rain taps windowpanes.")
+
+    def _raise_db_error(_session_id: str) -> None:
+        raise sqlite3.OperationalError("simulated db fault")
+
+    monkeypatch.setattr(runtime.store, "get_project_style_guide_for_session", _raise_db_error)
+
+    prompt = runtime.handle_command_sync(RPCommand("debug", ["prompt"], "/rp debug prompt"), Event())
+    assert "Hermes Tavern prompt debug" in prompt
+    assert "system/project_style:" not in prompt
+    assert "system/canon:World" in prompt

@@ -43,6 +43,35 @@ def session_preset_modules(runtime, session: dict[str, Any]) -> list[PromptModul
     return modules
 
 
+def session_project_style_modules(runtime, session: dict[str, Any]) -> list[PromptModule]:
+    session_id = session.get("id") or ""
+    if not session_id:
+        return []
+
+    try:
+        style = runtime.store.get_project_style_guide_for_session(session_id)
+    except sqlite3.Error:
+        return []
+    if not style:
+        return []
+
+    style_text = style.get("style_text") or ""
+    if not style_text.strip():
+        return []
+
+    project_title = (style.get("project_title") or "Project").strip() or "Project"
+    return [
+        PromptModule(
+            name=f"project_style:{project_title}",
+            role="system",
+            content=f"Project style guide:\n{style_text}",
+            position="before_char",
+            insertion_order=-30,
+            enabled=True,
+        )
+    ]
+
+
 def session_prompt_modules(
     runtime,
     session: dict[str, Any],
@@ -50,6 +79,7 @@ def session_prompt_modules(
     history: list[dict[str, Any]],
 ) -> list[PromptModule]:
     modules = session_preset_modules(runtime, session)
+    modules.extend(session_project_style_modules(runtime, session))
     modules.extend(session_canon_modules(runtime, session))
     modules.extend(session_persona_modules(runtime, session))
     modules.extend(session_scene_narration_modules(runtime, session))

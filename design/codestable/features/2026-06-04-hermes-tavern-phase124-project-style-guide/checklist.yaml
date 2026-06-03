@@ -69,7 +69,20 @@ steps:
 
   - id: S3
     name: "Prompt module: linked project style guide"
-    status: pending
+    status: completed
+    completed_at: "2026-06-04"
+    result: >
+      IMPLEMENTED - runtime_prompt_modules.py now adds
+      session_project_style_modules() and wires it before canon modules so linked
+      scene sessions can emit system/project_style:<project title> with
+      Project style guide content, before_char placement, and insertion_order -30.
+      The module is omitted for missing session ids, unlinked sessions, missing or
+      whitespace-only style rows, and sqlite3.Error lookup failures. Focused
+      runtime tests cover module contract fields, linked inclusion, unlinked
+      exclusion, missing/blank omission, debug prompt ordering before canon and
+      preset modules, and sqlite-error skip behavior while canon remains visible.
+      Export/docs, architecture, root design, and final acceptance remain deferred
+      to S4/S5.
     description: >
       Add a linked-session project style PromptModule in runtime_prompt_modules.py.
       The module should be system/project_style:<project title>, include only
@@ -80,8 +93,13 @@ steps:
       before canon/preset modules, and sqlite-error skip behavior.
     verification:
       - command: "PYTHONDONTWRITEBYTECODE=1 python -m py_compile src/hermes_tavern/runtime_prompt_modules.py tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_runtime.py"
+        result: "passed (controller rerun after S3 implementation)"
       - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel_runtime.py -k style -q -o 'addopts='"
+        result: "passed; 10 passed, 52 deselected in 0.42s"
       - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_runtime.py -q -o 'addopts='"
+        result: "passed; 106 passed in 5.34s"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts='"
+        result: "passed; 813 passed in 33.21s"
 
   - id: S4
     name: "Export and docs: style guide visibility"
@@ -131,8 +149,9 @@ checks:
 
   - id: C3
     name: "Prompt contract: linked project style"
-    status: pending
+    status: passed
     command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel_runtime.py -k style -q -o 'addopts='"
+    result: "passed; 10 passed, 52 deselected in 0.42s (controller rerun)"
 
   - id: C4
     name: "Export and docs contract"
@@ -194,3 +213,27 @@ s2_controller_verification:
     result: "passed"
   - command: "controller S2 allowlist and reverse-scope diff guard"
     result: "passed; only runtime_novel.py, commands.py, two focused tests, and Phase 124 status docs changed; no protected core files changed"
+
+s3_controller_verification:
+  - command: "codex --profile architect exec --json --color never --sandbox read-only --cd /Users/steven/Projects/hermes-tavern <S3 artifact prompt>"
+    result: "passed; artifact at /tmp/hermes-tavern-architect-phase124-s3.jsonl approved S3 implementation scope with no blockers"
+  - command: "codex --profile executor exec --json --color never --sandbox workspace-write --cd /Users/steven/Projects/hermes-tavern <S3 implementation prompt>"
+    result: "completed; executor repaired focused test fixture issues before final controller verification; JSONL at /tmp/hermes-tavern-executor-phase124-s3.jsonl"
+  - command: "PYTHONDONTWRITEBYTECODE=1 python -m py_compile src/hermes_tavern/runtime_prompt_modules.py tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_runtime.py"
+    result: "passed"
+  - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel_runtime.py -k style -q -o 'addopts='"
+    result: "passed; 10 passed, 52 deselected in 0.42s"
+  - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_runtime.py -q -o 'addopts='"
+    result: "passed; 106 passed in 5.34s"
+  - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts='"
+    result: "passed; 813 passed in 33.21s"
+  - command: "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-04-hermes-tavern-phase124-project-style-guide/design.md --require doc_type --require status"
+    result: "passed; 1 passed, 0 failed"
+  - command: "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --yaml-only --file design/codestable/features/2026-06-04-hermes-tavern-phase124-project-style-guide/checklist.yaml"
+    result: "passed; 1 passed, 0 failed"
+  - command: "git diff --check"
+    result: "passed"
+  - command: "git diff --name-only -- run_agent.py cli.py gateway/run.py"
+    result: "passed; no protected core files changed"
+  - command: "controller S3 allowlist and reverse-scope diff guard"
+    result: "passed; only runtime_prompt_modules.py, novel runtime tests, and Phase 124 status docs changed; no forbidden scope terms added"
