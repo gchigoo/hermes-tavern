@@ -103,7 +103,16 @@ steps:
 
   - id: S4
     name: "Export and docs: style guide visibility"
-    status: pending
+    status: completed
+    completed_at: "2026-06-04"
+    result: >
+      IMPLEMENTED - export_project_markdown now emits a non-empty project style
+      guide as a Markdown ## Style Guide section after Summary and before
+      Chapters while omitting absent or whitespace-only style rows. README Core
+      commands now expose the project style inspect/set/clear command forms, and
+      focused DB/readme tests cover placement, omission, and public command
+      visibility. Final acceptance, architecture/root-design writeback, and S5
+      full status sync remain deferred to the final verification slice.
     description: >
       Include non-empty project style guides in Markdown export after Summary and
       before Chapters. Update README/help docs tests for the new project style
@@ -112,9 +121,12 @@ steps:
       DB/runtime/docs tests prove Markdown placement, empty-style omission, and
       README command coverage.
     verification:
-      - command: "PYTHONDONTWRITEBYTECODE=1 python -m py_compile src/hermes_tavern/db_novel.py tests/test_hermes_tavern_novel_db.py tests/test_hermes_tavern_readme_docs.py"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m py_compile src/hermes_tavern/db_novel.py tests/test_hermes_tavern_novel_db.py tests/test_hermes_tavern_readme_docs.py tests/test_hermes_tavern_commands.py"
+        result: "passed (controller rerun after S4 implementation)"
       - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel_db.py -k export_project_markdown -q -o 'addopts='"
-      - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_readme_docs.py -q -o 'addopts='"
+        result: "passed; 5 passed, 19 deselected in 0.22s"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_readme_docs.py tests/test_hermes_tavern_commands.py -q -o 'addopts='"
+        result: "passed; 51 passed in 0.06s"
 
   - id: S5
     name: "Final verification and writeback"
@@ -155,13 +167,15 @@ checks:
 
   - id: C4
     name: "Export and docs contract"
-    status: pending
-    command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel_db.py tests/test_hermes_tavern_readme_docs.py -q -o 'addopts='"
+    status: passed
+    command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel_db.py -k export_project_markdown -q -o 'addopts=' && PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_readme_docs.py tests/test_hermes_tavern_commands.py -q -o 'addopts='"
+    result: "passed; export_project_markdown focused tests passed (5 passed, 19 deselected) and README/docs command surface tests passed with command tests (51 passed)"
 
   - id: C5
     name: "Reverse scope"
-    status: pending
+    status: passed
     command: "git diff --name-only -- run_agent.py cli.py gateway/run.py"
+    result: "passed; no protected core file diffs and forbidden diff-term scan returned no hits"
 
 verification_commands:
   - "PYTHONDONTWRITEBYTECODE=1 python -m py_compile src/hermes_tavern/db_novel.py src/hermes_tavern/runtime_novel.py src/hermes_tavern/runtime_prompt_modules.py src/hermes_tavern/commands.py tests/test_hermes_tavern_novel_db.py tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_runtime.py tests/test_hermes_tavern_readme_docs.py tests/test_hermes_tavern_commands.py"
@@ -237,3 +251,27 @@ s3_controller_verification:
     result: "passed; no protected core files changed"
   - command: "controller S3 allowlist and reverse-scope diff guard"
     result: "passed; only runtime_prompt_modules.py, novel runtime tests, and Phase 124 status docs changed; no forbidden scope terms added"
+
+s4_controller_verification:
+  - command: "codex --profile architect exec --json --color never --sandbox read-only --cd /Users/steven/Projects/hermes-tavern <S4 artifact prompt>"
+    result: "passed; artifact at /tmp/hermes-tavern-architect-phase124-s4.jsonl approved export/docs-only implementation scope with no blockers"
+  - command: "codex --profile executor exec --json --color never --sandbox workspace-write --cd /Users/steven/Projects/hermes-tavern <S4 implementation prompt>"
+    result: "completed; JSONL at /tmp/hermes-tavern-executor-phase124-s4.jsonl"
+  - command: "PYTHONDONTWRITEBYTECODE=1 python -m py_compile src/hermes_tavern/db_novel.py tests/test_hermes_tavern_novel_db.py tests/test_hermes_tavern_readme_docs.py tests/test_hermes_tavern_commands.py"
+    result: "passed"
+  - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel_db.py -k export_project_markdown -q -o 'addopts='"
+    result: "passed; 5 passed, 19 deselected in 0.22s"
+  - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_readme_docs.py tests/test_hermes_tavern_commands.py -q -o 'addopts='"
+    result: "passed; 51 passed in 0.06s"
+  - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts='"
+    result: "passed; 816 passed in 32.75s"
+  - command: "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-04-hermes-tavern-phase124-project-style-guide/design.md --require doc_type --require status"
+    result: "passed; 1 passed, 0 failed"
+  - command: "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --yaml-only --file design/codestable/features/2026-06-04-hermes-tavern-phase124-project-style-guide/checklist.yaml"
+    result: "passed; 1 passed, 0 failed"
+  - command: "git diff --check"
+    result: "passed"
+  - command: "git diff --name-only -- run_agent.py cli.py gateway/run.py"
+    result: "passed; no protected core files changed"
+  - command: "controller S4 allowlist and forbidden-term diff guard"
+    result: "passed; only db_novel.py, README.md, focused tests, and Phase 124 status docs changed; forbidden diff-term scan returned no hits"

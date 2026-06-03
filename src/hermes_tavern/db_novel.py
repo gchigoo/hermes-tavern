@@ -767,6 +767,7 @@ class NovelDBMixin:
         chapters = self.list_chapters(project_id)
         canons = self.list_canon(project_id)
         timeline = self.list_timeline(project_id)
+        style_guide = self.get_project_style_guide(project_id)
 
         lines: list[str] = [
             f"# {novel_project['title']}",
@@ -774,8 +775,18 @@ class NovelDBMixin:
             "## Summary",
             novel_project["summary"] or "",
             "",
-            "## Chapters",
         ]
+        style_text = style_guide["style_text"] if style_guide is not None else ""
+        if style_text.strip():
+            lines.extend(
+                [
+                    "## Style Guide",
+                    style_text,
+                    "",
+                ]
+            )
+
+        lines.append("## Chapters")
 
         if chapters:
             for chapter in chapters:

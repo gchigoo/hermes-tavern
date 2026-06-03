@@ -118,7 +118,10 @@ Expected behavior:
 /rp model status/profiles/seed/use/mode/live/test
 /rp image scene/character/face/background/last | /rp image prompt/retry/inspect/history
 /rp image provider/settings/style/safety ...
-/rp project create/list/info/set/export | /rp chapter create/list
+/rp project create/list/info/set/export
+/rp project style [project-id] | /rp project style inspect [project-id]
+/rp project style set [project-id] <text> | /rp project style clear [project-id]
+/rp chapter create/list
 /rp scene create/list/start
 /rp scene goal <scene-id> [text] | /rp scene goal clear <scene-id>
 /rp scene narration <scene-id>

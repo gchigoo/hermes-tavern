@@ -577,3 +577,42 @@ def test_export_project_markdown_omits_empty_narration_controls_block(tmp_path):
     store.set_scene_narration_controls(scene["id"], pov_label="", tense="")
     markdown_after_clear = store.export_project_markdown(novel_project["id"])
     assert "Scene narration controls:" not in markdown_after_clear
+
+
+def test_export_project_markdown_includes_nonempty_style_guide_and_orders_after_summary(tmp_path):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+
+    novel_project = store.create_project("Style Project", "A clean and bright arc")
+    store.set_project_style_guide(
+        novel_project["id"],
+        "Tone: lyrical\nWorldbuilding: dense, sensory",
+    )
+    chapter = store.create_chapter(novel_project["id"], "Opening")
+    scene = store.create_scene(chapter["id"], "Arrival")
+    markdown = store.export_project_markdown(novel_project["id"])
+
+    assert "## Summary" in markdown
+    assert "## Style Guide" in markdown
+    assert "## Chapters" in markdown
+    assert "Tone: lyrical\nWorldbuilding: dense, sensory" in markdown
+    assert (
+        markdown.index("## Summary")
+        < markdown.index("## Style Guide")
+        < markdown.index("## Chapters")
+    )
+    style_section = markdown[
+        markdown.index("## Style Guide") : markdown.index("## Chapters")
+    ]
+    assert "Tone: lyrical\nWorldbuilding: dense, sensory" in style_section
+
+
+def test_export_project_markdown_omits_style_guide_when_absent_or_whitespace_only(tmp_path):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+
+    with_style_row = store.create_project("Whitespace Style Project")
+    markdown_without_style = store.export_project_markdown(with_style_row["id"])
+    assert "## Style Guide" not in markdown_without_style
+
+    store.set_project_style_guide(with_style_row["id"], "   \n  ")
+    markdown_after_whitespace = store.export_project_markdown(with_style_row["id"])
+    assert "## Style Guide" not in markdown_after_whitespace
