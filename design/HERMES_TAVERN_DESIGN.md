@@ -463,7 +463,7 @@ project:
   status: draft|in_progress|complete
 ```
 
-Future project metadata from the original vision remains out of Phase 121:
+Future project metadata from the original vision remains out of the current Phase 121/122 scope:
 `type`, `premise`, `outline`, `style_guide`, `canon_policy`, `content_mode`,
 `default_card_id`, `default_preset_id`, and `default_lorebook_ids`.
 
@@ -474,6 +474,12 @@ chapters
 scenes
 canon facts
 timeline events
+```
+
+Scene objects include:
+
+```text
+goal text
 ```
 
 Future sub-objects from the original vision remain deferred: character states,
@@ -492,6 +498,8 @@ Commands:
 /rp scene create <chapter-id> <title>
 /rp scene list <chapter-id>
 /rp scene start <scene-id>
+/rp scene goal <scene-id> [text]
+/rp scene goal clear <scene-id>
 /rp canon add <project-id> <title> <content>
 /rp canon list [project-id] [group]
 /rp canon group [project-id] <group>
@@ -855,12 +863,14 @@ relationship state, style guide, outline, and revision notes.
 /rp project create/list/info/set/export
 /rp chapter create/list
 /rp scene create/list/start
+/rp scene goal <scene-id> [text]
+/rp scene goal clear <scene-id>
 /rp canon add/list/group
 /rp timeline add/list
 ```
 
 Future writing commands from the original vision remain deferred: outline editing,
-scene goals, write continue/rewrite/expand/compress, POV/tense controls, and
+write continue/rewrite/expand/compress, POV/tense controls, and
 project archive export.
 
 ### 13.3 Canon management
@@ -973,6 +983,7 @@ model_profiles
 novel_projects
 novel_chapters
 novel_scenes
+novel_scene_goals
 sessions
 messages
 swipes
@@ -1036,8 +1047,8 @@ ST preset JSON
 ST lorebook/world info JSON
 ```
 
-Hermes Tavern native project archives are deferred; Phase 121 implements
-Markdown export only, not project/novel import.
+Hermes Tavern native project archives are deferred; the current Phase 121/122
+implementation provides Markdown export only, not project/novel import.
 
 Later:
 
@@ -1060,8 +1071,10 @@ chat export JSONL
 novel export Markdown
 ```
 
-Project archive ZIP remains a future exporter; current Phase 121 only writes
+Project archive ZIP remains a future exporter; current Phase 121/122 only writes
 local Markdown via `/rp project export [id]`.
+Scene goals are exported in Markdown directly under the relevant scene heading
+as `Goal: <text>`, when set.
 
 Commands:
 

@@ -70,9 +70,9 @@ renderers.py          ChatRenderer, StoryRenderer — convert compiled prompt to
 preset_safety.py      PresetRiskLevel, classify_preset_text — risk classification for imported modules
 lorebook.py           match_lorebook_entries — keyword/regex match, token-budget enforcement
 memory.py             Memory fact / summary management helpers
-db_novel.py           Novel domain mixins for project/chapter/scene/canon/timeline CRUD and export
-runtime_novel.py      Novel command family handlers for /rp project/chapter/scene/canon/timeline
-runtime_prompt_modules.py  Canon prompt module resolvers for linked novel sessions
+db_novel.py           Novel domain mixins for project/chapter/scene/scene-goal/canon/timeline CRUD and export
+runtime_novel.py      Novel command family handlers for /rp project/chapter/scene/scene-goal/canon/timeline
+runtime_prompt_modules.py  Scene-goal and canon prompt module resolvers for linked novel sessions
 model_router.py       resolve model descriptor from session row and store
 provider_bridge.py    resolve_runtime_provider + validate_provider_base_url — runtime credential resolution (no DB persistence); URL safety validator rejects non-https and private/loopback hosts
 adapters.py           FakeModelAdapter, HermesChatCompletionAdapter, HermesProviderAdapter
@@ -113,6 +113,7 @@ importers/
 - Phase 33: Provider and Media Safety Hardening (sanitized image provider failures, recursive provider debug redaction, and quoted MEDIA export regressions)
 - Phases 34–38: SQLite performance hardening plus runtime command-family refactors for presets/content, lore, notes, and memory; command surface and prompt semantics unchanged
 - Phase 121: Novel project layer (projects/chapters/scenes/canon/timeline/export)
+- Phase 122: Scene goals (`/rp scene goal` set/inspect/clear), linked-session scene-goal prompt injection (before author note), and Markdown goal export visibility
 
 ### Plugin flow
 
@@ -124,13 +125,13 @@ Gateway event
       └── otherwise → {"action": "allow"} → normal AIAgent dispatch
 ```
 
-### Prompt pipeline (Phases 4–22 plus Phase 121 canon injection)
+### Prompt pipeline (Phases 4–22 plus Phase 121/122 novel injections)
 
 ```
 handle_active_message_sync
       → _run_generation_pipeline(session, user_text, history, event)
       → _build_macro_context      (char from card; user from event; session/content mode from session)
-      → _session_prompt_modules  (preset + canon + persona + note + memory + lore modules)
+      → _session_prompt_modules  (preset + canon + persona + scene_goal + note + memory + lore modules)
       → PromptCompiler.compile   (card + modules + history + user message → macro-expanded CompiledPrompt)
       → ModelRouter.resolve      (session row → ModelDescriptor)
       → ChatRenderer.render      (CompiledPrompt → messages list)
@@ -142,7 +143,7 @@ Macro expansion is one-pass and allowlist-based. Supported Phase 20 macros are
 `{{content_mode}}`, and `{{session_title}}`; names are case/whitespace tolerant,
 unknown macros are preserved, and replacement text is not recursively expanded.
 
-### /rp command surface (Phase 121 current)
+### /rp command surface (current through Phase 122)
 
 ```
 /rp help | status | assets
@@ -166,11 +167,13 @@ unknown macros are preserved, and replacement text is not recursively expanded.
 /rp project create/list/info/set/export
 /rp chapter create/list
 /rp scene create/list/start
+/rp scene goal <scene-id> [text]
+/rp scene goal clear <scene-id>
 /rp canon add/list/group
 /rp timeline add/list
 ```
 
-### DB schema (current, through Phase 121)
+### DB schema (current through Phase 122)
 
 ```sql
 cards(id, name, data_json, source_path, created_at)
@@ -192,6 +195,7 @@ session_summaries(id, session_key, content, created_at, updated_at)
 novel_projects(id, title, summary, status, created_at, updated_at)
 novel_chapters(id, project_id, title, chapter_number, summary, status, created_at, updated_at)
 novel_scenes(id, chapter_id, session_id TEXT, title, summary, scene_number, status, created_at, updated_at)
+novel_scene_goals(id, scene_id, goal_text, created_at, updated_at)
 novel_canon(id, project_id, title, content, canon_group, importance, created_at, updated_at)
 novel_timeline(id, project_id, event_date, title, description, chapter_id, sort_key, created_at)
 ```
