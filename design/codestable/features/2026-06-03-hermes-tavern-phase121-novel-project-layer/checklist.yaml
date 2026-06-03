@@ -1,7 +1,7 @@
 doc_type: feature-checklist
 feature: hermes-tavern-phase121-novel-project-layer
 date: "2026-06-03"
-status: planned
+status: in_progress
 
 summary: >
   Novel project layer — projects, chapters, scenes, canon facts, timeline,
@@ -27,7 +27,14 @@ steps:
       CRUD methods: create/list/get_project, create/list/get_chapter,
       create/list/get/link_scene, create/list/get_canon, get_canon_for_prompt,
       create/list_timeline, export_project_markdown.
-    status: pending
+    status: completed
+    completed_at: "2026-06-03"
+    result: >
+      IMPLEMENTED - db_novel.NovelDBMixin now owns the five-table novel schema,
+      project/chapter/scene/canon/timeline CRUD, scene-session linking, canon
+      prompt query ordering, and pure Markdown export. db.py invokes the novel
+      schema migration from TavernStore.migrate(). Focused S1 DB tests added in
+      tests/test_hermes_tavern_novel_db.py.
     exit_signal: >
       Import TavernStore → create/query project, chapter, scene, canon,
       timeline all return correct dicts; export_project_markdown returns
@@ -97,16 +104,16 @@ steps:
 
 verification:
   targeted_pytest:
-    - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel.py -q -o 'addopts='"
-      result: "not_run; novel test file is planned for S6"
+    - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel_db.py tests/test_hermes_tavern_db.py -q -o 'addopts='"
+      result: "passed; 18 passed in 0.53s (controller rerun after S1)"
     - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_db.py tests/test_hermes_tavern_runtime.py -q -o 'addopts='"
-      result: "passed; 55 passed in 2.96s"
+      result: "passed; 55 passed in 2.96s (S0 baseline)"
   full_pytest:
     - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts='"
-      result: "passed; 719 passed in 25.24s"
+      result: "passed; 725 passed in 28.49s (controller rerun after S1)"
   checklist_yaml_validation:
     - command: "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --yaml-only --file design/codestable/features/2026-06-03-hermes-tavern-phase121-novel-project-layer/checklist.yaml"
-      result: ""
+      result: "passed; 1 passed, 0 failed (controller rerun after S1 checklist update)"
   diff_check:
     - command: "git diff --check"
-      result: "passed"
+      result: "passed (controller rerun after S1)"

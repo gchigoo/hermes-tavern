@@ -323,6 +323,7 @@ class TavernStore(NovelDBMixin):
                     ON image_assets(job_id);
                 """
             )
+            self._migrate_novel_schema(conn)
         self._migrated = True
 
         # Seed ST-inspired image style presets if the table is empty.
