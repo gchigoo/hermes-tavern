@@ -139,6 +139,7 @@ def test_project_export_returns_media_marker_and_path_under_profile_safe_home(tm
     chapter = runtime.store.create_chapter(1, "Arrival")
     scene = runtime.store.create_scene(chapter["id"], "Opening")
     session = runtime.store.start_session("scope-epic")
+    runtime.store.set_scene_goal(scene["id"], "Secure the harbor")
     runtime.store.link_scene_session(scene["id"], session["id"])
     runtime.store.append_message(session["id"], "user", "Hello.")
     runtime.store.append_message(session["id"], "assistant", "Welcome.")
@@ -171,6 +172,7 @@ def test_project_export_returns_media_marker_and_path_under_profile_safe_home(tm
     assert "## Chapters" in exported
     assert "### Chapter 1: Arrival" in exported
     assert "#### Scene 1: Opening" in exported
+    assert "Goal: Secure the harbor" in exported
     assert "user" in exported and "assistant" in exported
     assert "## Canon" in exported
     assert "## Timeline" in exported

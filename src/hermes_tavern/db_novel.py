@@ -565,6 +565,9 @@ class NovelDBMixin:
                     for scene in scenes:
                         lines.append("")
                         lines.append(f"#### Scene {scene['scene_number']}: {scene['title']}")
+                        scene_goal = self.get_scene_goal(scene["id"])
+                        if scene_goal and scene_goal["goal_text"].strip():
+                            lines.append(f"Goal: {scene_goal['goal_text']}")
                         if scene["session_id"]:
                             with self.connect() as conn:
                                 messages = conn.execute(

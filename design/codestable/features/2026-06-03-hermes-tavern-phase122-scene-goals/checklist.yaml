@@ -80,12 +80,24 @@ steps:
 
   - id: S4
     name: "Export and docs: scene goal visibility"
-    status: pending
+    status: completed
+    completed_at: "2026-06-03"
+    result: >
+      IMPLEMENTED - project Markdown export now prints non-empty scene goals as
+      "Goal: <text>" directly under the relevant scene heading and before any
+      exported scene messages or no-session/no-message placeholder. README core
+      commands expose both /rp scene goal forms, and focused DB/runtime/docs tests
+      lock the export and documentation visibility contract.
     description: >
       Include scene goals in project Markdown export under the relevant scene.
       Update README command surface. Do not add project/novel import or archive formats.
     verification:
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m py_compile src/hermes_tavern/db_novel.py tests/test_hermes_tavern_novel_db.py tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_readme_docs.py"
+        result: "passed (controller rerun after S4 implementation)"
       - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel_db.py tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_readme_docs.py -q -o 'addopts='"
+        result: "passed; 63 passed in 1.36s (controller rerun after S4 implementation)"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts='"
+        result: "passed; 768 passed in 31.78s"
 
   - id: S5
     name: "Final verification: full suite and scope guards"
@@ -181,3 +193,21 @@ s3_controller_verification:
     result: "passed; no protected core files changed"
   - command: "search_files prohibited-scope scan on changed runtime/test files"
     result: "passed; no prohibited cloud/collab/import/provider-credential/minor/underage markers found"
+
+s4_controller_verification:
+  - command: "PYTHONDONTWRITEBYTECODE=1 python -m py_compile src/hermes_tavern/db_novel.py tests/test_hermes_tavern_novel_db.py tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_readme_docs.py"
+    result: "passed (controller rerun after S4 implementation)"
+  - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel_db.py tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_readme_docs.py -q -o 'addopts='"
+    result: "passed; 63 passed in 1.36s"
+  - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts='"
+    result: "passed; 768 passed in 31.78s"
+  - command: "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-03-hermes-tavern-phase122-scene-goals/design.md --require doc_type --require status"
+    result: "passed; 1 passed, 0 failed"
+  - command: "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --yaml-only --file design/codestable/features/2026-06-03-hermes-tavern-phase122-scene-goals/checklist.yaml"
+    result: "passed; 1 passed, 0 failed"
+  - command: "git diff --check"
+    result: "passed"
+  - command: "git diff --name-only -- run_agent.py cli.py gateway/run.py"
+    result: "passed; no protected core files changed"
+  - command: "controller added-line prohibited-scope scan"
+    result: "passed; no prohibited markers in added diff lines"

@@ -248,6 +248,7 @@ def test_export_project_markdown_structure(tmp_path):
     novel_project = store.create_project("The Long Road", "adventure in winter")
     chapter = store.create_chapter(novel_project["id"], "Beginning")
     scene = store.create_scene(chapter["id"], "Dawn")
+    store.set_scene_goal(scene["id"], "Locate the hidden shrine")
     session = store.start_session("scope-epic")
     store.link_scene_session(scene["id"], session["id"])
     store.append_message(session["id"], "user", "Hello.")
@@ -269,8 +270,14 @@ def test_export_project_markdown_structure(tmp_path):
     assert "## Chapters" in markdown
     assert "### Chapter 1: Beginning" in markdown
     assert "#### Scene 1: Dawn" in markdown
+    assert "Goal: Locate the hidden shrine" in markdown
     assert "user" in markdown
     assert "assistant" in markdown
+    assert (
+        markdown.index("#### Scene 1: Dawn")
+        < markdown.index("Goal: Locate the hidden shrine")
+        < markdown.index("- **user**: Hello.")
+    )
     assert "## Canon" in markdown
     assert "Snow is common in the north" in markdown
     assert "## Timeline" in markdown
