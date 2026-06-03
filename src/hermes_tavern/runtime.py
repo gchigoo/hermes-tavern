@@ -23,6 +23,7 @@ from hermes_tavern import (
     runtime_content,
     runtime_debug,
     runtime_lore,
+    runtime_novel,
     runtime_images,
     runtime_lifecycle,
     runtime_memory,
@@ -105,6 +106,7 @@ class TavernRuntime:
         self.image_provider = image_provider or MockImageProvider()
         self.tts_renderer = tts_renderer
         self._voice_enabled_session_keys: set[str] = set()
+        self._novel_active_projects: dict[str, int] = {}
         self.store.migrate()
 
     async def handle_command(
@@ -509,6 +511,21 @@ class TavernRuntime:
 
     def _export(self, command: RPCommand, event: Any) -> str:
         return runtime_lifecycle.export(self, command, event)
+
+    def _project_command(self, command: RPCommand, event: Any) -> str:
+        return runtime_novel.project_command(self, command, event)
+
+    def _chapter_command(self, command: RPCommand, event: Any) -> str:
+        return runtime_novel.chapter_command(self, command, event)
+
+    def _scene_command(self, command: RPCommand, event: Any) -> str:
+        return runtime_novel.scene_command(self, command, event)
+
+    def _canon_command(self, command: RPCommand, event: Any) -> str:
+        return runtime_novel.canon_command(self, command, event)
+
+    def _timeline_command(self, command: RPCommand, event: Any) -> str:
+        return runtime_novel.timeline_command(self, command, event)
 
     def _status(self, event: Any) -> str:
         return runtime_lifecycle.status(self, event)

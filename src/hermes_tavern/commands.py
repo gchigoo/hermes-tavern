@@ -265,6 +265,47 @@ TAVERN_COMMAND_TABLE: dict[str, TavernCommandEntry] = {
             "/rp image safety [inspect|mode <safe|mature|explicit>|clear]",
         ],
     ),
+    # ── novel layer ──
+    "project": TavernCommandEntry(
+        handler="_project_command",
+        help_lines=[
+            "/rp project create <title>",
+            "/rp project list",
+            "/rp project info <id>",
+            "/rp project set <id>",
+            "/rp project export [id]",
+        ],
+    ),
+    "chapter": TavernCommandEntry(
+        handler="_chapter_command",
+        help_lines=[
+            "/rp chapter create [project-id] <title>",
+            "/rp chapter list [project-id]",
+        ],
+    ),
+    "scene": TavernCommandEntry(
+        handler="_scene_command",
+        help_lines=[
+            "/rp scene create <chapter-id> <title>",
+            "/rp scene list <chapter-id>",
+            "/rp scene start <scene-id>",
+        ],
+    ),
+    "canon": TavernCommandEntry(
+        handler="_canon_command",
+        help_lines=[
+            "/rp canon add <project-id> <title> <content...> [--group <group>]",
+            "/rp canon list [project-id] [group]",
+            "/rp canon group [project-id] <group>",
+        ],
+    ),
+    "timeline": TavernCommandEntry(
+        handler="_timeline_command",
+        help_lines=[
+            "/rp timeline add <project-id> <date> <title> [description...]",
+            "/rp timeline list [project-id]",
+        ],
+    ),
 }
 
 

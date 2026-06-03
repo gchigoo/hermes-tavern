@@ -118,6 +118,8 @@ Expected behavior:
 /rp model status/profiles/seed/use/mode/live/test
 /rp image scene/character/face/background/last | /rp image prompt/retry/inspect/history
 /rp image provider/settings/style/safety ...
+/rp project create/list/info/set/export | /rp chapter create/list
+/rp scene create/list/start | /rp canon add/list/group | /rp timeline add/list
 /rp debug prompt [limit] [page] | /rp debug swipes
 ```
 
