@@ -31,6 +31,8 @@ def test_novel_command_table_has_five_families():
     for name in ("project", "chapter", "scene", "canon", "timeline"):
         entry = TAVERN_COMMAND_TABLE[name]
         assert entry.handler == f"_{name}_command"
+    assert "/rp scene goal <scene-id> [text]" in TAVERN_COMMAND_TABLE["scene"].help_lines
+    assert "/rp scene goal clear <scene-id>" in TAVERN_COMMAND_TABLE["scene"].help_lines
 
 
 def test_project_routes_create_list_info_set(tmp_path):
@@ -285,6 +287,106 @@ def test_scene_list_shows_no_session_linked_flag_for_unlinked_scene(tmp_path):
         Event(),
     )
     assert "no session linked" in listed.lower()
+
+
+def test_scene_goal_command_is_listed_in_help_output(tmp_path):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    response = runtime.handle_command_sync(RPCommand("help", [], "/rp"), Event())
+
+    assert "/rp scene goal <scene-id> [text]" in response
+    assert "/rp scene goal clear <scene-id>" in response
+
+
+def test_scene_goal_set_inspect_update_and_clear(tmp_path):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    project = runtime.store.create_project("Atlas")
+    chapter = runtime.store.create_chapter(project["id"], "Arrival")
+    scene = runtime.store.create_scene(chapter["id"], "Opening")
+
+    set_goal = runtime.handle_command_sync(
+        RPCommand(
+            "scene",
+            ["goal", str(scene["id"]), "Reach", "the", "gate", "before", "dawn"],
+            "/rp scene goal 1 Reach the gate before dawn",
+        ),
+        Event(),
+    )
+    assert set_goal == "Scene goal set for scene [1]: Reach the gate before dawn"
+
+    assert (
+        runtime.store.get_scene_goal(scene["id"])["goal_text"]
+        == "Reach the gate before dawn"
+    )
+    assert (
+        runtime.handle_command_sync(
+            RPCommand("scene", ["goal", str(scene["id"])], "/rp scene goal 1"),
+            Event(),
+        )
+        == "Scene [1] goal: Reach the gate before dawn"
+    )
+
+    update_goal = runtime.handle_command_sync(
+        RPCommand(
+            "scene",
+            ["goal", str(scene["id"]), "Find", "the", "hidden", "key"],
+            "/rp scene goal 1 Find the hidden key",
+        ),
+        Event(),
+    )
+    assert "Scene goal set for scene [1]:" in update_goal
+    assert (
+        runtime.store.get_scene_goal(scene["id"])["goal_text"]
+        == "Find the hidden key"
+    )
+    assert (
+        runtime.handle_command_sync(
+            RPCommand("scene", ["goal", str(scene["id"])], "/rp scene goal 1"),
+            Event(),
+        )
+        == "Scene [1] goal: Find the hidden key"
+    )
+
+    clear_goal = runtime.handle_command_sync(
+        RPCommand("scene", ["goal", "clear", str(scene["id"])], "/rp scene goal clear 1"),
+        Event(),
+    )
+    assert clear_goal == "Scene goal cleared for scene [1]."
+    assert (
+        runtime.handle_command_sync(
+            RPCommand("scene", ["goal", str(scene["id"])], "/rp scene goal 1"),
+            Event(),
+        )
+        == "No scene goal set for scene [1]."
+    )
+
+
+@pytest.mark.parametrize(
+    "command, expected_prefix",
+    [
+        (RPCommand("scene", ["goal"], "/rp scene goal"), "Usage: /rp scene goal <scene-id> [text] | /rp scene goal clear <scene-id>"),
+        (RPCommand("scene", ["goal", "not-a-number"], "/rp scene goal not-a-number"), "Usage: /rp scene goal <scene-id> [text] | /rp scene goal clear <scene-id>"),
+        (RPCommand("scene", ["goal", "clear", "not-a-number"], "/rp scene goal clear not-a-number"), "Usage: /rp scene goal <scene-id> [text] | /rp scene goal clear <scene-id>"),
+        (RPCommand("scene", ["goal", "1", "   "], "/rp scene goal 1   "), "Usage: /rp scene goal <scene-id> [text] | /rp scene goal clear <scene-id>"),
+    ],
+)
+def test_scene_goal_bad_arguments_return_usage(tmp_path, command, expected_prefix):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    response = runtime.handle_command_sync(command, Event())
+    assert response.startswith(expected_prefix)
+
+
+@pytest.mark.parametrize(
+    "command, expected_message",
+    [
+        (RPCommand("scene", ["goal", "9999", "Reach"], "/rp scene goal 9999 Reach"), "No novel scene found: 9999"),
+        (RPCommand("scene", ["goal", "9999"], "/rp scene goal 9999"), "No novel scene found: 9999"),
+        (RPCommand("scene", ["goal", "clear", "9999"], "/rp scene goal clear 9999"), "No novel scene found: 9999"),
+    ],
+)
+def test_scene_goal_missing_scene_returns_not_found(tmp_path, command, expected_message):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    response = runtime.handle_command_sync(command, Event())
+    assert response == expected_message
 
 
 def test_scene_start_nonexistent_returns_error(tmp_path):

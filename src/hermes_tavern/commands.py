@@ -289,6 +289,8 @@ TAVERN_COMMAND_TABLE: dict[str, TavernCommandEntry] = {
             "/rp scene create <chapter-id> <title>",
             "/rp scene list <chapter-id>",
             "/rp scene start <scene-id>",
+            "/rp scene goal <scene-id> [text]",
+            "/rp scene goal clear <scene-id>",
         ],
     ),
     "canon": TavernCommandEntry(

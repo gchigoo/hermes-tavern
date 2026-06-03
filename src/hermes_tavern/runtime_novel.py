@@ -44,7 +44,12 @@ def scene_command(runtime: Any, command: RPCommand, event: Any) -> str:
         return scene_list(runtime, command)
     if subcommand == "start":
         return scene_start(runtime, command, event)
-    return "Usage: /rp scene create <chapter-id> <title> | /rp scene list <chapter-id> | /rp scene start <scene-id>"
+    if subcommand == "goal":
+        return scene_goal(runtime, command)
+    return (
+        "Usage: /rp scene create <chapter-id> <title> | /rp scene list <chapter-id> | "
+        "/rp scene start <scene-id> | /rp scene goal <scene-id> [text] | /rp scene goal clear <scene-id>"
+    )
 
 
 def canon_command(runtime: Any, command: RPCommand, event: Any) -> str:
@@ -319,6 +324,51 @@ def scene_start(runtime: Any, command: RPCommand, event: Any) -> str:
         return "Failed to start or locate active RP session."
     runtime.store.link_scene_session(scene_id, session["id"])
     return start
+
+
+def scene_goal(runtime: Any, command: RPCommand) -> str:
+    usage = (
+        "Usage: /rp scene goal <scene-id> [text] | /rp scene goal clear <scene-id>"
+    )
+    if len(command.args) < 2:
+        return usage
+
+    mode = command.args[1].lower()
+    if mode == "clear":
+        if len(command.args) != 3:
+            return usage
+        scene_id = _safe_int(command.args[2])
+        if scene_id is None:
+            return usage
+        try:
+            runtime.store.clear_scene_goal(scene_id)
+        except ValueError:
+            return f"No novel scene found: {scene_id}"
+        return f"Scene goal cleared for scene [{scene_id}]."
+
+    if len(command.args) < 2:
+        return usage
+    scene_id = _safe_int(command.args[1])
+    if scene_id is None:
+        return usage
+
+    if len(command.args) == 2:
+        try:
+            goal = runtime.store.get_scene_goal(scene_id)
+        except ValueError:
+            return f"No novel scene found: {scene_id}"
+        if goal is None:
+            return f"No scene goal set for scene [{scene_id}]."
+        return f"Scene [{scene_id}] goal: {_mobile_preview(goal['goal_text'], 220)}"
+
+    text = " ".join(command.args[2:])
+    if not text.strip():
+        return usage
+    try:
+        runtime.store.set_scene_goal(scene_id, text)
+    except ValueError:
+        return f"No novel scene found: {scene_id}"
+    return f"Scene goal set for scene [{scene_id}]: {_mobile_preview(text, 180)}"
 
 
 def canon_add(runtime: Any, command: RPCommand, event: Any) -> str:

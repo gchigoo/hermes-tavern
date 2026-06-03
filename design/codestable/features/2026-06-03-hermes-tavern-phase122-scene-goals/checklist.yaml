@@ -30,14 +30,28 @@ steps:
 
   - id: S2
     name: "Command surface: scene goal set inspect clear"
-    status: pending
+    status: completed
+    completed_at: "2026-06-03"
+    result: >
+      IMPLEMENTED - runtime_novel.scene_command now routes /rp scene goal to a
+      bounded scene_goal helper for set, inspect, and explicit clear. The helper
+      uses S1 store methods, maps missing scenes to a bounded "No novel scene
+      found" response, rejects missing/non-numeric ids and blank set text with
+      usage, and previews goal text with mobile_preview. commands.py help lists
+      both scene-goal forms, and focused runtime tests cover help, set/update,
+      inspect, clear, usage, blank text, non-numeric ids, and missing-scene
+      errors.
     description: >
       Add /rp scene goal <scene-id> [text] and /rp scene goal clear <scene-id>
       under runtime_novel.py. Update commands.py help and runtime tests for usage,
       missing scene, set, inspect, and clear.
     verification:
       - command: "PYTHONDONTWRITEBYTECODE=1 python -m py_compile src/hermes_tavern/runtime_novel.py src/hermes_tavern/commands.py tests/test_hermes_tavern_novel_runtime.py"
+        result: "passed (controller rerun after S2 implementation)"
       - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel_runtime.py -q -o 'addopts='"
+        result: "passed; 28 passed in 0.90s (controller rerun after S2 implementation)"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel_db.py tests/test_hermes_tavern_novel_runtime.py -q -o 'addopts='"
+        result: "passed; 38 passed in 1.31s"
 
   - id: S3
     name: "Prompt module: active linked scene goal"
@@ -113,3 +127,23 @@ s1_controller_verification:
     result: "passed"
   - command: "git diff --name-only -- run_agent.py cli.py gateway/run.py"
     result: "passed; no protected core files changed"
+
+s2_controller_verification:
+  - command: "PYTHONDONTWRITEBYTECODE=1 python -m py_compile src/hermes_tavern/runtime_novel.py src/hermes_tavern/commands.py tests/test_hermes_tavern_novel_runtime.py"
+    result: "passed (controller rerun after S2 implementation)"
+  - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel_runtime.py -q -o 'addopts='"
+    result: "passed; 28 passed in 0.90s"
+  - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel_db.py tests/test_hermes_tavern_novel_runtime.py -q -o 'addopts='"
+    result: "passed; 38 passed in 1.31s"
+  - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts='"
+    result: "passed; 764 passed in 30.24s"
+  - command: "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-03-hermes-tavern-phase122-scene-goals/design.md --require doc_type --require status"
+    result: "passed; 1 passed, 0 failed"
+  - command: "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --yaml-only --file design/codestable/features/2026-06-03-hermes-tavern-phase122-scene-goals/checklist.yaml"
+    result: "passed; 1 passed, 0 failed"
+  - command: "git diff --check"
+    result: "passed"
+  - command: "git diff --name-only -- run_agent.py cli.py gateway/run.py"
+    result: "passed; no protected core files changed"
+  - command: "search_files prohibited-scope scan on changed runtime/test files"
+    result: "passed; no prohibited cloud/collab/import/provider-credential/minor/underage markers found"
