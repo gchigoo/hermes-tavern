@@ -28,6 +28,8 @@ PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_repo_hygiene
 PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_packaging.py -q -o 'addopts='
 PYTHONPYCACHEPREFIX=/private/tmp/hermes-tavern-phase103-pycache python -m py_compile conftest.py plugins/__init__.py plugins/hermes_tavern/__init__.py src/hermes_tavern/*.py src/hermes_tavern/importers/*.py tests/test_hermes_tavern_*.py
 PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_*.py -q -o 'addopts='
+python design/codestable/tools/validate-yaml.py --yaml-only --file design/codestable/features/2026-06-03-hermes-tavern-phase120-codestable-public-verification-contract/checklist.yaml
+git diff --check -- CONTRIBUTING.md README.md tests/test_hermes_tavern_repo_hygiene.py design/codestable/features/2026-06-03-hermes-tavern-phase120-codestable-public-verification-contract/checklist.yaml
 ```
 
 ## Safe validation rules for contributors

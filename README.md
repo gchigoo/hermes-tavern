@@ -155,6 +155,8 @@ restarting the Gateway or touching runtime services:
 - `python -m pytest tests/test_hermes_tavern_readme_docs.py -q -o 'addopts='`
 - `python -m pytest tests/test_hermes_tavern_packaging.py -q -o 'addopts='`
 - `python -m pytest tests/test_hermes_tavern_*.py -q -o 'addopts='`
+- `python design/codestable/tools/validate-yaml.py --yaml-only --file design/codestable/features/2026-06-03-hermes-tavern-phase120-codestable-public-verification-contract/checklist.yaml`
+- `git diff --check -- CONTRIBUTING.md README.md tests/test_hermes_tavern_repo_hygiene.py design/codestable/features/2026-06-03-hermes-tavern-phase120-codestable-public-verification-contract/checklist.yaml`
 - `python -m build --sdist --wheel --outdir /tmp && python -m pip install --no-deps --target /tmp/hermes-tavern-release-smoke --no-index --find-links /tmp --force-reinstall hermes-tavern` to verify isolated wheel install and entry point metadata.
 - Inspect wheel/sdist artifact inspection (payload + dist-info + metadata) and validate no repo-root-only files land in the wheel.
 - Verify wheel payload boundary coverage includes `entry_points.txt` and excludes forbidden repository artifacts.

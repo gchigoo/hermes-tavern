@@ -1,0 +1,58 @@
+doc_type: feature-checklist
+feature: hermes-tavern-phase120-codestable-public-verification-contract
+date: "2026-06-03"
+status: implemented
+
+summary: >
+  Publish a lightweight public CodeStable verification contract for this slice
+  by documenting offline checklist validation and diff hygiene checks in README and
+  CONTRIBUTING, then asserting that guidance in repo-hygiene tests.
+
+steps:
+  - id: S1
+    name: Add checklist validation and diff-check guidance to README
+    description: >
+      Add public preflight commands to README Release preflight block for
+      validating this phase checklist YAML and checking staged/unstaged diff
+      whitespace issues with git diff --check.
+    status: implemented
+    changed_file: "README.md"
+    result: "IMPLEMENTED - release preflight section includes both required markers"
+
+  - id: S2
+    name: Add public verification guidance to CONTRIBUTING
+    description: >
+      Add the checklist validation and git diff --check commands to the required
+      offline verification list in CONTRIBUTING.
+    status: implemented
+    changed_file: "CONTRIBUTING.md"
+    result: "IMPLEMENTED - contributor workflow checklist includes both required commands"
+
+  - id: S3
+    name: Add offline hygiene assertions for marker presence
+    description: >
+      Extend tests/test_hermes_tavern_repo_hygiene.py with checks that README and
+      CONTRIBUTING mention the phase-specific checklist validation marker and
+      diff-check marker.
+    status: implemented
+    changed_file: "tests/test_hermes_tavern_repo_hygiene.py"
+    result: "IMPLEMENTED - added two assertions for required marker presence"
+
+verification:
+  targeted_pytest:
+    - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_repo_hygiene.py -k phase120 -q -o 'addopts='"
+      result: "passed - 2 passed, 42 deselected in 0.04s (Codex); controller rerun passed - 2 passed, 42 deselected in 0.04s"
+  checklist_yaml_validation:
+    - command: "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --yaml-only --file design/codestable/features/2026-06-03-hermes-tavern-phase120-codestable-public-verification-contract/checklist.yaml"
+      result: "passed - 1 passed, 0 failed (Codex); controller rerun passed - 1 passed, 0 failed"
+  diff_check:
+    - command: "git diff --check -- CONTRIBUTING.md README.md tests/test_hermes_tavern_repo_hygiene.py design/codestable/features/2026-06-03-hermes-tavern-phase120-codestable-public-verification-contract/checklist.yaml"
+      result: "passed (Codex); controller rerun passed"
+  full_pytest:
+    - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts='"
+      result: "controller rerun passed - 718 passed in 27.33s"
+
+implementation_notes: |
+  - Scope is intentionally limited to docs/tests/checklist artifacts.
+  - No runtime code, run_agent.py, cli.py, gateway/run.py, provider/model code,
+    credentials, or safety policy logic was modified.

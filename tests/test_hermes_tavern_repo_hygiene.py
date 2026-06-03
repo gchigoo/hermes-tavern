@@ -14,6 +14,7 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 LICENSE_FILE = REPO_ROOT / "LICENSE"
 WORKFLOW_FILE = REPO_ROOT / ".github/workflows/test.yml"
 PATCH_FILE = REPO_ROOT / "patches/hermes-agent-core-changes.patch"
+PHASE120_CHECKLIST_FILE = REPO_ROOT / "design/codestable/features/2026-06-03-hermes-tavern-phase120-codestable-public-verification-contract/checklist.yaml"
 DEPENDABOT_FILE = REPO_ROOT / ".github" / "dependabot.yml"
 REQUIREMENTS_TEST_FILE = REPO_ROOT / "requirements-test.txt"
 CODEOWNERS_FILE = REPO_ROOT / ".github" / "CODEOWNERS"
@@ -128,10 +129,17 @@ SUPPORT_REQUIRED_PHRASES = {
 
 DEPENDABOT_EXPECTED_INTERVAL = "weekly"
 DEPENDABOT_MAX_OPEN_PRS = 3
+PHASE120_YAML_VALIDATION_COMMAND = "python design/codestable/tools/validate-yaml.py --yaml-only --file design/codestable/features/2026-06-03-hermes-tavern-phase120-codestable-public-verification-contract/checklist.yaml"
+PHASE120_DIFF_CHECK_COMMAND = "git diff --check -- CONTRIBUTING.md README.md tests/test_hermes_tavern_repo_hygiene.py design/codestable/features/2026-06-03-hermes-tavern-phase120-codestable-public-verification-contract/checklist.yaml"
 
 
 def _read_text(path: Path) -> str:
     return path.read_text(encoding="utf-8")
+
+
+def _normalize_for_marker_check(text: str) -> str:
+    """Normalize markdown command blocks for exact-string marker assertions."""
+    return " ".join(text.replace("`", " ").split())
 
 
 def _load_yaml_template(path: Path) -> dict:
@@ -343,6 +351,13 @@ def test_contributing_guide_has_required_commands_and_scope_rules():
 
     for phrase in required_phrases:
         assert phrase in text, f"missing contributing guide phrase: {phrase}"
+
+
+def test_contributing_mentions_phase120_public_verification_markers():
+    text = _normalize_for_marker_check(CONTRIBUTING_FILE.read_text(encoding="utf-8").lower())
+
+    assert PHASE120_YAML_VALIDATION_COMMAND.lower() in text
+    assert PHASE120_DIFF_CHECK_COMMAND.lower() in text
 
 
 def test_contributing_guide_prohibits_gateway_and_external_endpoint_calls():
@@ -764,6 +779,13 @@ def test_readme_public_policy_block_has_no_forbidden_runtime_or_credential_guida
 
     for phrase in forbidden:
         assert phrase not in public_policy
+
+
+def test_readme_mentions_phase120_public_verification_markers():
+    readme_text = _normalize_for_marker_check((REPO_ROOT / "README.md").read_text(encoding="utf-8").lower())
+
+    assert PHASE120_YAML_VALIDATION_COMMAND.lower() in readme_text
+    assert PHASE120_DIFF_CHECK_COMMAND.lower() in readme_text
 
 
 def test_security_policy_has_supported_versions_for_public_beta():
