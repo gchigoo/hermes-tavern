@@ -10,6 +10,7 @@ from typing import Any
 from uuid import uuid4
 
 from hermes_tavern.hermes_home import get_hermes_home
+from hermes_tavern.db_novel import NovelDBMixin
 from hermes_tavern.db_utils import (
     assert_no_secret_keys as _assert_no_secret_keys,
     row_to_dict as _row_to_dict,
@@ -19,7 +20,7 @@ from hermes_tavern.db_utils import (
 SQLITE_BUSY_TIMEOUT_MS = 5000
 
 
-class TavernStore:
+class TavernStore(NovelDBMixin):
     """Small SQLite store for Tavern cards, sessions, and messages."""
 
     def __init__(self, db_path: str | Path | None = None) -> None:

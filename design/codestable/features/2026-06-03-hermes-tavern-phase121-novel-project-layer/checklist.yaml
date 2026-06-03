@@ -15,7 +15,8 @@ steps:
       Per design §2.5: Create src/hermes_tavern/db_novel.py with novel-related
       DB methods (NovelDBMixin). Update db.py TavernStore to inherit/compose
       the mixin. Verify no behavioral regressions via full pytest suite.
-    status: pending
+    status: completed
+    completed_at: "2026-06-03"
     exit_signal: "Full pytest suite passes (718+ tests) with zero behavioral diffs"
 
   - id: S1
@@ -97,13 +98,15 @@ steps:
 verification:
   targeted_pytest:
     - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel.py -q -o 'addopts='"
-      result: ""
+      result: "not_run; novel test file is planned for S6"
+    - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_db.py tests/test_hermes_tavern_runtime.py -q -o 'addopts='"
+      result: "passed; 55 passed in 2.96s"
   full_pytest:
     - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts='"
-      result: ""
+      result: "passed; 719 passed in 25.24s"
   checklist_yaml_validation:
     - command: "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --yaml-only --file design/codestable/features/2026-06-03-hermes-tavern-phase121-novel-project-layer/checklist.yaml"
       result: ""
   diff_check:
     - command: "git diff --check"
-      result: ""
+      result: "passed"

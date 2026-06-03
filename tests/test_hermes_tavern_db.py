@@ -2,6 +2,7 @@ import sqlite3
 from pathlib import Path
 
 from plugins.hermes_tavern.db import SQLITE_BUSY_TIMEOUT_MS, TavernStore
+from plugins.hermes_tavern.db_novel import NovelDBMixin
 
 
 def _table_names(db_path: Path) -> set[str]:
@@ -166,3 +167,9 @@ def test_default_db_path_uses_profile_safe_hermes_home(tmp_path, monkeypatch):
     assert store.db_path == (
         tmp_path / "plugins" / "hermes-tavern" / "data" / "tavern.sqlite3"
     )
+
+
+def test_tavern_store_inherits_novel_db_mixin(tmp_path):
+    assert issubclass(TavernStore, NovelDBMixin)
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    assert isinstance(store, NovelDBMixin)
