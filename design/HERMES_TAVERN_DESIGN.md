@@ -463,7 +463,7 @@ project:
   status: draft|in_progress|complete
 ```
 
-Future project metadata from the original vision remains out of the current Phase 121/122 scope:
+Future project metadata from the original vision remains out of the current Phase 121–123 scope:
 `type`, `premise`, `outline`, `style_guide`, `canon_policy`, `content_mode`,
 `default_card_id`, `default_preset_id`, and `default_lorebook_ids`.
 
@@ -480,6 +480,8 @@ Scene objects include:
 
 ```text
 goal text
+POV label
+tense: past|present
 ```
 
 Future sub-objects from the original vision remain deferred: character states,
@@ -500,6 +502,10 @@ Commands:
 /rp scene start <scene-id>
 /rp scene goal <scene-id> [text]
 /rp scene goal clear <scene-id>
+/rp scene narration <scene-id>
+/rp scene narration clear <scene-id>
+/rp scene narration pov <scene-id> <label>
+/rp scene narration tense <scene-id> <past|present>
 /rp canon add <project-id> <title> <content>
 /rp canon list [project-id] [group]
 /rp canon group [project-id] <group>
@@ -865,13 +871,17 @@ relationship state, style guide, outline, and revision notes.
 /rp scene create/list/start
 /rp scene goal <scene-id> [text]
 /rp scene goal clear <scene-id>
+/rp scene narration <scene-id>
+/rp scene narration clear <scene-id>
+/rp scene narration pov <scene-id> <label>
+/rp scene narration tense <scene-id> <past|present>
 /rp canon add/list/group
 /rp timeline add/list
 ```
 
 Future writing commands from the original vision remain deferred: outline editing,
-write continue/rewrite/expand/compress, POV/tense controls, and
-project archive export.
+deferred write continue/rewrite/expand/compress, deferred project archive
+ZIP/export/import, and deferred character/relationship state.
 
 ### 13.3 Canon management
 
@@ -886,6 +896,11 @@ Commands:
 Canon check/correlation tools are deferred; only add/list/group are included in Phase 9.
 Future canon commands from the original vision remain deferred: `/rp canon check`,
 `/rp canon conflict`, and `/rp canon pin <fact>`.
+
+Cross-cutting deferred novel constraints remain explicit in this slice: deferred
+project archive ZIP/import workflows, deferred character/relationship state,
+deferred cloud collaboration, no provider credential persistence, no
+minors/underage handling, and no provider safety bypass pathways.
 
 ---
 
@@ -1047,7 +1062,7 @@ ST preset JSON
 ST lorebook/world info JSON
 ```
 
-Hermes Tavern native project archives are deferred; the current Phase 121/122
+Hermes Tavern native project archives are deferred; the current Phase 121–123
 implementation provides Markdown export only, not project/novel import.
 
 Later:
@@ -1071,10 +1086,15 @@ chat export JSONL
 novel export Markdown
 ```
 
-Project archive ZIP remains a future exporter; current Phase 121/122 only writes
+Project archive ZIP remains a future exporter/importer; current Phase 121–123 only writes
 local Markdown via `/rp project export [id]`.
 Scene goals are exported in Markdown directly under the relevant scene heading
 as `Goal: <text>`, when set.
+Scene narration controls are also exported under scene headings with only
+non-empty fields:
+- `Scene narration controls:`
+- `POV: <text>`
+- `Tense: <past|present>`
 
 Commands:
 

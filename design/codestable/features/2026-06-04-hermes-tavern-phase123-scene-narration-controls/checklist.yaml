@@ -1,6 +1,6 @@
 doc_type: feature-checklist
 feature: "2026-06-04-hermes-tavern-phase123-scene-narration-controls"
-status: in_progress
+status: accepted
 summary: >
   Scene Narration Controls v1 adds scene-scoped POV and tense metadata, then
   exposes it through narrow commands, prompt modules, and Markdown export.
@@ -128,13 +128,43 @@ steps:
 
   - id: S5
     name: "Final verification and writeback"
-    status: pending
+    status: completed
+    completed_at: "2026-06-04"
+    result: >
+      ACCEPTED - controller reran the Phase 123 py_compile gate, focused
+      DB/runtime/docs/commands pytest gate, full pytest suite, CodeStable
+      frontmatter/YAML validators, diff hygiene, protected-core/source/test/README
+      guards, and a diff-aware prohibited-scope scan. All checks passed, and
+      architecture/root-design writeback plus the acceptance report now record
+      the current scene narration controls contract.
     description: >
-      Run targeted tests, full registry gate, diff hygiene, protected-core guard,
-      reverse-scope scans, and update architecture/design docs.
+      Run the final verification commands, complete controller verification
+      handoff, and finish architecture/design writeback for Phase 123 Scene
+      Narration Controls v1.
     exit_signal: >
-      Full suite and scope guards pass; acceptance can record the implemented
-      contract.
+      Full suite and scope guards pass; acceptance records the implemented
+      contract and architecture/design docs describe Phase 123 as current.
+    verification:
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m py_compile src/hermes_tavern/db_novel.py src/hermes_tavern/runtime_novel.py src/hermes_tavern/runtime_prompt_modules.py src/hermes_tavern/commands.py tests/test_hermes_tavern_novel_db.py tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_runtime.py tests/test_hermes_tavern_readme_docs.py tests/test_hermes_tavern_commands.py"
+        result: "passed (controller rerun after S5 docs/acceptance closure)"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel_db.py tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_runtime.py tests/test_hermes_tavern_readme_docs.py tests/test_hermes_tavern_commands.py -q -o 'addopts='"
+        result: "passed; 163 passed in 6.28s"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts='"
+        result: "passed; 798 passed in 30.73s"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-04-hermes-tavern-phase123-scene-narration-controls/design.md --require doc_type --require status"
+        result: "passed; 1 passed, 0 failed"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-04-hermes-tavern-phase123-scene-narration-controls/hermes-tavern-phase123-scene-narration-controls-acceptance.md --require doc_type --require status"
+        result: "passed; 1 passed, 0 failed"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --yaml-only --file design/codestable/features/2026-06-04-hermes-tavern-phase123-scene-narration-controls/checklist.yaml"
+        result: "passed; 1 passed, 0 failed"
+      - command: "git diff --check"
+        result: "passed"
+      - command: "git diff --name-only -- run_agent.py cli.py gateway/run.py"
+        result: "passed; no protected core files changed"
+      - command: "controller source/test/README/plugin status guard"
+        result: "passed; no source, test, README, or plugin files changed"
+      - command: "controller diff-aware prohibited-scope scan"
+        result: "passed; only deferred/no/prohibited-scope mentions of out-of-scope capabilities were added"
 
 checks:
   - id: C1
@@ -157,20 +187,22 @@ checks:
 
   - id: C4
     name: "Reverse scope"
-    status: pending
+    status: passed
     command: "git diff --name-only -- run_agent.py cli.py gateway/run.py"
+    result: "passed; no protected core files changed, no source/test/README/plugin files changed, and controller diff-aware prohibited-scope scan passed"
 
 verification_commands:
-  - "PYTHONDONTWRITEBYTECODE=1 python -m py_compile src/hermes_tavern/db_novel.py src/hermes_tavern/runtime_novel.py src/hermes_tavern/runtime_prompt_modules.py src/hermes_tavern/commands.py tests/test_hermes_tavern_novel_db.py tests/test_hermes_tavern_novel_runtime.py"
-  - "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel_db.py tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_runtime.py tests/test_hermes_tavern_readme_docs.py -q -o 'addopts='"
+  - "PYTHONDONTWRITEBYTECODE=1 python -m py_compile src/hermes_tavern/db_novel.py src/hermes_tavern/runtime_novel.py src/hermes_tavern/runtime_prompt_modules.py src/hermes_tavern/commands.py tests/test_hermes_tavern_novel_db.py tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_runtime.py tests/test_hermes_tavern_readme_docs.py tests/test_hermes_tavern_commands.py"
+  - "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel_db.py tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_runtime.py tests/test_hermes_tavern_readme_docs.py tests/test_hermes_tavern_commands.py -q -o 'addopts='"
   - "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts='"
   - "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-04-hermes-tavern-phase123-scene-narration-controls/design.md --require doc_type --require status"
+  - "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-04-hermes-tavern-phase123-scene-narration-controls/hermes-tavern-phase123-scene-narration-controls-acceptance.md --require doc_type --require status"
   - "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --yaml-only --file design/codestable/features/2026-06-04-hermes-tavern-phase123-scene-narration-controls/checklist.yaml"
   - "git diff --check"
 
 reverse_scope_scans:
   - "git diff --name-only -- run_agent.py cli.py gateway/run.py"
-  - "rg -n \"write continue|rewrite|expand|compress|archive zip|project import|novel import|relationship_state|character_state|api_key|access_token|underage|minor\" src/hermes_tavern tests README.md design/HERMES_TAVERN_DESIGN.md design/codestable/architecture/ARCHITECTURE.md"
+  - "controller diff-aware prohibited-scope scan over added docs lines, allowing only deferred/non-goal/no/prohibited mentions"
 
 s1_controller_verification:
   - command: "PYTHONDONTWRITEBYTECODE=1 python -m py_compile src/hermes_tavern/db_novel.py tests/test_hermes_tavern_novel_db.py"
@@ -211,3 +243,43 @@ s3_controller_verification:
     result: "passed; no run_agent.py, cli.py, or gateway/run.py changes"
   - command: "controller diff-aware prohibited-scope scan"
     result: "passed; no prohibited markers in added code/test lines"
+
+s4_controller_verification:
+  - command: "PYTHONDONTWRITEBYTECODE=1 python -m py_compile src/hermes_tavern/db_novel.py tests/test_hermes_tavern_novel_db.py tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_readme_docs.py"
+    result: "passed"
+  - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel_db.py tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_readme_docs.py -q -o 'addopts='"
+    result: "passed; 63 passed in 1.36s"
+  - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts='"
+    result: "passed; 768 passed in 31.78s"
+  - command: "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-04-hermes-tavern-phase123-scene-narration-controls/design.md --require doc_type --require status"
+    result: "passed; 1 passed, 0 failed"
+  - command: "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --yaml-only --file design/codestable/features/2026-06-04-hermes-tavern-phase123-scene-narration-controls/checklist.yaml"
+    result: "passed; 1 passed, 0 failed"
+  - command: "git diff --check"
+    result: "passed"
+  - command: "git diff --name-only -- run_agent.py cli.py gateway/run.py"
+    result: "passed; no protected core files changed"
+  - command: "controller added-line prohibited-scope scan"
+    result: "passed; no prohibited markers in added code/test lines"
+
+s5_controller_verification:
+  - command: "PYTHONDONTWRITEBYTECODE=1 python -m py_compile src/hermes_tavern/db_novel.py src/hermes_tavern/runtime_novel.py src/hermes_tavern/runtime_prompt_modules.py src/hermes_tavern/commands.py tests/test_hermes_tavern_novel_db.py tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_runtime.py tests/test_hermes_tavern_readme_docs.py tests/test_hermes_tavern_commands.py"
+    result: "passed"
+  - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel_db.py tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_runtime.py tests/test_hermes_tavern_readme_docs.py tests/test_hermes_tavern_commands.py -q -o 'addopts='"
+    result: "passed; 163 passed in 6.28s"
+  - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts='"
+    result: "passed; 798 passed in 30.73s"
+  - command: "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-04-hermes-tavern-phase123-scene-narration-controls/design.md --require doc_type --require status"
+    result: "passed; 1 passed, 0 failed"
+  - command: "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --yaml-only --file design/codestable/features/2026-06-04-hermes-tavern-phase123-scene-narration-controls/checklist.yaml"
+    result: "passed; 1 passed, 0 failed"
+  - command: "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-04-hermes-tavern-phase123-scene-narration-controls/hermes-tavern-phase123-scene-narration-controls-acceptance.md --require doc_type --require status"
+    result: "passed; 1 passed, 0 failed"
+  - command: "git diff --check"
+    result: "passed"
+  - command: "git diff --name-only -- run_agent.py cli.py gateway/run.py"
+    result: "passed; no protected core files changed"
+  - command: "git diff --name-only -- src tests README.md plugins"
+    result: "passed; no source, test, README, or plugin files changed"
+  - command: "controller diff-aware prohibited-scope scan"
+    result: "passed; only deferred/no/prohibited-scope mentions of out-of-scope capabilities were added"
