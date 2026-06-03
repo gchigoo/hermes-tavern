@@ -52,6 +52,7 @@ def session_prompt_modules(
     modules = session_preset_modules(runtime, session)
     modules.extend(session_canon_modules(runtime, session))
     modules.extend(session_persona_modules(runtime, session))
+    modules.extend(session_scene_narration_modules(runtime, session))
     modules.extend(session_scene_goal_modules(runtime, session))
     modules.extend(session_note_modules(runtime, session, history))
     modules.extend(session_memory_modules(runtime, session))
@@ -108,6 +109,48 @@ def session_persona_modules(runtime, session: dict[str, Any]) -> list[PromptModu
             content=persona.get("content") or "",
             position="before_char",
             insertion_order=50,
+            enabled=True,
+        )
+    ]
+
+
+def session_scene_narration_modules(runtime, session: dict[str, Any]) -> list[PromptModule]:
+    session_id = session.get("id") or ""
+    if not session_id:
+        return []
+
+    try:
+        controls = runtime.store.get_scene_narration_controls_for_session(session_id)
+    except sqlite3.Error:
+        return []
+    if not controls:
+        return []
+
+    pov_label = (controls.get("pov_label") or "").strip()
+    tense = (controls.get("tense") or "").strip()
+    if not pov_label and not tense:
+        return []
+
+    try:
+        scene = runtime.store.get_scene(controls.get("scene_id"))
+    except sqlite3.Error:
+        return []
+    if not scene:
+        return []
+
+    lines = ["Scene narration controls:"]
+    if pov_label:
+        lines.append(f"POV: {pov_label}")
+    if tense:
+        lines.append(f"Tense: {tense}")
+
+    return [
+        PromptModule(
+            name=f"scene_narration:{(scene.get('title') or 'Scene')}",
+            role="system",
+            content="\n".join(lines),
+            position="before_user",
+            insertion_order=65,
             enabled=True,
         )
     ]

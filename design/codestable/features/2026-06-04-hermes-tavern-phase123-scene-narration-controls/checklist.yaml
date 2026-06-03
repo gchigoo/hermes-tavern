@@ -69,13 +69,33 @@ steps:
 
   - id: S3
     name: "Prompt module: linked scene narration controls"
-    status: pending
+    status: completed
+    completed_at: "2026-06-04"
+    result: >
+      IMPLEMENTED - runtime_prompt_modules.session_scene_narration_modules now
+      injects one system/before_user PromptModule named scene_narration:<scene
+      title> for active sessions linked to a scene with non-empty narration
+      controls. It uses get_scene_narration_controls_for_session plus get_scene
+      for the title, strips blank POV/tense values, emits only non-empty content
+      lines, orders at insertion_order 65 before scene goal and author note, and
+      skips only this module on sqlite lookup errors. Focused debug-prompt tests
+      cover linked inclusion, unlinked exclusion, legacy blank-row exclusion,
+      ordering, and sqlite-error skip behavior.
     description: >
       Inject a system scene_narration module only for the active session linked
       to a scene with non-empty controls. Skip cleanly on sqlite errors.
     exit_signal: >
       Debug-prompt tests prove linked inclusion, unlinked exclusion, ordering
       before scene goal/note, and sqlite-error skip behavior.
+    verification:
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m py_compile src/hermes_tavern/runtime_prompt_modules.py tests/test_hermes_tavern_novel_runtime.py"
+        result: "passed (controller rerun after S3 implementation)"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel_runtime.py -k narration -q -o 'addopts='"
+        result: "passed; 21 passed, 31 deselected in 0.75s"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_runtime.py -q -o 'addopts='"
+        result: "passed; 96 passed in 5.12s"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts='"
+        result: "passed; 795 passed in 31.06s"
 
   - id: S4
     name: "Export and docs: narration visibility"
@@ -111,8 +131,9 @@ checks:
 
   - id: C3
     name: "Prompt linked-session contract"
-    status: pending
+    status: passed
     command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel_runtime.py -k narration -q -o 'addopts='"
+    result: "passed; 21 passed, 31 deselected in 0.75s (controller rerun after S3 implementation)"
 
   - id: C4
     name: "Reverse scope"
@@ -140,6 +161,26 @@ s1_controller_verification:
     result: "passed; 47 passed in 1.53s"
   - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts='"
     result: "passed; 774 passed in 30.20s"
+  - command: "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-04-hermes-tavern-phase123-scene-narration-controls/design.md --require doc_type --require status"
+    result: "passed; 1 passed, 0 failed"
+  - command: "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --yaml-only --file design/codestable/features/2026-06-04-hermes-tavern-phase123-scene-narration-controls/checklist.yaml"
+    result: "passed; 1 passed, 0 failed"
+  - command: "git diff --check"
+    result: "passed"
+  - command: "protected-core diff guard"
+    result: "passed; no run_agent.py, cli.py, or gateway/run.py changes"
+  - command: "controller diff-aware prohibited-scope scan"
+    result: "passed; no prohibited markers in added code/test lines"
+
+s3_controller_verification:
+  - command: "PYTHONDONTWRITEBYTECODE=1 python -m py_compile src/hermes_tavern/runtime_prompt_modules.py tests/test_hermes_tavern_novel_runtime.py"
+    result: "passed"
+  - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel_runtime.py -k narration -q -o 'addopts='"
+    result: "passed; 21 passed, 31 deselected in 0.75s"
+  - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_runtime.py -q -o 'addopts='"
+    result: "passed; 96 passed in 5.12s"
+  - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts='"
+    result: "passed; 795 passed in 31.06s"
   - command: "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-04-hermes-tavern-phase123-scene-narration-controls/design.md --require doc_type --require status"
     result: "passed; 1 passed, 0 failed"
   - command: "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --yaml-only --file design/codestable/features/2026-06-04-hermes-tavern-phase123-scene-narration-controls/checklist.yaml"

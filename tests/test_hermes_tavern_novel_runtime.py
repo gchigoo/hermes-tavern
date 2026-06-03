@@ -692,6 +692,128 @@ def test_scene_goal_module_shows_in_debug_prompt_for_linked_scene(tmp_path):
     assert prompt.index("system/scene_goal:Opening") < prompt.index("system/note:author")
 
 
+def test_scene_narration_module_shows_in_debug_prompt_for_linked_scene(tmp_path):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    store.save_card(parse_character_card({"name": "Alice", "description": "Scholar"}))
+    runtime = TavernRuntime(store)
+    runtime.handle_command_sync(RPCommand("start", ["Alice"], "/rp start Alice"), Event())
+
+    session = store.get_active_session("telegram:chat:chat-1:thread:main:user:user-1")
+    project = store.create_project("Skyline")
+    chapter = store.create_chapter(project["id"], "Prologue")
+    scene = store.create_scene(chapter["id"], "Opening", session_id=session["id"])
+    store.set_scene_narration_controls(
+        scene["id"],
+        pov_label="third-person limited: Mara",
+        tense="present",
+    )
+
+    prompt = runtime.handle_command_sync(RPCommand("debug", ["prompt"], "/rp debug prompt"), Event())
+
+    assert "system/scene_narration:Opening" in prompt
+    assert "Scene narration controls:" in prompt
+    assert "POV: third-person limited: Mara" in prompt
+    assert "Tense: present" in prompt
+
+
+def test_scene_narration_module_not_shown_for_unlinked_scene(tmp_path):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    store.save_card(parse_character_card({"name": "Alice", "description": "Scholar"}))
+    runtime = TavernRuntime(store)
+    runtime.handle_command_sync(RPCommand("start", ["Alice"], "/rp start Alice"), Event())
+
+    project = store.create_project("Skyline")
+    chapter = store.create_chapter(project["id"], "Prologue")
+    scene = store.create_scene(chapter["id"], "Opening")
+    store.set_scene_narration_controls(
+        scene["id"],
+        pov_label="first-person",
+        tense="past",
+    )
+
+    prompt = runtime.handle_command_sync(RPCommand("debug", ["prompt"], "/rp debug prompt"), Event())
+
+    assert "system/scene_narration:" not in prompt
+
+
+def test_scene_narration_module_skips_blank_controls_row(tmp_path):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    store.save_card(parse_character_card({"name": "Alice", "description": "Scholar"}))
+    runtime = TavernRuntime(store)
+    runtime.handle_command_sync(RPCommand("start", ["Alice"], "/rp start Alice"), Event())
+
+    session = store.get_active_session("telegram:chat:chat-1:thread:main:user:user-1")
+    project = store.create_project("Skyline")
+    chapter = store.create_chapter(project["id"], "Prologue")
+    scene = store.create_scene(chapter["id"], "Opening", session_id=session["id"])
+
+    with store.connect() as conn:
+        conn.execute(
+            """
+            INSERT INTO novel_scene_narration_controls (
+                scene_id, pov_label, tense, created_at, updated_at
+            ) VALUES (?, '', '', '2025-01-01 00:00:00', '2025-01-01 00:00:00')
+            """,
+            (scene["id"],),
+        )
+
+    prompt = runtime.handle_command_sync(RPCommand("debug", ["prompt"], "/rp debug prompt"), Event())
+
+    assert "system/scene_narration:Opening" not in prompt
+
+
+def test_scene_narration_module_orders_before_scene_goal_and_note(tmp_path):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    store.save_card(parse_character_card({"name": "Alice", "description": "Scholar"}))
+    runtime = TavernRuntime(store)
+    runtime.handle_command_sync(RPCommand("start", ["Alice"], "/rp start Alice"), Event())
+
+    session = store.get_active_session("telegram:chat:chat-1:thread:main:user:user-1")
+    project = store.create_project("Skyline")
+    chapter = store.create_chapter(project["id"], "Prologue")
+    scene = store.create_scene(chapter["id"], "Opening", session_id=session["id"])
+    store.set_scene_narration_controls(
+        scene["id"],
+        pov_label="first-person",
+        tense="present",
+    )
+    store.set_scene_goal(scene["id"], "Reach the watchtower before sunrise.")
+    runtime.handle_command_sync(
+        RPCommand("note", ["set", "Keep the tone focused and concise."], "/rp note set Keep the tone focused and concise."),
+        Event(),
+    )
+
+    prompt = runtime.handle_command_sync(RPCommand("debug", ["prompt"], "/rp debug prompt"), Event())
+
+    assert prompt.index("system/scene_narration:Opening") < prompt.index("system/scene_goal:Opening")
+    assert prompt.index("system/scene_narration:Opening") < prompt.index("system/note:author")
+
+
+def test_scene_narration_module_skips_on_db_error(tmp_path, monkeypatch):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    store.save_card(parse_character_card({"name": "Alice", "description": "Scholar"}))
+    runtime = TavernRuntime(store)
+    runtime.handle_command_sync(RPCommand("start", ["Alice"], "/rp start Alice"), Event())
+
+    session = store.get_active_session("telegram:chat:chat-1:thread:main:user:user-1")
+    project = store.create_project("Skyline")
+    chapter = store.create_chapter(project["id"], "Prologue")
+    scene = store.create_scene(chapter["id"], "Opening", session_id=session["id"])
+    store.set_scene_narration_controls(scene["id"], pov_label="first-person")
+    store.set_scene_goal(scene["id"], "Reach the watchtower before sunrise.")
+
+    monkeypatch.setattr(
+        runtime.store,
+        "get_scene_narration_controls_for_session",
+        lambda _session_id: (_ for _ in ()).throw(sqlite3.OperationalError("DB unavailable")),
+    )
+
+    prompt = runtime.handle_command_sync(RPCommand("debug", ["prompt"], "/rp debug prompt"), Event())
+
+    assert "Hermes Tavern prompt debug" in prompt
+    assert "system/scene_narration:Opening" not in prompt
+
+
 def test_scene_goal_module_not_shown_for_unlinked_scene(tmp_path):
     store = TavernStore(tmp_path / "tavern.sqlite3")
     store.save_card(parse_character_card({"name": "Alice", "description": "Scholar"}))
