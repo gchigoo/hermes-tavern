@@ -1,6 +1,6 @@
 doc_type: feature-checklist
 feature: "2026-06-04-hermes-tavern-phase124-project-style-guide"
-status: planned
+status: in_progress
 summary: >
   Project Style Guide v1 adds local project-scoped style-guide persistence,
   project command controls, linked-session prompt visibility, and Markdown
@@ -9,7 +9,20 @@ summary: >
 steps:
   - id: S1
     name: "DB contract: project style-guide persistence"
-    status: pending
+    status: completed
+    completed_at: "2026-06-04"
+    result: >
+      IMPLEMENTED - db_novel.NovelDBMixin now migrates
+      novel_project_style_guides, exposes set/get/clear project style-guide
+      helpers, validates missing parent projects with ValueError("Project not
+      found"), updates repeated project writes in place while preserving supplied
+      style text, clears deterministically with idempotent boolean semantics, and
+      resolves linked-session project style through novel_scenes -> chapters ->
+      projects with project_title for later prompt modules. Focused DB tests cover
+      migration/table/index shape, set/update/get behavior, clear idempotence,
+      missing-project errors, linked-session scoping, unlinked sessions, and
+      no-style projects. Command, prompt, export, README, architecture, and
+      root-design behavior remain deferred to later slices.
     description: >
       Add novel_project_style_guides migration/index, set/get/clear helpers,
       missing-project validation, idempotent clear behavior, linked-session
@@ -19,7 +32,11 @@ steps:
       architecture behavior has been implemented yet.
     verification:
       - command: "PYTHONDONTWRITEBYTECODE=1 python -m py_compile src/hermes_tavern/db_novel.py tests/test_hermes_tavern_novel_db.py"
+        result: "passed (controller rerun after S1 implementation)"
       - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel_db.py -q -o 'addopts='"
+        result: "passed; 22 passed in 0.80s"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts='"
+        result: "passed; 802 passed in 31.06s"
 
   - id: S2
     name: "Command surface: project style inspect set clear"
@@ -88,8 +105,9 @@ steps:
 checks:
   - id: C1
     name: "DB contract: project style guide"
-    status: pending
+    status: passed
     command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel_db.py -q -o 'addopts='"
+    result: "passed; 22 passed in 0.80s (controller rerun after S1 implementation)"
 
   - id: C2
     name: "Runtime command contract: project style"
@@ -123,3 +141,21 @@ reverse_scope_scans:
   - "git diff --name-only -- run_agent.py cli.py gateway/run.py"
   - "git diff --name-only | rg -v '^(src/hermes_tavern/(db_novel.py|runtime_novel.py|runtime_prompt_modules.py|commands.py)|tests/test_hermes_tavern_(novel_db|novel_runtime|runtime|readme_docs|commands)\\.py|README\\.md|design/HERMES_TAVERN_DESIGN\\.md|design/codestable/architecture/ARCHITECTURE\\.md|design/codestable/features/2026-06-04-hermes-tavern-phase124-project-style-guide/)'"
   - "git diff -- src tests README.md | rg -n 'api_key|access_token|cloud sync|collaboration|underage|minor|jailbreak|bypass provider|project import|novel import|ZIP|relationship state|character state|outline|rewrite|expand|compress'"
+
+s1_controller_verification:
+  - command: "PYTHONDONTWRITEBYTECODE=1 python -m py_compile src/hermes_tavern/db_novel.py tests/test_hermes_tavern_novel_db.py"
+    result: "passed"
+  - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel_db.py -q -o 'addopts='"
+    result: "passed; 22 passed in 0.80s"
+  - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts='"
+    result: "passed; 802 passed in 31.06s"
+  - command: "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-04-hermes-tavern-phase124-project-style-guide/design.md --require doc_type --require status"
+    result: "passed; 1 passed, 0 failed"
+  - command: "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --yaml-only --file design/codestable/features/2026-06-04-hermes-tavern-phase124-project-style-guide/checklist.yaml"
+    result: "passed; 1 passed, 0 failed"
+  - command: "git diff --check"
+    result: "passed"
+  - command: "git diff --name-only -- run_agent.py cli.py gateway/run.py"
+    result: "passed; no protected core files changed"
+  - command: "controller S1 allowlist diff guard"
+    result: "passed; only db_novel.py, novel DB tests, and Phase 124 status docs changed"

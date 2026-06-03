@@ -1,7 +1,7 @@
 ---
 doc_type: feature-design
 feature: 2026-06-04-hermes-tavern-phase124-project-style-guide
-status: draft
+status: approved
 summary: >
   Project Style Guide v1 adds a project-scoped freeform style guide for novel
   projects, with local persistence, command inspect/set/clear controls, linked
@@ -10,6 +10,11 @@ tags: [novel, project, style-guide, prompt, long-form]
 ---
 
 # Phase 124: Project Style Guide v1
+
+> Approval note: promoted for unattended S1 implementation by the 2026-06-04
+> Codex architect/controller pass. This approval is limited to the bounded S1
+> DB persistence slice; later command, prompt, export/docs, and acceptance
+> slices remain gated by the checklist.
 
 ## 0. Terms
 

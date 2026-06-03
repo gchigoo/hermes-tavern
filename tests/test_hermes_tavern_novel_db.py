@@ -26,6 +26,7 @@ def test_migrate_creates_novel_tables(tmp_path):
         "novel_timeline",
         "novel_scene_goals",
         "novel_scene_narration_controls",
+        "novel_project_style_guides",
     }.issubset(tables)
     novel_tables = {name for name in tables if name.startswith("novel_")}
     assert novel_tables == {
@@ -36,7 +37,22 @@ def test_migrate_creates_novel_tables(tmp_path):
         "novel_timeline",
         "novel_scene_goals",
         "novel_scene_narration_controls",
+        "novel_project_style_guides",
     }
+
+    with sqlite3.connect(db_path) as conn:
+        indexes = {
+            row[0]
+            for row in conn.execute(
+                """
+                SELECT name
+                FROM sqlite_master
+                WHERE type='index'
+                    AND tbl_name='novel_project_style_guides'
+                """
+            ).fetchall()
+        }
+    assert "idx_novel_project_style_guides_project" in indexes
 
 
 def test_novel_project_crud_and_counts(tmp_path):
@@ -62,6 +78,67 @@ def test_novel_project_crud_and_counts(tmp_path):
 
     no_project = store.get_project(999)
     assert no_project is None
+
+
+def test_project_style_guide_set_update_get(tmp_path):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    novel_project = store.create_project("Voice", "distinctive")
+
+    created = store.set_project_style_guide(
+        novel_project["id"],
+        "voice: first-person\npace: brisk",
+    )
+    assert created["project_id"] == novel_project["id"]
+    assert created["style_text"] == "voice: first-person\npace: brisk"
+
+    fetched = store.get_project_style_guide(novel_project["id"])
+    assert fetched is not None
+    assert fetched["style_text"] == "voice: first-person\npace: brisk"
+
+    updated = store.set_project_style_guide(
+        novel_project["id"],
+        "voice: second-person\npace: methodical",
+    )
+    assert updated["id"] == created["id"]
+    assert updated["style_text"] == "voice: second-person\npace: methodical"
+    assert updated["updated_at"] >= created["updated_at"]
+    assert store.get_project_style_guide(novel_project["id"]) == updated
+
+
+def test_project_style_guide_clear_returns_bool(tmp_path):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    novel_project = store.create_project("Style Memory")
+    assert store.clear_project_style_guide(novel_project["id"]) is False
+
+    store.set_project_style_guide(novel_project["id"], "tone: warm")
+    assert store.clear_project_style_guide(novel_project["id"]) is True
+    assert store.get_project_style_guide(novel_project["id"]) is None
+    assert store.clear_project_style_guide(novel_project["id"]) is False
+
+
+def test_project_style_guide_missing_project_raises(tmp_path):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+
+    try:
+        store.set_project_style_guide(999, "anything")
+    except ValueError as exc:
+        assert str(exc) == "Project not found"
+    else:
+        raise AssertionError("Expected ValueError for missing project")
+
+    try:
+        store.get_project_style_guide(999)
+    except ValueError as exc:
+        assert str(exc) == "Project not found"
+    else:
+        raise AssertionError("Expected ValueError for missing project")
+
+    try:
+        store.clear_project_style_guide(999)
+    except ValueError as exc:
+        assert str(exc) == "Project not found"
+    else:
+        raise AssertionError("Expected ValueError for missing project")
 
 
 def test_scene_crud_and_parent_validation(tmp_path):
@@ -314,6 +391,43 @@ def test_scene_goal_for_session_uses_scene_link(tmp_path):
 
     other_session = store.start_session("scope-unlinked")
     assert store.get_scene_goal_for_session(other_session["id"]) is None
+
+
+def test_project_style_guide_for_session_uses_linked_scene_only(tmp_path):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    project_with_style = store.create_project("Session Style Project", "for sessions")
+    chapter = store.create_chapter(project_with_style["id"], "Chapter 1")
+    styled_scene = store.create_scene(chapter["id"], "Styled Scene")
+    other_scene = store.create_scene(chapter["id"], "Non styled scene")
+
+    store.set_project_style_guide(project_with_style["id"], "voice: cinematic")
+
+    session = store.start_session("session-style-linked")
+    store.link_scene_session(styled_scene["id"], session["id"])
+
+    linked_style = store.get_project_style_guide_for_session(session["id"])
+    assert linked_style is not None
+    assert linked_style["project_id"] == project_with_style["id"]
+    assert linked_style["style_text"] == "voice: cinematic"
+    assert linked_style["project_title"] == "Session Style Project"
+
+    no_style_session = store.start_session("session-style-none")
+    no_style_project = store.create_project("Session Style Missing")
+    no_style_chapter = store.create_chapter(no_style_project["id"], "Chapter 1")
+    no_style_scene = store.create_scene(no_style_chapter["id"], "Unstyled Scene")
+    store.link_scene_session(no_style_scene["id"], no_style_session["id"])
+    assert store.get_project_style_guide_for_session(no_style_session["id"]) is None
+
+    other_styled_project = store.create_project("Other Style Project")
+    store.set_project_style_guide(other_styled_project["id"], "voice: minimalist")
+    other_project_chapter = store.create_chapter(other_styled_project["id"], "Chapter 1")
+    other_project_scene = store.create_scene(other_project_chapter["id"], "Other Scene")
+    other_session = store.start_session("session-style-other")
+    store.link_scene_session(other_project_scene["id"], other_session["id"])
+
+    other_styled = store.get_project_style_guide_for_session(other_session["id"])
+    assert other_styled is not None
+    assert other_styled["project_title"] == "Other Style Project"
 
 
 def test_canon_group_default_and_prompt_ordering(tmp_path):

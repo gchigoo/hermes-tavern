@@ -85,6 +85,14 @@ class NovelDBMixin:
                 updated_at TEXT NOT NULL DEFAULT (datetime('now'))
             );
 
+            CREATE TABLE IF NOT EXISTS novel_project_style_guides (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                project_id INTEGER NOT NULL UNIQUE REFERENCES novel_projects(id) ON DELETE CASCADE,
+                style_text TEXT NOT NULL DEFAULT '',
+                created_at TEXT NOT NULL DEFAULT (datetime('now')),
+                updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+            );
+
             CREATE INDEX IF NOT EXISTS idx_novel_projects_created
                 ON novel_projects(created_at);
             CREATE INDEX IF NOT EXISTS idx_novel_chapters_project
@@ -101,6 +109,8 @@ class NovelDBMixin:
                 ON novel_scene_goals(scene_id);
             CREATE INDEX IF NOT EXISTS idx_novel_scene_narration_controls_scene
                 ON novel_scene_narration_controls(scene_id);
+            CREATE INDEX IF NOT EXISTS idx_novel_project_style_guides_project
+                ON novel_project_style_guides(project_id);
             """
         )
 
@@ -154,6 +164,68 @@ class NovelDBMixin:
                 (project_id,),
             ).fetchone()
         return _row_to_dict(row)
+
+    def set_project_style_guide(
+        self,
+        project_id: int,
+        style_text: str,
+    ) -> dict[str, Any]:
+        self.migrate()
+        with self.connect() as conn:
+            project = conn.execute(
+                "SELECT id FROM novel_projects WHERE id = ?",
+                (project_id,),
+            ).fetchone()
+            if project is None:
+                raise ValueError("Project not found")
+            now = _utc_now()
+            conn.execute(
+                """
+                INSERT INTO novel_project_style_guides (
+                    project_id, style_text, created_at, updated_at
+                )
+                VALUES (?, ?, ?, ?)
+                ON CONFLICT(project_id) DO UPDATE SET
+                    style_text = excluded.style_text,
+                    updated_at = excluded.updated_at
+                """,
+                (project_id, style_text, now, now),
+            )
+            row = conn.execute(
+                "SELECT * FROM novel_project_style_guides WHERE project_id = ?",
+                (project_id,),
+            ).fetchone()
+        return _row_to_dict(row)
+
+    def get_project_style_guide(self, project_id: int) -> dict[str, Any] | None:
+        self.migrate()
+        with self.connect() as conn:
+            project = conn.execute(
+                "SELECT id FROM novel_projects WHERE id = ?",
+                (project_id,),
+            ).fetchone()
+            if project is None:
+                raise ValueError("Project not found")
+            row = conn.execute(
+                "SELECT * FROM novel_project_style_guides WHERE project_id = ?",
+                (project_id,),
+            ).fetchone()
+        return _row_to_dict(row)
+
+    def clear_project_style_guide(self, project_id: int) -> bool:
+        self.migrate()
+        with self.connect() as conn:
+            project = conn.execute(
+                "SELECT id FROM novel_projects WHERE id = ?",
+                (project_id,),
+            ).fetchone()
+            if project is None:
+                raise ValueError("Project not found")
+            cursor = conn.execute(
+                "DELETE FROM novel_project_style_guides WHERE project_id = ?",
+                (project_id,),
+            )
+            return cursor.rowcount > 0
 
     def create_chapter(self, project_id: int, title: str) -> dict[str, Any]:
         self.migrate()
@@ -476,6 +548,29 @@ class NovelDBMixin:
                 FROM novel_scenes AS ns
                 JOIN novel_scene_goals AS nsg
                     ON nsg.scene_id = ns.id
+                WHERE ns.session_id = ?
+                ORDER BY ns.updated_at DESC, ns.id DESC
+                LIMIT 1
+                """,
+                (session_id,),
+            ).fetchone()
+        return _row_to_dict(row)
+
+    def get_project_style_guide_for_session(self, session_id: str) -> dict[str, Any] | None:
+        self.migrate()
+        with self.connect() as conn:
+            row = conn.execute(
+                """
+                SELECT
+                    npsg.*,
+                    np.title AS project_title
+                FROM novel_scenes AS ns
+                JOIN novel_chapters AS nc
+                    ON nc.id = ns.chapter_id
+                JOIN novel_projects AS np
+                    ON np.id = nc.project_id
+                JOIN novel_project_style_guides AS npsg
+                    ON npsg.project_id = np.id
                 WHERE ns.session_id = ?
                 ORDER BY ns.updated_at DESC, ns.id DESC
                 LIMIT 1
