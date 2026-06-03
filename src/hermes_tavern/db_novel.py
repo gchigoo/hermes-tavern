@@ -695,6 +695,16 @@ class NovelDBMixin:
                         scene_goal = self.get_scene_goal(scene["id"])
                         if scene_goal and scene_goal["goal_text"].strip():
                             lines.append(f"Goal: {scene_goal['goal_text']}")
+                        scene_narration_controls = self.get_scene_narration_controls(scene["id"])
+                        if scene_narration_controls is not None:
+                            pov_label = scene_narration_controls["pov_label"].strip()
+                            tense = scene_narration_controls["tense"].strip()
+                            if pov_label or tense:
+                                lines.append("Scene narration controls:")
+                                if pov_label:
+                                    lines.append(f"POV: {pov_label}")
+                                if tense:
+                                    lines.append(f"Tense: {tense}")
                         if scene["session_id"]:
                             with self.connect() as conn:
                                 messages = conn.execute(

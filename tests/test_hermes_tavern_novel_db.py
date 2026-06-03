@@ -378,6 +378,11 @@ def test_export_project_markdown_structure(tmp_path):
     chapter = store.create_chapter(novel_project["id"], "Beginning")
     scene = store.create_scene(chapter["id"], "Dawn")
     store.set_scene_goal(scene["id"], "Locate the hidden shrine")
+    store.set_scene_narration_controls(
+        scene["id"],
+        pov_label="third-person limited: Mara",
+        tense="past",
+    )
     session = store.start_session("scope-epic")
     store.link_scene_session(scene["id"], session["id"])
     store.append_message(session["id"], "user", "Hello.")
@@ -400,13 +405,61 @@ def test_export_project_markdown_structure(tmp_path):
     assert "### Chapter 1: Beginning" in markdown
     assert "#### Scene 1: Dawn" in markdown
     assert "Goal: Locate the hidden shrine" in markdown
+    assert "Scene narration controls:" in markdown
+    assert "POV: third-person limited: Mara" in markdown
+    assert "Tense: past" in markdown
     assert "user" in markdown
     assert "assistant" in markdown
     assert (
         markdown.index("#### Scene 1: Dawn")
         < markdown.index("Goal: Locate the hidden shrine")
+        < markdown.index("Scene narration controls:")
+        < markdown.index("POV: third-person limited: Mara")
+        < markdown.index("Tense: past")
         < markdown.index("- **user**: Hello.")
     )
     assert "## Canon" in markdown
     assert "Snow is common in the north" in markdown
     assert "## Timeline" in markdown
+
+
+def test_export_project_markdown_place_narration_controls_before_no_session_fallback(tmp_path):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+
+    novel_project = store.create_project("The Long Road")
+    chapter = store.create_chapter(novel_project["id"], "Dusk")
+    scene = store.create_scene(chapter["id"], "Night")
+    store.set_scene_narration_controls(
+        scene["id"],
+        pov_label="first-person",
+        tense="present",
+    )
+
+    markdown = store.export_project_markdown(novel_project["id"])
+
+    assert "#### Scene 1: Night" in markdown
+    assert "Scene narration controls:" in markdown
+    assert "POV: first-person" in markdown
+    assert "Tense: present" in markdown
+    assert markdown.index("Scene narration controls:") < markdown.index("*No session linked.*")
+
+
+def test_export_project_markdown_omits_empty_narration_controls_block(tmp_path):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+
+    novel_project = store.create_project("The Long Road")
+    chapter = store.create_chapter(novel_project["id"], "Dawn")
+    scene = store.create_scene(chapter["id"], "Quiet")
+
+    markdown_without_controls = store.export_project_markdown(novel_project["id"])
+    assert "Scene narration controls:" not in markdown_without_controls
+
+    store.set_scene_narration_controls(scene["id"], tense="present")
+    markdown_with_tense = store.export_project_markdown(novel_project["id"])
+    assert "Scene narration controls:" in markdown_with_tense
+    assert "POV:" not in markdown_with_tense
+    assert "Tense: present" in markdown_with_tense
+
+    store.set_scene_narration_controls(scene["id"], pov_label="", tense="")
+    markdown_after_clear = store.export_project_markdown(novel_project["id"])
+    assert "Scene narration controls:" not in markdown_after_clear

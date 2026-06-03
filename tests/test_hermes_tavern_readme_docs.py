@@ -210,6 +210,15 @@ def test_readme_core_commands_includes_scene_goal_literals():
     assert "/rp scene goal clear <scene-id>" in core_commands
 
 
+def test_readme_core_commands_includes_scene_narration_literals():
+    core_commands = _readme_core_commands_text()
+
+    assert "/rp scene narration <scene-id>" in core_commands
+    assert "/rp scene narration clear <scene-id>" in core_commands
+    assert "/rp scene narration pov <scene-id> <label>" in core_commands
+    assert "/rp scene narration tense <scene-id> <past|present>" in core_commands
+
+
 def test_readme_card_import_format_docs_are_accurate():
     card_import_lines = [
         line.strip()

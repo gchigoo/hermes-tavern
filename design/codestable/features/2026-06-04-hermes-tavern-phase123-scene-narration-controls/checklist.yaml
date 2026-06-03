@@ -99,12 +99,32 @@ steps:
 
   - id: S4
     name: "Export and docs: narration visibility"
-    status: pending
+    status: completed
+    completed_at: "2026-06-04"
+    result: >
+      IMPLEMENTED - export_project_markdown now emits non-empty scene narration
+      controls under each scene heading, after any scene goal and before messages,
+      no-message, or no-session fallback text. The Markdown block uses the same
+      field labels as the prompt/debug surfaces ("Scene narration controls:",
+      "POV:", and "Tense:"), omits empty fields, and suppresses the whole block
+      when controls are absent or blank. README Core commands now list all four
+      /rp scene narration forms, and focused docs tests pin those literals.
     description: >
       Include non-empty narration controls in project Markdown export and update
       README command visibility. Do not add archive ZIP/import formats.
     exit_signal: >
       DB/runtime/docs tests prove Markdown placement and README command coverage.
+    verification:
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m py_compile src/hermes_tavern/db_novel.py tests/test_hermes_tavern_novel_db.py tests/test_hermes_tavern_readme_docs.py"
+        result: "passed (controller rerun after S4 implementation)"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel_db.py -k export_project_markdown -q -o 'addopts='"
+        result: "passed; 3 passed, 15 deselected in 0.15s"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_readme_docs.py -q -o 'addopts='"
+        result: "passed; 23 passed in 0.03s"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel_db.py tests/test_hermes_tavern_readme_docs.py -q -o 'addopts='"
+        result: "passed; 41 passed in 0.69s"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts='"
+        result: "passed; 798 passed in 35.91s"
 
   - id: S5
     name: "Final verification and writeback"
