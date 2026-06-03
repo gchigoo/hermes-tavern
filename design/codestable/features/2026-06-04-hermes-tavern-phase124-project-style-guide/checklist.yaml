@@ -1,0 +1,125 @@
+doc_type: feature-checklist
+feature: "2026-06-04-hermes-tavern-phase124-project-style-guide"
+status: planned
+summary: >
+  Project Style Guide v1 adds local project-scoped style-guide persistence,
+  project command controls, linked-session prompt visibility, and Markdown
+  export/docs visibility.
+
+steps:
+  - id: S1
+    name: "DB contract: project style-guide persistence"
+    status: pending
+    description: >
+      Add novel_project_style_guides migration/index, set/get/clear helpers,
+      missing-project validation, idempotent clear behavior, linked-session
+      lookup, and focused DB tests.
+    exit_signal: >
+      Focused novel DB tests pass and no command, prompt, export, README, or
+      architecture behavior has been implemented yet.
+    verification:
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m py_compile src/hermes_tavern/db_novel.py tests/test_hermes_tavern_novel_db.py"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel_db.py -q -o 'addopts='"
+
+  - id: S2
+    name: "Command surface: project style inspect set clear"
+    status: pending
+    description: >
+      Add /rp project style inspect, set, and clear forms under the existing
+      project command family. Support explicit project ids and active-project
+      fallback with bounded usage/missing-project responses.
+    exit_signal: >
+      Runtime and command-table tests cover help visibility, explicit-id behavior,
+      active-project fallback, malformed args, blank text, missing active project,
+      and missing project errors.
+    verification:
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m py_compile src/hermes_tavern/runtime_novel.py src/hermes_tavern/commands.py tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_commands.py"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_commands.py -q -o 'addopts='"
+
+  - id: S3
+    name: "Prompt module: linked project style guide"
+    status: pending
+    description: >
+      Add a linked-session project style PromptModule in runtime_prompt_modules.py.
+      The module should be system/project_style:<project title>, include only
+      non-empty style text, sort before canon/preset dynamic modules, and skip
+      cleanly on sqlite errors.
+    exit_signal: >
+      Debug-prompt tests prove linked inclusion, unlinked exclusion, ordering
+      before canon/preset modules, and sqlite-error skip behavior.
+    verification:
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m py_compile src/hermes_tavern/runtime_prompt_modules.py tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_runtime.py"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel_runtime.py -k style -q -o 'addopts='"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_runtime.py -q -o 'addopts='"
+
+  - id: S4
+    name: "Export and docs: style guide visibility"
+    status: pending
+    description: >
+      Include non-empty project style guides in Markdown export after Summary and
+      before Chapters. Update README/help docs tests for the new project style
+      command forms. Do not add archive ZIP/import behavior.
+    exit_signal: >
+      DB/runtime/docs tests prove Markdown placement, empty-style omission, and
+      README command coverage.
+    verification:
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m py_compile src/hermes_tavern/db_novel.py tests/test_hermes_tavern_novel_db.py tests/test_hermes_tavern_readme_docs.py"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel_db.py -k export_project_markdown -q -o 'addopts='"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_readme_docs.py -q -o 'addopts='"
+
+  - id: S5
+    name: "Final verification and writeback"
+    status: pending
+    description: >
+      Run targeted and full verification, validate CodeStable YAML/frontmatter,
+      perform protected-core and reverse-scope checks, and write acceptance plus
+      architecture/root-design updates.
+    exit_signal: >
+      Full suite and scope guards pass; acceptance records the implemented Phase
+      124 contract and docs describe Project Style Guide v1 as current.
+    verification:
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m py_compile src/hermes_tavern/db_novel.py src/hermes_tavern/runtime_novel.py src/hermes_tavern/runtime_prompt_modules.py src/hermes_tavern/commands.py tests/test_hermes_tavern_novel_db.py tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_runtime.py tests/test_hermes_tavern_readme_docs.py tests/test_hermes_tavern_commands.py"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel_db.py tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_runtime.py tests/test_hermes_tavern_readme_docs.py tests/test_hermes_tavern_commands.py -q -o 'addopts='"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts='"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-04-hermes-tavern-phase124-project-style-guide/design.md --require doc_type --require status"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --yaml-only --file design/codestable/features/2026-06-04-hermes-tavern-phase124-project-style-guide/checklist.yaml"
+      - command: "git diff --check"
+
+checks:
+  - id: C1
+    name: "DB contract: project style guide"
+    status: pending
+    command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel_db.py -q -o 'addopts='"
+
+  - id: C2
+    name: "Runtime command contract: project style"
+    status: pending
+    command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_commands.py -q -o 'addopts='"
+
+  - id: C3
+    name: "Prompt contract: linked project style"
+    status: pending
+    command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel_runtime.py -k style -q -o 'addopts='"
+
+  - id: C4
+    name: "Export and docs contract"
+    status: pending
+    command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel_db.py tests/test_hermes_tavern_readme_docs.py -q -o 'addopts='"
+
+  - id: C5
+    name: "Reverse scope"
+    status: pending
+    command: "git diff --name-only -- run_agent.py cli.py gateway/run.py"
+
+verification_commands:
+  - "PYTHONDONTWRITEBYTECODE=1 python -m py_compile src/hermes_tavern/db_novel.py src/hermes_tavern/runtime_novel.py src/hermes_tavern/runtime_prompt_modules.py src/hermes_tavern/commands.py tests/test_hermes_tavern_novel_db.py tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_runtime.py tests/test_hermes_tavern_readme_docs.py tests/test_hermes_tavern_commands.py"
+  - "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel_db.py tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_runtime.py tests/test_hermes_tavern_readme_docs.py tests/test_hermes_tavern_commands.py -q -o 'addopts='"
+  - "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts='"
+  - "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-04-hermes-tavern-phase124-project-style-guide/design.md --require doc_type --require status"
+  - "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --yaml-only --file design/codestable/features/2026-06-04-hermes-tavern-phase124-project-style-guide/checklist.yaml"
+  - "git diff --check"
+
+reverse_scope_scans:
+  - "git diff --name-only -- run_agent.py cli.py gateway/run.py"
+  - "git diff --name-only | rg -v '^(src/hermes_tavern/(db_novel.py|runtime_novel.py|runtime_prompt_modules.py|commands.py)|tests/test_hermes_tavern_(novel_db|novel_runtime|runtime|readme_docs|commands)\\.py|README\\.md|design/HERMES_TAVERN_DESIGN\\.md|design/codestable/architecture/ARCHITECTURE\\.md|design/codestable/features/2026-06-04-hermes-tavern-phase124-project-style-guide/)'"
+  - "git diff -- src tests README.md | rg -n 'api_key|access_token|cloud sync|collaboration|underage|minor|jailbreak|bypass provider|project import|novel import|ZIP|relationship state|character state|outline|rewrite|expand|compress'"
