@@ -102,8 +102,10 @@ def test_chapter_routes_require_active_or_explicit_project(tmp_path):
     assert "Chapter 1: First" in listed
 
 
-def test_scene_create_list_and_start_is_deferred(tmp_path):
+def test_scene_create_list_and_start_links_session(tmp_path):
     runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    runtime.store.save_card(parse_character_card({"name": "Alice", "description": "Scholar", "first_mes": "Hello."}))
+    runtime.handle_command_sync(RPCommand("start", ["Alice"], "/rp start Alice"), Event())
     project = runtime.store.create_project("Atlas")
     chapter = runtime.store.create_chapter(project["id"], "Arrival")
     runtime.store.create_scene(chapter["id"], "Opening",)
@@ -122,13 +124,38 @@ def test_scene_create_list_and_start_is_deferred(tmp_path):
         RPCommand("scene", ["start", str(scene["id"])], f"/rp scene start {scene['id']}"),
         Event(),
     )
-    assert "Scene start is deferred to phase 121 S4" in start
+    assert "Started Hermes Tavern session with Alice." in start
+    linked_scene = runtime.store.get_scene(scene["id"])
+    active = runtime.store.get_active_session("telegram:chat:chat-1:thread:main:user:user-1")
+    assert linked_scene["session_id"] == active["id"]
+    session_info = runtime.handle_command_sync(
+        RPCommand("session", ["info"], "/rp session info"),
+        Event(),
+    )
+    assert "Project: Atlas" in session_info
+    assert "Chapter: Arrival" in session_info
+    assert "Scene: Second" in session_info
 
     missing = runtime.handle_command_sync(
         RPCommand("scene", ["start"], "/rp scene start"),
         Event(),
     )
     assert missing == "Usage: /rp scene start <scene-id>"
+
+
+def test_scene_start_requires_available_card(tmp_path):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    project = runtime.store.create_project("Atlas")
+    chapter = runtime.store.create_chapter(project["id"], "Arrival")
+    scene = runtime.store.create_scene(chapter["id"], "Only Scene")
+
+    start = runtime.handle_command_sync(
+        RPCommand("scene", ["start", str(scene["id"])], f"/rp scene start {scene['id']}"),
+        Event(),
+    )
+    assert start == "No card has been imported yet. Import a card first: /rp card import <file>"
+    assert runtime.store.get_active_session("telegram:chat:chat-1:thread:main:user:user-1") is None
+    assert runtime.store.get_scene(scene["id"]).get("session_id") is None
 
 
 def test_canon_and_timeline_routes_use_active_project(tmp_path):

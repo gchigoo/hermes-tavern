@@ -291,6 +291,29 @@ class NovelDBMixin:
             ).fetchone()
         return row["project_id"] if row else None
 
+    def get_novel_context_for_session(self, session_id: str) -> dict[str, Any] | None:
+        self.migrate()
+        with self.connect() as conn:
+            row = conn.execute(
+                """
+                SELECT
+                    np.title AS project_title,
+                    nc.title AS chapter_title,
+                    ns.title AS scene_title,
+                    ns.id AS scene_id
+                FROM novel_scenes AS ns
+                JOIN novel_chapters AS nc
+                    ON nc.id = ns.chapter_id
+                JOIN novel_projects AS np
+                    ON np.id = nc.project_id
+                WHERE ns.session_id = ?
+                ORDER BY ns.updated_at DESC, ns.id DESC
+                LIMIT 1
+                """,
+                (session_id,),
+            ).fetchone()
+        return _row_to_dict(row)
+
     def link_scene_session(self, scene_id: int, session_id: str) -> bool:
         self.migrate()
         with self.connect() as conn:

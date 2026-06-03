@@ -40,6 +40,7 @@ def session_info(runtime: Any, event: Any) -> str:
     facts = runtime.store.list_session_memory_facts(session_key)
     summary = runtime.store.get_session_summary(session_key)
     recent_msgs = runtime.store.get_recent_messages(session["id"], limit=5)
+    novel_context = runtime.store.get_novel_context_for_session(session["id"])
     lines = [
         f"Session: [{short_id}] {title} ({status})",
         f"card: {card_name}",
@@ -51,6 +52,14 @@ def session_info(runtime: Any, event: Any) -> str:
         f"recent messages: {len(recent_msgs)}",
         "hints: /rp history | /rp debug prompt | /rp status",
     ]
+    if novel_context is not None:
+        lines.extend(
+            [
+                f"Project: {novel_context['project_title']}",
+                f"Chapter: {novel_context['chapter_title']}",
+                f"Scene: {novel_context['scene_title']}",
+            ]
+        )
     return "\n".join(lines)
 
 

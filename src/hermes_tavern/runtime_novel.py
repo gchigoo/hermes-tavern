@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from hermes_tavern.commands import RPCommand
+from hermes_tavern import runtime_lifecycle
 from hermes_tavern.identity import session_key_from_event
 from hermes_tavern.runtime_utils import mobile_preview as _mobile_preview
 
@@ -40,7 +41,7 @@ def scene_command(runtime: Any, command: RPCommand, event: Any) -> str:
     if subcommand == "list":
         return scene_list(runtime, command)
     if subcommand == "start":
-        return scene_start(runtime, command)
+        return scene_start(runtime, command, event)
     return "Usage: /rp scene create <chapter-id> <title> | /rp scene list <chapter-id> | /rp scene start <scene-id>"
 
 
@@ -69,6 +70,25 @@ def _safe_int(text: str) -> int | None:
         return int(text)
     except (TypeError, ValueError):
         return None
+
+
+def _scene_card_unavailable_message(runtime: Any) -> str:
+    if runtime.store.get_card("last") is None:
+        return "No card has been imported yet. Import a card first: /rp card import <file>"
+    return (
+        "No active Hermes Tavern session with a bound card. "
+        "Use /rp start <card> to begin a fresh session."
+    )
+
+
+def _scene_start_card(runtime: Any, event: Any) -> dict[str, Any] | None:
+    session_key = session_key_from_event(event)
+    session = runtime.store.get_active_session(session_key) or runtime.store.get_paused_session(
+        session_key
+    )
+    if not session or not session.get("card_id"):
+        return None
+    return runtime.store.get_card(session["card_id"])
 
 
 def _project_scope(runtime: Any, event: Any) -> dict[str, int]:
@@ -270,7 +290,7 @@ def scene_list(runtime: Any, command: RPCommand) -> str:
     return "\n".join(lines)
 
 
-def scene_start(runtime: Any, command: RPCommand) -> str:
+def scene_start(runtime: Any, command: RPCommand, event: Any) -> str:
     if len(command.args) < 2:
         return "Usage: /rp scene start <scene-id>"
     scene_id = _safe_int(command.args[1])
@@ -279,10 +299,19 @@ def scene_start(runtime: Any, command: RPCommand) -> str:
     scene = runtime.store.get_scene(scene_id)
     if scene is None:
         return f"No novel scene found: {scene_id}"
-    return (
-        "Scene start is deferred to phase 121 S4. "
-        f"Scene [{scene['id']}] {scene['title']} exists and will be linked to an RP session later."
+    card = _scene_start_card(runtime, event)
+    if card is None:
+        return _scene_card_unavailable_message(runtime)
+    start = runtime_lifecycle.start(
+        runtime,
+        RPCommand("start", [card["id"]], f"/rp start {card['id']}"),
+        event,
     )
+    session = runtime.store.get_active_session(session_key_from_event(event))
+    if session is None:
+        return "Failed to start or locate active RP session."
+    runtime.store.link_scene_session(scene_id, session["id"])
+    return start
 
 
 def canon_add(runtime: Any, command: RPCommand, event: Any) -> str:

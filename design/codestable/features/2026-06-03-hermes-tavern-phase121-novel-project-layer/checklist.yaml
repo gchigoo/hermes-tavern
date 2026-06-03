@@ -88,7 +88,13 @@ steps:
       /rp scene start <scene> creates a new RP session, associates it with
       the current card, updates scene.session_id, and starts the RP loop.
       /rp session info should display linked project/chapter/scene.
-    status: pending
+    status: completed
+    completed_at: "2026-06-03"
+    result: >
+      IMPLEMENTED - `/rp scene start <scene-id>` now starts the RP loop
+      via the existing `/rp start` behavior, links the scene.session_id through
+      store.link_scene_session, and `/rp session info` now shows project/chapter/scene
+      context for the active linked session.
     exit_signal: >
       /rp scene start → /rp session info shows "Project: X / Chapter: Y / Scene: Z"
 
@@ -128,6 +134,8 @@ verification:
       result: "passed; 71 passed in 3.79s (controller rerun after S2 command surface + README doc guard)"
     - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_lore_runtime.py tests/test_hermes_tavern_memory.py -q -o 'addopts='"
       result: "passed; 20 passed in 0.64s (controller rerun after S3 canon prompt injection)"
+    - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_runtime.py -q -o 'addopts='"
+      result: "passed; 53 passed in 3.23s (controller rerun after S4 scene-session linking)"
   full_pytest:
     - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts='"
       result: "passed; 725 passed in 28.49s (controller rerun after S1)"
@@ -135,6 +143,8 @@ verification:
       result: "passed; 732 passed in 27.10s (controller rerun after S2)"
     - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts='"
       result: "passed; 734 passed in 29.56s (controller rerun after S3)"
+    - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts='"
+      result: "passed; 735 passed in 27.56s (controller rerun after S4)"
   checklist_yaml_validation:
     - command: "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --yaml-only --file design/codestable/features/2026-06-03-hermes-tavern-phase121-novel-project-layer/checklist.yaml"
       result: "passed; 1 passed, 0 failed (controller rerun after S1 checklist update)"
@@ -142,11 +152,15 @@ verification:
       result: "passed; 1 passed, 0 failed (controller rerun after S2 checklist update)"
     - command: "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --yaml-only --file design/codestable/features/2026-06-03-hermes-tavern-phase121-novel-project-layer/checklist.yaml"
       result: "passed; 1 passed, 0 failed (controller rerun after S3 checklist update)"
+    - command: "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --yaml-only --file design/codestable/features/2026-06-03-hermes-tavern-phase121-novel-project-layer/checklist.yaml"
+      result: "passed; 1 passed, 0 failed (controller rerun after S4 checklist update)"
   py_compile:
     - command: "python -m py_compile src/hermes_tavern/runtime_novel.py tests/test_hermes_tavern_novel_runtime.py"
       result: "passed (controller rerun after S2)"
     - command: "PYTHONDONTWRITEBYTECODE=1 python -m py_compile src/hermes_tavern/db_novel.py src/hermes_tavern/runtime_prompt_modules.py tests/test_hermes_tavern_novel_runtime.py"
       result: "passed (controller rerun after S3)"
+    - command: "PYTHONDONTWRITEBYTECODE=1 python -m py_compile src/hermes_tavern/runtime_novel.py src/hermes_tavern/runtime_sessions.py src/hermes_tavern/db_novel.py tests/test_hermes_tavern_novel_runtime.py"
+      result: "passed (controller rerun after S4)"
   diff_check:
     - command: "git diff --check"
       result: "passed (controller rerun after S1)"
@@ -154,3 +168,5 @@ verification:
       result: "passed (controller rerun after S2)"
     - command: "git diff --check"
       result: "passed (controller rerun after S3)"
+    - command: "git diff --check"
+      result: "passed (controller rerun after S4)"
