@@ -1,0 +1,115 @@
+doc_type: feature-checklist
+feature: "2026-06-03-hermes-tavern-phase122-scene-goals"
+status: in_progress
+summary: >
+  Scene Goals v1 adds persistent scene goals, a narrow /rp scene goal command,
+  active-session prompt injection, and export/docs visibility.
+
+steps:
+  - id: S1
+    name: "DB contract: scene goal persistence"
+    status: completed
+    completed_at: "2026-06-03"
+    result: >
+      IMPLEMENTED - db_novel.NovelDBMixin now migrates novel_scene_goals,
+      exposes set/get/clear scene goal helpers, validates missing parent scenes
+      with ValueError("Scene not found"), updates repeated scene-goal writes in
+      place, clears deterministically by deleting the row, and resolves linked
+      session goals through novel_scenes.session_id. Focused DB tests cover
+      migration, set/update/get/clear behavior, missing-scene errors, and
+      linked-session scoping.
+    description: >
+      Add the novel_scene_goals table to db_novel.py plus set/get/clear and
+      get_scene_goal_for_session helpers. Extend novel DB tests for migration,
+      parent validation, update semantics, clear semantics, and linked-session lookup.
+    verification:
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m py_compile src/hermes_tavern/db_novel.py tests/test_hermes_tavern_novel_db.py"
+        result: "passed (controller rerun after S1 implementation)"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel_db.py -q -o 'addopts='"
+        result: "passed; 10 passed in 0.36s (controller rerun after S1 implementation)"
+
+  - id: S2
+    name: "Command surface: scene goal set inspect clear"
+    status: pending
+    description: >
+      Add /rp scene goal <scene-id> [text] and /rp scene goal clear <scene-id>
+      under runtime_novel.py. Update commands.py help and runtime tests for usage,
+      missing scene, set, inspect, and clear.
+    verification:
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m py_compile src/hermes_tavern/runtime_novel.py src/hermes_tavern/commands.py tests/test_hermes_tavern_novel_runtime.py"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel_runtime.py -q -o 'addopts='"
+
+  - id: S3
+    name: "Prompt module: active linked scene goal"
+    status: pending
+    description: >
+      Add session_scene_goal_modules in runtime_prompt_modules.py. Inject a
+      system scene_goal module only for the active session linked to a scene
+      with a non-empty goal. Skip cleanly on sqlite errors.
+    verification:
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m py_compile src/hermes_tavern/runtime_prompt_modules.py tests/test_hermes_tavern_novel_runtime.py"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel_runtime.py -q -o 'addopts='"
+
+  - id: S4
+    name: "Export and docs: scene goal visibility"
+    status: pending
+    description: >
+      Include scene goals in project Markdown export under the relevant scene.
+      Update README command surface. Do not add project/novel import or archive formats.
+    verification:
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel_db.py tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_readme_docs.py -q -o 'addopts='"
+
+  - id: S5
+    name: "Final verification: full suite and scope guards"
+    status: pending
+    description: >
+      Run targeted tests, full pytest, diff hygiene, protected-core-file guard,
+      and reverse-scope scans.
+    verification:
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel_db.py tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_runtime.py -q -o 'addopts='"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts='"
+      - command: "git diff --check"
+
+checks:
+  - id: C1
+    name: "Command contract: scene goal set inspect clear"
+    status: pending
+    command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel_runtime.py -q -o 'addopts='"
+
+  - id: C2
+    name: "Prompt contract: linked sessions only"
+    status: pending
+    command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel_runtime.py -k scene_goal -q -o 'addopts='"
+
+  - id: C3
+    name: "Reverse scope: prohibited feature families absent"
+    status: pending
+    command: "! rg -n \"(cloud|collab|collaboration|multi[-_ ]?user|project_import|novel_import|import_project|timeline_graph|timeline_render|canon_check|relationship_state|character_state|api_key|access_token|minor|underage)\" src/hermes_tavern tests README.md"
+
+verification_commands:
+  - "PYTHONDONTWRITEBYTECODE=1 python -m py_compile src/hermes_tavern/db_novel.py src/hermes_tavern/runtime_novel.py src/hermes_tavern/runtime_prompt_modules.py src/hermes_tavern/commands.py tests/test_hermes_tavern_novel_db.py tests/test_hermes_tavern_novel_runtime.py"
+  - "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel_db.py tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_runtime.py tests/test_hermes_tavern_readme_docs.py -q -o 'addopts='"
+  - "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts='"
+  - "git diff --check"
+
+reverse_scope_scans:
+  - "test -z \"$(git diff --name-only -- run_agent.py cli.py gateway/run.py)\""
+  - "! rg -n \"(cloud|collab|collaboration|multi[-_ ]?user|project_import|novel_import|import_project|timeline_graph|timeline_render|canvas|svg|canon_check|relationship_state|character_state|api_key|access_token|minor|underage)\" src/hermes_tavern tests README.md"
+
+s1_controller_verification:
+  - command: "PYTHONDONTWRITEBYTECODE=1 python -m py_compile src/hermes_tavern/db_novel.py tests/test_hermes_tavern_novel_db.py"
+    result: "passed (controller rerun after S1 implementation)"
+  - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel_db.py -q -o 'addopts='"
+    result: "passed; 10 passed in 0.36s"
+  - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel_db.py tests/test_hermes_tavern_novel_runtime.py -q -o 'addopts='"
+    result: "passed; 29 passed in 0.99s"
+  - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts='"
+    result: "passed; 755 passed in 29.48s"
+  - command: "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-03-hermes-tavern-phase122-scene-goals/design.md --require doc_type --require status"
+    result: "passed; 1 passed, 0 failed"
+  - command: "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --yaml-only --file design/codestable/features/2026-06-03-hermes-tavern-phase122-scene-goals/checklist.yaml"
+    result: "passed; 1 passed, 0 failed"
+  - command: "git diff --check"
+    result: "passed"
+  - command: "git diff --name-only -- run_agent.py cli.py gateway/run.py"
+    result: "passed; no protected core files changed"

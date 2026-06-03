@@ -68,6 +68,14 @@ class NovelDBMixin:
                 created_at TEXT NOT NULL DEFAULT (datetime('now'))
             );
 
+            CREATE TABLE IF NOT EXISTS novel_scene_goals (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                scene_id INTEGER NOT NULL UNIQUE REFERENCES novel_scenes(id) ON DELETE CASCADE,
+                goal_text TEXT NOT NULL DEFAULT '',
+                created_at TEXT NOT NULL DEFAULT (datetime('now')),
+                updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+            );
+
             CREATE INDEX IF NOT EXISTS idx_novel_projects_created
                 ON novel_projects(created_at);
             CREATE INDEX IF NOT EXISTS idx_novel_chapters_project
@@ -80,6 +88,8 @@ class NovelDBMixin:
                 ON novel_canon(project_id, canon_group, importance);
             CREATE INDEX IF NOT EXISTS idx_novel_timeline_project
                 ON novel_timeline(project_id, sort_key, created_at);
+            CREATE INDEX IF NOT EXISTS idx_novel_scene_goals_scene
+                ON novel_scene_goals(scene_id);
             """
         )
 
@@ -269,6 +279,81 @@ class NovelDBMixin:
             row = conn.execute(
                 "SELECT * FROM novel_scenes WHERE id = ?",
                 (scene_id,),
+            ).fetchone()
+        return _row_to_dict(row)
+
+    def set_scene_goal(self, scene_id: int, goal_text: str) -> dict[str, Any]:
+        self.migrate()
+        with self.connect() as conn:
+            scene = conn.execute(
+                "SELECT id FROM novel_scenes WHERE id = ?",
+                (scene_id,),
+            ).fetchone()
+            if scene is None:
+                raise ValueError("Scene not found")
+            now = _utc_now()
+            conn.execute(
+                """
+                INSERT INTO novel_scene_goals (
+                    scene_id, goal_text, created_at, updated_at
+                )
+                VALUES (?, ?, ?, ?)
+                ON CONFLICT(scene_id) DO UPDATE SET
+                    goal_text = excluded.goal_text,
+                    updated_at = excluded.updated_at
+                """,
+                (scene_id, goal_text, now, now),
+            )
+            row = conn.execute(
+                "SELECT * FROM novel_scene_goals WHERE scene_id = ?",
+                (scene_id,),
+            ).fetchone()
+        return _row_to_dict(row)
+
+    def get_scene_goal(self, scene_id: int) -> dict[str, Any] | None:
+        self.migrate()
+        with self.connect() as conn:
+            scene = conn.execute(
+                "SELECT id FROM novel_scenes WHERE id = ?",
+                (scene_id,),
+            ).fetchone()
+            if scene is None:
+                raise ValueError("Scene not found")
+            row = conn.execute(
+                "SELECT * FROM novel_scene_goals WHERE scene_id = ?",
+                (scene_id,),
+            ).fetchone()
+        return _row_to_dict(row)
+
+    def clear_scene_goal(self, scene_id: int) -> bool:
+        self.migrate()
+        with self.connect() as conn:
+            scene = conn.execute(
+                "SELECT id FROM novel_scenes WHERE id = ?",
+                (scene_id,),
+            ).fetchone()
+            if scene is None:
+                raise ValueError("Scene not found")
+            cursor = conn.execute(
+                "DELETE FROM novel_scene_goals WHERE scene_id = ?",
+                (scene_id,),
+            )
+            return cursor.rowcount > 0
+
+    def get_scene_goal_for_session(self, session_id: str) -> dict[str, Any] | None:
+        self.migrate()
+        with self.connect() as conn:
+            row = conn.execute(
+                """
+                SELECT nsg.*
+                FROM novel_scenes AS ns
+                JOIN novel_scene_goals AS nsg
+                    ON nsg.scene_id = ns.id
+                WHERE ns.session_id = ?
+                ORDER BY ns.updated_at DESC, ns.id DESC
+                LIMIT 1
+                """,
+                (session_id,),
             ).fetchone()
         return _row_to_dict(row)
 

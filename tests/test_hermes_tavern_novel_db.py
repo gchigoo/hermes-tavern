@@ -24,6 +24,7 @@ def test_migrate_creates_novel_tables(tmp_path):
         "novel_scenes",
         "novel_canon",
         "novel_timeline",
+        "novel_scene_goals",
     }.issubset(tables)
     novel_tables = {name for name in tables if name.startswith("novel_")}
     assert novel_tables == {
@@ -32,6 +33,7 @@ def test_migrate_creates_novel_tables(tmp_path):
         "novel_scenes",
         "novel_canon",
         "novel_timeline",
+        "novel_scene_goals",
     }
 
 
@@ -106,6 +108,83 @@ def test_scene_crud_and_parent_validation(tmp_path):
     except ValueError as exc:
         missing = str(exc)
     assert "Scene not found" in missing
+
+
+def test_scene_goal_set_update_get_clear(tmp_path):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    novel_project = store.create_project("Goals Project")
+    chapter = store.create_chapter(novel_project["id"], "Chapter 1")
+    scene = store.create_scene(chapter["id"], "Goal Scene")
+
+    set_once = store.set_scene_goal(scene["id"], "Reach the gate before dawn")
+    assert set_once["scene_id"] == scene["id"]
+    assert set_once["goal_text"] == "Reach the gate before dawn"
+
+    retrieved = store.get_scene_goal(scene["id"])
+    assert retrieved is not None
+    assert retrieved["goal_text"] == "Reach the gate before dawn"
+    assert retrieved["created_at"] == set_once["created_at"]
+
+    set_twice = store.set_scene_goal(scene["id"], "Find the hidden key")
+    assert set_twice["id"] == set_once["id"]
+    assert set_twice["goal_text"] == "Find the hidden key"
+    assert set_twice["updated_at"] >= set_once["updated_at"]
+
+    fetched = store.get_scene_goal(scene["id"])
+    assert fetched is not None
+    assert fetched["goal_text"] == "Find the hidden key"
+
+    assert store.clear_scene_goal(scene["id"]) is True
+    assert store.get_scene_goal(scene["id"]) is None
+    assert store.clear_scene_goal(scene["id"]) is False
+
+
+def test_scene_goal_missing_scene_errors(tmp_path):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    missing_id = 999
+
+    try:
+        store.set_scene_goal(missing_id, "Impossible")
+    except ValueError as exc:
+        assert str(exc) == "Scene not found"
+    else:
+        raise AssertionError("Expected ValueError for missing scene")
+
+    try:
+        store.get_scene_goal(missing_id)
+    except ValueError as exc:
+        assert str(exc) == "Scene not found"
+    else:
+        raise AssertionError("Expected ValueError for missing scene")
+
+    try:
+        store.clear_scene_goal(missing_id)
+    except ValueError as exc:
+        assert str(exc) == "Scene not found"
+    else:
+        raise AssertionError("Expected ValueError for missing scene")
+
+
+def test_scene_goal_for_session_uses_scene_link(tmp_path):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    novel_project = store.create_project("Session Scope Project")
+    chapter = store.create_chapter(novel_project["id"], "Chapter 1")
+    linked = store.create_scene(chapter["id"], "Linked Scene")
+    unlinked = store.create_scene(chapter["id"], "Other Scene")
+
+    session = store.start_session("scope-linked")
+    store.link_scene_session(linked["id"], session["id"])
+
+    store.set_scene_goal(linked["id"], "Open the gates")
+    store.set_scene_goal(unlinked["id"], "Ignore this link")
+
+    linked_goal = store.get_scene_goal_for_session(session["id"])
+    assert linked_goal is not None
+    assert linked_goal["scene_id"] == linked["id"]
+    assert linked_goal["goal_text"] == "Open the gates"
+
+    other_session = store.start_session("scope-unlinked")
+    assert store.get_scene_goal_for_session(other_session["id"]) is None
 
 
 def test_canon_group_default_and_prompt_ordering(tmp_path):
