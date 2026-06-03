@@ -25,6 +25,14 @@ def test_migrate_creates_novel_tables(tmp_path):
         "novel_canon",
         "novel_timeline",
     }.issubset(tables)
+    novel_tables = {name for name in tables if name.startswith("novel_")}
+    assert novel_tables == {
+        "novel_projects",
+        "novel_chapters",
+        "novel_scenes",
+        "novel_canon",
+        "novel_timeline",
+    }
 
 
 def test_novel_project_crud_and_counts(tmp_path):
@@ -120,6 +128,23 @@ def test_canon_group_default_and_prompt_ordering(tmp_path):
 
     ordered = store.get_canon_for_prompt(novel_project["id"], limit=10)
     assert ordered[0]["id"] == world["id"]
+
+
+def test_canon_group_empty_string_defaults_to_general(tmp_path):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+
+    novel_project = store.create_project("Lore House")
+    blank_group = store.create_canon(
+        novel_project["id"],
+        "Sky",
+        "Blue",
+        group="",
+    )
+
+    assert blank_group["canon_group"] == "general"
+    canon = store.list_canon(novel_project["id"])
+    assert len(canon) == 1
+    assert canon[0]["canon_group"] == "general"
 
 
 def test_timeline_ordering(tmp_path):

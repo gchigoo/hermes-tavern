@@ -290,8 +290,9 @@ def scene_list(runtime: Any, command: RPCommand) -> str:
         return f"No scenes for chapter [{chapter_id}] yet."
     lines = [f"Hermes Tavern scenes for chapter [{chapter_id}]:"]
     for scene in scenes:
+        session_hint = " (no session linked)" if not scene["session_id"] else ""
         lines.append(
-            f"  - [{scene['id']}] Scene {scene['scene_number']}: {scene['title']} ({scene['status']})"
+            f"  - [{scene['id']}] Scene {scene['scene_number']}: {scene['title']} ({scene['status']}){session_hint}"
         )
     return "\n".join(lines)
 

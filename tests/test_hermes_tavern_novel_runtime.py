@@ -58,6 +58,23 @@ def test_project_routes_create_list_info_set(tmp_path):
     set_ok = runtime.handle_command_sync(RPCommand("project", ["set", "1"], "/rp project set 1"), event)
     assert "Active novel project set" in set_ok
 
+    followup_chapter = runtime.handle_command_sync(
+        RPCommand("chapter", ["create", "Setup"], "/rp chapter create Setup"),
+        event,
+    )
+    assert "Hermes Tavern chapter created" in followup_chapter
+
+
+def test_project_list_includes_chapter_count_for_created_project(tmp_path):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+
+    runtime.store.create_project("Atlas")
+    runtime.handle_command_sync(RPCommand("chapter", ["create", "1", "Arrival"], "/rp chapter create 1 Arrival"), Event())
+    listed = runtime.handle_command_sync(RPCommand("project", ["list"], "/rp project list"), Event())
+
+    assert "Atlas" in listed
+    assert "(chapters: 1, draft)" in listed
+
 
 @pytest.mark.parametrize(
     "command, expected_prefix",
@@ -100,6 +117,15 @@ def test_chapter_routes_require_active_or_explicit_project(tmp_path):
     )
     assert "Hermes Tavern chapters for project [1]" in listed
     assert "Chapter 1: First" in listed
+
+
+def test_chapter_routes_create_requires_existing_project(tmp_path):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    response = runtime.handle_command_sync(
+        RPCommand("chapter", ["create", "9999", "Missing"], "/rp chapter create 9999 Missing"),
+        Event(),
+    )
+    assert response == "No novel project found: 9999"
 
 
 def test_project_export_returns_media_marker_and_path_under_profile_safe_home(tmp_path, monkeypatch):
@@ -171,13 +197,45 @@ def test_project_export_empty_project_still_exports_sections(tmp_path, monkeypat
     assert "No timeline events." in exported
 
 
+def test_project_export_with_active_project_and_no_id(tmp_path, monkeypatch):
+    monkeypatch.setenv("HERMES_HOME", str(tmp_path / "hermes home"))
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+
+    runtime.handle_command_sync(
+        RPCommand("project", ["create", "Atlas", "A long voyage"], "/rp project create Atlas A long voyage"),
+        Event(),
+    )
+    runtime.store.create_chapter(1, "Arrival")
+    scene = runtime.store.create_scene(1, "Opening")
+    session = runtime.store.start_session("telegram:chat:chat-1:thread:main:user:user-1")
+    runtime.store.link_scene_session(scene["id"], session["id"])
+    runtime.store.append_message(session["id"], "user", "Hello.")
+    runtime.store.append_message(session["id"], "assistant", "Welcome.")
+    runtime.store.create_canon(1, "Climate", "Snow is common.")
+
+    response = runtime.handle_command_sync(RPCommand("project", ["export"], "/rp project export"), Event())
+    assert "Project exported as Markdown." in response
+    file_path = response.split("file: ", 1)[1].splitlines()[0].strip()
+    media_path = response.split("MEDIA:", 1)[1].strip().strip('"')
+    assert media_path == file_path
+
+    from pathlib import Path
+
+    exported = Path(file_path).read_text(encoding="utf-8")
+    assert "# Atlas" in exported
+    assert "## Chapters" in exported
+
+
 def test_scene_create_list_and_start_links_session(tmp_path):
     runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
     runtime.store.save_card(parse_character_card({"name": "Alice", "description": "Scholar", "first_mes": "Hello."}))
     runtime.handle_command_sync(RPCommand("start", ["Alice"], "/rp start Alice"), Event())
     project = runtime.store.create_project("Atlas")
     chapter = runtime.store.create_chapter(project["id"], "Arrival")
-    runtime.store.create_scene(chapter["id"], "Opening",)
+    runtime.handle_command_sync(
+        RPCommand("scene", ["create", str(chapter["id"]), "Opening"], "/rp scene create 1 Opening"),
+        Event(),
+    )
 
     scene = runtime.store.create_scene(chapter["id"], "Second")
 
@@ -210,6 +268,31 @@ def test_scene_create_list_and_start_links_session(tmp_path):
         Event(),
     )
     assert missing == "Usage: /rp scene start <scene-id>"
+
+
+def test_scene_list_shows_no_session_linked_flag_for_unlinked_scene(tmp_path):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    project = runtime.store.create_project("Atlas")
+    chapter = runtime.store.create_chapter(project["id"], "Arrival")
+    runtime.handle_command_sync(
+        RPCommand("scene", ["create", str(chapter["id"]), "Opening"], "/rp scene create 1 Opening"),
+        Event(),
+    )
+
+    listed = runtime.handle_command_sync(
+        RPCommand("scene", ["list", str(chapter["id"])], "/rp scene list 1"),
+        Event(),
+    )
+    assert "no session linked" in listed.lower()
+
+
+def test_scene_start_nonexistent_returns_error(tmp_path):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    missing = runtime.handle_command_sync(
+        RPCommand("scene", ["start", "9999"], "/rp scene start 9999"),
+        Event(),
+    )
+    assert missing == "No novel scene found: 9999"
 
 
 def test_scene_start_requires_available_card(tmp_path):
@@ -320,9 +403,18 @@ def test_canon_modules_do_not_show_in_debug_prompt_for_unlinked_session(tmp_path
     runtime.handle_command_sync(RPCommand("start", ["Alice"], "/rp start Alice"), Event())
 
     project = store.create_project("Skyline")
-    store.create_canon(project["id"], "Skyline", "The sky is violet.")
+    chapter = store.create_chapter(project["id"], "Prologue")
+    store.create_scene(chapter["id"], "Opening", session_id=store.get_active_session("telegram:chat:chat-1:thread:main:user:user-1")["id"])
 
     prompt = runtime.handle_command_sync(RPCommand("debug", ["prompt"], "/rp debug prompt"), Event())
 
     assert "system/canon:Skyline" not in prompt
     assert "The sky is violet." not in prompt
+
+
+def test_novel_help_does_not_list_import_commands(tmp_path):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    response = runtime.handle_command_sync(RPCommand("help", [], "/rp"), Event())
+
+    assert "project import" not in response
+    assert "novel import" not in response
