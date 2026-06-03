@@ -76,6 +76,15 @@ class NovelDBMixin:
                 updated_at TEXT NOT NULL DEFAULT (datetime('now'))
             );
 
+            CREATE TABLE IF NOT EXISTS novel_scene_narration_controls (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                scene_id INTEGER NOT NULL UNIQUE REFERENCES novel_scenes(id) ON DELETE CASCADE,
+                pov_label TEXT NOT NULL DEFAULT '',
+                tense TEXT NOT NULL DEFAULT '',
+                created_at TEXT NOT NULL DEFAULT (datetime('now')),
+                updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+            );
+
             CREATE INDEX IF NOT EXISTS idx_novel_projects_created
                 ON novel_projects(created_at);
             CREATE INDEX IF NOT EXISTS idx_novel_chapters_project
@@ -90,6 +99,8 @@ class NovelDBMixin:
                 ON novel_timeline(project_id, sort_key, created_at);
             CREATE INDEX IF NOT EXISTS idx_novel_scene_goals_scene
                 ON novel_scene_goals(scene_id);
+            CREATE INDEX IF NOT EXISTS idx_novel_scene_narration_controls_scene
+                ON novel_scene_narration_controls(scene_id);
             """
         )
 
@@ -339,6 +350,122 @@ class NovelDBMixin:
                 (scene_id,),
             )
             return cursor.rowcount > 0
+
+    def set_scene_narration_controls(
+        self,
+        scene_id: int,
+        *,
+        pov_label: str | None = None,
+        tense: str | None = None,
+    ) -> dict[str, Any] | None:
+        self.migrate()
+        with self.connect() as conn:
+            scene = conn.execute(
+                "SELECT id FROM novel_scenes WHERE id = ?",
+                (scene_id,),
+            ).fetchone()
+            if scene is None:
+                raise ValueError("Scene not found")
+
+            existing = conn.execute(
+                "SELECT * FROM novel_scene_narration_controls WHERE scene_id = ?",
+                (scene_id,),
+            ).fetchone()
+            current_pov = existing["pov_label"] if existing is not None else ""
+            current_tense = existing["tense"] if existing is not None else ""
+
+            if pov_label is None:
+                next_pov = current_pov
+            else:
+                next_pov = pov_label
+
+            if tense is None:
+                next_tense = current_tense
+            else:
+                if tense != "" and tense not in {"past", "present"}:
+                    raise ValueError("Invalid tense")
+                next_tense = tense
+
+            if next_pov == "" and next_tense == "":
+                if existing is not None:
+                    conn.execute(
+                        "DELETE FROM novel_scene_narration_controls WHERE scene_id = ?",
+                        (scene_id,),
+                    )
+                return None
+
+            now = _utc_now()
+            if existing is not None:
+                conn.execute(
+                    """
+                    UPDATE novel_scene_narration_controls
+                    SET pov_label = ?, tense = ?, updated_at = ?
+                    WHERE scene_id = ?
+                    """,
+                    (next_pov, next_tense, now, scene_id),
+                )
+            else:
+                conn.execute(
+                    """
+                    INSERT INTO novel_scene_narration_controls (
+                        scene_id, pov_label, tense, created_at, updated_at
+                    )
+                    VALUES (?, ?, ?, ?, ?)
+                    """,
+                    (scene_id, next_pov, next_tense, now, now),
+                )
+            row = conn.execute(
+                "SELECT * FROM novel_scene_narration_controls WHERE scene_id = ?",
+                (scene_id,),
+            ).fetchone()
+        return _row_to_dict(row)
+
+    def get_scene_narration_controls(self, scene_id: int) -> dict[str, Any] | None:
+        self.migrate()
+        with self.connect() as conn:
+            scene = conn.execute(
+                "SELECT id FROM novel_scenes WHERE id = ?",
+                (scene_id,),
+            ).fetchone()
+            if scene is None:
+                raise ValueError("Scene not found")
+            row = conn.execute(
+                "SELECT * FROM novel_scene_narration_controls WHERE scene_id = ?",
+                (scene_id,),
+            ).fetchone()
+        return _row_to_dict(row)
+
+    def clear_scene_narration_controls(self, scene_id: int) -> bool:
+        self.migrate()
+        with self.connect() as conn:
+            scene = conn.execute(
+                "SELECT id FROM novel_scenes WHERE id = ?",
+                (scene_id,),
+            ).fetchone()
+            if scene is None:
+                raise ValueError("Scene not found")
+            cursor = conn.execute(
+                "DELETE FROM novel_scene_narration_controls WHERE scene_id = ?",
+                (scene_id,),
+            )
+            return cursor.rowcount > 0
+
+    def get_scene_narration_controls_for_session(self, session_id: str) -> dict[str, Any] | None:
+        self.migrate()
+        with self.connect() as conn:
+            row = conn.execute(
+                """
+                SELECT nssc.*
+                FROM novel_scenes AS ns
+                JOIN novel_scene_narration_controls AS nssc
+                    ON nssc.scene_id = ns.id
+                WHERE ns.session_id = ?
+                ORDER BY ns.updated_at DESC, ns.id DESC
+                LIMIT 1
+                """,
+                (session_id,),
+            ).fetchone()
+        return _row_to_dict(row)
 
     def get_scene_goal_for_session(self, session_id: str) -> dict[str, Any] | None:
         self.migrate()

@@ -1,0 +1,131 @@
+doc_type: feature-checklist
+feature: "2026-06-04-hermes-tavern-phase123-scene-narration-controls"
+status: in_progress
+summary: >
+  Scene Narration Controls v1 adds scene-scoped POV and tense metadata, then
+  exposes it through narrow commands, prompt modules, and Markdown export.
+
+steps:
+  - id: S1
+    name: "DB contract: scene narration-control persistence"
+    status: completed
+    completed_at: "2026-06-04"
+    result: >
+      IMPLEMENTED - db_novel.NovelDBMixin now migrates
+      novel_scene_narration_controls, exposes set/get/clear and linked-session
+      lookup helpers, validates missing parent scenes with ValueError("Scene not
+      found"), validates tense as past/present with ValueError("Invalid tense"),
+      preserves fields on None updates, clears individual fields with blank
+      strings, and removes the row when both controls are blank. Focused DB tests
+      cover migration/table-set shape, set/get/update/partial-update behavior,
+      blank clearing, idempotent clear, missing-scene errors, invalid tense, and
+      linked-session scoping.
+    description: >
+      Add the novel_scene_narration_controls table, index, CRUD helpers, tense
+      validation, missing-scene validation, and linked-session lookup in
+      db_novel.py. Extend novel DB tests only.
+    exit_signal: >
+      Focused novel DB tests pass and no command/runtime prompt/export behavior
+      has been implemented yet.
+    verification:
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m py_compile src/hermes_tavern/db_novel.py tests/test_hermes_tavern_novel_db.py"
+        result: "passed (controller rerun after S1 implementation)"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel_db.py -q -o 'addopts='"
+        result: "passed; 16 passed in 0.57s"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel_db.py tests/test_hermes_tavern_novel_runtime.py -q -o 'addopts='"
+        result: "passed; 47 passed in 1.53s"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts='"
+        result: "passed; 774 passed in 30.20s"
+
+  - id: S2
+    name: "Command surface: scene narration inspect set clear"
+    status: pending
+    description: >
+      Add /rp scene narration inspect, clear, pov, and tense forms under the
+      existing scene command family. Update command help and focused runtime tests.
+    exit_signal: >
+      Runtime tests cover normal, boundary, missing-scene, and invalid-tense
+      command behavior.
+
+  - id: S3
+    name: "Prompt module: linked scene narration controls"
+    status: pending
+    description: >
+      Inject a system scene_narration module only for the active session linked
+      to a scene with non-empty controls. Skip cleanly on sqlite errors.
+    exit_signal: >
+      Debug-prompt tests prove linked inclusion, unlinked exclusion, ordering
+      before scene goal/note, and sqlite-error skip behavior.
+
+  - id: S4
+    name: "Export and docs: narration visibility"
+    status: pending
+    description: >
+      Include non-empty narration controls in project Markdown export and update
+      README command visibility. Do not add archive ZIP/import formats.
+    exit_signal: >
+      DB/runtime/docs tests prove Markdown placement and README command coverage.
+
+  - id: S5
+    name: "Final verification and writeback"
+    status: pending
+    description: >
+      Run targeted tests, full registry gate, diff hygiene, protected-core guard,
+      reverse-scope scans, and update architecture/design docs.
+    exit_signal: >
+      Full suite and scope guards pass; acceptance can record the implemented
+      contract.
+
+checks:
+  - id: C1
+    name: "DB contract"
+    status: passed
+    command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel_db.py -q -o 'addopts='"
+    result: "passed; 16 passed in 0.57s (controller rerun after S1 implementation)"
+
+  - id: C2
+    name: "Runtime command contract"
+    status: pending
+    command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel_runtime.py -q -o 'addopts='"
+
+  - id: C3
+    name: "Prompt linked-session contract"
+    status: pending
+    command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel_runtime.py -k narration -q -o 'addopts='"
+
+  - id: C4
+    name: "Reverse scope"
+    status: pending
+    command: "git diff --name-only -- run_agent.py cli.py gateway/run.py"
+
+verification_commands:
+  - "PYTHONDONTWRITEBYTECODE=1 python -m py_compile src/hermes_tavern/db_novel.py src/hermes_tavern/runtime_novel.py src/hermes_tavern/runtime_prompt_modules.py src/hermes_tavern/commands.py tests/test_hermes_tavern_novel_db.py tests/test_hermes_tavern_novel_runtime.py"
+  - "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel_db.py tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_runtime.py tests/test_hermes_tavern_readme_docs.py -q -o 'addopts='"
+  - "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts='"
+  - "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-04-hermes-tavern-phase123-scene-narration-controls/design.md --require doc_type --require status"
+  - "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --yaml-only --file design/codestable/features/2026-06-04-hermes-tavern-phase123-scene-narration-controls/checklist.yaml"
+  - "git diff --check"
+
+reverse_scope_scans:
+  - "git diff --name-only -- run_agent.py cli.py gateway/run.py"
+  - "rg -n \"write continue|rewrite|expand|compress|archive zip|project import|novel import|relationship_state|character_state|api_key|access_token|underage|minor\" src/hermes_tavern tests README.md design/HERMES_TAVERN_DESIGN.md design/codestable/architecture/ARCHITECTURE.md"
+
+s1_controller_verification:
+  - command: "PYTHONDONTWRITEBYTECODE=1 python -m py_compile src/hermes_tavern/db_novel.py tests/test_hermes_tavern_novel_db.py"
+    result: "passed"
+  - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel_db.py -q -o 'addopts='"
+    result: "passed; 16 passed in 0.57s"
+  - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel_db.py tests/test_hermes_tavern_novel_runtime.py -q -o 'addopts='"
+    result: "passed; 47 passed in 1.53s"
+  - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts='"
+    result: "passed; 774 passed in 30.20s"
+  - command: "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-04-hermes-tavern-phase123-scene-narration-controls/design.md --require doc_type --require status"
+    result: "passed; 1 passed, 0 failed"
+  - command: "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --yaml-only --file design/codestable/features/2026-06-04-hermes-tavern-phase123-scene-narration-controls/checklist.yaml"
+    result: "passed; 1 passed, 0 failed"
+  - command: "git diff --check"
+    result: "passed"
+  - command: "protected-core diff guard"
+    result: "passed; no run_agent.py, cli.py, or gateway/run.py changes"
+  - command: "controller diff-aware prohibited-scope scan"
+    result: "passed; no prohibited markers in added code/test lines"

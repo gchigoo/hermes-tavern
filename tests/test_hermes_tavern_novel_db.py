@@ -25,6 +25,7 @@ def test_migrate_creates_novel_tables(tmp_path):
         "novel_canon",
         "novel_timeline",
         "novel_scene_goals",
+        "novel_scene_narration_controls",
     }.issubset(tables)
     novel_tables = {name for name in tables if name.startswith("novel_")}
     assert novel_tables == {
@@ -34,6 +35,7 @@ def test_migrate_creates_novel_tables(tmp_path):
         "novel_canon",
         "novel_timeline",
         "novel_scene_goals",
+        "novel_scene_narration_controls",
     }
 
 
@@ -137,6 +139,133 @@ def test_scene_goal_set_update_get_clear(tmp_path):
     assert store.clear_scene_goal(scene["id"]) is True
     assert store.get_scene_goal(scene["id"]) is None
     assert store.clear_scene_goal(scene["id"]) is False
+
+
+def test_scene_narration_controls_set_get_update_and_partial_updates(tmp_path):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    novel_project = store.create_project("Narration Project")
+    chapter = store.create_chapter(novel_project["id"], "Chapter 1")
+    scene = store.create_scene(chapter["id"], "Narration Scene")
+
+    set_once = store.set_scene_narration_controls(
+        scene["id"],
+        pov_label="third-person limited: Mara",
+        tense="past",
+    )
+    assert set_once is not None
+    assert set_once["scene_id"] == scene["id"]
+    assert set_once["pov_label"] == "third-person limited: Mara"
+    assert set_once["tense"] == "past"
+
+    retrieved = store.get_scene_narration_controls(scene["id"])
+    assert retrieved is not None
+    assert retrieved["pov_label"] == "third-person limited: Mara"
+    assert retrieved["tense"] == "past"
+
+    updated = store.set_scene_narration_controls(
+        scene["id"],
+        tense="present",
+    )
+    assert updated is not None
+    assert updated["pov_label"] == "third-person limited: Mara"
+    assert updated["tense"] == "present"
+
+    updated = store.set_scene_narration_controls(scene["id"], pov_label="first-person")
+    assert updated is not None
+    assert updated["pov_label"] == "first-person"
+    assert updated["tense"] == "present"
+
+
+def test_scene_narration_controls_blank_clears_field_and_both(tmp_path):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    novel_project = store.create_project("Narration Project")
+    chapter = store.create_chapter(novel_project["id"], "Chapter 1")
+    scene = store.create_scene(chapter["id"], "Narration Scene")
+
+    store.set_scene_narration_controls(scene["id"], pov_label="Omniscient", tense="present")
+
+    cleared_pov = store.set_scene_narration_controls(scene["id"], pov_label="")
+    assert cleared_pov is not None
+    assert cleared_pov["pov_label"] == ""
+    assert cleared_pov["tense"] == "present"
+
+    cleared_all = store.set_scene_narration_controls(scene["id"], pov_label="", tense="")
+    assert cleared_all is None
+    assert store.get_scene_narration_controls(scene["id"]) is None
+
+
+def test_scene_narration_controls_clear_is_idempotent(tmp_path):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    novel_project = store.create_project("Narration Project")
+    chapter = store.create_chapter(novel_project["id"], "Chapter 1")
+    scene = store.create_scene(chapter["id"], "Narration Scene")
+
+    assert store.clear_scene_narration_controls(scene["id"]) is False
+    store.set_scene_narration_controls(scene["id"], pov_label="Close")
+    assert store.clear_scene_narration_controls(scene["id"]) is True
+    assert store.clear_scene_narration_controls(scene["id"]) is False
+
+
+def test_scene_narration_controls_missing_scene_errors(tmp_path):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    missing_id = 999
+
+    try:
+        store.set_scene_narration_controls(missing_id, pov_label="No one")
+    except ValueError as exc:
+        assert str(exc) == "Scene not found"
+    else:
+        raise AssertionError("Expected ValueError for missing scene")
+
+    try:
+        store.get_scene_narration_controls(missing_id)
+    except ValueError as exc:
+        assert str(exc) == "Scene not found"
+    else:
+        raise AssertionError("Expected ValueError for missing scene")
+
+    try:
+        store.clear_scene_narration_controls(missing_id)
+    except ValueError as exc:
+        assert str(exc) == "Scene not found"
+    else:
+        raise AssertionError("Expected ValueError for missing scene")
+
+
+def test_scene_narration_controls_invalid_tense_raises(tmp_path):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    novel_project = store.create_project("Narration Project")
+    chapter = store.create_chapter(novel_project["id"], "Chapter 1")
+    scene = store.create_scene(chapter["id"], "Narration Scene")
+
+    try:
+        store.set_scene_narration_controls(scene["id"], tense="future")
+    except ValueError as exc:
+        assert str(exc) == "Invalid tense"
+    else:
+        raise AssertionError("Expected ValueError for invalid tense")
+
+
+def test_scene_narration_controls_for_session_uses_linked_scene_only(tmp_path):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    novel_project = store.create_project("Session Scope Project")
+    chapter = store.create_chapter(novel_project["id"], "Chapter 1")
+    linked = store.create_scene(chapter["id"], "Linked Scene")
+    unlinked = store.create_scene(chapter["id"], "Other Scene")
+
+    session = store.start_session("scope-linked")
+    store.link_scene_session(linked["id"], session["id"])
+
+    store.set_scene_narration_controls(linked["id"], pov_label="Linked POV", tense="past")
+    store.set_scene_narration_controls(unlinked["id"], pov_label="Unlinked POV", tense="present")
+
+    linked_controls = store.get_scene_narration_controls_for_session(session["id"])
+    assert linked_controls is not None
+    assert linked_controls["scene_id"] == linked["id"]
+    assert linked_controls["pov_label"] == "Linked POV"
+
+    other_session = store.start_session("scope-unlinked")
+    assert store.get_scene_narration_controls_for_session(other_session["id"]) is None
 
 
 def test_scene_goal_missing_scene_errors(tmp_path):
