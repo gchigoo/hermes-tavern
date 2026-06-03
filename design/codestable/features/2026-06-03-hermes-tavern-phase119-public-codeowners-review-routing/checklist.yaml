@@ -1,0 +1,51 @@
+doc_type: feature-checklist
+feature: hermes-tavern-phase119-public-codeowners-review-routing
+date: "2026-06-03"
+status: implemented
+
+summary: >
+  Add a repository-wide CODEOWNERS wildcard route for review ownership and
+  enforce offline repository hygiene checks to ensure CODEOWNERS coverage and
+  avoid secrets/API/provider operational guidance in ownership routing files.
+
+steps:
+  - id: S1
+    name: Add CODEOWNERS review-routing policy
+    description: >
+      Add a repository-wide CODEOWNERS rule in `.github/CODEOWNERS` that routes
+      all files to a GitHub-style `@owner` or `@org/team` principal.
+    status: implemented
+    changed_file: ".github/CODEOWNERS"
+    result: "IMPLEMENTED - wildcard route added"
+
+  - id: S2
+    name: Extend offline repo-hygiene tests for CODEOWNERS
+    description: >
+      Add tests in `tests/test_hermes_tavern_repo_hygiene.py` that assert CODEOWNERS
+      exists, includes a wildcard rule using a GitHub principal token, and does not
+      contain secrets/API/provider operational guidance.
+    status: implemented
+    changed_file: "tests/test_hermes_tavern_repo_hygiene.py"
+    result: "IMPLEMENTED - three CODEOWNERS-specific hygiene tests added"
+
+  - id: S3
+    name: Capture phase verification placeholders
+    description: >
+      Record the phase checklist with verification commands for the targeted test
+      slice and checklist YAML validation.
+    status: implemented
+    changed_file: "design/codestable/features/2026-06-03-hermes-tavern-phase119-public-codeowners-review-routing/checklist.yaml"
+
+verification:
+  targeted_pytest:
+    - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_repo_hygiene.py -k codeowners -q -o 'addopts='"
+      result: "passed - 3 passed, 39 deselected in 0.04s (Codex); controller rerun passed - 3 passed, 39 deselected in 0.04s"
+  checklist_yaml_validation:
+    - command: "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --yaml-only --file design/codestable/features/2026-06-03-hermes-tavern-phase119-public-codeowners-review-routing/checklist.yaml"
+      result: "passed - 1 passed, 0 failed (Codex); controller rerun passed - 1 passed, 0 failed"
+  diff_check:
+    - command: "git diff --check -- .github/CODEOWNERS tests/test_hermes_tavern_repo_hygiene.py design/codestable/features/2026-06-03-hermes-tavern-phase119-public-codeowners-review-routing/checklist.yaml"
+      result: "passed"
+  full_pytest:
+    - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts='"
+      result: "passed - 716 passed in 26.52s"

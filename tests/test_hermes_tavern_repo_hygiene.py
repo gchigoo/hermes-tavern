@@ -16,6 +16,7 @@ WORKFLOW_FILE = REPO_ROOT / ".github/workflows/test.yml"
 PATCH_FILE = REPO_ROOT / "patches/hermes-agent-core-changes.patch"
 DEPENDABOT_FILE = REPO_ROOT / ".github" / "dependabot.yml"
 REQUIREMENTS_TEST_FILE = REPO_ROOT / "requirements-test.txt"
+CODEOWNERS_FILE = REPO_ROOT / ".github" / "CODEOWNERS"
 CONTRIBUTING_FILE = REPO_ROOT / "CONTRIBUTING.md"
 ISSUE_TEMPLATES_ROOT = REPO_ROOT / ".github" / "ISSUE_TEMPLATE"
 PR_TEMPLATE_FILE = REPO_ROOT / ".github" / "pull_request_template.md"
@@ -62,6 +63,24 @@ FORBIDDEN_VALIDATION_PATTERNS = [
     "service start",
     "service restart",
     "curl",
+]
+CODEOWNERS_GITHUB_PRINCIPAL_RE = re.compile(r"^@[A-Za-z0-9](?:[A-Za-z0-9._-]{0,38})(?:/[A-Za-z0-9](?:[A-Za-z0-9._-]{0,38}))?$")
+CODEOWNERS_FORBIDDEN_PATTERNS = [
+    "api key",
+    "api-token",
+    "access token",
+    "bearer",
+    "provider",
+    "secret",
+    "credential",
+    "private endpoint",
+    "service start",
+    "service restart",
+    "gateway start",
+    "gateway restart",
+    "curl",
+    "sk-",
+    "ghp_",
 ]
 
 SECRET_SHARING_PATTERNS = [
@@ -123,6 +142,19 @@ def _load_yaml_template(path: Path) -> dict:
 
 def _load_pyproject() -> dict:
     return tomllib.loads(PYPROJECT_FILE.read_text(encoding="utf-8"))
+
+
+def _parse_codeowners_rules() -> list[tuple[str, list[str]]]:
+    rules: list[tuple[str, list[str]]] = []
+    for raw_line in CODEOWNERS_FILE.read_text(encoding="utf-8").splitlines():
+        line = raw_line.split("#", 1)[0].strip()
+        if not line:
+            continue
+
+        parts = line.split()
+        if len(parts) >= 2:
+            rules.append((parts[0], parts[1:]))
+    return rules
 
 
 def _issue_field_ids(template: dict) -> set[str]:
@@ -565,6 +597,34 @@ def test_issue_template_config_keeps_blank_issues_enabled_and_links_contributing
         "security.md" in url and url.startswith("https://github.com/")
         for url in urls
     ), "config.yml must link to SECURITY.md"
+
+
+def test_codeowners_file_exists_and_has_repo_wide_routing_rule():
+    assert CODEOWNERS_FILE.is_file(), "CODEOWNERS file is required for repository review routing"
+
+    rules = _parse_codeowners_rules()
+    wildcard_owner_rules = [owners for pattern, owners in rules if pattern == "*"]
+    assert wildcard_owner_rules, "repository-wide '*' CODEOWNERS rule is required"
+
+
+def test_codeowners_wildcard_routes_to_github_principal_token():
+    rules = _parse_codeowners_rules()
+    wildcard_owners = []
+    for pattern, owners in rules:
+        if pattern == "*":
+            wildcard_owners.extend(owners)
+
+    assert wildcard_owners, "repository-wide wildcard rule missing in CODEOWNERS"
+    assert any(
+        CODEOWNERS_GITHUB_PRINCIPAL_RE.fullmatch(owner)
+        for owner in wildcard_owners
+    ), "wildcard CODEOWNERS rule must route to @owner or @org/team token"
+
+
+def test_codeowners_file_has_no_secrets_api_provider_or_operational_guidance():
+    text = CODEOWNERS_FILE.read_text(encoding="utf-8").lower()
+    for pattern in CODEOWNERS_FORBIDDEN_PATTERNS:
+        assert pattern not in text, f"CODEOWNERS contains forbidden guidance phrase: {pattern}"
 
 
 def test_security_policy_and_issue_template_config_have_no_sensitive_reporting_instructions():
