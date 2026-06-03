@@ -532,6 +532,65 @@ def test_canon_modules_skip_prompt_injection_on_db_error(tmp_path, monkeypatch):
     assert "system/canon:" not in prompt
 
 
+def test_scene_goal_module_shows_in_debug_prompt_for_linked_scene(tmp_path):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    store.save_card(parse_character_card({"name": "Alice", "description": "Scholar"}))
+    runtime = TavernRuntime(store)
+    runtime.handle_command_sync(RPCommand("start", ["Alice"], "/rp start Alice"), Event())
+
+    session = store.get_active_session("telegram:chat:chat-1:thread:main:user:user-1")
+    project = store.create_project("Skyline")
+    chapter = store.create_chapter(project["id"], "Prologue")
+    scene = store.create_scene(chapter["id"], "Opening", session_id=session["id"])
+    store.set_scene_goal(scene["id"], "Reach the watchtower before sunrise.")
+    runtime.handle_command_sync(
+        RPCommand("note", ["set", "Keep the tone focused and concise."], "/rp note set Keep the tone focused and concise."),
+        Event(),
+    )
+
+    prompt = runtime.handle_command_sync(RPCommand("debug", ["prompt"], "/rp debug prompt"), Event())
+
+    assert "system/scene_goal:Opening" in prompt
+    assert "Scene goal: Reach the watchtower before sunrise." in prompt
+    assert "system/note:author" in prompt
+    assert prompt.index("system/scene_goal:Opening") < prompt.index("system/note:author")
+
+
+def test_scene_goal_module_not_shown_for_unlinked_scene(tmp_path):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    store.save_card(parse_character_card({"name": "Alice", "description": "Scholar"}))
+    runtime = TavernRuntime(store)
+    runtime.handle_command_sync(RPCommand("start", ["Alice"], "/rp start Alice"), Event())
+
+    project = store.create_project("Skyline")
+    chapter = store.create_chapter(project["id"], "Prologue")
+    other_scene = store.create_scene(chapter["id"], "Opening")
+    store.set_scene_goal(other_scene["id"], "Reach the watchtower before sunrise.")
+
+    prompt = runtime.handle_command_sync(RPCommand("debug", ["prompt"], "/rp debug prompt"), Event())
+
+    assert "system/scene_goal" not in prompt
+    assert "Scene goal: Reach the watchtower before sunrise." not in prompt
+
+
+def test_scene_goal_module_skips_on_db_error(tmp_path, monkeypatch):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    store.save_card(parse_character_card({"name": "Alice", "description": "Scholar"}))
+    runtime = TavernRuntime(store)
+    runtime.handle_command_sync(RPCommand("start", ["Alice"], "/rp start Alice"), Event())
+
+    monkeypatch.setattr(
+        runtime.store,
+        "get_scene_goal_for_session",
+        lambda _session_id: (_ for _ in ()).throw(sqlite3.OperationalError("DB unavailable")),
+    )
+
+    prompt = runtime.handle_command_sync(RPCommand("debug", ["prompt"], "/rp debug prompt"), Event())
+
+    assert "Hermes Tavern prompt debug" in prompt
+    assert "system/scene_goal:" not in prompt
+
+
 def test_novel_help_does_not_list_import_commands(tmp_path):
     runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
     response = runtime.handle_command_sync(RPCommand("help", [], "/rp"), Event())

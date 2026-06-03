@@ -52,6 +52,7 @@ def session_prompt_modules(
     modules = session_preset_modules(runtime, session)
     modules.extend(session_canon_modules(runtime, session))
     modules.extend(session_persona_modules(runtime, session))
+    modules.extend(session_scene_goal_modules(runtime, session))
     modules.extend(session_note_modules(runtime, session, history))
     modules.extend(session_memory_modules(runtime, session))
     modules.extend(session_lore_modules(runtime, session, user_text, history))
@@ -107,6 +108,39 @@ def session_persona_modules(runtime, session: dict[str, Any]) -> list[PromptModu
             content=persona.get("content") or "",
             position="before_char",
             insertion_order=50,
+            enabled=True,
+        )
+    ]
+
+
+def session_scene_goal_modules(runtime, session: dict[str, Any]) -> list[PromptModule]:
+    session_id = session.get("id") or ""
+    if not session_id:
+        return []
+    try:
+        goal = runtime.store.get_scene_goal_for_session(session_id)
+    except sqlite3.Error:
+        return []
+    if not goal:
+        return []
+
+    goal_text = (goal.get("goal_text") or "").strip()
+    if not goal_text:
+        return []
+
+    try:
+        scene = runtime.store.get_scene(goal["scene_id"])
+    except sqlite3.Error:
+        return []
+    scene_title = (scene or {}).get("title") or "Scene"
+
+    return [
+        PromptModule(
+            name=f"scene_goal:{scene_title}",
+            role="system",
+            content=f"Scene goal: {goal_text}",
+            position="before_user",
+            insertion_order=70,
             enabled=True,
         )
     ]
