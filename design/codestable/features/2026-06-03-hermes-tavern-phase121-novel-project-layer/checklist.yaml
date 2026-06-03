@@ -1,0 +1,109 @@
+doc_type: feature-checklist
+feature: hermes-tavern-phase121-novel-project-layer
+date: "2026-06-03"
+status: planned
+
+summary: >
+  Novel project layer — projects, chapters, scenes, canon facts, timeline,
+  and Markdown export. Last major phase from the original HERMES_TAVERN_DESIGN.md
+  not yet implemented.
+
+steps:
+  - id: S0
+    name: "Micro-refactor: extract novel DB methods to db_novel.py"
+    description: >
+      Per design §2.5: Create src/hermes_tavern/db_novel.py with novel-related
+      DB methods (NovelDBMixin). Update db.py TavernStore to inherit/compose
+      the mixin. Verify no behavioral regressions via full pytest suite.
+    status: pending
+    exit_signal: "Full pytest suite passes (718+ tests) with zero behavioral diffs"
+
+  - id: S1
+    name: "DB schema: 5 novel tables + CRUD methods"
+    description: >
+      Create novel_projects, novel_chapters, novel_scenes, novel_canon,
+      novel_timeline tables with all fields from design §2.1. Implement
+      CRUD methods: create/list/get_project, create/list/get_chapter,
+      create/list/get/link_scene, create/list/get_canon, get_canon_for_prompt,
+      create/list_timeline, export_project_markdown.
+    status: pending
+    exit_signal: >
+      Import TavernStore → create/query project, chapter, scene, canon,
+      timeline all return correct dicts; export_project_markdown returns
+      non-empty Markdown string
+
+  - id: S2
+    name: "Command surface: runtime_novel.py with 5 command families"
+    description: >
+      Create src/hermes_tavern/runtime_novel.py with handlers for:
+      project (create/list/info/set/export), chapter (create/list),
+      scene (create/list/start), canon (add/list/group), timeline (add/list).
+      Register in COMMAND_TABLE in runtime.py. Use table-driven dispatch
+      pattern consistent with existing runtime_*.py modules.
+    status: pending
+    exit_signal: >
+      /rp project create/list, /rp chapter create/list, /rp scene create/list/start,
+      /rp canon add/list, /rp timeline add/list all return correct responses
+
+  - id: S3
+    name: "Canon prompt injection"
+    description: >
+      In _session_prompt_modules (runtime.py), detect when session is linked
+      to a scene→chapter→project chain. Call store.get_canon_for_prompt(project_id)
+      and wrap results as PromptModule(role="system", position="after_card",
+      insertion_order=between_card_and_presets). Canon modules should appear
+      in debug prompt output.
+    status: pending
+    exit_signal: >
+      /rp debug prompt with project-linked session shows canon modules
+      between card and preset sections
+
+  - id: S4
+    name: "Scene-session linking"
+    description: >
+      /rp scene start <scene> creates a new RP session, associates it with
+      the current card, updates scene.session_id, and starts the RP loop.
+      /rp session info should display linked project/chapter/scene.
+    status: pending
+    exit_signal: >
+      /rp scene start → /rp session info shows "Project: X / Chapter: Y / Scene: Z"
+
+  - id: S5
+    name: "Markdown export"
+    description: >
+      Implement export_project_markdown (in db_novel.py or a new export utility).
+      Write to get_hermes_home()/plugins/hermes-tavern/exports/project_{id}.md.
+      Return MEDIA:"<path>" format. Structure: title, summary, canon by group,
+      timeline by sort_key, chapters→scenes→session messages as dialogue.
+    status: pending
+    exit_signal: >
+      /rp project export returns MEDIA marker → file exists and contains
+      structured Markdown with all sections
+
+  - id: S6
+    name: "Tests: unit + integration for novel layer"
+    description: >
+      Create tests/test_hermes_tavern_novel.py covering:
+      - CRUD for all 5 tables (normal + boundary + error paths)
+      - Canon injection through _session_prompt_modules
+      - Scene-session linking
+      - Markdown export structure validation
+      - /rp command routing for all novel commands
+    status: pending
+    exit_signal: >
+      pytest tests/test_hermes_tavern_novel.py -q passes all tests;
+      full pytest suite still green
+
+verification:
+  targeted_pytest:
+    - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel.py -q -o 'addopts='"
+      result: ""
+  full_pytest:
+    - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts='"
+      result: ""
+  checklist_yaml_validation:
+    - command: "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --yaml-only --file design/codestable/features/2026-06-03-hermes-tavern-phase121-novel-project-layer/checklist.yaml"
+      result: ""
+  diff_check:
+    - command: "git diff --check"
+      result: ""
