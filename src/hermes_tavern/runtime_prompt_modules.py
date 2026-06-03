@@ -49,10 +49,40 @@ def session_prompt_modules(
     history: list[dict[str, Any]],
 ) -> list[PromptModule]:
     modules = session_preset_modules(runtime, session)
+    modules.extend(session_canon_modules(runtime, session))
     modules.extend(session_persona_modules(runtime, session))
     modules.extend(session_note_modules(runtime, session, history))
     modules.extend(session_memory_modules(runtime, session))
     modules.extend(session_lore_modules(runtime, session, user_text, history))
+    return modules
+
+
+def session_canon_modules(runtime, session: dict[str, Any]) -> list[PromptModule]:
+    session_id = session.get("id") or ""
+    if not session_id:
+        return []
+    project_id = runtime.store.get_project_id_for_session(session_id)
+    if not project_id:
+        return []
+    canons = runtime.store.get_canon_for_prompt(project_id)
+    if not canons:
+        return []
+    modules: list[PromptModule] = []
+    for canon in canons:
+        title = canon.get("title") or "Canon"
+        content = canon.get("content") or ""
+        if not content:
+            continue
+        modules.append(
+            PromptModule(
+                name=f"canon:{title}",
+                role="system",
+                content=f"{title}: {content}",
+                position="after_card",
+                insertion_order=-20,
+                enabled=True,
+            )
+        )
     return modules
 
 

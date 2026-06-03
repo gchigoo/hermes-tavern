@@ -4,6 +4,8 @@ from plugins.hermes_tavern.commands import TAVERN_COMMAND_TABLE
 from plugins.hermes_tavern.db import TavernStore
 from plugins.hermes_tavern.runtime import TavernRuntime
 from plugins.hermes_tavern.commands import RPCommand
+from plugins.hermes_tavern.importers.cards import parse_character_card
+from plugins.hermes_tavern.importers.presets import import_st_preset_json
 
 
 class Source:
@@ -188,3 +190,43 @@ def test_canon_and_timeline_routes_use_active_project(tmp_path):
     )
     assert "Hermes Tavern timeline for project [1]" in timeline
     assert "Start" in timeline
+
+
+def test_canon_modules_show_in_debug_prompt_for_project_linked_session(tmp_path):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    store.save_card(parse_character_card({"name": "Alice", "description": "Scholar"}))
+    preset_id = store.save_preset(
+        import_st_preset_json(
+            {"name": "Writer", "prompts": [{"name": "style", "content": "Preset marker."}]}
+        )
+    )
+    runtime = TavernRuntime(store)
+    runtime.handle_command_sync(RPCommand("start", ["Alice"], "/rp start Alice"), Event())
+
+    session = store.get_active_session("telegram:chat:chat-1:thread:main:user:user-1")
+    store.set_session_preset(session["session_key"], preset_id)
+    project = store.create_project("Skyline")
+    chapter = store.create_chapter(project["id"], "Prologue")
+    store.create_scene(chapter["id"], "Opening", session_id=session["id"])
+    store.create_canon(project["id"], "Skyline", "The sky is violet.")
+
+    prompt = runtime.handle_command_sync(RPCommand("debug", ["prompt"], "/rp debug prompt"), Event())
+
+    assert "system/canon:Skyline" in prompt
+    assert "The sky is violet." in prompt
+    assert prompt.index("system/canon:Skyline") < prompt.index("system/preset:style")
+
+
+def test_canon_modules_do_not_show_in_debug_prompt_for_unlinked_session(tmp_path):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    store.save_card(parse_character_card({"name": "Alice", "description": "Scholar"}))
+    runtime = TavernRuntime(store)
+    runtime.handle_command_sync(RPCommand("start", ["Alice"], "/rp start Alice"), Event())
+
+    project = store.create_project("Skyline")
+    store.create_canon(project["id"], "Skyline", "The sky is violet.")
+
+    prompt = runtime.handle_command_sync(RPCommand("debug", ["prompt"], "/rp debug prompt"), Event())
+
+    assert "system/canon:Skyline" not in prompt
+    assert "The sky is violet." not in prompt

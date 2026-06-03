@@ -70,7 +70,14 @@ steps:
       and wrap results as PromptModule(role="system", position="after_card",
       insertion_order=between_card_and_presets). Canon modules should appear
       in debug prompt output.
-    status: pending
+    status: completed
+    completed_at: "2026-06-03"
+    result: >
+      IMPLEMENTED - runtime_prompt_modules.session_canon_modules resolves an
+      active session's scene→chapter→project chain via NovelDBMixin.get_project_id_for_session,
+      converts get_canon_for_prompt rows into deterministic system PromptModule entries,
+      and keeps unlinked or empty-canon sessions silent. Focused debug-prompt tests cover
+      linked inclusion, canon-before-preset ordering, and unlinked exclusion.
     exit_signal: >
       /rp debug prompt with project-linked session shows canon modules
       between card and preset sections
@@ -119,21 +126,31 @@ verification:
       result: "passed; 55 passed in 2.96s (S0 baseline)"
     - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_runtime.py tests/test_hermes_tavern_readme_docs.py -q -o 'addopts='"
       result: "passed; 71 passed in 3.79s (controller rerun after S2 command surface + README doc guard)"
+    - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_lore_runtime.py tests/test_hermes_tavern_memory.py -q -o 'addopts='"
+      result: "passed; 20 passed in 0.64s (controller rerun after S3 canon prompt injection)"
   full_pytest:
     - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts='"
       result: "passed; 725 passed in 28.49s (controller rerun after S1)"
     - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts='"
       result: "passed; 732 passed in 27.10s (controller rerun after S2)"
+    - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts='"
+      result: "passed; 734 passed in 29.56s (controller rerun after S3)"
   checklist_yaml_validation:
     - command: "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --yaml-only --file design/codestable/features/2026-06-03-hermes-tavern-phase121-novel-project-layer/checklist.yaml"
       result: "passed; 1 passed, 0 failed (controller rerun after S1 checklist update)"
     - command: "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --yaml-only --file design/codestable/features/2026-06-03-hermes-tavern-phase121-novel-project-layer/checklist.yaml"
       result: "passed; 1 passed, 0 failed (controller rerun after S2 checklist update)"
+    - command: "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --yaml-only --file design/codestable/features/2026-06-03-hermes-tavern-phase121-novel-project-layer/checklist.yaml"
+      result: "passed; 1 passed, 0 failed (controller rerun after S3 checklist update)"
   py_compile:
     - command: "python -m py_compile src/hermes_tavern/runtime_novel.py tests/test_hermes_tavern_novel_runtime.py"
       result: "passed (controller rerun after S2)"
+    - command: "PYTHONDONTWRITEBYTECODE=1 python -m py_compile src/hermes_tavern/db_novel.py src/hermes_tavern/runtime_prompt_modules.py tests/test_hermes_tavern_novel_runtime.py"
+      result: "passed (controller rerun after S3)"
   diff_check:
     - command: "git diff --check"
       result: "passed (controller rerun after S1)"
     - command: "git diff --check"
       result: "passed (controller rerun after S2)"
+    - command: "git diff --check"
+      result: "passed (controller rerun after S3)"
