@@ -39,13 +39,33 @@ steps:
 
   - id: S2
     name: "Command surface: scene narration inspect set clear"
-    status: pending
+    status: completed
+    completed_at: "2026-06-04"
+    result: >
+      IMPLEMENTED - runtime_novel.scene_command now routes /rp scene narration
+      to a narrow command handler covering bare inspect, clear, pov, and tense
+      forms. commands.py help lists the four narration forms. Runtime tests cover
+      help visibility, POV/tense set and inspect behavior, field preservation,
+      idempotent clear, no-controls inspect, malformed arguments, missing-scene
+      translation, and invalid-tense translation. Prompt-module, Markdown export,
+      README docs, architecture writeback, provider/generation, archive import,
+      character/relationship state, and protected core-file behavior remain
+      deferred to later slices.
     description: >
       Add /rp scene narration inspect, clear, pov, and tense forms under the
       existing scene command family. Update command help and focused runtime tests.
     exit_signal: >
       Runtime tests cover normal, boundary, missing-scene, and invalid-tense
       command behavior.
+    verification:
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m py_compile src/hermes_tavern/runtime_novel.py src/hermes_tavern/commands.py tests/test_hermes_tavern_novel_runtime.py"
+        result: "passed (controller rerun after S2 implementation)"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_commands.py -q -o 'addopts='"
+        result: "passed; 73 passed in 1.63s"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel_db.py tests/test_hermes_tavern_novel_runtime.py -q -o 'addopts='"
+        result: "passed; 63 passed in 2.06s"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts='"
+        result: "passed; 790 passed in 31.26s"
 
   - id: S3
     name: "Prompt module: linked scene narration controls"
@@ -85,8 +105,9 @@ checks:
 
   - id: C2
     name: "Runtime command contract"
-    status: pending
+    status: passed
     command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel_runtime.py -q -o 'addopts='"
+    result: "passed; covered by controller rerun with tests/test_hermes_tavern_commands.py (73 passed in 1.63s) and DB/runtime combined gate (63 passed in 2.06s)"
 
   - id: C3
     name: "Prompt linked-session contract"

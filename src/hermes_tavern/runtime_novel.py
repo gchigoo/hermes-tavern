@@ -46,9 +46,13 @@ def scene_command(runtime: Any, command: RPCommand, event: Any) -> str:
         return scene_start(runtime, command, event)
     if subcommand == "goal":
         return scene_goal(runtime, command)
+    if subcommand == "narration":
+        return scene_narration(runtime, command)
     return (
         "Usage: /rp scene create <chapter-id> <title> | /rp scene list <chapter-id> | "
-        "/rp scene start <scene-id> | /rp scene goal <scene-id> [text] | /rp scene goal clear <scene-id>"
+        "/rp scene start <scene-id> | /rp scene goal <scene-id> [text] | /rp scene goal clear <scene-id> | "
+        "/rp scene narration <scene-id> | /rp scene narration clear <scene-id> | "
+        "/rp scene narration pov <scene-id> <label> | /rp scene narration tense <scene-id> <past|present>"
     )
 
 
@@ -369,6 +373,88 @@ def scene_goal(runtime: Any, command: RPCommand) -> str:
     except ValueError:
         return f"No novel scene found: {scene_id}"
     return f"Scene goal set for scene [{scene_id}]: {_mobile_preview(text, 180)}"
+
+
+def scene_narration(runtime: Any, command: RPCommand) -> str:
+    usage = (
+        "Usage: /rp scene narration <scene-id> | /rp scene narration clear <scene-id> | "
+        "/rp scene narration pov <scene-id> <label> | /rp scene narration tense <scene-id> <past|present>"
+    )
+    if len(command.args) < 2:
+        return usage
+
+    mode = command.args[1].lower()
+    if mode == "clear":
+        if len(command.args) != 3:
+            return usage
+        scene_id = _safe_int(command.args[2])
+        if scene_id is None:
+            return usage
+        try:
+            runtime.store.clear_scene_narration_controls(scene_id)
+        except ValueError as exc:
+            if str(exc) == "Scene not found":
+                return f"No novel scene found: {scene_id}"
+            raise
+        return f"Scene narration controls cleared for scene [{scene_id}]."
+
+    if mode == "pov":
+        if len(command.args) < 4:
+            return usage
+        scene_id = _safe_int(command.args[2])
+        if scene_id is None:
+            return usage
+        label = " ".join(command.args[3:]).strip()
+        if not label:
+            return usage
+        try:
+            runtime.store.set_scene_narration_controls(scene_id, pov_label=label)
+        except ValueError as exc:
+            if str(exc) == "Scene not found":
+                return f"No novel scene found: {scene_id}"
+            raise
+        return f"Scene narration POV set for scene [{scene_id}]: {_mobile_preview(label, 180)}"
+
+    if mode == "tense":
+        if len(command.args) != 4:
+            return usage
+        scene_id = _safe_int(command.args[2])
+        if scene_id is None:
+            return usage
+        tense = command.args[3].strip().lower()
+        try:
+            runtime.store.set_scene_narration_controls(scene_id, tense=tense)
+        except ValueError as exc:
+            message = str(exc)
+            if message == "Scene not found":
+                return f"No novel scene found: {scene_id}"
+            if message == "Invalid tense":
+                return "Invalid tense. Use past or present."
+            raise
+        return f"Scene narration tense set for scene [{scene_id}]: {tense}"
+
+    if len(command.args) != 2:
+        return usage
+    scene_id = _safe_int(command.args[1])
+    if scene_id is None:
+        return usage
+    try:
+        controls = runtime.store.get_scene_narration_controls(scene_id)
+    except ValueError as exc:
+        if str(exc) == "Scene not found":
+            return f"No novel scene found: {scene_id}"
+        raise
+    if not controls:
+        return f"No scene narration controls set for scene [{scene_id}]."
+    pov = controls.get("pov_label") or "(not set)"
+    tense = controls.get("tense") or "(not set)"
+    return "\n".join(
+        [
+            f"Scene narration controls for scene [{scene_id}]:",
+            f"POV: {pov}",
+            f"Tense: {tense}",
+        ]
+    )
 
 
 def canon_add(runtime: Any, command: RPCommand, event: Any) -> str:

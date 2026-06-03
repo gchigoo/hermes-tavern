@@ -33,6 +33,10 @@ def test_novel_command_table_has_five_families():
         assert entry.handler == f"_{name}_command"
     assert "/rp scene goal <scene-id> [text]" in TAVERN_COMMAND_TABLE["scene"].help_lines
     assert "/rp scene goal clear <scene-id>" in TAVERN_COMMAND_TABLE["scene"].help_lines
+    assert "/rp scene narration <scene-id>" in TAVERN_COMMAND_TABLE["scene"].help_lines
+    assert "/rp scene narration clear <scene-id>" in TAVERN_COMMAND_TABLE["scene"].help_lines
+    assert "/rp scene narration pov <scene-id> <label>" in TAVERN_COMMAND_TABLE["scene"].help_lines
+    assert "/rp scene narration tense <scene-id> <past|present>" in TAVERN_COMMAND_TABLE["scene"].help_lines
 
 
 def test_project_routes_create_list_info_set(tmp_path):
@@ -297,6 +301,84 @@ def test_scene_goal_command_is_listed_in_help_output(tmp_path):
 
     assert "/rp scene goal <scene-id> [text]" in response
     assert "/rp scene goal clear <scene-id>" in response
+    assert "/rp scene narration <scene-id>" in response
+    assert "/rp scene narration clear <scene-id>" in response
+    assert "/rp scene narration pov <scene-id> <label>" in response
+    assert "/rp scene narration tense <scene-id> <past|present>" in response
+
+
+def test_scene_narration_set_inspect_update_clear_preserves_other_fields(tmp_path):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    project = runtime.store.create_project("Atlas")
+    chapter = runtime.store.create_chapter(project["id"], "Arrival")
+    scene = runtime.store.create_scene(chapter["id"], "Opening")
+
+    set_pov = runtime.handle_command_sync(
+        RPCommand(
+            "scene",
+            ["narration", "pov", str(scene["id"]), "third-person", "limited:", "Mara"],
+            "/rp scene narration pov 1 third-person limited: Mara",
+        ),
+        Event(),
+    )
+    assert set_pov == "Scene narration POV set for scene [1]: third-person limited: Mara"
+    inspect_pov_only = runtime.handle_command_sync(
+        RPCommand("scene", ["narration", str(scene["id"])], "/rp scene narration 1"),
+        Event(),
+    )
+    assert inspect_pov_only == (
+        "Scene narration controls for scene [1]:\n"
+        "POV: third-person limited: Mara\n"
+        "Tense: (not set)"
+    )
+
+    set_tense = runtime.handle_command_sync(
+        RPCommand("scene", ["narration", "tense", str(scene["id"]), "Past"], "/rp scene narration tense 1 Past"),
+        Event(),
+    )
+    assert set_tense == "Scene narration tense set for scene [1]: past"
+
+    inspect_full = runtime.handle_command_sync(
+        RPCommand("scene", ["narration", str(scene["id"])], "/rp scene narration 1"),
+        Event(),
+    )
+    assert inspect_full == (
+        "Scene narration controls for scene [1]:\n"
+        "POV: third-person limited: Mara\n"
+        "Tense: past"
+    )
+
+    update_pov = runtime.handle_command_sync(
+        RPCommand(
+            "scene",
+            ["narration", "pov", str(scene["id"]), "second-person", "omniscient"],
+            "/rp scene narration pov 1 second-person omniscient",
+        ),
+        Event(),
+    )
+    assert update_pov == "Scene narration POV set for scene [1]: second-person omniscient"
+    inspect_after_update = runtime.handle_command_sync(
+        RPCommand("scene", ["narration", str(scene["id"])], "/rp scene narration 1"),
+        Event(),
+    )
+    assert inspect_after_update == (
+        "Scene narration controls for scene [1]:\n"
+        "POV: second-person omniscient\n"
+        "Tense: past"
+    )
+
+    clear = runtime.handle_command_sync(
+        RPCommand("scene", ["narration", "clear", str(scene["id"])], "/rp scene narration clear 1"),
+        Event(),
+    )
+    assert clear == "Scene narration controls cleared for scene [1]."
+    assert (
+        runtime.handle_command_sync(
+            RPCommand("scene", ["narration", str(scene["id"])], "/rp scene narration 1"),
+            Event(),
+        )
+        == "No scene narration controls set for scene [1]."
+    )
 
 
 def test_scene_goal_set_inspect_update_and_clear(tmp_path):
@@ -389,6 +471,58 @@ def test_scene_goal_missing_scene_returns_not_found(tmp_path, command, expected_
     runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
     response = runtime.handle_command_sync(command, Event())
     assert response == expected_message
+
+
+@pytest.mark.parametrize(
+    "command",
+    [
+        RPCommand("scene", ["narration"], "/rp scene narration"),
+        RPCommand("scene", ["narration", "clear"], "/rp scene narration clear"),
+        RPCommand("scene", ["narration", "clear", "1", "extra"], "/rp scene narration clear 1 extra"),
+        RPCommand("scene", ["narration", "pov"], "/rp scene narration pov"),
+        RPCommand("scene", ["narration", "pov", "1"], "/rp scene narration pov 1"),
+        RPCommand("scene", ["narration", "pov", "1", "   "], "/rp scene narration pov 1   "),
+        RPCommand("scene", ["narration", "tense"], "/rp scene narration tense"),
+        RPCommand("scene", ["narration", "tense", "1"], "/rp scene narration tense 1"),
+        RPCommand("scene", ["narration", "tense", "1", "past", "too", "many"], "/rp scene narration tense 1 past too many"),
+        RPCommand("scene", ["narration", "1", "extra"], "/rp scene narration 1 extra"),
+    ],
+)
+def test_scene_narration_malformed_arguments_return_usage(tmp_path, command):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    response = runtime.handle_command_sync(command, Event())
+    assert response.startswith(
+        "Usage: /rp scene narration <scene-id> | /rp scene narration clear <scene-id> | "
+        "/rp scene narration pov <scene-id> <label> | /rp scene narration tense <scene-id> <past|present>"
+    )
+
+
+@pytest.mark.parametrize(
+    "command, expected_message",
+    [
+        (RPCommand("scene", ["narration", "9999"], "/rp scene narration 9999"), "No novel scene found: 9999"),
+        (RPCommand("scene", ["narration", "clear", "9999"], "/rp scene narration clear 9999"), "No novel scene found: 9999"),
+        (RPCommand("scene", ["narration", "pov", "9999", "third-person", "limited:"], "/rp scene narration pov 9999 third-person limited:"), "No novel scene found: 9999"),
+        (RPCommand("scene", ["narration", "tense", "9999", "past"], "/rp scene narration tense 9999 past"), "No novel scene found: 9999"),
+    ],
+)
+def test_scene_narration_missing_scene_returns_not_found(tmp_path, command, expected_message):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    response = runtime.handle_command_sync(command, Event())
+    assert response == expected_message
+
+
+def test_scene_narration_invalid_tense_is_reported(tmp_path):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    project = runtime.store.create_project("Atlas")
+    chapter = runtime.store.create_chapter(project["id"], "Arrival")
+    scene = runtime.store.create_scene(chapter["id"], "Opening")
+
+    response = runtime.handle_command_sync(
+        RPCommand("scene", ["narration", "tense", str(scene["id"]), "future"], "/rp scene narration tense 1 future"),
+        Event(),
+    )
+    assert response == "Invalid tense. Use past or present."
 
 
 def test_scene_start_nonexistent_returns_error(tmp_path):
