@@ -457,18 +457,15 @@ Long-form writing requires a project layer above chat sessions.
 
 ```yaml
 project:
-  id: uuid
+  id: int
   title: string
-  type: rp|novel|serial|sandbox
-  premise: text
-  outline: text
-  style_guide: text
-  canon_policy: strict|flexible|dreamlike
-  content_mode: safe|mature|explicit|dark|custom
-  default_card_id: uuid|null
-  default_preset_id: uuid|null
-  default_lorebook_ids: list[uuid]
+  summary: text
+  status: draft|in_progress|complete
 ```
+
+Future project metadata from the original vision remains out of Phase 121:
+`type`, `premise`, `outline`, `style_guide`, `canon_policy`, `content_mode`,
+`default_card_id`, `default_preset_id`, and `default_lorebook_ids`.
 
 Sub-objects:
 
@@ -477,26 +474,29 @@ chapters
 scenes
 canon facts
 timeline events
-character states
-relationship states
-locations
-organizations
-plot threads
-style samples
 ```
+
+Future sub-objects from the original vision remain deferred: character states,
+relationship states, locations, organizations, plot threads, and style samples.
 
 Commands:
 
 ```text
-/rp project new <title>
+/rp project create <title>
 /rp project list
-/rp project use <title>
-/rp chapter new <title>
-/rp scene new <title>
-/rp canon add <fact>
-/rp timeline add <event>
-/rp relationship set <a> <b> <state>
-/rp export markdown
+/rp project info <id>
+/rp project set <id>
+/rp project export [id]
+/rp chapter create [project-id] <title>
+/rp chapter list [project-id]
+/rp scene create <chapter-id> <title>
+/rp scene list <chapter-id>
+/rp scene start <scene-id>
+/rp canon add <project-id> <title> <content>
+/rp canon list [project-id] [group]
+/rp canon group [project-id] <group>
+/rp timeline add <project-id> <date> <title> [description]
+/rp timeline list [project-id]
 ```
 
 ---
@@ -840,49 +840,42 @@ Hermes Tavern should model:
 
 ```text
 project
-volume / arc
 chapter
 scene
-beat
-character state
-relationship state
 timeline
 canon
-style guide
-outline
-revision notes
 ```
+
+Future novel-engine dimensions remain deferred: volume/arc, beat, character state,
+relationship state, style guide, outline, and revision notes.
 
 ### 13.2 Writing commands
 
 ```text
-/rp novel new <title>
-/rp outline set <text>
-/rp chapter new <title>
-/rp scene new <title>
-/rp scene goal <goal>
-/rp write continue
-/rp write rewrite <instruction>
-/rp write expand
-/rp write compress
-/rp write pov <character>
-/rp write tense past|present
-/rp export markdown
+/rp project create/list/info/set/export
+/rp chapter create/list
+/rp scene create/list/start
+/rp canon add/list/group
+/rp timeline add/list
 ```
+
+Future writing commands from the original vision remain deferred: outline editing,
+scene goals, write continue/rewrite/expand/compress, POV/tense controls, and
+project archive export.
 
 ### 13.3 Canon management
 
 Commands:
 
 ```text
-/rp canon add <fact>
-/rp canon list
-/rp canon check
-/rp canon conflict
-/rp canon pin <fact>
+/rp canon add <project-id> <title> <content>
+/rp canon list [project-id] [group]
+/rp canon group [project-id] <group>
 ```
 
-The canon checker should detect contradictions but not automatically overwrite canon without user confirmation.
+Canon check/correlation tools are deferred; only add/list/group are included in Phase 9.
+Future canon commands from the original vision remain deferred: `/rp canon check`,
+`/rp canon conflict`, and `/rp canon pin <fact>`.
 
 ---
 
@@ -977,15 +970,16 @@ lorebooks
 lorebook_entries
 personas
 model_profiles
-projects
-chapters
-scenes
+novel_projects
+novel_chapters
+novel_scenes
 sessions
 messages
 swipes
 summaries
 memory_facts
-timeline_events
+novel_canon
+novel_timeline
 character_states
 relationship_states
 media_assets
@@ -1040,8 +1034,10 @@ ST character JSON
 ST character PNG metadata
 ST preset JSON
 ST lorebook/world info JSON
-Hermes Tavern native project archive
 ```
+
+Hermes Tavern native project archives are deferred; Phase 121 implements
+Markdown export only, not project/novel import.
 
 Later:
 
@@ -1062,8 +1058,10 @@ preset export JSON/native
 lorebook export JSON
 chat export JSONL
 novel export Markdown
-project archive ZIP
 ```
+
+Project archive ZIP remains a future exporter; current Phase 121 only writes
+local Markdown via `/rp project export [id]`.
 
 Commands:
 
@@ -1074,6 +1072,8 @@ Commands:
 /rp export markdown
 /rp backup
 ```
+
+Project/novel import is deferred for this phase; only export is implemented.
 
 ---
 
@@ -1338,6 +1338,7 @@ Acceptance:
 
 - a project can produce chapter/scene structured output;
 - canon facts can be injected and debugged.
+- Implemented (2026-06-03). Acceptance report: design/codestable/features/2026-06-03-hermes-tavern-phase121-novel-project-layer/hermes-tavern-phase121-novel-project-layer-acceptance.md
 
 ### Phase 10: Adult Fiction Mode
 

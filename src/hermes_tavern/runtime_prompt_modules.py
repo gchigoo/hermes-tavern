@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import sqlite3
 from typing import Any
 
 from hermes_tavern.lorebook import match_lorebook_entries, modules_from_lore_matches
@@ -61,10 +62,16 @@ def session_canon_modules(runtime, session: dict[str, Any]) -> list[PromptModule
     session_id = session.get("id") or ""
     if not session_id:
         return []
-    project_id = runtime.store.get_project_id_for_session(session_id)
+    try:
+        project_id = runtime.store.get_project_id_for_session(session_id)
+    except sqlite3.Error:
+        return []
     if not project_id:
         return []
-    canons = runtime.store.get_canon_for_prompt(project_id)
+    try:
+        canons = runtime.store.get_canon_for_prompt(project_id)
+    except sqlite3.Error:
+        return []
     if not canons:
         return []
     modules: list[PromptModule] = []

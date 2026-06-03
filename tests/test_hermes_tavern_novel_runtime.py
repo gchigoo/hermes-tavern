@@ -1,4 +1,5 @@
 import pytest
+import sqlite3
 
 from plugins.hermes_tavern.commands import TAVERN_COMMAND_TABLE
 from plugins.hermes_tavern.db import TavernStore
@@ -410,6 +411,23 @@ def test_canon_modules_do_not_show_in_debug_prompt_for_unlinked_session(tmp_path
 
     assert "system/canon:Skyline" not in prompt
     assert "The sky is violet." not in prompt
+
+
+def test_canon_modules_skip_prompt_injection_on_db_error(tmp_path, monkeypatch):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    store.save_card(parse_character_card({"name": "Alice", "description": "Scholar"}))
+    runtime = TavernRuntime(store)
+    runtime.handle_command_sync(RPCommand("start", ["Alice"], "/rp start Alice"), Event())
+
+    monkeypatch.setattr(
+        runtime.store,
+        "get_project_id_for_session",
+        lambda _session_id: (_ for _ in ()).throw(sqlite3.OperationalError("DB unavailable")),
+    )
+
+    prompt = runtime.handle_command_sync(RPCommand("debug", ["prompt"], "/rp debug prompt"), Event())
+
+    assert "system/canon:" not in prompt
 
 
 def test_novel_help_does_not_list_import_commands(tmp_path):

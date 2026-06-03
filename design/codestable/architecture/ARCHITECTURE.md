@@ -1,7 +1,7 @@
 # Hermes Agent — Architecture
 
 > Status: current snapshot
-> Last updated: 2026-05-22
+> Last updated: 2026-06-03
 
 ## 1. Project Summary
 
@@ -70,6 +70,9 @@ renderers.py          ChatRenderer, StoryRenderer — convert compiled prompt to
 preset_safety.py      PresetRiskLevel, classify_preset_text — risk classification for imported modules
 lorebook.py           match_lorebook_entries — keyword/regex match, token-budget enforcement
 memory.py             Memory fact / summary management helpers
+db_novel.py           Novel domain mixins for project/chapter/scene/canon/timeline CRUD and export
+runtime_novel.py      Novel command family handlers for /rp project/chapter/scene/canon/timeline
+runtime_prompt_modules.py  Canon prompt module resolvers for linked novel sessions
 model_router.py       resolve model descriptor from session row and store
 provider_bridge.py    resolve_runtime_provider + validate_provider_base_url — runtime credential resolution (no DB persistence); URL safety validator rejects non-https and private/loopback hosts
 adapters.py           FakeModelAdapter, HermesChatCompletionAdapter, HermesProviderAdapter
@@ -109,6 +112,7 @@ importers/
 - Phase 32: Gateway Security and Session Isolation (gateway attachment import trust policy and scoped session switching)
 - Phase 33: Provider and Media Safety Hardening (sanitized image provider failures, recursive provider debug redaction, and quoted MEDIA export regressions)
 - Phases 34–38: SQLite performance hardening plus runtime command-family refactors for presets/content, lore, notes, and memory; command surface and prompt semantics unchanged
+- Phase 121: Novel project layer (projects/chapters/scenes/canon/timeline/export)
 
 ### Plugin flow
 
@@ -120,13 +124,13 @@ Gateway event
       └── otherwise → {"action": "allow"} → normal AIAgent dispatch
 ```
 
-### Prompt pipeline (Phases 4–22)
+### Prompt pipeline (Phases 4–22 plus Phase 121 canon injection)
 
 ```
 handle_active_message_sync
-  → _run_generation_pipeline(session, user_text, history, event)
+      → _run_generation_pipeline(session, user_text, history, event)
       → _build_macro_context      (char from card; user from event; session/content mode from session)
-      → _session_prompt_modules  (preset + persona + note + memory + lore modules)
+      → _session_prompt_modules  (preset + canon + persona + note + memory + lore modules)
       → PromptCompiler.compile   (card + modules + history + user message → macro-expanded CompiledPrompt)
       → ModelRouter.resolve      (session row → ModelDescriptor)
       → ChatRenderer.render      (CompiledPrompt → messages list)
@@ -138,7 +142,7 @@ Macro expansion is one-pass and allowlist-based. Supported Phase 20 macros are
 `{{content_mode}}`, and `{{session_title}}`; names are case/whitespace tolerant,
 unknown macros are preserved, and replacement text is not recursively expanded.
 
-### /rp command surface (Phase 31 current)
+### /rp command surface (Phase 121 current)
 
 ```
 /rp help | status | assets
@@ -159,9 +163,14 @@ unknown macros are preserved, and replacement text is not recursively expanded.
 /rp memory add <fact> | list [limit] [page] | summary [set <text>|summarize [limit]] | debug
 /rp content mode [safe|adult-fiction]
 /rp model status | profiles | seed apiyi | use <profile> | mode [fake|hermes] | live [status|confirm|off] | test
+/rp project create/list/info/set/export
+/rp chapter create/list
+/rp scene create/list/start
+/rp canon add/list/group
+/rp timeline add/list
 ```
 
-### DB schema (current, through Phase 31; no schema changes in Phases 23–31)
+### DB schema (current, through Phase 121)
 
 ```sql
 cards(id, name, data_json, source_path, created_at)
@@ -180,6 +189,11 @@ lorebook_entries(id, lorebook_id, title, content, keys_json, secondary_keys_json
 personas(id, name, content, raw_json, source_path, created_at)
 session_memory_facts(id, session_key, content, importance, source, created_at)
 session_summaries(id, session_key, content, created_at, updated_at)
+novel_projects(id, title, summary, status, created_at, updated_at)
+novel_chapters(id, project_id, title, chapter_number, summary, status, created_at, updated_at)
+novel_scenes(id, chapter_id, session_id TEXT, title, summary, scene_number, status, created_at, updated_at)
+novel_canon(id, project_id, title, content, canon_group, importance, created_at, updated_at)
+novel_timeline(id, project_id, event_date, title, description, chapter_id, sort_key, created_at)
 ```
 
 Phase 26 adds in-memory quick-action tracking on `TavernStore` only:
@@ -210,4 +224,5 @@ These phases do not change schema or core prompt/generation assembly.
 - **Tavern image provider error envelope**: `/rp image ...` catches provider exceptions and returns a fixed bounded message with retry/status hints. Failed image jobs persist only sanitized generic error text, never `str(exc)`.
 - **Tavern provider debug sanitizer**: provider/debug dicts must pass recursive, case-insensitive secret-key filtering before display. Secret-like keys include `api_key`, `access_token`, `password`, `secret`, and `token`.
 - **Tavern export MEDIA contract**: `/rp export` returns quoted `MEDIA:"<path>"` markers so gateway adapters preserve attachment paths with spaces. Exports must not include raw event JSON or raw message metadata blobs.
+- **Phase 121 reverse-scope constraints**: no cloud sync, no collaboration/multi-user workflow, no novel import, no timeline graphics, no DB credential persistence.
 - **Tavern DB never persists `api_key` / `access_token`**: credentials resolved at runtime via `HermesRuntimeProviderResolver`, discarded after use.

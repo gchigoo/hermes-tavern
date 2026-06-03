@@ -1,7 +1,7 @@
 ---
 doc_type: feature-design
 feature: 2026-06-03-hermes-tavern-phase121-novel-project-layer
-status: draft
+status: approved
 summary: >
   Novel project layer: projects, chapters, scenes, canon facts, timeline,
   and Markdown export. This enables structured long-form fiction management
@@ -108,7 +108,7 @@ CREATE TABLE IF NOT EXISTS novel_chapters (
 CREATE TABLE IF NOT EXISTS novel_scenes (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     chapter_id INTEGER NOT NULL REFERENCES novel_chapters(id),
-    session_id INTEGER REFERENCES sessions(id),  -- nullable: scene 可以不关联 session
+    session_id TEXT REFERENCES sessions(id),  -- nullable: scene 可以不关联 session
     title TEXT NOT NULL,
     summary TEXT NOT NULL DEFAULT '',
     scene_number INTEGER NOT NULL DEFAULT 1,
@@ -162,10 +162,10 @@ def list_chapters(self, project_id: int) -> list[dict[str, Any]]
 def get_chapter(self, chapter_id: int) -> dict[str, Any] | None
 
 # Scene CRUD
-def create_scene(self, chapter_id: int, title: str, session_id: int | None = None) -> dict[str, Any]
+def create_scene(self, chapter_id: int, title: str, session_id: str | None = None) -> dict[str, Any]
 def list_scenes(self, chapter_id: int) -> list[dict[str, Any]]
 def get_scene(self, scene_id: int) -> dict[str, Any] | None
-def link_scene_session(self, scene_id: int, session_id: int) -> None
+def link_scene_session(self, scene_id: int, session_id: str) -> None
 
 # Canon CRUD
 def create_canon(self, project_id: int, title: str, content: str, group: str = "general") -> dict[str, Any]
@@ -201,19 +201,19 @@ sequenceDiagram
     Runtime-->>User: "Project created: Galactic Empire"
 
     Note over User,Compiler: 创建 Chapter & Scene
-    User->>Runtime: /rp chapter create "The Fall"
+    User->>Runtime: /rp chapter create 1 "The Fall"
     Runtime->>Store: create_chapter(project_id, ...)
     Store-->>Runtime: chapter
     Runtime-->>User: "Chapter created: The Fall"
 
-    User->>Runtime: /rp scene create "Rebellion"
+    User->>Runtime: /rp scene create 1 "Rebellion"
     Runtime->>Store: create_scene(chapter_id, ...)
     Store-->>Runtime: scene
     Runtime-->>User: "Scene created: Rebellion"
 
     Note over User,Compiler: 在 Scene 中 RP
-    User->>Runtime: /rp scene start "Rebellion"
-    Runtime->>Store: create session, link to scene
+    User->>Runtime: /rp scene start 1
+    Runtime->>Store: start/update session via existing /rp start semantics, then link to scene
     Runtime-->>User: "RP started in scene: Rebellion"
     User->>Runtime: hello from mobile
     Runtime->>Compiler: compile(card, modules, history, msg)
@@ -222,12 +222,12 @@ sequenceDiagram
     Runtime-->>User: (assistant reply)
 
     Note over User,Compiler: Canon 管理
-    User->>Runtime: /rp canon add "Empire founded by House Atreides"
+    User->>Runtime: /rp canon add 1 "Empire Doctrine" "Empire founded by House Atreides"
     Runtime->>Store: create_canon(project_id, ...)
     Runtime-->>User: "Canon added"
 
     Note over User,Compiler: Timeline
-    User->>Runtime: /rp timeline add "2450.3" "Battle of Corrin"
+    User->>Runtime: /rp timeline add 1 "2450.3" "Battle of Corrin"
     Runtime->>Store: create_timeline_event(...)
     Runtime-->>User: "Timeline event added"
 
@@ -255,7 +255,7 @@ sequenceDiagram
 
 3. **Canon 注入到 prompt**：在 `_session_prompt_modules` (`runtime.py`) 中，当 session 关联的 scene/chapter/project 存在时，调用 `store.get_canon_for_prompt(project_id)` 获取 canon facts，包装为 `PromptModule(role="system", content=..., position="after_card", insertion_order=...)` 注入到 `preset_modules` 之前。
 
-4. **Scene 启动时自动关联 session**：`/rp scene start` 创建一个新 session，设置 `card_id`（从当前 card 或参数），并将 `scene.session_id` 更新为新 session 的 id。
+4. **Scene 启动时自动关联 session**：`/rp scene start` 复用现有 `/rp start` 生命周期语义启动/更新当前 RP session，设置 `card_id`（从当前 card 或参数），并将 `scene.session_id` 更新为该 session 的 id。
 
 5. **Markdown 导出**：`export_project_markdown` 在 `TavernStore` 中拼接：
    ```
@@ -353,19 +353,19 @@ sequenceDiagram
 ### 关键场景清单
 
 **正常路径**：
-1. `/rp project create "My Novel"` → 返回 "Project created: My Novel (id: 1)"
+1. `/rp project create "My Novel"` → 返回 "Hermes Tavern project created: [1] My Novel"
 2. `/rp project list` → 列出所有 project（含 chapter_count）
-3. `/rp chapter create "Chapter 1"` → 在当前 project 下创建 chapter
-4. `/rp scene create "Opening"` → 在当前 chapter 下创建 scene
-5. `/rp scene start Opening` → 创建新 session，state 显示 "Scene: Opening"
-6. `/rp canon add "The sky is purple" --group world` → 添加 canon fact
+3. `/rp chapter create [1] "Chapter 1"` → 在当前 project 下创建 chapter（或显式 project-id）
+4. `/rp scene create 1 "Opening"` → 在 chapter 1 下创建 scene
+5. `/rp scene start 1` → 创建新 session，state 显示 "Scene: Opening"
+6. `/rp canon add 1 "World" "The sky is purple" --group world` → 添加 canon fact
 7. `/rp canon list` → 列出当前 project 的 canon facts
-8. `/rp timeline add "Year 1" "The Beginning"` → 添加 timeline event
+8. `/rp timeline add 1 "Year 1" "The Beginning"` → 添加 timeline event
 9. `/rp timeline list` → 列出当前 project 的 timeline
 10. `/rp project export` → 返回 MEDIA 格式的 Markdown 导出路径
 
 **边界**：
-11. 未选择 project 时执行 `/rp chapter create` → "No active project. Use /rp project create or /rp project use <id>"
+11. 未选择 project 时执行 `/rp chapter create` → "No active novel project. Use /rp project set <id> or pass project-id."
 12. canon fact 的 group 为空时 → default 为 "general"
 13. 空 canon → get_canon_for_prompt 返回空列表，不影响 prompt 构建
 14. scene 不关联 session 时 → scene list 显示 "no session linked"

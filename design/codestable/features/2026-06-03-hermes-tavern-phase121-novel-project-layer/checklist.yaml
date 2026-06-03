@@ -1,12 +1,12 @@
 doc_type: feature-checklist
 feature: hermes-tavern-phase121-novel-project-layer
 date: "2026-06-03"
-status: implemented
+status: accepted
 
 summary: >
   Novel project layer — projects, chapters, scenes, canon facts, timeline,
   and Markdown export. Last major phase from the original HERMES_TAVERN_DESIGN.md
-  not yet implemented.
+  is implemented and accepted after controller verification.
 
 steps:
   - id: S0
@@ -76,8 +76,9 @@ steps:
       IMPLEMENTED - runtime_prompt_modules.session_canon_modules resolves an
       active session's scene→chapter→project chain via NovelDBMixin.get_project_id_for_session,
       converts get_canon_for_prompt rows into deterministic system PromptModule entries,
-      and keeps unlinked or empty-canon sessions silent. Focused debug-prompt tests cover
-      linked inclusion, canon-before-preset ordering, and unlinked exclusion.
+      and keeps unlinked, empty-canon, or sqlite DB-error sessions silent so RP prompt
+      compilation can continue. Focused debug-prompt tests cover linked inclusion,
+      canon-before-preset ordering, unlinked exclusion, and DB-error skip behavior.
     exit_signal: >
       /rp debug prompt with project-linked session shows canon modules
       between card and preset sections
@@ -134,14 +135,27 @@ steps:
       test files plus a small session-switch regression guard. Added exact novel
       table-set and blank canon-group defaults, runtime coverage for active-project
       export, chapter counts, scene creation/listing/start errors, missing-project
-      errors, linked-session empty-canon prompt behavior, and no novel import command
-      help. A tiny runtime_novel.scene_list display fix now marks unlinked scenes
-      with "(no session linked)" to satisfy the design §3 boundary case.
+      errors, linked-session empty-canon prompt behavior, canon DB-error skip behavior,
+      and no novel import command help. A tiny runtime_novel.scene_list display fix now
+      marks unlinked scenes with "(no session linked)" to satisfy the design §3
+      boundary case.
     exit_signal: >
       targeted novel DB/runtime tests and session regression tests pass;
       full pytest suite still green
 
 verification:
+  acceptance_closure:
+    - command: "PYTHONDONTWRITEBYTECODE=1 python -m py_compile src/hermes_tavern/db_novel.py src/hermes_tavern/runtime_novel.py src/hermes_tavern/runtime_prompt_modules.py src/hermes_tavern/runtime_sessions.py tests/test_hermes_tavern_novel_db.py tests/test_hermes_tavern_novel_runtime.py"
+      result: "passed (controller rerun after acceptance closure; includes canon DB-error skip guard)"
+    - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel_db.py tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_runtime.py tests/test_hermes_tavern_readme_docs.py -q -o 'addopts='"
+      result: "passed; 91 passed in 4.60s (controller rerun after acceptance closure)"
+    - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts='"
+      result: "passed; 752 passed in 30.38s (controller rerun after acceptance closure)"
+  acceptance_frontmatter_validation:
+    - command: "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-03-hermes-tavern-phase121-novel-project-layer/design.md --require doc_type --require status"
+      result: "passed; 1 passed, 0 failed (controller rerun after acceptance closure)"
+    - command: "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-03-hermes-tavern-phase121-novel-project-layer/hermes-tavern-phase121-novel-project-layer-acceptance.md --require doc_type --require status"
+      result: "passed; 1 passed, 0 failed (controller rerun after acceptance closure)"
   targeted_pytest:
     - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel_db.py tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_runtime.py -q -o 'addopts='"
       result: "passed; 69 passed in 4.29s (controller rerun after S6 test consolidation)"
@@ -172,6 +186,8 @@ verification:
       result: "passed; 735 passed in 27.56s (controller rerun after S4)"
   checklist_yaml_validation:
     - command: "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --yaml-only --file design/codestable/features/2026-06-03-hermes-tavern-phase121-novel-project-layer/checklist.yaml"
+      result: "passed; 1 passed, 0 failed (controller rerun after acceptance closure)"
+    - command: "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --yaml-only --file design/codestable/features/2026-06-03-hermes-tavern-phase121-novel-project-layer/checklist.yaml"
       result: "passed; 1 passed, 0 failed (controller rerun after S6 checklist status/result update)"
     - command: "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --yaml-only --file design/codestable/features/2026-06-03-hermes-tavern-phase121-novel-project-layer/checklist.yaml"
       result: "passed; 1 passed, 0 failed (controller rerun after S1 checklist update)"
@@ -196,6 +212,8 @@ verification:
       result: "passed (controller rerun after S4)"
   diff_check:
     - command: "git diff --check"
+      result: "passed (controller rerun after acceptance closure)"
+    - command: "git diff --check"
       result: "passed (controller rerun after S6 test consolidation)"
     - command: "git diff --check"
       result: "passed (controller rerun after S5 implementation)"
@@ -208,5 +226,9 @@ verification:
     - command: "git diff --check"
       result: "passed (controller rerun after S4)"
   reverse_scope_scan:
+    - command: "rg -n \"(cloud|collab|collaboration|multi[-_ ]?user|project_import|novel_import|import_project|timeline_graph|timeline_render|canvas|svg|credential|api_key|access_token|minor|underage)\" src/hermes_tavern/db_novel.py src/hermes_tavern/runtime_novel.py src/hermes_tavern/runtime_prompt_modules.py src/hermes_tavern/runtime_sessions.py"
+      result: "passed; no matches (controller rerun after acceptance closure)"
+    - command: "git diff --name-only -- run_agent.py cli.py gateway/run.py"
+      result: "passed; no protected core files changed (controller rerun after acceptance closure)"
     - command: "rg -n \"(cloud|collab|collaboration|project_import|novel_import|import_project|timeline_graph|timeline_render|canvas|svg)\" src/hermes_tavern/db_novel.py src/hermes_tavern/runtime_novel.py src/hermes_tavern/runtime_prompt_modules.py src/hermes_tavern/runtime_sessions.py"
       result: "passed; no matches (controller rerun after S6 test consolidation)"
