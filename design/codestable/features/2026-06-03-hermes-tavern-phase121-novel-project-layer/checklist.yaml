@@ -105,7 +105,15 @@ steps:
       Write to get_hermes_home()/plugins/hermes-tavern/exports/project_{id}.md.
       Return MEDIA:"<path>" format. Structure: title, summary, canon by group,
       timeline by sort_key, chapters→scenes→session messages as dialogue.
-    status: pending
+    status: completed
+    completed_at: "2026-06-03"
+    result: >
+      IMPLEMENTED - `/rp project export [id]` now writes the Markdown produced by
+      `TavernStore.export_project_markdown(project_id)` to
+      `get_hermes_home()/plugins/hermes-tavern/exports/project_{project_id}.md`
+      and returns a `file:` line plus quoted `MEDIA:"<path>"` marker.
+      Added runtime tests for profile-safe export path, file creation, marker parsing,
+      Markdown sections, and empty-project export fallback output.
     exit_signal: >
       /rp project export returns MEDIA marker → file exists and contains
       structured Markdown with all sections
@@ -126,6 +134,8 @@ steps:
 
 verification:
   targeted_pytest:
+    - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_novel_db.py tests/test_hermes_tavern_runtime.py -q -o 'addopts='"
+      result: "passed; 61 passed in 3.71s (controller rerun after S5 implementation)"
     - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel_db.py tests/test_hermes_tavern_db.py -q -o 'addopts='"
       result: "passed; 18 passed in 0.53s (controller rerun after S1)"
     - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_db.py tests/test_hermes_tavern_runtime.py -q -o 'addopts='"
@@ -138,6 +148,8 @@ verification:
       result: "passed; 53 passed in 3.23s (controller rerun after S4 scene-session linking)"
   full_pytest:
     - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts='"
+      result: "passed; 737 passed in 29.51s (controller rerun after S5 implementation)"
+    - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts='"
       result: "passed; 725 passed in 28.49s (controller rerun after S1)"
     - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts='"
       result: "passed; 732 passed in 27.10s (controller rerun after S2)"
@@ -149,12 +161,16 @@ verification:
     - command: "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --yaml-only --file design/codestable/features/2026-06-03-hermes-tavern-phase121-novel-project-layer/checklist.yaml"
       result: "passed; 1 passed, 0 failed (controller rerun after S1 checklist update)"
     - command: "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --yaml-only --file design/codestable/features/2026-06-03-hermes-tavern-phase121-novel-project-layer/checklist.yaml"
+      result: "passed; 1 passed, 0 failed (controller rerun after S5 checklist status/result update)"
+    - command: "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --yaml-only --file design/codestable/features/2026-06-03-hermes-tavern-phase121-novel-project-layer/checklist.yaml"
       result: "passed; 1 passed, 0 failed (controller rerun after S2 checklist update)"
     - command: "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --yaml-only --file design/codestable/features/2026-06-03-hermes-tavern-phase121-novel-project-layer/checklist.yaml"
       result: "passed; 1 passed, 0 failed (controller rerun after S3 checklist update)"
     - command: "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --yaml-only --file design/codestable/features/2026-06-03-hermes-tavern-phase121-novel-project-layer/checklist.yaml"
       result: "passed; 1 passed, 0 failed (controller rerun after S4 checklist update)"
   py_compile:
+    - command: "PYTHONDONTWRITEBYTECODE=1 python -m py_compile src/hermes_tavern/runtime_novel.py src/hermes_tavern/db_novel.py tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_novel_db.py"
+      result: "passed (controller rerun after S5 implementation)"
     - command: "python -m py_compile src/hermes_tavern/runtime_novel.py tests/test_hermes_tavern_novel_runtime.py"
       result: "passed (controller rerun after S2)"
     - command: "PYTHONDONTWRITEBYTECODE=1 python -m py_compile src/hermes_tavern/db_novel.py src/hermes_tavern/runtime_prompt_modules.py tests/test_hermes_tavern_novel_runtime.py"
@@ -162,6 +178,8 @@ verification:
     - command: "PYTHONDONTWRITEBYTECODE=1 python -m py_compile src/hermes_tavern/runtime_novel.py src/hermes_tavern/runtime_sessions.py src/hermes_tavern/db_novel.py tests/test_hermes_tavern_novel_runtime.py"
       result: "passed (controller rerun after S4)"
   diff_check:
+    - command: "git diff --check"
+      result: "passed (controller rerun after S5 implementation)"
     - command: "git diff --check"
       result: "passed (controller rerun after S1)"
     - command: "git diff --check"

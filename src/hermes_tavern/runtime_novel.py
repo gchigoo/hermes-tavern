@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Any
 
 from hermes_tavern.commands import RPCommand
+from hermes_tavern.hermes_home import get_hermes_home
 from hermes_tavern import runtime_lifecycle
 from hermes_tavern.identity import session_key_from_event
 from hermes_tavern.runtime_utils import mobile_preview as _mobile_preview
@@ -197,13 +199,17 @@ def project_export(runtime: Any, command: RPCommand, event: Any) -> str:
     )
     if project_id is None:
         return err or "Usage: /rp project export [id]"
-    project = runtime.store.get_project(project_id)
-    if project is None:
+
+    try:
+        markdown = runtime.store.export_project_markdown(project_id)
+    except ValueError:
         return f"No novel project found: {project_id}"
-    return (
-        "Project export is deferred to phase 121 S5. "
-        f"Project {project['title']} [id={project_id}] is ready for markdown export."
-    )
+
+    export_dir = get_hermes_home() / "plugins" / "hermes-tavern" / "exports"
+    export_dir.mkdir(parents=True, exist_ok=True)
+    export_path = Path(export_dir) / f"project_{project_id}.md"
+    export_path.write_text(markdown, encoding="utf-8")
+    return f"Project exported as Markdown.\nfile: {export_path}\nMEDIA:\"{export_path}\""
 
 
 def chapter_create(runtime: Any, command: RPCommand, event: Any) -> str:

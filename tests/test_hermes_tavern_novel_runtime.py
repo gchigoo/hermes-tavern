@@ -102,6 +102,75 @@ def test_chapter_routes_require_active_or_explicit_project(tmp_path):
     assert "Chapter 1: First" in listed
 
 
+def test_project_export_returns_media_marker_and_path_under_profile_safe_home(tmp_path, monkeypatch):
+    monkeypatch.setenv("HERMES_HOME", str(tmp_path / "hermes home"))
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+
+    runtime.store.create_project("Atlas", "A long voyage")
+    chapter = runtime.store.create_chapter(1, "Arrival")
+    scene = runtime.store.create_scene(chapter["id"], "Opening")
+    session = runtime.store.start_session("scope-epic")
+    runtime.store.link_scene_session(scene["id"], session["id"])
+    runtime.store.append_message(session["id"], "user", "Hello.")
+    runtime.store.append_message(session["id"], "assistant", "Welcome.")
+    runtime.store.create_canon(1, "Climate", "Snow is common.")
+    runtime.store.create_timeline_event(1, "Day 1", "Departure", description="At dawn.")
+
+    response = runtime.handle_command_sync(
+        RPCommand("project", ["export", "1"], "/rp project export 1"),
+        Event(),
+    )
+
+    assert "Project exported as Markdown." in response
+    assert "file:" in response
+    assert "MEDIA:" in response
+    file_path = response.split("file: ", 1)[1].splitlines()[0].strip()
+    media_path = response.split("MEDIA:", 1)[1].strip().strip('"')
+    assert media_path == file_path
+
+    from pathlib import Path
+    from gateway.platforms.base import BasePlatformAdapter
+
+    exported_path = Path(file_path)
+    assert str(exported_path).startswith(
+        str(tmp_path / "hermes home" / "plugins" / "hermes-tavern" / "exports")
+    )
+    assert exported_path.exists()
+    exported = exported_path.read_text(encoding="utf-8")
+    assert "# Atlas" in exported
+    assert "## Summary" in exported
+    assert "## Chapters" in exported
+    assert "### Chapter 1: Arrival" in exported
+    assert "#### Scene 1: Opening" in exported
+    assert "user" in exported and "assistant" in exported
+    assert "## Canon" in exported
+    assert "## Timeline" in exported
+
+    media_files, cleaned = BasePlatformAdapter.extract_media(response)
+    assert media_files == [(file_path, False)]
+    assert "MEDIA:" not in cleaned
+
+
+def test_project_export_empty_project_still_exports_sections(tmp_path, monkeypatch):
+    monkeypatch.setenv("HERMES_HOME", str(tmp_path / "hermes home"))
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+
+    project = runtime.store.create_project("Atlas", "A quiet beginning")
+    response = runtime.handle_command_sync(
+        RPCommand("project", ["export", str(project["id"])], f"/rp project export {project['id']}"),
+        Event(),
+    )
+
+    assert "Project exported as Markdown." in response
+    file_path = response.split("file: ", 1)[1].splitlines()[0].strip()
+    from pathlib import Path
+
+    exported = Path(file_path).read_text(encoding="utf-8")
+    assert "No chapters yet." in exported
+    assert "No canon entries." in exported
+    assert "No timeline events." in exported
+
+
 def test_scene_create_list_and_start_links_session(tmp_path):
     runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
     runtime.store.save_card(parse_character_card({"name": "Alice", "description": "Scholar", "first_mes": "Hello."}))
