@@ -24,7 +24,13 @@ def project_command(runtime: Any, command: RPCommand, event: Any) -> str:
         return project_set(runtime, command, event)
     if subcommand == "export":
         return project_export(runtime, command, event)
-    return "Usage: /rp project create <title> | /rp project list | /rp project info <id> | /rp project set <id> | /rp project export [id]"
+    if subcommand == "style":
+        return project_style(runtime, command, event)
+    return (
+        "Usage: /rp project create <title> | /rp project list | /rp project info <id> | /rp project set <id> "
+        "| /rp project export [id] | /rp project style [project-id] | /rp project style inspect [project-id] | "
+        "/rp project style set [project-id] <text> | /rp project style clear [project-id]"
+    )
 
 
 def chapter_command(runtime: Any, command: RPCommand, event: Any) -> str:
@@ -196,6 +202,109 @@ def project_set(runtime: Any, command: RPCommand, event: Any) -> str:
         return f"No novel project found: {project_id}"
     _project_set_active(runtime, event, project_id)
     return f"Active novel project set: [{project['id']}] {project['title']}"
+
+
+_PROJECT_STYLE_USAGE = (
+    "Usage: /rp project style [project-id] | /rp project style inspect [project-id] | "
+    "/rp project style set [project-id] <text> | /rp project style clear [project-id]"
+)
+
+
+def project_style(runtime: Any, command: RPCommand, event: Any) -> str:
+    if len(command.args) < 2:
+        project_id = _project_active_id(runtime, event)
+        if project_id is None:
+            return "No active novel project. Use /rp project set <id> or pass project-id."
+        return project_style_inspect(runtime, project_id)
+
+    mode = command.args[1].lower()
+    if mode == "inspect":
+        if len(command.args) > 3:
+            return _PROJECT_STYLE_USAGE
+        if len(command.args) == 2:
+            project_id = _project_active_id(runtime, event)
+            if project_id is None:
+                return "No active novel project. Use /rp project set <id> or pass project-id."
+            return project_style_inspect(runtime, project_id)
+        project_id = _safe_int(command.args[2])
+        if project_id is None or len(command.args) != 3:
+            return _PROJECT_STYLE_USAGE
+        return project_style_inspect(runtime, project_id)
+
+    if mode == "clear":
+        if len(command.args) > 3:
+            return _PROJECT_STYLE_USAGE
+        if len(command.args) == 2:
+            project_id = _project_active_id(runtime, event)
+            if project_id is None:
+                return "No active novel project. Use /rp project set <id> or pass project-id."
+            return project_style_clear(runtime, project_id)
+        project_id = _safe_int(command.args[2])
+        if project_id is None:
+            return _PROJECT_STYLE_USAGE
+        return project_style_clear(runtime, project_id)
+
+    if mode == "set":
+        return project_style_set(runtime, command, event)
+
+    project_id = _safe_int(command.args[1])
+    if project_id is None:
+        return _PROJECT_STYLE_USAGE
+    if len(command.args) != 2:
+        return _PROJECT_STYLE_USAGE
+    return project_style_inspect(runtime, project_id)
+
+
+def project_style_inspect(runtime: Any, project_id: int) -> str:
+    try:
+        style_guide = runtime.store.get_project_style_guide(project_id)
+    except ValueError:
+        return f"No novel project found: {project_id}"
+
+    if style_guide is None:
+        return f"No project style guide set for project [{project_id}]."
+    return (
+        f"Project style guide for project [{project_id}]: "
+        f"{_mobile_preview(style_guide['style_text'] or '', 220)}"
+    )
+
+
+def project_style_set(runtime: Any, command: RPCommand, event: Any) -> str:
+    if len(command.args) < 3:
+        return _PROJECT_STYLE_USAGE
+
+    explicit_project = _safe_int(command.args[2])
+    if explicit_project is None:
+        project_id = _project_active_id(runtime, event)
+        if project_id is None:
+            return "No active novel project. Use /rp project set <id> or pass project-id."
+        style_text = " ".join(command.args[2:]).strip()
+    else:
+        project_id = explicit_project
+        if len(command.args) < 4:
+            return _PROJECT_STYLE_USAGE
+        style_text = " ".join(command.args[3:]).strip()
+
+    if not style_text:
+        return _PROJECT_STYLE_USAGE
+
+    try:
+        runtime.store.set_project_style_guide(project_id, style_text)
+    except ValueError:
+        return f"No novel project found: {project_id}"
+
+    return (
+        f"Project style guide set for project [{project_id}]: "
+        f"{_mobile_preview(style_text, 180)}"
+    )
+
+
+def project_style_clear(runtime: Any, project_id: int) -> str:
+    try:
+        runtime.store.clear_project_style_guide(project_id)
+    except ValueError:
+        return f"No novel project found: {project_id}"
+    return f"Project style guide cleared for project [{project_id}]."
 
 
 def project_export(runtime: Any, command: RPCommand, event: Any) -> str:

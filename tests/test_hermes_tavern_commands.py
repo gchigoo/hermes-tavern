@@ -106,6 +106,15 @@ def test_help_lists_asset_and_prompt_control_commands():
     assert "/rp persona temp <text>" in help_text
 
 
+def test_help_lists_project_style_commands():
+    help_text = _build_help_text()
+
+    assert "/rp project style" in help_text
+    assert "/rp project style inspect [project-id]" in help_text
+    assert "/rp project style set [project-id] <text>" in help_text
+    assert "/rp project style clear [project-id]" in help_text
+
+
 class RecordingRuntime:
     def __init__(self):
         self.calls = []

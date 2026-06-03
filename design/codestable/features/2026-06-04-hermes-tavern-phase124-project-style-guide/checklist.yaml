@@ -40,7 +40,19 @@ steps:
 
   - id: S2
     name: "Command surface: project style inspect set clear"
-    status: pending
+    status: completed
+    completed_at: "2026-06-04"
+    result: >
+      IMPLEMENTED - /rp project style now routes under the existing project
+      command family, with bare/inspect forms for explicit ids or active-project
+      fallback, set forms that distinguish explicit project ids from freeform
+      fallback text, idempotent clear behavior, bounded usage/missing-active/
+      missing-project messages, and mobile-preview responses while preserving the
+      stored style text through the S1 DB helpers. Focused runtime and command
+      tests cover help visibility, explicit-id set/inspect/update/clear,
+      active-project fallback, malformed arguments, missing projects, and long
+      style preview behavior. Prompt injection, Markdown export, README docs,
+      architecture, and root-design writeback remain deferred to later slices.
     description: >
       Add /rp project style inspect, set, and clear forms under the existing
       project command family. Support explicit project ids and active-project
@@ -51,7 +63,9 @@ steps:
       and missing project errors.
     verification:
       - command: "PYTHONDONTWRITEBYTECODE=1 python -m py_compile src/hermes_tavern/runtime_novel.py src/hermes_tavern/commands.py tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_commands.py"
+        result: "passed (controller rerun after S2 implementation)"
       - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_commands.py -q -o 'addopts='"
+        result: "passed; 85 passed in 1.97s (final controller rerun after executor repaired one malformed-args test)"
 
   - id: S3
     name: "Prompt module: linked project style guide"
@@ -111,8 +125,9 @@ checks:
 
   - id: C2
     name: "Runtime command contract: project style"
-    status: pending
+    status: passed
     command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_commands.py -q -o 'addopts='"
+    result: "passed; 85 passed in 1.97s (final controller rerun)"
 
   - id: C3
     name: "Prompt contract: linked project style"
@@ -159,3 +174,23 @@ s1_controller_verification:
     result: "passed; no protected core files changed"
   - command: "controller S1 allowlist diff guard"
     result: "passed; only db_novel.py, novel DB tests, and Phase 124 status docs changed"
+
+s2_controller_verification:
+  - command: "codex --profile architect exec --json --color never --sandbox read-only --cd /Users/steven/Projects/hermes-tavern <S2 artifact prompt>"
+    result: "passed; artifact at /tmp/hermes-tavern-architect-phase124-s2.jsonl approved S2 implementation scope with no blockers"
+  - command: "codex --profile executor exec --json --color never --sandbox workspace-write --cd /Users/steven/Projects/hermes-tavern <S2 implementation prompt>"
+    result: "completed; executor repaired one focused test failure before final controller verification; JSONL at /tmp/hermes-tavern-executor-phase124-s2.jsonl"
+  - command: "PYTHONDONTWRITEBYTECODE=1 python -m py_compile src/hermes_tavern/runtime_novel.py src/hermes_tavern/commands.py tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_commands.py"
+    result: "passed"
+  - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_commands.py -q -o 'addopts='"
+    result: "passed; 85 passed in 1.97s"
+  - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts='"
+    result: "passed; 809 passed in 31.29s"
+  - command: "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-04-hermes-tavern-phase124-project-style-guide/design.md --require doc_type --require status"
+    result: "passed; 1 passed, 0 failed"
+  - command: "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --yaml-only --file design/codestable/features/2026-06-04-hermes-tavern-phase124-project-style-guide/checklist.yaml"
+    result: "passed; 1 passed, 0 failed"
+  - command: "git diff --check"
+    result: "passed"
+  - command: "controller S2 allowlist and reverse-scope diff guard"
+    result: "passed; only runtime_novel.py, commands.py, two focused tests, and Phase 124 status docs changed; no protected core files changed"

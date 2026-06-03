@@ -7,6 +7,7 @@ from plugins.hermes_tavern.runtime import TavernRuntime
 from plugins.hermes_tavern.commands import RPCommand
 from plugins.hermes_tavern.importers.cards import parse_character_card
 from plugins.hermes_tavern.importers.presets import import_st_preset_json
+from plugins.hermes_tavern.runtime_utils import mobile_preview as _mobile_preview
 
 
 class Source:
@@ -37,6 +38,10 @@ def test_novel_command_table_has_five_families():
     assert "/rp scene narration clear <scene-id>" in TAVERN_COMMAND_TABLE["scene"].help_lines
     assert "/rp scene narration pov <scene-id> <label>" in TAVERN_COMMAND_TABLE["scene"].help_lines
     assert "/rp scene narration tense <scene-id> <past|present>" in TAVERN_COMMAND_TABLE["scene"].help_lines
+    assert "/rp project style" in TAVERN_COMMAND_TABLE["project"].help_lines
+    assert "/rp project style inspect [project-id]" in TAVERN_COMMAND_TABLE["project"].help_lines
+    assert "/rp project style set [project-id] <text>" in TAVERN_COMMAND_TABLE["project"].help_lines
+    assert "/rp project style clear [project-id]" in TAVERN_COMMAND_TABLE["project"].help_lines
 
 
 def test_project_routes_create_list_info_set(tmp_path):
@@ -95,6 +100,132 @@ def test_project_routes_boundary_args(tmp_path, command, expected_prefix):
 
     response = runtime.handle_command_sync(command, Event())
     assert response.startswith(expected_prefix)
+
+
+def test_project_style_routes_explicit_id_set_inspect_update_clear(tmp_path):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    project = runtime.store.create_project("Atlas")
+
+    set_first = runtime.handle_command_sync(
+        RPCommand("project", ["style", "set", str(project["id"]), "voice:", "first-person"], "/rp project style set 1 voice first-person"),
+        Event(),
+    )
+    assert set_first == f"Project style guide set for project [{project['id']}]: {_mobile_preview('voice: first-person', 180)}"
+    assert runtime.store.get_project_style_guide(project["id"])["style_text"] == "voice: first-person"
+
+    inspect = runtime.handle_command_sync(
+        RPCommand("project", ["style", str(project["id"])], "/rp project style 1"),
+        Event(),
+    )
+    assert inspect == f"Project style guide for project [{project['id']}]: {_mobile_preview('voice: first-person', 220)}"
+
+    set_update = runtime.handle_command_sync(
+        RPCommand("project", ["style", "set", str(project["id"]), "tone:", "warm"], "/rp project style set 1 tone warm"),
+        Event(),
+    )
+    assert set_update == f"Project style guide set for project [{project['id']}]: {_mobile_preview('tone: warm', 180)}"
+    assert runtime.store.get_project_style_guide(project["id"])["style_text"] == "tone: warm"
+
+    cleared = runtime.handle_command_sync(
+        RPCommand("project", ["style", "clear", str(project["id"])], "/rp project style clear 1"),
+        Event(),
+    )
+    assert cleared == f"Project style guide cleared for project [{project['id']}]."
+    assert runtime.store.get_project_style_guide(project["id"]) is None
+
+
+def test_project_style_routes_active_project_fallback_forms(tmp_path):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    runtime.store.create_project("Atlas")
+
+    runtime.handle_command_sync(RPCommand("project", ["set", "1"], "/rp project set 1"), Event())
+
+    set_fallback = runtime.handle_command_sync(
+        RPCommand("project", ["style", "set", "voice:", "grounded"], "/rp project style set voice: grounded"),
+        Event(),
+    )
+    assert set_fallback == f"Project style guide set for project [1]: {_mobile_preview('voice: grounded', 180)}"
+
+    inspect_fallback = runtime.handle_command_sync(RPCommand("project", ["style"], "/rp project style"), Event())
+    assert inspect_fallback == f"Project style guide for project [1]: {_mobile_preview('voice: grounded', 220)}"
+
+    clear_fallback = runtime.handle_command_sync(RPCommand("project", ["style", "clear"], "/rp project style clear"), Event())
+    assert clear_fallback == "Project style guide cleared for project [1]."
+
+
+def test_project_style_active_project_fallback_without_active_project(tmp_path):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    fallback_message = "No active novel project. Use /rp project set <id> or pass project-id."
+
+    assert (
+        runtime.handle_command_sync(RPCommand("project", ["style"], "/rp project style"), Event())
+        == fallback_message
+    )
+    assert (
+        runtime.handle_command_sync(
+            RPCommand("project", ["style", "set", "voice:", "first-person"], "/rp project style set voice: first-person"),
+            Event(),
+        )
+        == fallback_message
+    )
+    assert (
+        runtime.handle_command_sync(RPCommand("project", ["style", "clear"], "/rp project style clear"), Event())
+        == fallback_message
+    )
+
+
+def test_project_style_bad_arguments_return_usage(tmp_path):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    runtime.store.create_project("Atlas")
+    runtime.handle_command_sync(RPCommand("project", ["set", "1"], "/rp project set 1"), Event())
+    usage = (
+        "Usage: /rp project style [project-id] | /rp project style inspect [project-id] | "
+        "/rp project style set [project-id] <text> | /rp project style clear [project-id]"
+    )
+
+    command_ids = [
+        RPCommand("project", ["style", "bad-id"], "/rp project style bad-id"),
+        RPCommand("project", ["style", "1", "extra"], "/rp project style 1 extra"),
+        RPCommand("project", ["style", "inspect", "1", "extra"], "/rp project style inspect 1 extra"),
+        RPCommand("project", ["style", "clear", "1", "extra"], "/rp project style clear 1 extra"),
+        RPCommand("project", ["style", "set"], "/rp project style set"),
+        RPCommand("project", ["style", "set", "1"], "/rp project style set 1"),
+        RPCommand("project", ["style", "set", ""], "/rp project style set"),
+    ]
+    for command in command_ids:
+        assert runtime.handle_command_sync(command, Event()) == usage
+
+
+def test_project_style_missing_project_returns_not_found(tmp_path):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    tests = [
+        (RPCommand("project", ["style", "9999"], "/rp project style 9999"), "No novel project found: 9999"),
+        (RPCommand("project", ["style", "inspect", "9999"], "/rp project style inspect 9999"), "No novel project found: 9999"),
+        (RPCommand("project", ["style", "set", "9999", "tone:", "warm"], "/rp project style set 9999 tone: warm"), "No novel project found: 9999"),
+        (RPCommand("project", ["style", "clear", "9999"], "/rp project style clear 9999"), "No novel project found: 9999"),
+    ]
+
+    for command, expected in tests:
+        assert runtime.handle_command_sync(command, Event()) == expected
+
+
+def test_project_style_set_stores_full_text_and_returns_mobile_preview(tmp_path):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    runtime.store.create_project("Atlas")
+
+    long_text = (
+        "Write cinematic prose with layered emotional transitions and vivid sensory "
+        "detail, while staying grounded in character voice and careful pacing. " * 6
+    ).strip()
+
+    response = runtime.handle_command_sync(
+        RPCommand("project", ["style", "set", "1", long_text], f"/rp project style set 1 {long_text}"),
+        Event(),
+    )
+
+    assert response == f"Project style guide set for project [1]: {_mobile_preview(long_text, 180)}"
+    assert long_text not in response
+    assert runtime.store.get_project_style_guide(1)["style_text"] == long_text
 
 
 def test_chapter_routes_require_active_or_explicit_project(tmp_path):
