@@ -1,11 +1,14 @@
 doc_type: feature-checklist
 feature: "2026-06-04-hermes-tavern-phase126-context-budget-report"
 date: "2026-06-04"
-status: in_progress
+status: accepted
 summary: >
-  Add a read-only /rp debug context command that reports estimated context
-  composition and per-row token estimates without changing prompt assembly,
-  provider behavior, storage, or safety boundaries.
+  ACCEPTED - /rp debug context [limit] [page] now provides a read-only context
+  budget report with estimated context composition, per-row token estimates,
+  command/docs visibility, acceptance evidence, and architecture/root-design
+  writeback. Prompt assembly, provider behavior, storage, trimming,
+  summarization, vectorization, provider tokenization, and safety boundaries
+  remain unchanged/deferred.
 
 steps:
   - id: S1
@@ -62,7 +65,7 @@ steps:
       executor changed only README.md and tests/test_hermes_tavern_readme_docs.py;
       controller reran py_compile, targeted command/README-docs tests,
       full-suite, YAML/frontmatter validators, whitespace check, and protected-core
-      guard from scratch. S3 acceptance/writeback remains pending.
+      guard from scratch. S3 acceptance/writeback is now complete.
     description: >
       Update README/docs command visibility if required by existing docs tests.
       Add or adjust command/docs assertions for /rp debug context [limit] [page].
@@ -90,7 +93,18 @@ steps:
 
   - id: S3
     name: "S3: Acceptance and architecture writeback"
-    status: pending
+    status: completed
+    completed_at: "2026-06-04"
+    result: >
+      ACCEPTED - Acceptance report created, architecture/root-design writeback
+      recorded /rp debug context [limit] [page] as current read-only context
+      budget reporting, and controller reran focused, full, YAML/frontmatter,
+      whitespace, protected-core, and docs-only reverse-scope verification before
+      final acceptance. Budget enforcement, trimming, summarization,
+      vectorization, provider-specific tokenization, provider/model routing,
+      prompt mutation, regex postprocessors, credentials, minors/underage,
+      safety-bypass, cloud/collab, and archive import/export scope remain
+      deferred.
     description: >
       After implementation verification, write acceptance evidence and update
       architecture/root design to record read-only context budget reporting while
@@ -99,8 +113,44 @@ steps:
     exit_signal: >
       Acceptance report and architecture/root-design writeback are complete and
       YAML/frontmatter validators pass.
+    verification:
+      - command: "codex --profile architect exec --json --color never --disable image_generation --sandbox read-only --cd /Users/steven/Projects/hermes-tavern <Phase 126 S3 artifact prompt>"
+        result: "passed; artifact at /tmp/hermes-tavern-architect-phase126-s3.jsonl confirmed S3 was acceptance/writeback only"
+      - command: "codex --profile executor exec --json --color never --disable image_generation --sandbox workspace-write --cd /Users/steven/Projects/hermes-tavern <Phase 126 S3 docs/status prompt>"
+        result: "completed; JSONL at /tmp/hermes-tavern-executor-phase126-s3.jsonl; one early inspection command failed before the acceptance file existed, then executor created the file and validations passed"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m py_compile src/hermes_tavern/runtime_debug.py src/hermes_tavern/runtime.py src/hermes_tavern/commands.py tests/test_hermes_tavern_runtime.py tests/test_hermes_tavern_commands.py tests/test_hermes_tavern_readme_docs.py"
+        result: "passed (controller rerun)"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_runtime.py tests/test_hermes_tavern_commands.py tests/test_hermes_tavern_readme_docs.py -q -o 'addopts='"
+        result: "passed; 104 passed in 3.65s (controller rerun)"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts='"
+        result: "passed; 830 passed in 31.49s (controller rerun)"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-04-hermes-tavern-phase126-context-budget-report/design.md --require doc_type --require status"
+        result: "passed; 1 passed, 0 failed"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --yaml-only --file design/codestable/features/2026-06-04-hermes-tavern-phase126-context-budget-report/checklist.yaml"
+        result: "passed; 1 passed, 0 failed after final status update"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-04-hermes-tavern-phase126-context-budget-report/hermes-tavern-phase126-context-budget-report-acceptance.md --require doc_type --require status --require feature"
+        result: "passed; 1 passed, 0 failed after final status update"
+      - command: "git diff --check"
+        result: "passed"
+      - command: "git diff --name-only -- run_agent.py cli.py gateway/run.py"
+        result: "passed; no protected core file diffs"
+      - command: "controller S3 diff allowlist/reverse-scope review"
+        result: "passed; only Phase 126 docs/status files, architecture, and root design changed; no source/runtime/test/README/protected-core changes"
 
 checks:
+  - id: C7
+    name: "C7: S3 acceptance/writeback doc draft"
+    status: passed
+    result: >
+      Acceptance markdown, architecture/root-design writeback, and final
+      checklist status synchronization were completed after controller reran
+      focused, full, YAML/frontmatter, whitespace, protected-core, and docs-only
+      reverse-scope verification. No source/runtime/test/README files changed in
+      this slice.
+    criteria: >
+      S3 artifact updates must remain docs-only, with no implementation,
+      implementation-surface expansion, or prohibited scope changes.
+
   - id: C1
     name: "C1: No existing active checklist"
     status: passed
@@ -161,11 +211,12 @@ checks:
     name: "C6: Reverse-scope guard"
     status: passed
     result: >
-      Controller-verified: changed files are limited to the S1 allowlist and no
-      protected core files, README/docs, architecture/root-design, acceptance,
-      schema, provider routing, trimming/summarization/vectorization, regex
-      postprocessor, safety-bypass, minors/underage, cloud/collab, or archive
-      import/export scope was added.
+      Controller-verified: the final S3 docs/status diff is limited to the
+      Phase 126 acceptance report, checklist/design status wording, architecture,
+      and root design writeback. No protected core files, source/runtime files,
+      tests, README changes, schema, provider routing,
+      trimming/summarization/vectorization, regex postprocessor, safety-bypass,
+      minors/underage, cloud/collab, or archive import/export scope was added.
     criteria: >
       No protected core files are changed, and no context trimming, summarization,
       vectorization, provider/model routing change, regex postprocessor,

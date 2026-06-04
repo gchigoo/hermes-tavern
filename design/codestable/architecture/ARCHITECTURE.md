@@ -117,6 +117,7 @@ importers/
 - Phase 123: Scene narration controls (`/rp scene narration` inspect/clear/pov/tense), linked-session scene-narration prompt injection (before scene goal), and Markdown narration visibility
 - Phase 124: Project style guide (`/rp project style` inspect/set/clear), linked-session project-style prompt injection, and Markdown style-guide export
 - Phase 125: Lore Regex Complexity Guard (regex lore keys longer than 256 chars or with nested quantified groups are excluded before Python `re.search`; bounded rejection reasons available via `/rp lore test`/debug; no importer, schema, command, provider, or postprocessor behavior changes)
+- Phase 126: Context Budget Report v1 (`/rp debug context [limit] [page]` renders a read-only prompt/context composition report with estimated tokens, omitted-layer summary, renderer/model/context-window metadata, and paginated rows; no prompt trimming, summarization, vectorization, provider tokenization/routing, storage, provider calls, or generation behavior changes)
 
 ### Plugin flow
 
@@ -146,7 +147,7 @@ Macro expansion is one-pass and allowlist-based. Supported Phase 20 macros are
 `{{content_mode}}`, and `{{session_title}}`; names are case/whitespace tolerant,
 unknown macros are preserved, and replacement text is not recursively expanded.
 
-### /rp command surface (current through Phase 124)
+### /rp command surface (current through Phase 126)
 
 ```
 /rp help | status | assets
@@ -156,6 +157,7 @@ unknown macros are preserved, and replacement text is not recursively expanded.
 /rp speak | voice [on|off]                   ← placeholder speech surface; no real TTS/network call yet
 /rp history [limit] [page]                  ← paginated chronological (Phase 18)
 /rp debug prompt                              ← includes macro context summary; never raw event JSON
+/rp debug context [limit] [page]             ← read-only context budget report with estimated tokens, omitted-layer summary, and paginated rows (Phase 126)
 /rp export [markdown|st-json]                ← returns file path + quoted MEDIA attachment (Phase 23)
 /rp session info                            ← new (Phase 17)
 /rp sessions [all] [limit] [page]           ← paginated (Phase 18)

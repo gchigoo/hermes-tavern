@@ -11,10 +11,9 @@ tags: [debug, context, prompt, observability, long-form]
 
 # Phase 126: Context Budget Report v1
 
-> Approval note: promoted for unattended S1 implementation by the 2026-06-04
-> Codex architect/controller pass. This approval is limited to the S1 read-only
-> debug context report; S2 docs visibility and S3 acceptance/writeback remain
-> deferred.
+> Approval note: promoted for unattended implementation by the 2026-06-04
+> Codex architect/controller passes. S1 runtime, S2 docs visibility, and S3
+> acceptance/writeback are complete; Context Budget Report v1 is accepted.
 
 ## 0. Terms
 

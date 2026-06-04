@@ -682,6 +682,15 @@ Responsibilities:
 - detect overflow;
 - explain why items were excluded.
 
+Current Phase 126 v1 status:
+
+- `/rp debug context [limit] [page]` is implemented as read-only debug reporting.
+- The command renders shallow prompt compilation diagnostics and row-level token
+  estimates without changing prompt assembly or generation behavior.
+- Budget enforcement, prompt trimming, summarization, vectorization,
+  provider-specific tokenizer usage, provider/model routing, and broader context
+  enforcement remain future/deferred boundaries.
+
 Command:
 
 ```text
