@@ -120,6 +120,7 @@ importers/
 - Phase 126: Context Budget Report v1 (`/rp debug context [limit] [page]` renders a read-only prompt/context composition report with estimated tokens, omitted-layer summary, renderer/model/context-window metadata, and paginated rows; no prompt trimming, summarization, vectorization, provider tokenization/routing, storage, provider calls, or generation behavior changes)
 - Phase 127: Project Brief v1 metadata (`/rp project brief` + `/rp project info`, and `## Project Brief` export) backed by `novel_project_briefs`; metadata-only, no prompt/provider/routing/generation behavior changes
 - Phase 128: Project Outline v1 metadata (`/rp project outline` + `## Outline`) backed by `novel_project_outlines`; metadata-only, no prompt/provider/routing/content-mode/generation behavior changes
+- Phase 129: Chapter and Scene Summary metadata (`/rp chapter summary`, `/rp scene summary`) backed by existing `novel_chapters.summary` / `novel_scenes.summary`; metadata-only, no prompt/provider/routing/content-mode/generation changes
 
 ### Plugin flow
 
@@ -151,8 +152,10 @@ unknown macros are preserved, and replacement text is not recursively expanded.
 
 Project Brief and Project Outline are explicitly excluded from prompt assembly and
 session prompt module selection.
+Chapter/scene summary metadata is also excluded from prompt assembly and debug
+payloads; it is visible only through command output and Markdown export metadata.
 
-### /rp command surface (current through Phase 128)
+### /rp command surface (current through Phase 129)
 
 ```
 /rp help | status | assets
@@ -190,7 +193,11 @@ session prompt module selection.
 /rp project outline set [project-id] <text>
 /rp project outline clear [project-id]
 /rp chapter create/list
+/rp chapter summary <chapter-id> [text]
+/rp chapter summary clear <chapter-id>
 /rp scene create/list/start
+/rp scene summary <scene-id> [text]
+/rp scene summary clear <scene-id>
 /rp scene goal <scene-id> [text]
 /rp scene goal clear <scene-id>
 /rp scene narration <scene-id>
@@ -201,7 +208,7 @@ session prompt module selection.
 /rp timeline add/list
 ```
 
-### DB schema (current through Phase 128)
+### DB schema (current through Phase 129)
 
 ```sql
 cards(id, name, data_json, source_path, created_at)
@@ -237,6 +244,15 @@ novel_canon(id, project_id, title, content, canon_group, importance, created_at,
 novel_timeline(id, project_id, event_date, title, description, chapter_id, sort_key, created_at)
 ```
 
+Phase 129 adds explicit semantics on existing summary columns:
+
+- `novel_chapters.summary` is reused as chapter summary metadata for command-driven
+  chapter summaries.
+- `novel_scenes.summary` is reused as scene summary metadata for command-driven
+  scene summaries.
+- Both columns can store raw DB text; UI/runtime treats blank or whitespace-only
+  summary text as not-visible and omits it from getters and Markdown export.
+
 Phase 26 adds in-memory quick-action tracking on `TavernStore` only:
 `_last_card_id`, `_last_preset_id`, `_last_lorebook_id`, and
 `_last_persona_id`. These IDs are not persisted and reset when the runtime
@@ -267,4 +283,5 @@ These phases do not change schema or core prompt/generation assembly.
 - **Tavern export MEDIA contract**: `/rp export` returns quoted `MEDIA:"<path>"` markers so gateway adapters preserve attachment paths with spaces. Exports must not include raw event JSON or raw message metadata blobs.
 - **Phase 121 reverse-scope constraints**: no cloud sync, no collaboration/multi-user workflow, no novel import, no timeline graphics, no DB credential persistence.
 - **Tavern DB never persists `api_key` / `access_token`**: credentials resolved at runtime via `HermesRuntimeProviderResolver`, discarded after use.
+- **Phase 129 summary metadata boundary**: chapter/scene summary text is metadata-only and export-visible but not injected into prompt modules, context budgeting, vectorization, retrieval, provider routing, or generation.
 - **Tavern lore regex complexity guard**: lorebook regex keys are screened locally before matching. Entries with patterns longer than 256 characters or nested quantified groups (for example `(a+)+`, `(.+)*`, `([a-z]+){2,}`) are excluded with bounded reasons (`regex rejected: ...`), preserving raw imported lore data while preventing unbounded local matching behavior.

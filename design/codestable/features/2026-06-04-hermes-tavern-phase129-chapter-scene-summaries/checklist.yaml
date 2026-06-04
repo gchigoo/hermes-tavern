@@ -1,12 +1,14 @@
 doc_type: feature-checklist
 feature: "2026-06-04-hermes-tavern-phase129-chapter-scene-summaries"
 date: "2026-06-04"
-status: in_progress
+status: accepted
 summary: >
-  Chapter And Scene Summary Metadata v1 is in progress as a local/offline
-  feature using existing chapter and scene summary fields. S1 implemented helper,
-  command, export, help/README, and offline test coverage; S2 acceptance and
-  architecture/root-design writeback remain planned.
+  ACCEPTED - Chapter and Scene Summary Metadata v1 reuses existing
+  `novel_chapters.summary` and `novel_scenes.summary` fields for local
+  command-driven metadata, exports non-empty summary prose in deterministic
+  chapter/scene positions, and keeps prompt/provider/model/content-mode/
+  generation behavior unchanged. S1 implementation and S2 acceptance/writeback
+  are complete with controller verification.
 
 steps:
   - id: S1
@@ -14,15 +16,16 @@ steps:
     status: completed
     completed_at: "2026-06-04"
     result: >
-      IMPLEMENTED - S1 added chapter/scene summary DB helpers around the existing
-      summary columns, `/rp chapter summary ...` and `/rp scene summary ...`
-      inspect/set/clear command surfaces, help/README literals, Markdown export
-      visibility immediately after chapter/scene headings, and focused DB/runtime/
-      help/docs tests. Controller kept a small README ordering repair, reran
-      focused and full verification from scratch, and confirmed no protected core,
-      prompt-module, provider/model, credential, content-mode, generation,
-      vectorization/retrieval, archive import/export, cloud/collab, minors/
-      underage, or safety-bypass files/behavior changed.
+      IMPLEMENTED - S1 added chapter/scene summary DB helpers around existing
+      summary columns; `/rp chapter summary ...` and `/rp scene summary ...`
+      inspect/set/update/clear command surfaces; help/README command literals;
+      Markdown export visibility immediately after chapter/scene headings; and
+      focused DB/runtime/help/docs tests, including no-leak debug prompt/context
+      regressions. Controller reran focused and full verification from scratch
+      and confirmed no protected core, prompt-module, provider/model,
+      credential, content-mode, generation, vectorization/retrieval, archive
+      import/export, cloud/collab, minors/underage, or safety-bypass files or
+      behavior changed.
     description: >
       Add helper methods around existing `novel_chapters.summary` and
       `novel_scenes.summary`, route `/rp chapter summary ...` and
@@ -47,39 +50,25 @@ steps:
           codex --profile architect exec --json --color never --sandbox read-only --cd /Users/steven/Projects/hermes-tavern <Phase 129 S1 artifact prompt>
         result: >
           passed; artifact at /tmp/hermes-tavern-architect-phase129-s1.jsonl
-          ended with RESULT: ARCHITECT_ARTIFACT and selected S1 only. No Codex
-          429/rate-limit/exhaustion signal; architect noted a read-only sandbox
-          git/xcrun cache limitation, so the controller performed git status and
-          diff checks directly.
+          selected S1 only and produced bounded implementation scope.
       - command: >-
           codex --profile executor exec --json --color never --disable image_generation --sandbox workspace-write --cd /Users/steven/Projects/hermes-tavern <Phase 129 S1 implementation prompt>
         result: >
           completed; JSONL at /tmp/hermes-tavern-executor-phase129-s1.jsonl.
-          Executor stderr/JSONL contained patch-context misses and failed
-          in-sandbox pytest/py_compile attempts before Codex recovered and
-          reported 193 focused tests passing; no Codex 429/rate-limit/exhaustion
-          signal. Controller independently reran verification after a small README
-          ordering repair.
-      - command: >-
-          python -m py_compile src/hermes_tavern/db_novel.py src/hermes_tavern/runtime_novel.py src/hermes_tavern/commands.py tests/test_hermes_tavern_novel_db.py tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_commands.py tests/test_hermes_tavern_readme_docs.py
-        result: "passed (controller rerun)"
-      - command: >-
-          python -m pytest tests/test_hermes_tavern_novel_db.py tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_commands.py tests/test_hermes_tavern_readme_docs.py -q -o 'addopts='
-        result: "passed; 193 passed in 4.82s (controller rerun after README ordering repair)"
-      - command: "python -m pytest -q"
-        result: "passed; 884 passed in 36.45s (controller rerun)"
-      - command: >-
-          git diff --name-only -- run_agent.py cli.py gateway/run.py src/hermes_tavern/runtime_prompt_modules.py src/hermes_tavern/prompt.py src/hermes_tavern/runtime_debug.py src/hermes_tavern/model_router.py src/hermes_tavern/provider_bridge.py src/hermes_tavern/adapters.py src/hermes_tavern/runtime_model.py src/hermes_tavern/runtime_generation.py
-        result: "passed; no protected/prompt/provider/generation file diffs"
-      - command: "git diff --check"
-        result: "passed"
-      - command: >-
-          python design/codestable/tools/validate-yaml.py --yaml-only --file design/codestable/features/2026-06-04-hermes-tavern-phase129-chapter-scene-summaries/checklist.yaml
-        result: "passed (controller rerun after status edit)"
+          Executor had recoverable patch/test attempts before final useful diff;
+          controller reran verification after a small README ordering repair.
 
   - id: S2
     name: "S2: Verify and write architecture"
-    status: planned
+    status: completed
+    completed_at: "2026-06-04"
+    result: >
+      ACCEPTED - S2 created the Phase 129 acceptance report, updated the feature
+      design/checklist status, and wrote current chapter/scene summary behavior
+      into architecture and root design docs. Controller reran py_compile,
+      focused tests, plugin/full tests, frontmatter/YAML validators,
+      protected-core/reverse-scope checks, and whitespace checks before marking
+      the phase accepted.
     description: >
       Run focused, plugin, full, YAML/frontmatter, whitespace, protected-core,
       and reverse-scope verification. Create the acceptance report and update
@@ -94,26 +83,67 @@ steps:
     exit_signal: >
       Acceptance docs and architecture/root-design writeback are complete after
       controller verification and reverse-scope confirmation.
+    verification:
+      - command: >-
+          codex --profile architect exec --json --color never --sandbox read-only --cd /Users/steven/Projects/hermes-tavern <Phase 129 S2 acceptance artifact prompt>
+        result: >
+          passed; artifact at /tmp/hermes-tavern-architect-phase129-s2.jsonl.
+          JSONL had one harmless failed `rg` probe for a missing `scripts/` path
+          and read-only macOS git/xcrun cache warnings, but ended with
+          RESULT: ARCHITECT_ARTIFACT and no Codex 429/rate-limit/exhaustion signal.
+      - command: >-
+          codex --profile executor exec --json --color never --disable image_generation --sandbox workspace-write --cd /Users/steven/Projects/hermes-tavern <Phase 129 S2 acceptance/writeback prompt>
+        result: >
+          completed; JSONL at /tmp/hermes-tavern-executor-phase129-s2.jsonl.
+          Executor initially observed the missing acceptance report and had
+          recoverable patch-context misses, then changed only the five allowed
+          docs/status files. No Codex 429/rate-limit/exhaustion signal.
+      - command: >-
+          PYTHONDONTWRITEBYTECODE=1 python -m py_compile src/hermes_tavern/db_novel.py src/hermes_tavern/runtime_novel.py src/hermes_tavern/commands.py tests/test_hermes_tavern_novel_db.py tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_commands.py tests/test_hermes_tavern_readme_docs.py
+        result: "passed (controller rerun)"
+      - command: >-
+          PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel_db.py tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_commands.py tests/test_hermes_tavern_readme_docs.py -q -o 'addopts=' -p no:cacheprovider
+        result: "passed; 193 passed in 5.46s (controller rerun)"
+      - command: >-
+          PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_*.py -q -o 'addopts=' -p no:cacheprovider
+        result: "passed; 884 passed in 38.50s (controller rerun)"
+      - command: >-
+          PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts=' -p no:cacheprovider
+        result: "passed; 884 passed in 40.64s (controller rerun)"
+      - command: >-
+          python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-04-hermes-tavern-phase129-chapter-scene-summaries/design.md --require doc_type --require status --require feature
+        result: "passed (controller rerun after final status edit)"
+      - command: >-
+          python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-04-hermes-tavern-phase129-chapter-scene-summaries/hermes-tavern-phase129-chapter-scene-summaries-acceptance.md --require doc_type --require status --require feature
+        result: "passed (controller rerun after final status edit)"
+      - command: >-
+          python design/codestable/tools/validate-yaml.py --yaml-only --file design/codestable/features/2026-06-04-hermes-tavern-phase129-chapter-scene-summaries/checklist.yaml
+        result: "passed (controller rerun after final status edit)"
+      - command: >-
+          git diff --name-only -- run_agent.py cli.py gateway/run.py src/hermes_tavern/runtime_prompt_modules.py src/hermes_tavern/prompt.py src/hermes_tavern/runtime_debug.py src/hermes_tavern/model_router.py src/hermes_tavern/provider_bridge.py src/hermes_tavern/adapters.py src/hermes_tavern/runtime_model.py src/hermes_tavern/runtime_generation.py
+        result: "passed; no protected/prompt/provider/generation file diffs"
+      - command: "git diff --check"
+        result: "passed"
 
 checks:
   - id: C1
     name: "C1: Active checklist precondition"
     status: completed
     result: >
-      Controller status scan before implementation found exactly one active
-      planned/pending/in-progress feature checklist: this Phase 129 checklist.
+      Passed. Phase 129 was the only active in-progress feature checklist, with
+      S1 complete and S2 planned/in-progress before this acceptance slice.
     criteria: >
-      Before implementation, no other feature checklist is planned, pending, or
-      in progress; this Phase 129 checklist is the only planned feature.
+      Before acceptance, no unrelated feature checklist is planned, pending, or
+      in progress; this Phase 129 checklist is the only active feature.
 
   - id: C2
     name: "C2: Persistence contract"
     status: completed
     result: >
-      DB/runtime tests prove chapter and scene summary helpers set, update,
-      inspect/get visible rows, clear to not-set, preserve whitespace-only stored
-      values for DB callers while export/inspect omit visible-empty text, and
-      raise bounded missing-owner errors.
+      Passed. DB/runtime tests prove existing `novel_chapters.summary` and
+      `novel_scenes.summary` fields support set, update, visible get/inspect,
+      clear-to-not-set, blank/whitespace visibility omission, and bounded missing
+      owner behavior without new summary tables.
     criteria: >
       Chapter and scene summaries can be set, updated, inspected, and cleared
       using existing summary columns, with bounded not-found and malformed-input
@@ -123,25 +153,23 @@ checks:
     name: "C3: Command contract"
     status: completed
     result: >
-      Runtime/help/docs tests prove `/rp chapter summary <chapter-id> [text]`,
-      `/rp chapter summary clear <chapter-id>`, `/rp scene summary <scene-id>
-      [text]`, and `/rp scene summary clear <scene-id>` support inspect/set/
-      update/clear, not-set, usage, blank-text, missing-id, README, and help
-      visibility behavior.
+      Passed. Runtime/help/docs tests cover `/rp chapter summary <chapter-id>
+      [text]`, `/rp chapter summary clear <chapter-id>`, `/rp scene summary
+      <scene-id> [text]`, and `/rp scene summary clear <scene-id>` for inspect,
+      set, update, clear, not-set, usage, blank-text, missing-id, README, and
+      help visibility behavior.
     criteria: >
-      `/rp chapter summary <chapter-id> [text]`, `/rp chapter summary clear
-      <chapter-id>`, `/rp scene summary <scene-id> [text]`, and `/rp scene
-      summary clear <scene-id>` return bounded normal, not-set, usage, blank-text,
-      and missing-id messages and are visible in help/README command surfaces.
+      Chapter/scene summary command literals return bounded normal and error
+      messages and are visible in help/README command surfaces.
 
   - id: C4
     name: "C4: Markdown export visibility"
     status: completed
     result: >
-      DB/export tests prove non-empty chapter summaries appear immediately after
-      chapter headings, non-empty scene summaries appear immediately after scene
-      headings and before goal/narration/session fallback, and empty/whitespace
-      summaries are omitted from the Chapters section.
+      Passed. Export tests prove non-empty chapter summaries appear immediately
+      after chapter headings, non-empty scene summaries appear immediately after
+      scene headings and before goal/narration/session content, and empty or
+      whitespace-only summaries are omitted.
     criteria: >
       Non-empty chapter summaries appear directly under chapter headings;
       non-empty scene summaries appear directly under scene headings and before
@@ -151,10 +179,10 @@ checks:
     name: "C5: Offline and prompt-safe boundary"
     status: completed
     result: >
-      Implementation is local SQLite/runtime/help/README/export/tests only. A
-      focused debug prompt/context regression with distinctive chapter/scene
-      summary tokens passed, and protected prompt/provider/generation files have
-      no diffs.
+      Passed. Implementation and S2 writeback are local SQLite/runtime/help/
+      README/export/tests/docs only. Focused debug prompt/context regressions
+      with distinctive summary tokens passed, and protected prompt/provider/
+      generation files have no diffs.
     criteria: >
       The feature has no provider calls, no network calls, no credential storage,
       no vectorization, no context trimming, no prompt assembly changes, no
@@ -165,9 +193,10 @@ checks:
     name: "C6: Reverse-scope guard"
     status: completed
     result: >
-      Changed files are limited to the S1 allowlist plus this checklist status
-      update. `git diff --name-only` over protected core, prompt, provider,
-      model-router, credential, and generation paths returned no files.
+      Passed. Final changed files are limited to feature design/checklist/
+      acceptance plus architecture/root design docs. Protected core, prompt,
+      provider, model-router, credential, and generation path diff checks
+      returned no files.
     criteria: >
       No protected core files are changed, and no automatic summarization,
       project summary, retrieval/vector index, structured beat engine, archive

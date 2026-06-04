@@ -1,13 +1,12 @@
 ---
 doc_type: feature-design
 feature: "2026-06-04-hermes-tavern-phase129-chapter-scene-summaries"
-status: draft
+status: approved
 summary: >
-  Chapter And Scene Summary Metadata v1 plans a local, user-authored summary
-  surface for existing chapter/scene summary columns, including commands,
-  Markdown export visibility, help/README command literals, and offline tests.
-  It does not add automatic summarization, prompt injection, provider calls,
-  vectorization, content-mode routing, or generation behavior.
+  Chapter And Scene Summary Metadata v1 is implemented using existing chapter/scene
+  summary columns with local command surface and Markdown export behavior. It remains
+  a metadata-only, offline boundary. S1 implementation and S2 acceptance/writeback
+  are complete after controller verification.
 tags: [novel, chapter, scene, summary, metadata, export, offline]
 ---
 
@@ -17,66 +16,64 @@ tags: [novel, chapter, scene, summary, metadata, export, offline]
 
 | Term | Meaning | Conflict guard |
 |---|---|---|
-| Chapter Summary | User-authored local prose stored on an existing `novel_chapters.summary` field. | Not automatic model summarization and not memory extraction. |
-| Scene Summary | User-authored local prose stored on an existing `novel_scenes.summary` field. | Not a rolling session summary and not prompt injection. |
-| Summary Metadata | Informational chapter/scene text visible through commands and export. | Not provider, vector index, or generation behavior. |
-| Summary Export | Optional prose emitted in project Markdown export near the owning chapter/scene heading. | Not project ZIP/archive import/export. |
+| Chapter Summary | User-authored local prose stored on `novel_chapters.summary`. | Not automatic model summarization and not memory extraction. |
+| Scene Summary | User-authored local prose stored on `novel_scenes.summary`. | Not a rolling session summary and not prompt injection. |
+| Summary Metadata | Informational chapter/scene text visible through commands and export. | Not vector index, retrieval, context trimming, or generation behavior. |
+| Summary Export | Optional prose emitted in project Markdown export near the owning chapter/scene heading. | Not project archive ZIP/import/export. |
 
-Startup inspection found no active feature checklist: recent Phase 121-128 feature checklists are accepted/completed and no `planned`, `pending`, or `in_progress` feature checklist remains under `design/codestable/features`.
+S1 implementation and S2 acceptance/writeback are complete.
 
 ## 1. Decisions And Constraints
 
 ### Need
 
-The root design lists long-form fiction support for projects, chapters, scenes,
-outlines, canon, timeline, summaries, relationship state, and retrieval memory.
-Phases 121-128 made the project/chapter/scene lane, scene goal/narration controls,
-project style, project brief, project outline, and context-budget inspection current.
-However the existing chapter and scene `summary` columns are still not directly
-manageable from the command surface or visible in Markdown export.
+The root design already supports projects, chapters, scenes, canon, timeline,
+outlines, project briefs, and style metadata. Phase 129 closes a local metadata
+gap by making existing chapter/scene summary fields user-manageable and export-visible.
 
 ### Success
 
 - A user can inspect, set/update, and clear a chapter summary.
 - A user can inspect, set/update, and clear a scene summary.
-- Project Markdown export includes non-empty chapter summaries directly under
-  chapter headings and non-empty scene summaries directly under scene headings
-  before goal/narration/message content.
-- `/rp help` and README command-surface docs expose the new summary commands.
-- The feature stays local/offline and metadata-only: no prompt assembly,
-  provider routing, content mode, vectorization, model summarization, or generation
-  behavior changes.
+- Project Markdown export includes non-empty chapter summaries immediately under each
+  chapter heading.
+- Project Markdown export includes non-empty scene summaries immediately under each
+  scene heading before goal/narration/session content.
+- `/rp help` and README command surfaces expose new chapter/scene summary command
+  literals.
+- Focused debug boundary checks include distinctive-token assertions that `/rp debug prompt`
+  and `/rp debug context` do not include chapter/scene summary text.
+- The feature remains metadata-only and local: no prompt injection, no summarization
+  worker, no vectorization/retrieval changes, no provider/model routing behavior,
+  no content-mode changes, and no generation pipeline edits.
 
 ### Explicit Non-Goals
 
-- No automatic summarization, model/provider calls, scheduled summarization, memory
-  extraction, vector index, retrieval, or context trimming.
-- No prompt module injection for chapter or scene summary text.
-- No project summary, rolling session summary, character state, relationship state,
-  locations, organizations, plot threads, style samples, or default binding metadata.
-- No project archive ZIP/import, Markdown import, provider/model routing, credentials,
-  content-mode routing, minors/underage path, provider safety bypass, or protected
-  core-file edits.
+- No automatic summarization, model/provider calls, scheduled summarization,
+  context trimming, or memory extraction.
+- No prompt module injection for chapter/scene summaries.
+- No project archive ZIP/import, Markdown import, provider/model routing,
+  credentials, content-mode routing, minors/underage paths, provider safety
+  bypass, or protected core-file edits.
 - No edits to `run_agent.py`, `cli.py`, or `gateway/run.py`.
 
 ### Complexity
 
-Small local plugin slice. The database already has `novel_chapters.summary` and
-`novel_scenes.summary`; this phase should add bounded helper/command/export behavior
-and tests around those existing fields rather than introducing new schema or runtime
-model work.
+Small local plugin slice. Existing `novel_chapters.summary` and `novel_scenes.summary`
+columns are reused, and runtime/export behavior is added with bounded validation.
 
 ### Key Decisions
 
 1. Reuse the existing `summary` columns instead of adding side tables.
 2. Keep summaries user-authored and metadata-only in v1.
-3. Use `summary` subcommands under the existing `chapter` and `scene` command families:
-   `/rp chapter summary <chapter-id> [text]`, `/rp chapter summary clear <chapter-id>`,
-   `/rp scene summary <scene-id> [text]`, and `/rp scene summary clear <scene-id>`.
-4. Empty or whitespace-only summary text is not visible; explicit `clear` removes
-   visible summary text.
-5. Implement all runtime/source changes in one bounded S1 slice, then use S2 for
-   acceptance and architecture/root-design writeback.
+3. Add `summary` subcommands in chapter and scene families:
+   `/rp chapter summary <chapter-id> [text]`,
+   `/rp chapter summary clear <chapter-id>`,
+   `/rp scene summary <scene-id> [text]`,
+   `/rp scene summary clear <scene-id>`.
+4. Reject blank/whitespace summary text on set; require explicit clear.
+5. Empty or whitespace-visible text is treated as not set for getters/export.
+6. S1 implementation is complete; S2 is acceptance/writeback only.
 
 ## 2. Names And Flow
 
@@ -84,16 +81,16 @@ model work.
 
 Current:
 
-- `src/hermes_tavern/db_novel.py` creates `novel_chapters.summary` and
+- `src/hermes_tavern/db_novel.py` owns `novel_chapters.summary` and
   `novel_scenes.summary` in the existing schema.
 - `src/hermes_tavern/runtime_novel.py` owns `/rp chapter ...` and `/rp scene ...`
-  command handling.
-- `src/hermes_tavern/commands.py`, `README.md`, and command/docs tests guard
-  public command visibility.
-- `runtime_prompt_modules.py` and prompt/debug surfaces intentionally do not use
-  project brief/outline metadata; chapter/scene summaries must preserve that boundary.
+  command parsing.
+- `src/hermes_tavern/commands.py`, `README.md`, and command/docs tests guard command
+  visibility.
+- `runtime_prompt_modules.py`, prompt, and debug paths intentionally exclude chapter/
+  scene summaries from prompt input.
 
-Change:
+Implemented API shape:
 
 ```python
 def get_chapter_summary(self, chapter_id: int) -> dict[str, Any] | None
@@ -104,15 +101,12 @@ def set_scene_summary(self, scene_id: int, summary: str) -> dict[str, Any]
 def clear_scene_summary(self, scene_id: int) -> bool
 ```
 
-Rules:
+Runtime constraints:
 
-- Missing chapter or scene returns a bounded not-found path at runtime; DB helpers
-  may raise `ValueError("Chapter not found")` / `ValueError("Scene not found")` or
-  use an equivalent existing project-lane pattern, but runtime messages must not
-  expose stack traces.
+- Missing chapter/scene returns bounded not-found behavior.
 - Inspect returns a compact `(not set)` style response when no visible summary exists.
-- Set rejects blank summary text with usage/bounded guidance; clearing is explicit.
-- Export writes plain Markdown summary text without invoking providers or prompt logic.
+- Set rejects blank summary text with bounded usage guidance.
+- Export emits `Summary: <text>` when non-empty only.
 
 Command behavior:
 
@@ -146,84 +140,72 @@ sequenceDiagram
 
     User->>Runtime: /rp project export 1
     Runtime->>Export: export_project_markdown(1)
-    Export-->>Runtime: Markdown with optional chapter/scene summary prose
+    Export-->>Runtime: Markdown with optional summary prose
 ```
 
 Flow constraints:
 
-- Summary commands are local metadata commands only; they do not start generation,
-  summarization, or memory extraction.
-- Summary lookup is not called by prompt assembly, context-budget calculation,
-  provider routing, model profiles, content mode, or generation.
-- Export ordering is deterministic: chapter summary immediately after its chapter
-  heading, scene summary immediately after its scene heading and before goal,
-  narration controls, session messages, or no-session placeholders.
+- Summary commands remain local and metadata-only.
+- Summary lookup is not used by prompt assembly, context-budget selection, provider
+  routing, model profile resolution, content mode, or generation.
+- Export ordering is deterministic: chapter summaries appear immediately below chapter
+  headings; scene summaries appear immediately below scene headings and before
+  goal/narration/message sections.
 
 ### 2.3 Mount Points
 
 | Mount | Purpose |
 |---|---|
-| `src/hermes_tavern/db_novel.py` | S1: add helper methods around existing chapter/scene summary columns and export summary text. |
-| `src/hermes_tavern/runtime_novel.py` | S1: route `/rp chapter summary ...` and `/rp scene summary ...` with bounded inspect/set/clear behavior. |
-| `src/hermes_tavern/commands.py` | S1: add help lines for chapter/scene summary commands. |
-| `README.md` | S1: keep Core commands command literals in sync if docs tests require it. |
-| `tests/test_hermes_tavern_novel_db.py` | S1: helper/export ordering tests. |
-| `tests/test_hermes_tavern_novel_runtime.py` | S1: runtime command behavior, missing-id, blank-text, and no prompt/context leak tests. |
-| `tests/test_hermes_tavern_commands.py` and `tests/test_hermes_tavern_readme_docs.py` | S1: help/docs command visibility assertions. |
-| `design/codestable/architecture/ARCHITECTURE.md` and `design/HERMES_TAVERN_DESIGN.md` | S2: writeback only after verification. |
+| `src/hermes_tavern/db_novel.py` | S1: helper methods around existing chapter/scene summary columns and export summary text. |
+| `src/hermes_tavern/runtime_novel.py` | S1: command routing for chapter/scene summary inspect/set/clear with bounded messages. |
+| `src/hermes_tavern/commands.py` | S1: help lines for chapter/scene summary commands. |
+| `README.md` | S1: keep Core command literals in sync for docs assertions. |
+| `tests/test_hermes_tavern_novel_db.py` | S1: summary helper/export ordering tests. |
+| `tests/test_hermes_tavern_novel_runtime.py` | S1: command contract and no-leak boundary tests. |
+| `tests/test_hermes_tavern_commands.py` | S1: command visibility command-table tests. |
+| `tests/test_hermes_tavern_readme_docs.py` | S1: README literal assertions. |
+| `design/codestable/architecture/ARCHITECTURE.md` | S2: writeback after verification. |
+| `design/HERMES_TAVERN_DESIGN.md` | S2: writeback after verification. |
 
 Non-mounts:
 
 - `runtime_prompt_modules.py`, `prompt.py`, `runtime_debug.py`, `model_router.py`,
-  provider adapters, credentials, `run_agent.py`, `cli.py`, and `gateway/run.py`
-  stay untouched. If implementation needs them, stop and redesign.
+  provider adapters, credentials, `run_agent.py`, `cli.py`, `gateway/run.py`
+  stay untouched for this phase.
 
 ### 2.4 Slicing
 
-1. S1: Chapter/Scene Summary Metadata implementation: DB helpers, runtime commands,
-   help/README visibility, Markdown export, and focused offline tests.
-2. S2: Acceptance/writeback after focused, plugin, full, YAML/frontmatter,
-   whitespace, protected-core, and reverse-scope verification.
+1. S1: Chapter/Scene Summary Metadata implementation (completed).
+2. S2: Acceptance/writeback after focused/plugin/full checks and reverse-scope review.
 
 ### 2.5 Structure Health
 
-No pre-feature micro-refactor.
+No pre-feature micro-refactor required.
 
-`db_novel.py` already owns chapter/scene persistence and project Markdown export.
-`runtime_novel.py` already owns chapter/scene command parsing. Adding one metadata
-subcommand per family and helper methods over existing fields is cohesive. If
-implementation discovers that summaries require automatic model generation,
-vector indexing, context trimming, retrieval, prompt injection, or new state families,
-stop because that exceeds this phase.
+`db_novel.py` already owns chapter/scene persistence and export.
+`runtime_novel.py` already owns chapter/scene command parsing. If implementation
+needs automatic generation, vector indexing, context trimming, retrieval, prompt
+injection, or additional state families, it is out of phase and should be deferred.
 
 ## 3. Acceptance Criteria
 
-1. Chapter summaries can be set, updated, inspected, and cleared, using existing
-   chapter IDs and bounded messages for missing IDs and malformed arguments.
-2. Scene summaries can be set, updated, inspected, and cleared, using existing
-   scene IDs and bounded messages for missing IDs and malformed arguments.
-3. Blank/whitespace set text is rejected; clear is explicit and idempotent enough
-   for repeated user attempts.
-4. Project Markdown export includes non-empty chapter summaries immediately after
-   chapter headings and omits empty chapter summaries.
-5. Project Markdown export includes non-empty scene summaries immediately after
-   scene headings and before goal/narration/session content, and omits empty scene
-   summaries.
+1. Chapter summaries can be set, updated, inspected, and cleared using existing chapter IDs.
+2. Scene summaries can be set, updated, inspected, and cleared using existing scene IDs.
+3. Blank/whitespace set text is rejected; clear is explicit.
+4. Export includes non-empty chapter summaries directly under chapter headings and omits
+   empty chapter summaries.
+5. Export includes non-empty scene summaries directly under scene headings before goal,
+   narration, and session content; empty scene summaries are omitted.
 6. `/rp help` and README Core commands include chapter/scene summary command literals.
 7. `/rp debug prompt`, `/rp debug context`, prompt module selection, provider/model
-   routing, content mode, credential handling, and generation behavior remain unchanged.
-8. Reverse-scope scan confirms no protected core edits and no prohibited feature
-   family implementation.
+   routing, content mode, credentials, and generation behavior remain unchanged.
+8. Reverse-scope audit confirms no protected-core edits and no prohibited-family behavior.
 
 ## 4. Architecture Writeback
 
-Acceptance should update:
-
-- `design/codestable/architecture/ARCHITECTURE.md`: add Phase 129 summary behavior
-  to the Hermes Tavern capability list, command surface, DB schema semantics, and
-  project/chapter/scene metadata description.
-- `design/HERMES_TAVERN_DESIGN.md`: document chapter/scene summary commands and
-  Markdown export behavior as current local metadata while keeping automatic
-  summarization, project summary, character/relationship state, vectorization,
-  context trimming, provider/generation behavior, minors/underage paths, and
-  provider safety bypass deferred.
+- `design/codestable/architecture/ARCHITECTURE.md` should add Phase 129 in the
+  capability summary, command surface, and DB metadata list, and document metadata-only
+  boundary: chapter/scene summaries are export-visible but not in prompt assembly.
+- `design/HERMES_TAVERN_DESIGN.md` should document chapter/scene summary commands,
+  existing `novel_chapters.summary`/`novel_scenes.summary` reuse, and export ordering
+  under each chapter/scene heading while keeping deferred automation boundaries explicit.

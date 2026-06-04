@@ -533,9 +533,13 @@ Commands:
 /rp project outline clear [project-id]
 /rp chapter create [project-id] <title>
 /rp chapter list [project-id]
+/rp chapter summary <chapter-id> [text]
+/rp chapter summary clear <chapter-id>
 /rp scene create <chapter-id> <title>
 /rp scene list <chapter-id>
 /rp scene start <scene-id>
+/rp scene summary <scene-id> [text]
+/rp scene summary clear <scene-id>
 /rp scene goal <scene-id> [text]
 /rp scene goal clear <scene-id>
 /rp scene narration <scene-id>
@@ -553,6 +557,9 @@ Project Markdown export emits `## Project Brief` after `## Summary` and, when
 present, emits `## Outline` immediately after Project Brief and before Style
 Guide. Project Brief and Outline content are omitted when empty. Project Brief
 labels are `Type:` and `Premise:`, and blank field labels are omitted.
+Chapter and scene summaries are also metadata-only: they are emitted as `Summary:`
+lines directly under chapter and scene headings in the same export pass.
+Blank or whitespace-only summary values are omitted.
 
 ---
 
@@ -932,7 +939,11 @@ character state, relationship state, and revision notes.
 /rp project outline set [project-id] <text>
 /rp project outline clear [project-id]
 /rp chapter create/list
+/rp chapter summary <chapter-id> [text]
+/rp chapter summary clear <chapter-id>
 /rp scene create/list/start
+/rp scene summary <scene-id> [text]
+/rp scene summary clear <scene-id>
 /rp scene goal <scene-id> [text]
 /rp scene goal clear <scene-id>
 /rp scene narration <scene-id>
@@ -946,6 +957,8 @@ character state, relationship state, and revision notes.
 Project Brief and Project Outline commands are metadata-only. They expose local
 project metadata for inspection/info/export, not prompt injection, content-mode
 changes, provider selection, or generation control.
+Chapter and scene summaries are metadata-only and local-only: command-driven
+metadata for prose visibility and export, no model/provider/routing side effect.
 
 Future writing commands from the original vision remain deferred: outline
 generation/rewrite/expand/compress workflows, project archive
@@ -1094,6 +1107,10 @@ Current Project Outline table:
 with `project_id UNIQUE REFERENCES novel_projects(id) ON DELETE CASCADE` and
 `idx_novel_project_outlines_project ON novel_project_outlines(project_id)`.
 
+Current chapter/scene summary metadata:
+`novel_chapters.summary` and `novel_scenes.summary` are reused by Phase 129 for
+local chapter/scene summary commands and Markdown export visibility.
+
 ### 16.2 Message table
 
 ```sql
@@ -1144,7 +1161,7 @@ ST preset JSON
 ST lorebook/world info JSON
 ```
 
-Hermes Tavern native project archives are deferred; the current Phase 121–123
+Hermes Tavern native project archives are deferred; the current Phase 121–129
 implementation provides Markdown export only, not project/novel import.
 
 Later:
@@ -1168,12 +1185,17 @@ chat export JSONL
 novel export Markdown
 ```
 
-Project archive ZIP remains a future exporter/importer; current Phase 121–128 writes
+Project archive ZIP remains a future exporter/importer; current Phase 121–129 writes
 local Markdown via `/rp project export [id]`.
 Project Brief and Project Outline are exported as optional top-level `## Project Brief`
 and `## Outline` sections after `## Summary` when non-empty. Project style guides
 are exported as a top-level `## Style Guide` section after optional Project Brief
 and Outline and before Chapters when non-empty.
+Chapter summaries are exported as `Summary: <text>` immediately under chapter headings
+when non-empty.
+Scene summaries are exported as `Summary: <text>` immediately under scene headings,
+before scene goal, narration controls, and session content, and whitespace-only
+summaries are omitted.
 Scene goals are exported in Markdown directly under the relevant scene heading
 as `Goal: <text>`, when set.
 Scene narration controls are also exported under scene headings with only
