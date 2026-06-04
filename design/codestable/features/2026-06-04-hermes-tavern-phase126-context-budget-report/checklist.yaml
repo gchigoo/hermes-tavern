@@ -1,0 +1,106 @@
+doc_type: feature-checklist
+feature: "2026-06-04-hermes-tavern-phase126-context-budget-report"
+date: "2026-06-04"
+status: planned
+summary: >
+  Add a read-only /rp debug context command that reports estimated context
+  composition and per-row token estimates without changing prompt assembly,
+  provider behavior, storage, or safety boundaries.
+
+steps:
+  - id: S1
+    name: "S1: Add read-only debug context report"
+    status: pending
+    description: >
+      Add runtime_debug.debug_context(), route /rp debug context [limit] [page]
+      through TavernRuntime._debug_command, add command-table help, and add
+      focused runtime tests for active/no-active/no-card, pagination, row token
+      estimates, and read-only behavior.
+    exit_signal: >
+      Focused runtime tests pass; /rp debug context returns a mobile paginated
+      report and does not append messages or call providers.
+
+  - id: S2
+    name: "S2: Docs and command visibility"
+    status: pending
+    description: >
+      Update README/docs command visibility if required by existing docs tests.
+      Add or adjust command/docs assertions for /rp debug context [limit] [page].
+    exit_signal: >
+      Command-table and README/docs tests pass with /rp debug context visible.
+
+  - id: S3
+    name: "S3: Acceptance and architecture writeback"
+    status: pending
+    description: >
+      After implementation verification, write acceptance evidence and update
+      architecture/root design to record read-only context budget reporting while
+      keeping budget enforcement, trimming, summarization, vectorization, and
+      provider-specific tokenization deferred.
+    exit_signal: >
+      Acceptance report and architecture/root-design writeback are complete and
+      YAML/frontmatter validators pass.
+
+checks:
+  - id: C1
+    name: "C1: No existing active checklist"
+    status: pending
+    criteria: >
+      Existing feature checklists have no planned or in-progress status; this
+      Phase 126 feature is the only new planned checklist.
+
+  - id: C2
+    name: "C2: Debug context command contract"
+    status: pending
+    criteria: >
+      /rp debug context [limit] [page] returns a read-only context budget report
+      for active card-backed sessions and bounded usage/no-session/no-card
+      messages for boundary cases.
+
+  - id: C3
+    name: "C3: Report content"
+    status: pending
+    criteria: >
+      The report includes renderer, model descriptor summary, context window
+      when known, estimated total tokens, modules/history/rendered-message
+      counts, omitted-layer summary, and per-row token estimates.
+
+  - id: C4
+    name: "C4: Pagination and mobile safety"
+    status: pending
+    criteria: >
+      Row pagination uses the same limit/page style as /rp debug prompt and
+      previews are single-line mobile-safe text.
+
+  - id: C5
+    name: "C5: Read-only and offline boundary"
+    status: pending
+    criteria: >
+      Running /rp debug context does not append messages, mutate sessions,
+      call providers, persist credentials, or change prompt compilation output.
+
+  - id: C6
+    name: "C6: Reverse-scope guard"
+    status: pending
+    criteria: >
+      No protected core files are changed, and no context trimming, summarization,
+      vectorization, provider/model routing change, regex postprocessor,
+      write/rewrite/expand/compress command, outline editing, character or
+      relationship state, cloud/collab, archive import/export, minors/underage
+      path, or provider safety bypass is introduced.
+
+verification:
+  - command: "PYTHONDONTWRITEBYTECODE=1 python -m py_compile src/hermes_tavern/runtime_debug.py src/hermes_tavern/runtime.py src/hermes_tavern/commands.py tests/test_hermes_tavern_runtime.py tests/test_hermes_tavern_commands.py tests/test_hermes_tavern_readme_docs.py"
+    owner: executor
+  - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_runtime.py tests/test_hermes_tavern_commands.py tests/test_hermes_tavern_readme_docs.py -q -o 'addopts='"
+    owner: executor
+  - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts='"
+    owner: controller
+  - command: "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-04-hermes-tavern-phase126-context-budget-report/design.md --require doc_type --require status"
+    owner: controller
+  - command: "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --yaml-only --file design/codestable/features/2026-06-04-hermes-tavern-phase126-context-budget-report/checklist.yaml"
+    owner: controller
+  - command: "git diff --check"
+    owner: controller
+  - command: "git diff --name-only -- run_agent.py cli.py gateway/run.py"
+    owner: controller
