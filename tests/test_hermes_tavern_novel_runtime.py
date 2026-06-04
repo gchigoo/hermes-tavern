@@ -484,6 +484,32 @@ def test_project_brief_markers_do_not_leak_to_debug_prompt_or_context(tmp_path):
         assert "marker: distinct outline token" not in lowered
 
 
+def test_chapter_and_scene_summary_tokens_do_not_leak_to_debug_prompt_or_context(tmp_path):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    store.save_card(parse_character_card({"name": "Alice", "description": "Scholar", "first_mes": "Hello."}))
+    runtime = TavernRuntime(store)
+    runtime.handle_command_sync(RPCommand("start", ["Alice"], "/rp start Alice"), Event())
+
+    project = store.create_project("Skyline")
+    chapter = store.create_chapter(project["id"], "Prologue")
+    scene = store.create_scene(chapter["id"], "Opening")
+    store.link_scene_session(
+        scene["id"],
+        store.get_active_session("telegram:chat:chat-1:thread:main:user:user-1")["id"],
+    )
+
+    store.set_chapter_summary(chapter["id"], "marker: distinctive chapter summary token")
+    store.set_scene_summary(scene["id"], "marker: distinctive scene summary token")
+
+    prompt = runtime.handle_command_sync(RPCommand("debug", ["prompt"], "/rp debug prompt"), Event())
+    context = runtime.handle_command_sync(RPCommand("debug", ["context"], "/rp debug context"), Event())
+
+    assert "marker: distinctive chapter summary token" not in prompt
+    assert "marker: distinctive scene summary token" not in prompt
+    assert "marker: distinctive chapter summary token" not in context
+    assert "marker: distinctive scene summary token" not in context
+
+
 def test_project_style_bad_arguments_return_usage(tmp_path):
     runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
     runtime.store.create_project("Atlas")
@@ -750,6 +776,170 @@ def test_project_export_returns_media_marker_and_path_under_profile_safe_home(tm
     assert "MEDIA:" not in cleaned
 
 
+def test_chapter_summary_set_update_clear(tmp_path):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    project = runtime.store.create_project("Atlas")
+    chapter = runtime.store.create_chapter(project["id"], "Arrival")
+
+    set_first = runtime.handle_command_sync(
+        RPCommand(
+            "chapter",
+            ["summary", str(chapter["id"]), "Fog", "hides", "the", "market."],
+            "/rp chapter summary 1 Fog hides the market.",
+        ),
+        Event(),
+    )
+    assert set_first == (
+        f"Chapter summary set for chapter [{chapter['id']}]: "
+        f"{_mobile_preview('Fog hides the market.', 180)}"
+    )
+    assert (
+        runtime.store.get_chapter_summary(chapter["id"])["summary"]
+        == "Fog hides the market."
+    )
+
+    inspect = runtime.handle_command_sync(
+        RPCommand("chapter", ["summary", str(chapter["id"])], "/rp chapter summary 1"),
+        Event(),
+    )
+    assert inspect == f"Chapter [{chapter['id']}] summary: {_mobile_preview('Fog hides the market.', 220)}"
+
+    update = runtime.handle_command_sync(
+        RPCommand(
+            "chapter",
+            ["summary", str(chapter["id"]), "Bells", "ring", "at", "dawn."],
+            "/rp chapter summary 1 Bells ring at dawn.",
+        ),
+        Event(),
+    )
+    assert update == (
+        f"Chapter summary set for chapter [{chapter['id']}]: "
+        f"{_mobile_preview('Bells ring at dawn.', 180)}"
+    )
+    assert (
+        runtime.store.get_chapter_summary(chapter["id"])["summary"]
+        == "Bells ring at dawn."
+    )
+
+    clear = runtime.handle_command_sync(
+        RPCommand("chapter", ["summary", "clear", str(chapter["id"])], "/rp chapter summary clear 1"),
+        Event(),
+    )
+    assert clear == f"Chapter summary cleared for chapter [{chapter['id']}]."
+    assert runtime.store.get_chapter_summary(chapter["id"]) is None
+
+    assert (
+        runtime.handle_command_sync(
+            RPCommand("chapter", ["summary", str(chapter["id"])], "/rp chapter summary 1"),
+            Event(),
+        )
+        == f"Chapter [{chapter['id']}] summary: (not set)"
+    )
+
+
+def test_chapter_summary_bad_arguments_return_usage(tmp_path):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    cases = [
+        (RPCommand("chapter", ["summary"], "/rp chapter summary"), "Usage: /rp chapter summary <chapter-id> [text] | /rp chapter summary clear <chapter-id>"),
+        (RPCommand("chapter", ["summary", "clear", "not-a-number"], "/rp chapter summary clear not-a-number"), "Usage: /rp chapter summary <chapter-id> [text] | /rp chapter summary clear <chapter-id>"),
+        (RPCommand("chapter", ["summary", "1", "   "], "/rp chapter summary 1   "), "Usage: /rp chapter summary <chapter-id> [text] | /rp chapter summary clear <chapter-id>"),
+        (RPCommand("chapter", ["summary", "clear", "1", "extra"], "/rp chapter summary clear 1 extra"), "Usage: /rp chapter summary <chapter-id> [text] | /rp chapter summary clear <chapter-id>"),
+    ]
+    for command, expected_prefix in cases:
+        assert runtime.handle_command_sync(command, Event()) == expected_prefix
+
+
+def test_chapter_summary_missing_chapter_returns_not_found(tmp_path):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    command = RPCommand("chapter", ["summary", "9999"], "/rp chapter summary 9999")
+    assert (
+        runtime.handle_command_sync(command, Event())
+        == "No novel chapter found: 9999"
+    )
+    update = RPCommand("chapter", ["summary", "9999", "No", "signal."], "/rp chapter summary 9999 No signal.")
+    assert (
+        runtime.handle_command_sync(update, Event())
+        == "No novel chapter found: 9999"
+    )
+    clear = RPCommand("chapter", ["summary", "clear", "9999"], "/rp chapter summary clear 9999")
+    assert (
+        runtime.handle_command_sync(clear, Event())
+        == "No novel chapter found: 9999"
+    )
+
+
+def test_scene_summary_set_update_clear(tmp_path):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    project = runtime.store.create_project("Atlas")
+    chapter = runtime.store.create_chapter(project["id"], "Arrival")
+    scene = runtime.store.create_scene(chapter["id"], "Opening")
+
+    set_first = runtime.handle_command_sync(
+        RPCommand(
+            "scene",
+            ["summary", str(scene["id"]), "Clouds", "crowd", "the", "street."],
+            "/rp scene summary 1 Clouds crowd the street.",
+        ),
+        Event(),
+    )
+    assert set_first == (
+        f"Scene summary set for scene [{scene['id']}]: "
+        f"{_mobile_preview('Clouds crowd the street.', 180)}"
+    )
+    assert runtime.store.get_scene_summary(scene["id"])["summary"] == "Clouds crowd the street."
+
+    inspect = runtime.handle_command_sync(
+        RPCommand("scene", ["summary", str(scene["id"])], "/rp scene summary 1"),
+        Event(),
+    )
+    assert inspect == f"Scene [{scene['id']}] summary: {_mobile_preview('Clouds crowd the street.', 220)}"
+
+    update = runtime.handle_command_sync(
+        RPCommand(
+            "scene",
+            ["summary", str(scene["id"]), "Lanterns", "flare", "through", "the", "rain."],
+            "/rp scene summary 1 Lanterns flare through the rain.",
+        ),
+        Event(),
+    )
+    assert update == (
+        f"Scene summary set for scene [{scene['id']}]: "
+        f"{_mobile_preview('Lanterns flare through the rain.', 180)}"
+    )
+    assert runtime.store.get_scene_summary(scene["id"])["summary"] == "Lanterns flare through the rain."
+
+    clear = runtime.handle_command_sync(
+        RPCommand("scene", ["summary", "clear", str(scene["id"])], "/rp scene summary clear 1"),
+        Event(),
+    )
+    assert clear == f"Scene summary cleared for scene [{scene['id']}]."
+    assert runtime.store.get_scene_summary(scene["id"]) is None
+
+
+def test_scene_summary_bad_arguments_return_usage(tmp_path):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    usage = "Usage: /rp scene summary <scene-id> [text] | /rp scene summary clear <scene-id>"
+    command_ids = [
+        RPCommand("scene", ["summary"], "/rp scene summary"),
+        RPCommand("scene", ["summary", "clear", "not-a-number"], "/rp scene summary clear not-a-number"),
+        RPCommand("scene", ["summary", "clear", "1", "extra"], "/rp scene summary clear 1 extra"),
+        RPCommand("scene", ["summary", "1", "   "], "/rp scene summary 1   "),
+    ]
+    for command in command_ids:
+        assert runtime.handle_command_sync(command, Event()) == usage
+
+
+def test_scene_summary_missing_scene_returns_not_found(tmp_path):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    check = [
+        RPCommand("scene", ["summary", "9999"], "/rp scene summary 9999"),
+        RPCommand("scene", ["summary", "9999", "Fog", "on", "the", "road."], "/rp scene summary 9999 Fog on the road."),
+        RPCommand("scene", ["summary", "clear", "9999"], "/rp scene summary clear 9999"),
+    ]
+    for command in check:
+        assert runtime.handle_command_sync(command, Event()) == "No novel scene found: 9999"
+
+
 def test_project_export_empty_project_still_exports_sections(tmp_path, monkeypatch):
     monkeypatch.setenv("HERMES_HOME", str(tmp_path / "hermes home"))
     runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
@@ -869,6 +1059,16 @@ def test_scene_goal_command_is_listed_in_help_output(tmp_path):
     assert "/rp scene narration clear <scene-id>" in response
     assert "/rp scene narration pov <scene-id> <label>" in response
     assert "/rp scene narration tense <scene-id> <past|present>" in response
+
+
+def test_summary_command_is_listed_in_help_output(tmp_path):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    response = runtime.handle_command_sync(RPCommand("help", [], "/rp"), Event())
+
+    assert "/rp chapter summary <chapter-id> [text]" in response
+    assert "/rp chapter summary clear <chapter-id>" in response
+    assert "/rp scene summary <scene-id> [text]" in response
+    assert "/rp scene summary clear <scene-id>" in response
 
 
 def test_scene_narration_set_inspect_update_clear_preserves_other_fields(tmp_path):

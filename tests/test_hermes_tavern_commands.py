@@ -121,6 +121,15 @@ def test_help_lists_project_style_commands():
     assert "/rp project style clear [project-id]" in help_text
 
 
+def test_help_lists_chapter_and_scene_summary_commands():
+    help_text = _build_help_text()
+
+    assert "/rp chapter summary <chapter-id> [text]" in help_text
+    assert "/rp chapter summary clear <chapter-id>" in help_text
+    assert "/rp scene summary <scene-id> [text]" in help_text
+    assert "/rp scene summary clear <scene-id>" in help_text
+
+
 def test_help_lists_project_brief_commands():
     help_text = _build_help_text()
 

@@ -564,6 +564,117 @@ def test_scene_goal_missing_scene_errors(tmp_path):
         raise AssertionError("Expected ValueError for missing scene")
 
 
+def test_chapter_summary_set_update_get_clear(tmp_path):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    novel_project = store.create_project("Chapter Summary Project")
+    chapter = store.create_chapter(novel_project["id"], "Chapter One")
+
+    set_once = store.set_chapter_summary(chapter["id"], "A cold wind moves through the harbor.")
+    assert set_once["id"] == chapter["id"]
+    assert set_once["summary"] == "A cold wind moves through the harbor."
+
+    summary = store.get_chapter_summary(chapter["id"])
+    assert summary is not None
+    assert summary["summary"] == "A cold wind moves through the harbor."
+    assert summary["id"] == chapter["id"]
+
+    set_twice = store.set_chapter_summary(chapter["id"], "The harbor still remembers the storm.")
+    assert set_twice["id"] == set_once["id"]
+    assert set_twice["summary"] == "The harbor still remembers the storm."
+    assert set_twice["updated_at"] >= set_once["updated_at"]
+
+    fetched = store.get_chapter_summary(chapter["id"])
+    assert fetched is not None
+    assert fetched["summary"] == "The harbor still remembers the storm."
+
+    assert store.clear_chapter_summary(chapter["id"]) is True
+    assert store.get_chapter_summary(chapter["id"]) is None
+    assert store.get_chapter(chapter["id"]) is not None
+    assert store.get_chapter(chapter["id"])["summary"] == ""
+    assert store.clear_chapter_summary(chapter["id"]) is False
+
+
+def test_chapter_summary_missing_chapter_errors(tmp_path):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+
+    try:
+        store.get_chapter_summary(9999)
+    except ValueError as exc:
+        assert str(exc) == "Chapter not found"
+    else:
+        raise AssertionError("Expected ValueError for missing chapter")
+
+    try:
+        store.set_chapter_summary(9999, "No chapter")
+    except ValueError as exc:
+        assert str(exc) == "Chapter not found"
+    else:
+        raise AssertionError("Expected ValueError for missing chapter")
+
+    try:
+        store.clear_chapter_summary(9999)
+    except ValueError as exc:
+        assert str(exc) == "Chapter not found"
+    else:
+        raise AssertionError("Expected ValueError for missing chapter")
+
+
+def test_scene_summary_set_update_get_clear(tmp_path):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    novel_project = store.create_project("Scene Summary Project")
+    chapter = store.create_chapter(novel_project["id"], "Chapter One")
+    scene = store.create_scene(chapter["id"], "Opening")
+
+    set_once = store.set_scene_summary(scene["id"], "Torchlight and fog gather above the docks.")
+    assert set_once["id"] == scene["id"]
+    assert set_once["summary"] == "Torchlight and fog gather above the docks."
+
+    summary = store.get_scene_summary(scene["id"])
+    assert summary is not None
+    assert summary["summary"] == "Torchlight and fog gather above the docks."
+    assert summary["id"] == scene["id"]
+
+    set_twice = store.set_scene_summary(scene["id"], "Fog thins, revealing lanterns.")
+    assert set_twice["id"] == set_once["id"]
+    assert set_twice["summary"] == "Fog thins, revealing lanterns."
+    assert set_twice["updated_at"] >= set_once["updated_at"]
+
+    fetched = store.get_scene_summary(scene["id"])
+    assert fetched is not None
+    assert fetched["summary"] == "Fog thins, revealing lanterns."
+
+    assert store.clear_scene_summary(scene["id"]) is True
+    assert store.get_scene_summary(scene["id"]) is None
+    assert store.get_scene(scene["id"]) is not None
+    assert store.get_scene(scene["id"])["summary"] == ""
+    assert store.clear_scene_summary(scene["id"]) is False
+
+
+def test_scene_summary_missing_scene_errors(tmp_path):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+
+    try:
+        store.get_scene_summary(9999)
+    except ValueError as exc:
+        assert str(exc) == "Scene not found"
+    else:
+        raise AssertionError("Expected ValueError for missing scene")
+
+    try:
+        store.set_scene_summary(9999, "No scene")
+    except ValueError as exc:
+        assert str(exc) == "Scene not found"
+    else:
+        raise AssertionError("Expected ValueError for missing scene")
+
+    try:
+        store.clear_scene_summary(9999)
+    except ValueError as exc:
+        assert str(exc) == "Scene not found"
+    else:
+        raise AssertionError("Expected ValueError for missing scene")
+
+
 def test_scene_goal_for_session_uses_scene_link(tmp_path):
     store = TavernStore(tmp_path / "tavern.sqlite3")
     novel_project = store.create_project("Session Scope Project")
@@ -728,6 +839,65 @@ def test_export_project_markdown_structure(tmp_path):
     assert "## Canon" in markdown
     assert "Snow is common in the north" in markdown
     assert "## Timeline" in markdown
+
+
+def test_export_project_markdown_includes_summary_lines_for_chapter_and_scene_in_order(tmp_path):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+
+    novel_project = store.create_project("Summary Project", "first light")
+    chapter = store.create_chapter(novel_project["id"], "Arrival")
+    scene = store.create_scene(chapter["id"], "Dock")
+    store.set_chapter_summary(chapter["id"], "Opening chapter marker: dawn.")
+    store.set_scene_summary(scene["id"], "Opening scene marker: rain.")
+    store.set_scene_goal(scene["id"], "Find the signal fire.")
+    store.set_scene_narration_controls(
+        scene["id"],
+        pov_label="third-person limited",
+        tense="past",
+    )
+
+    markdown = store.export_project_markdown(novel_project["id"])
+
+    chapter_heading = "### Chapter 1: Arrival"
+    chapter_summary = "Summary: Opening chapter marker: dawn."
+    scene_heading = "#### Scene 1: Dock"
+    scene_summary = "Summary: Opening scene marker: rain."
+    goal = "Goal: Find the signal fire."
+    narration = "Scene narration controls:"
+
+    assert chapter_heading in markdown
+    assert chapter_summary in markdown
+    assert scene_heading in markdown
+    assert scene_summary in markdown
+    assert goal in markdown
+    assert narration in markdown
+    assert (
+        markdown.index(chapter_heading)
+        < markdown.index(chapter_summary)
+        < markdown.index(scene_heading)
+        < markdown.index(scene_summary)
+        < markdown.index(goal)
+        < markdown.index(narration)
+    )
+
+
+def test_export_project_markdown_omits_empty_summary_lines_in_chapters_section(tmp_path):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+
+    novel_project = store.create_project("Omitted Summary Project")
+    chapter = store.create_chapter(novel_project["id"], "Arrival")
+    scene = store.create_scene(chapter["id"], "Dock")
+    store.set_chapter_summary(chapter["id"], "   ")
+    store.set_scene_summary(scene["id"], "\n  \t")
+
+    markdown = store.export_project_markdown(novel_project["id"])
+
+    chapters_section = markdown[
+        markdown.index("## Chapters") : markdown.index("## Canon")
+    ]
+    assert "Summary:" not in chapters_section
+    assert store.get_chapter(chapter["id"])["summary"] == "   "
+    assert store.get_scene(scene["id"])["summary"] == "\n  \t"
 
 
 def test_export_project_markdown_place_narration_controls_before_no_session_fallback(tmp_path):

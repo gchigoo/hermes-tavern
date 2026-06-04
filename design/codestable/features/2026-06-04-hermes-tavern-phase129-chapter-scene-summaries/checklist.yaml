@@ -1,17 +1,28 @@
 doc_type: feature-checklist
 feature: "2026-06-04-hermes-tavern-phase129-chapter-scene-summaries"
 date: "2026-06-04"
-status: planned
+status: in_progress
 summary: >
-  Chapter And Scene Summary Metadata v1 is planned as a local/offline feature
-  using existing chapter and scene summary fields. S1 will implement helper,
-  command, export, help/README, and offline test coverage; S2 will perform
-  acceptance and architecture/root-design writeback after controller verification.
+  Chapter And Scene Summary Metadata v1 is in progress as a local/offline
+  feature using existing chapter and scene summary fields. S1 implemented helper,
+  command, export, help/README, and offline test coverage; S2 acceptance and
+  architecture/root-design writeback remain planned.
 
 steps:
   - id: S1
     name: "S1: Chapter/Scene Summary Metadata implementation"
-    status: planned
+    status: completed
+    completed_at: "2026-06-04"
+    result: >
+      IMPLEMENTED - S1 added chapter/scene summary DB helpers around the existing
+      summary columns, `/rp chapter summary ...` and `/rp scene summary ...`
+      inspect/set/clear command surfaces, help/README literals, Markdown export
+      visibility immediately after chapter/scene headings, and focused DB/runtime/
+      help/docs tests. Controller kept a small README ordering repair, reran
+      focused and full verification from scratch, and confirmed no protected core,
+      prompt-module, provider/model, credential, content-mode, generation,
+      vectorization/retrieval, archive import/export, cloud/collab, minors/
+      underage, or safety-bypass files/behavior changed.
     description: >
       Add helper methods around existing `novel_chapters.summary` and
       `novel_scenes.summary`, route `/rp chapter summary ...` and
@@ -31,6 +42,40 @@ steps:
       Focused DB/runtime/help/README tests pass; py_compile passes for changed
       files; summary text remains absent from prompt/debug/provider/generation
       paths; no protected core files change.
+    verification:
+      - command: >-
+          codex --profile architect exec --json --color never --sandbox read-only --cd /Users/steven/Projects/hermes-tavern <Phase 129 S1 artifact prompt>
+        result: >
+          passed; artifact at /tmp/hermes-tavern-architect-phase129-s1.jsonl
+          ended with RESULT: ARCHITECT_ARTIFACT and selected S1 only. No Codex
+          429/rate-limit/exhaustion signal; architect noted a read-only sandbox
+          git/xcrun cache limitation, so the controller performed git status and
+          diff checks directly.
+      - command: >-
+          codex --profile executor exec --json --color never --disable image_generation --sandbox workspace-write --cd /Users/steven/Projects/hermes-tavern <Phase 129 S1 implementation prompt>
+        result: >
+          completed; JSONL at /tmp/hermes-tavern-executor-phase129-s1.jsonl.
+          Executor stderr/JSONL contained patch-context misses and failed
+          in-sandbox pytest/py_compile attempts before Codex recovered and
+          reported 193 focused tests passing; no Codex 429/rate-limit/exhaustion
+          signal. Controller independently reran verification after a small README
+          ordering repair.
+      - command: >-
+          python -m py_compile src/hermes_tavern/db_novel.py src/hermes_tavern/runtime_novel.py src/hermes_tavern/commands.py tests/test_hermes_tavern_novel_db.py tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_commands.py tests/test_hermes_tavern_readme_docs.py
+        result: "passed (controller rerun)"
+      - command: >-
+          python -m pytest tests/test_hermes_tavern_novel_db.py tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_commands.py tests/test_hermes_tavern_readme_docs.py -q -o 'addopts='
+        result: "passed; 193 passed in 4.82s (controller rerun after README ordering repair)"
+      - command: "python -m pytest -q"
+        result: "passed; 884 passed in 36.45s (controller rerun)"
+      - command: >-
+          git diff --name-only -- run_agent.py cli.py gateway/run.py src/hermes_tavern/runtime_prompt_modules.py src/hermes_tavern/prompt.py src/hermes_tavern/runtime_debug.py src/hermes_tavern/model_router.py src/hermes_tavern/provider_bridge.py src/hermes_tavern/adapters.py src/hermes_tavern/runtime_model.py src/hermes_tavern/runtime_generation.py
+        result: "passed; no protected/prompt/provider/generation file diffs"
+      - command: "git diff --check"
+        result: "passed"
+      - command: >-
+          python design/codestable/tools/validate-yaml.py --yaml-only --file design/codestable/features/2026-06-04-hermes-tavern-phase129-chapter-scene-summaries/checklist.yaml
+        result: "passed (controller rerun after status edit)"
 
   - id: S2
     name: "S2: Verify and write architecture"
@@ -53,14 +98,22 @@ steps:
 checks:
   - id: C1
     name: "C1: Active checklist precondition"
-    status: pending
+    status: completed
+    result: >
+      Controller status scan before implementation found exactly one active
+      planned/pending/in-progress feature checklist: this Phase 129 checklist.
     criteria: >
       Before implementation, no other feature checklist is planned, pending, or
       in progress; this Phase 129 checklist is the only planned feature.
 
   - id: C2
     name: "C2: Persistence contract"
-    status: pending
+    status: completed
+    result: >
+      DB/runtime tests prove chapter and scene summary helpers set, update,
+      inspect/get visible rows, clear to not-set, preserve whitespace-only stored
+      values for DB callers while export/inspect omit visible-empty text, and
+      raise bounded missing-owner errors.
     criteria: >
       Chapter and scene summaries can be set, updated, inspected, and cleared
       using existing summary columns, with bounded not-found and malformed-input
@@ -68,7 +121,13 @@ checks:
 
   - id: C3
     name: "C3: Command contract"
-    status: pending
+    status: completed
+    result: >
+      Runtime/help/docs tests prove `/rp chapter summary <chapter-id> [text]`,
+      `/rp chapter summary clear <chapter-id>`, `/rp scene summary <scene-id>
+      [text]`, and `/rp scene summary clear <scene-id>` support inspect/set/
+      update/clear, not-set, usage, blank-text, missing-id, README, and help
+      visibility behavior.
     criteria: >
       `/rp chapter summary <chapter-id> [text]`, `/rp chapter summary clear
       <chapter-id>`, `/rp scene summary <scene-id> [text]`, and `/rp scene
@@ -77,7 +136,12 @@ checks:
 
   - id: C4
     name: "C4: Markdown export visibility"
-    status: pending
+    status: completed
+    result: >
+      DB/export tests prove non-empty chapter summaries appear immediately after
+      chapter headings, non-empty scene summaries appear immediately after scene
+      headings and before goal/narration/session fallback, and empty/whitespace
+      summaries are omitted from the Chapters section.
     criteria: >
       Non-empty chapter summaries appear directly under chapter headings;
       non-empty scene summaries appear directly under scene headings and before
@@ -85,7 +149,12 @@ checks:
 
   - id: C5
     name: "C5: Offline and prompt-safe boundary"
-    status: pending
+    status: completed
+    result: >
+      Implementation is local SQLite/runtime/help/README/export/tests only. A
+      focused debug prompt/context regression with distinctive chapter/scene
+      summary tokens passed, and protected prompt/provider/generation files have
+      no diffs.
     criteria: >
       The feature has no provider calls, no network calls, no credential storage,
       no vectorization, no context trimming, no prompt assembly changes, no
@@ -94,7 +163,11 @@ checks:
 
   - id: C6
     name: "C6: Reverse-scope guard"
-    status: pending
+    status: completed
+    result: >
+      Changed files are limited to the S1 allowlist plus this checklist status
+      update. `git diff --name-only` over protected core, prompt, provider,
+      model-router, credential, and generation paths returned no files.
     criteria: >
       No protected core files are changed, and no automatic summarization,
       project summary, retrieval/vector index, structured beat engine, archive

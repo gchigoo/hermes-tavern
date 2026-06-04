@@ -225,6 +225,15 @@ def test_readme_core_commands_includes_scene_narration_literals():
     assert "/rp scene narration tense <scene-id> <past|present>" in core_commands
 
 
+def test_readme_core_commands_includes_scene_and_chapter_summary_literals():
+    core_commands = _readme_core_commands_text()
+
+    assert "/rp chapter summary <chapter-id> [text]" in core_commands
+    assert "/rp chapter summary clear <chapter-id>" in core_commands
+    assert "/rp scene summary <scene-id> [text]" in core_commands
+    assert "/rp scene summary clear <scene-id>" in core_commands
+
+
 def test_readme_core_commands_include_project_style_literals():
     core_commands = _readme_core_commands_text()
 

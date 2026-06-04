@@ -48,7 +48,12 @@ def chapter_command(runtime: Any, command: RPCommand, event: Any) -> str:
         return chapter_create(runtime, command, event)
     if subcommand == "list":
         return chapter_list(runtime, command, event)
-    return "Usage: /rp chapter create [project-id] <title> | /rp chapter list [project-id]"
+    if subcommand == "summary":
+        return chapter_summary(runtime, command, event)
+    return (
+        "Usage: /rp chapter create [project-id] <title> | /rp chapter list [project-id] | "
+        "/rp chapter summary <chapter-id> [text] | /rp chapter summary clear <chapter-id>"
+    )
 
 
 def scene_command(runtime: Any, command: RPCommand, event: Any) -> str:
@@ -63,9 +68,12 @@ def scene_command(runtime: Any, command: RPCommand, event: Any) -> str:
         return scene_goal(runtime, command)
     if subcommand == "narration":
         return scene_narration(runtime, command)
+    if subcommand == "summary":
+        return scene_summary(runtime, command, event)
     return (
         "Usage: /rp scene create <chapter-id> <title> | /rp scene list <chapter-id> | "
         "/rp scene start <scene-id> | /rp scene goal <scene-id> [text] | /rp scene goal clear <scene-id> | "
+        "/rp scene summary <scene-id> [text] | /rp scene summary clear <scene-id> | "
         "/rp scene narration <scene-id> | /rp scene narration clear <scene-id> | "
         "/rp scene narration pov <scene-id> <label> | /rp scene narration tense <scene-id> <past|present>"
     )
@@ -649,6 +657,56 @@ def chapter_list(runtime: Any, command: RPCommand, event: Any) -> str:
     return "\n".join(lines)
 
 
+def chapter_summary(runtime: Any, command: RPCommand, event: Any) -> str:
+    del event
+    usage = (
+        "Usage: /rp chapter summary <chapter-id> [text] | /rp chapter summary clear <chapter-id>"
+    )
+    if len(command.args) < 2:
+        return usage
+
+    mode = command.args[1].lower()
+    if mode == "clear":
+        if len(command.args) != 3:
+            return usage
+        chapter_id = _safe_int(command.args[2])
+        if chapter_id is None:
+            return usage
+        try:
+            runtime.store.clear_chapter_summary(chapter_id)
+        except ValueError:
+            return f"No novel chapter found: {chapter_id}"
+        return f"Chapter summary cleared for chapter [{chapter_id}]."
+
+    chapter_id = _safe_int(mode)
+    if chapter_id is None:
+        return usage
+
+    if len(command.args) == 2:
+        try:
+            summary = runtime.store.get_chapter_summary(chapter_id)
+        except ValueError:
+            return f"No novel chapter found: {chapter_id}"
+        if summary is None:
+            return f"Chapter [{chapter_id}] summary: (not set)"
+        return (
+            f"Chapter [{chapter_id}] summary: "
+            f"{_mobile_preview((summary['summary'] or '').strip(), 220)}"
+        )
+
+    text = " ".join(command.args[2:]).strip()
+    if not text:
+        return usage
+    try:
+        runtime.store.set_chapter_summary(chapter_id, text)
+    except ValueError:
+        return f"No novel chapter found: {chapter_id}"
+    return (
+        f"Chapter summary set for chapter [{chapter_id}]: "
+        f"{_mobile_preview(text, 180)}"
+    )
+
+
 def scene_create(runtime: Any, command: RPCommand, event: Any) -> str:
     if len(command.args) < 3:
         return "Usage: /rp scene create <chapter-id> <title>"
@@ -684,6 +742,56 @@ def scene_list(runtime: Any, command: RPCommand) -> str:
             f"  - [{scene['id']}] Scene {scene['scene_number']}: {scene['title']} ({scene['status']}){session_hint}"
         )
     return "\n".join(lines)
+
+
+def scene_summary(runtime: Any, command: RPCommand, event: Any) -> str:
+    del event
+    usage = (
+        "Usage: /rp scene summary <scene-id> [text] | /rp scene summary clear <scene-id>"
+    )
+    if len(command.args) < 2:
+        return usage
+
+    mode = command.args[1].lower()
+    if mode == "clear":
+        if len(command.args) != 3:
+            return usage
+        scene_id = _safe_int(command.args[2])
+        if scene_id is None:
+            return usage
+        try:
+            runtime.store.clear_scene_summary(scene_id)
+        except ValueError:
+            return f"No novel scene found: {scene_id}"
+        return f"Scene summary cleared for scene [{scene_id}]."
+
+    scene_id = _safe_int(mode)
+    if scene_id is None:
+        return usage
+
+    if len(command.args) == 2:
+        try:
+            summary = runtime.store.get_scene_summary(scene_id)
+        except ValueError:
+            return f"No novel scene found: {scene_id}"
+        if summary is None:
+            return f"Scene [{scene_id}] summary: (not set)"
+        return (
+            f"Scene [{scene_id}] summary: "
+            f"{_mobile_preview((summary['summary'] or '').strip(), 220)}"
+        )
+
+    text = " ".join(command.args[2:]).strip()
+    if not text:
+        return usage
+    try:
+        runtime.store.set_scene_summary(scene_id, text)
+    except ValueError:
+        return f"No novel scene found: {scene_id}"
+    return (
+        f"Scene summary set for scene [{scene_id}]: "
+        f"{_mobile_preview(text, 180)}"
+    )
 
 
 def scene_start(runtime: Any, command: RPCommand, event: Any) -> str:

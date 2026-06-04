@@ -127,8 +127,12 @@ Expected behavior:
 /rp project outline [project-id] | /rp project outline inspect [project-id]
 /rp project outline set [project-id] <text> | /rp project outline clear [project-id]
 /rp chapter create/list
+/rp chapter summary <chapter-id> [text]
+/rp chapter summary clear <chapter-id>
 /rp scene create/list/start
 /rp scene goal <scene-id> [text] | /rp scene goal clear <scene-id>
+/rp scene summary <scene-id> [text]
+/rp scene summary clear <scene-id>
 /rp scene narration <scene-id>
 /rp scene narration clear <scene-id>
 /rp scene narration pov <scene-id> <label>

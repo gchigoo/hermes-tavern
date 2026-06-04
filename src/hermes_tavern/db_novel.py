@@ -513,6 +513,64 @@ class NovelDBMixin:
             ).fetchone()
         return _row_to_dict(row)
 
+    def get_chapter_summary(self, chapter_id: int) -> dict[str, Any] | None:
+        self.migrate()
+        with self.connect() as conn:
+            row = conn.execute(
+                "SELECT * FROM novel_chapters WHERE id = ?",
+                (chapter_id,),
+            ).fetchone()
+            if row is None:
+                raise ValueError("Chapter not found")
+            if not (row["summary"] or "").strip():
+                return None
+        return _row_to_dict(row)
+
+    def set_chapter_summary(self, chapter_id: int, summary: str) -> dict[str, Any]:
+        self.migrate()
+        with self.connect() as conn:
+            chapter = conn.execute(
+                "SELECT id FROM novel_chapters WHERE id = ?",
+                (chapter_id,),
+            ).fetchone()
+            if chapter is None:
+                raise ValueError("Chapter not found")
+            now = _utc_now()
+            conn.execute(
+                """
+                UPDATE novel_chapters
+                SET summary = ?, updated_at = ?
+                WHERE id = ?
+                """,
+                (summary, now, chapter_id),
+            )
+            row = conn.execute(
+                "SELECT * FROM novel_chapters WHERE id = ?",
+                (chapter_id,),
+            ).fetchone()
+        return _row_to_dict(row)
+
+    def clear_chapter_summary(self, chapter_id: int) -> bool:
+        self.migrate()
+        with self.connect() as conn:
+            row = conn.execute(
+                "SELECT id, summary FROM novel_chapters WHERE id = ?",
+                (chapter_id,),
+            ).fetchone()
+            if row is None:
+                raise ValueError("Chapter not found")
+            was_set = row["summary"] != ""
+            now = _utc_now()
+            conn.execute(
+                """
+                UPDATE novel_chapters
+                SET summary = '', updated_at = ?
+                WHERE id = ?
+                """,
+                (now, chapter_id),
+            )
+            return was_set
+
     def create_scene(
         self,
         chapter_id: int,
@@ -587,6 +645,64 @@ class NovelDBMixin:
                 (scene_id,),
             ).fetchone()
         return _row_to_dict(row)
+
+    def get_scene_summary(self, scene_id: int) -> dict[str, Any] | None:
+        self.migrate()
+        with self.connect() as conn:
+            row = conn.execute(
+                "SELECT * FROM novel_scenes WHERE id = ?",
+                (scene_id,),
+            ).fetchone()
+            if row is None:
+                raise ValueError("Scene not found")
+            if not (row["summary"] or "").strip():
+                return None
+        return _row_to_dict(row)
+
+    def set_scene_summary(self, scene_id: int, summary: str) -> dict[str, Any]:
+        self.migrate()
+        with self.connect() as conn:
+            scene = conn.execute(
+                "SELECT id FROM novel_scenes WHERE id = ?",
+                (scene_id,),
+            ).fetchone()
+            if scene is None:
+                raise ValueError("Scene not found")
+            now = _utc_now()
+            conn.execute(
+                """
+                UPDATE novel_scenes
+                SET summary = ?, updated_at = ?
+                WHERE id = ?
+                """,
+                (summary, now, scene_id),
+            )
+            row = conn.execute(
+                "SELECT * FROM novel_scenes WHERE id = ?",
+                (scene_id,),
+            ).fetchone()
+        return _row_to_dict(row)
+
+    def clear_scene_summary(self, scene_id: int) -> bool:
+        self.migrate()
+        with self.connect() as conn:
+            row = conn.execute(
+                "SELECT id, summary FROM novel_scenes WHERE id = ?",
+                (scene_id,),
+            ).fetchone()
+            if row is None:
+                raise ValueError("Scene not found")
+            was_set = row["summary"] != ""
+            now = _utc_now()
+            conn.execute(
+                """
+                UPDATE novel_scenes
+                SET summary = '', updated_at = ?
+                WHERE id = ?
+                """,
+                (now, scene_id),
+            )
+            return was_set
 
     def set_scene_goal(self, scene_id: int, goal_text: str) -> dict[str, Any]:
         self.migrate()
@@ -1034,11 +1150,17 @@ class NovelDBMixin:
                 lines.append(
                     f"### Chapter {chapter['chapter_number']}: {chapter['title']}"
                 )
+                chapter_summary = (chapter["summary"] or "").strip()
+                if chapter_summary:
+                    lines.append(f"Summary: {chapter_summary}")
                 scenes = self.list_scenes(chapter["id"])
                 if scenes:
                     for scene in scenes:
                         lines.append("")
                         lines.append(f"#### Scene {scene['scene_number']}: {scene['title']}")
+                        scene_summary = (scene["summary"] or "").strip()
+                        if scene_summary:
+                            lines.append(f"Summary: {scene_summary}")
                         scene_goal = self.get_scene_goal(scene["id"])
                         if scene_goal and scene_goal["goal_text"].strip():
                             lines.append(f"Goal: {scene_goal['goal_text']}")
