@@ -1,0 +1,102 @@
+doc_type: feature-checklist
+feature: "2026-06-04-hermes-tavern-phase129-chapter-scene-summaries"
+date: "2026-06-04"
+status: planned
+summary: >
+  Chapter And Scene Summary Metadata v1 is planned as a local/offline feature
+  using existing chapter and scene summary fields. S1 will implement helper,
+  command, export, help/README, and offline test coverage; S2 will perform
+  acceptance and architecture/root-design writeback after controller verification.
+
+steps:
+  - id: S1
+    name: "S1: Chapter/Scene Summary Metadata implementation"
+    status: planned
+    description: >
+      Add helper methods around existing `novel_chapters.summary` and
+      `novel_scenes.summary`, route `/rp chapter summary ...` and
+      `/rp scene summary ...`, expose help/README command literals, include
+      non-empty chapter/scene summaries in deterministic Markdown export order,
+      and add focused offline tests.
+    allowed_files:
+      - src/hermes_tavern/db_novel.py
+      - src/hermes_tavern/runtime_novel.py
+      - src/hermes_tavern/commands.py
+      - README.md
+      - tests/test_hermes_tavern_novel_db.py
+      - tests/test_hermes_tavern_novel_runtime.py
+      - tests/test_hermes_tavern_commands.py
+      - tests/test_hermes_tavern_readme_docs.py
+    exit_signal: >
+      Focused DB/runtime/help/README tests pass; py_compile passes for changed
+      files; summary text remains absent from prompt/debug/provider/generation
+      paths; no protected core files change.
+
+  - id: S2
+    name: "S2: Verify and write architecture"
+    status: planned
+    description: >
+      Run focused, plugin, full, YAML/frontmatter, whitespace, protected-core,
+      and reverse-scope verification. Create the acceptance report and update
+      architecture/root design to mark chapter/scene summary metadata current
+      while preserving deferred automatic summarization/vectorization boundaries.
+    allowed_files:
+      - design/codestable/features/2026-06-04-hermes-tavern-phase129-chapter-scene-summaries/design.md
+      - design/codestable/features/2026-06-04-hermes-tavern-phase129-chapter-scene-summaries/checklist.yaml
+      - design/codestable/features/2026-06-04-hermes-tavern-phase129-chapter-scene-summaries/hermes-tavern-phase129-chapter-scene-summaries-acceptance.md
+      - design/codestable/architecture/ARCHITECTURE.md
+      - design/HERMES_TAVERN_DESIGN.md
+    exit_signal: >
+      Acceptance docs and architecture/root-design writeback are complete after
+      controller verification and reverse-scope confirmation.
+
+checks:
+  - id: C1
+    name: "C1: Active checklist precondition"
+    status: pending
+    criteria: >
+      Before implementation, no other feature checklist is planned, pending, or
+      in progress; this Phase 129 checklist is the only planned feature.
+
+  - id: C2
+    name: "C2: Persistence contract"
+    status: pending
+    criteria: >
+      Chapter and scene summaries can be set, updated, inspected, and cleared
+      using existing summary columns, with bounded not-found and malformed-input
+      behavior.
+
+  - id: C3
+    name: "C3: Command contract"
+    status: pending
+    criteria: >
+      `/rp chapter summary <chapter-id> [text]`, `/rp chapter summary clear
+      <chapter-id>`, `/rp scene summary <scene-id> [text]`, and `/rp scene
+      summary clear <scene-id>` return bounded normal, not-set, usage, blank-text,
+      and missing-id messages and are visible in help/README command surfaces.
+
+  - id: C4
+    name: "C4: Markdown export visibility"
+    status: pending
+    criteria: >
+      Non-empty chapter summaries appear directly under chapter headings;
+      non-empty scene summaries appear directly under scene headings and before
+      goal/narration/session content; empty summaries are omitted.
+
+  - id: C5
+    name: "C5: Offline and prompt-safe boundary"
+    status: pending
+    criteria: >
+      The feature has no provider calls, no network calls, no credential storage,
+      no vectorization, no context trimming, no prompt assembly changes, no
+      content-mode changes, no model routing changes, and no generation behavior
+      changes.
+
+  - id: C6
+    name: "C6: Reverse-scope guard"
+    status: pending
+    criteria: >
+      No protected core files are changed, and no automatic summarization,
+      project summary, retrieval/vector index, structured beat engine, archive
+      import/export, character/relationship state, cloud/collab, minors/underage
+      path, provider safety bypass, or credential persistence is introduced.
