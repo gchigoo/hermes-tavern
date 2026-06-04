@@ -12,6 +12,12 @@ from hermes_tavern.prompt import PromptModule
 from hermes_tavern.utils import estimate_tokens
 
 
+_NESTED_QUANTIFIER_RE = re.compile(
+    r"\([^()]*?(?:\{\s*\d+\s*(?:,\s*\d*)?\s*\}|[+*?])\s*\)\s*(?:[+*?]|\{\s*\d+\s*(?:,\s*\d*)?\s*\})"
+)
+_MAX_REGEX_KEY_LENGTH = 256
+
+
 @dataclass(frozen=True)
 class LoreMatch:
     entry_id: str
@@ -128,13 +134,13 @@ def _entry_matches(row: dict[str, Any], haystack: str, haystack_lower: str) -> t
         return False, "no keys"
     regex = bool(row.get("regex"))
     primary_hit = _any_key_matches(keys, haystack, haystack_lower, regex)
-    if primary_hit.startswith("regex error"):
+    if primary_hit.startswith(("regex error", "regex rejected")):
         return False, primary_hit
     if not primary_hit:
         return False, "no primary key match"
     if secondary:
         secondary_hit = _any_key_matches(secondary, haystack, haystack_lower, regex)
-        if secondary_hit.startswith("regex error"):
+        if secondary_hit.startswith(("regex error", "regex rejected")):
             return False, secondary_hit
         if not secondary_hit:
             return False, "secondary key filter miss"
@@ -144,6 +150,10 @@ def _entry_matches(row: dict[str, Any], haystack: str, haystack_lower: str) -> t
 def _any_key_matches(keys: tuple[str, ...], haystack: str, haystack_lower: str, regex: bool) -> str:
     for key in keys:
         if regex:
+            if len(key) > _MAX_REGEX_KEY_LENGTH:
+                return "regex rejected: pattern too long"
+            if _NESTED_QUANTIFIER_RE.search(key):
+                return "regex rejected: nested quantifier"
             try:
                 if re.search(key, haystack, flags=re.IGNORECASE):
                     return key

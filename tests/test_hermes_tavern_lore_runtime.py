@@ -101,3 +101,22 @@ async def test_lore_enable_disable_entry_affects_matching(tmp_path):
     assert "+ Moon: key match: moon" not in after_disable
     assert "lore entry enabled: Sun" in enabled
     assert "+ Sun: key match: sun" in after_enable
+
+
+@pytest.mark.asyncio
+async def test_lore_runtime_rejects_nested_quantifier_without_crash(tmp_path):
+    path = tmp_path / "atlas.json"
+    path.write_text(json.dumps({
+        "name": "Atlas",
+        "entries": [{"comment": "Nested", "content": "Nested lore", "keys": ["(a+)+"], "regex": True}],
+    }), encoding="utf-8")
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    store.start_session("telegram:chat:chat-1:thread:main:user:user-1")
+    runtime = TavernRuntime(store)
+
+    await runtime.handle_command(RPCommand("lore", ["import", str(path)], "/rp lore import"), Event())
+    await runtime.handle_command(RPCommand("lore", ["use", "Atlas"], "/rp lore use Atlas"), Event())
+    tested = await runtime.handle_command(RPCommand("lore", ["test", "aaa"], "/rp lore test aaa"), Event())
+
+    assert "regex rejected: nested quantifier" in tested
+    assert "Nested lore" not in tested

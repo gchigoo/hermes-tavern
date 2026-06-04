@@ -187,3 +187,86 @@ def test_lorebook_bad_regex_is_excluded_not_raised():
 
     assert not result.matches
     assert "regex error" in result.excluded[0].reason
+
+
+def test_lorebook_regex_matches_normal_pattern():
+    pattern = json.dumps(["moon\\s+.*"])
+
+    result = match_lorebook_entries([
+        {
+            "id": "1",
+            "title": "Moon",
+            "content": "Moon lore",
+            "keys_json": pattern,
+            "enabled": 1,
+            "regex": 1,
+            "probability": 1,
+        }
+    ], "The moon rises over the sea.")
+
+    assert len(result.matches) == 1
+    assert result.matches[0].title == "Moon"
+    assert result.matches[0].reason == "key match: moon\\s+.*"
+
+
+def test_lorebook_nested_quantifier_is_rejected_before_search(monkeypatch):
+    monkeypatched = {"called": False}
+
+    def fail_search(*args, **kwargs):
+        monkeypatched["called"] = True
+        raise AssertionError("re.search should not be called for nested quantifiers")
+
+    monkeypatch.setattr("plugins.hermes_tavern.lorebook.re.search", fail_search)
+
+    result = match_lorebook_entries([
+        {
+            "id": "1",
+            "title": "Nested",
+            "content": "Nested lore",
+            "keys_json": '["(a+)+"]',
+            "enabled": 1,
+            "regex": 1,
+            "probability": 1,
+        }
+    ], "aaaa")
+
+    assert len(result.matches) == 0
+    assert result.excluded[0].reason == "regex rejected: nested quantifier"
+    assert not monkeypatched["called"]
+
+
+def test_lorebook_regex_longer_than_256_is_rejected():
+    long_pattern = "a" * 257
+
+    result = match_lorebook_entries([
+        {
+            "id": "1",
+            "title": "Long",
+            "content": "Long lore",
+            "keys_json": f'[{json.dumps(long_pattern)}]',
+            "enabled": 1,
+            "regex": 1,
+            "probability": 1,
+        }
+    ], "aaaa")
+
+    assert len(result.matches) == 0
+    assert result.excluded[0].reason == "regex rejected: pattern too long"
+
+
+def test_lorebook_secondary_regex_rejection_excludes_entry():
+    result = match_lorebook_entries([
+        {
+            "id": "1",
+            "title": "SecondaryNested",
+            "content": "Nested lore",
+            "keys_json": '["moon"]',
+            "secondary_keys_json": '["(a+)+"]',
+            "enabled": 1,
+            "regex": 1,
+            "probability": 1,
+        }
+    ], "moon aaa")
+
+    assert len(result.matches) == 0
+    assert result.excluded[0].reason == "regex rejected: nested quantifier"

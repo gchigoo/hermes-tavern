@@ -1,0 +1,123 @@
+doc_type: feature-checklist
+feature: "2026-06-04-hermes-tavern-phase125-lore-regex-guard"
+status: in_progress
+summary: >
+  Add a local matcher-level guard for imported lorebook regex keys so high-risk
+  patterns are excluded before Python regex search while preserving ordinary ST
+  lorebook regex compatibility.
+
+steps:
+  - id: S1
+    name: "Matcher guard: reject high-risk lore regex keys"
+    status: completed
+    completed_at: "2026-06-04"
+    result: >
+      IMPLEMENTED - src/hermes_tavern/lorebook.py now rejects regex keys longer
+      than 256 characters and nested quantified groups before Python re.search,
+      preserves invalid-regex error handling, treats primary and secondary regex
+      rejections as exclusions, and leaves non-regex keys, constant entries,
+      probabilities, priorities, token budget behavior, importers, commands, and
+      prompt module callers unchanged. Focused matcher tests cover normal regex
+      matching, malformed regex errors, nested-quantifier rejection before
+      re.search, over-length rejection, and secondary-key rejection. Runtime lore
+      tests prove /rp lore test surfaces a bounded rejection reason without
+      crashing. Executor initially had a focused-test failure while writing tests,
+      then repaired it; controller added the secondary-key guard/test and reran
+      verification from scratch.
+    description: >
+      Add regex key pre-search validation in src/hermes_tavern/lorebook.py.
+      Reject keys longer than 256 characters and nested quantified groups such
+      as (a+)+ before re.search. Preserve existing invalid-regex error handling,
+      non-regex matching, constant entries, priorities, probabilities, and token
+      budget behavior. Add focused matcher and /rp lore test coverage.
+    exit_signal: >
+      Focused lorebook matcher/runtime tests pass and rejected regex keys produce
+      bounded exclusion reasons without calling re.search.
+    verification:
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m py_compile src/hermes_tavern/lorebook.py tests/test_hermes_tavern_lorebooks.py tests/test_hermes_tavern_lore_runtime.py"
+        result: "passed (controller rerun after executor plus controller secondary-key fix)"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_lorebooks.py tests/test_hermes_tavern_lore_runtime.py -q -o 'addopts='"
+        result: "passed; 20 passed in 0.32s"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_runtime.py -k lore -q -o 'addopts='"
+        result: "passed; 3 passed, 41 deselected in 0.18s"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts='"
+        result: "passed; 821 passed in 32.22s"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-04-hermes-tavern-phase125-lore-regex-guard/design.md --require doc_type --require status"
+        result: "passed; 1 passed, 0 failed"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --yaml-only --file design/codestable/features/2026-06-04-hermes-tavern-phase125-lore-regex-guard/checklist.yaml"
+        result: "passed; 1 passed, 0 failed (controller rerun after checklist status update)"
+      - command: "git diff --check"
+        result: "passed"
+      - command: "git diff --name-only -- run_agent.py cli.py gateway/run.py"
+        result: "passed; no protected core file diffs"
+      - command: "controller status/diff allowlist and forbidden-term scan"
+        result: "passed; only lorebook matcher/tests plus Phase 125 CodeStable artifacts changed; no prohibited feature-family terms added"
+
+  - id: S2
+    name: "Acceptance and architecture writeback"
+    status: deferred
+    description: >
+      After S1 verification, write the acceptance report and update architecture
+      and root design to record the regex guard as current behavior.
+    exit_signal: >
+      Acceptance is recorded and architecture/root design mention the lore regex
+      complexity guard while keeping regex postprocessors deferred.
+
+checks:
+  - id: C1
+    name: "Focused py_compile"
+    status: passed
+    command: "PYTHONDONTWRITEBYTECODE=1 python -m py_compile src/hermes_tavern/lorebook.py tests/test_hermes_tavern_lorebooks.py tests/test_hermes_tavern_lore_runtime.py"
+    result: "passed (controller rerun)"
+
+  - id: C2
+    name: "Focused lorebook tests"
+    status: passed
+    command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_lorebooks.py tests/test_hermes_tavern_lore_runtime.py -q -o 'addopts='"
+    result: "passed; 20 passed in 0.32s (controller rerun)"
+
+  - id: C3
+    name: "Runtime lore regression"
+    status: passed
+    command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_runtime.py -k lore -q -o 'addopts='"
+    result: "passed; 3 passed, 41 deselected in 0.18s (controller rerun)"
+
+  - id: C4
+    name: "Reverse scope guard"
+    status: passed
+    command: "git diff --name-only -- run_agent.py cli.py gateway/run.py"
+    result: "passed; no protected core file diffs"
+
+  - id: C5
+    name: "Full project regression"
+    status: passed
+    command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts='"
+    result: "passed; 821 passed in 32.22s"
+
+verification_commands:
+  - "PYTHONDONTWRITEBYTECODE=1 python -m py_compile src/hermes_tavern/lorebook.py tests/test_hermes_tavern_lorebooks.py tests/test_hermes_tavern_lore_runtime.py"
+  - "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_lorebooks.py tests/test_hermes_tavern_lore_runtime.py -q -o 'addopts='"
+  - "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_runtime.py -k lore -q -o 'addopts='"
+  - "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts='"
+  - "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-04-hermes-tavern-phase125-lore-regex-guard/design.md --require doc_type --require status"
+  - "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --yaml-only --file design/codestable/features/2026-06-04-hermes-tavern-phase125-lore-regex-guard/checklist.yaml"
+  - "git diff --check"
+  - "git diff --name-only -- run_agent.py cli.py gateway/run.py"
+
+s1_controller_verification:
+  - command: "codex --profile architect exec --json --color never --sandbox read-only --cd /Users/steven/Projects/hermes-tavern <Phase 125 artifact prompt>"
+    result: "passed; artifact at /tmp/hermes-tavern-architect-phase125.jsonl selected Lore Regex Complexity Guard with no blockers"
+  - command: "codex --profile executor exec --json --color never --sandbox workspace-write --cd /Users/steven/Projects/hermes-tavern <S1 implementation prompt>"
+    result: "completed; JSONL at /tmp/hermes-tavern-executor-phase125-s1.jsonl; executor had one intermediate failed focused test run and later reran green"
+  - command: "PYTHONDONTWRITEBYTECODE=1 python -m py_compile src/hermes_tavern/lorebook.py tests/test_hermes_tavern_lorebooks.py tests/test_hermes_tavern_lore_runtime.py"
+    result: "passed"
+  - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_lorebooks.py tests/test_hermes_tavern_lore_runtime.py -q -o 'addopts='"
+    result: "passed; 20 passed in 0.32s"
+  - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_runtime.py -k lore -q -o 'addopts='"
+    result: "passed; 3 passed, 41 deselected in 0.18s"
+  - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts='"
+    result: "passed; 821 passed in 32.22s"
+  - command: "git diff --check"
+    result: "passed"
+  - command: "git diff --name-only -- run_agent.py cli.py gateway/run.py"
+    result: "passed; no protected core files changed"
