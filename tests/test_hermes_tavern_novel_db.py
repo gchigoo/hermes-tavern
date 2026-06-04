@@ -27,6 +27,7 @@ def test_migrate_creates_novel_tables(tmp_path):
         "novel_scene_goals",
         "novel_scene_narration_controls",
         "novel_project_style_guides",
+        "novel_project_briefs",
     }.issubset(tables)
     novel_tables = {name for name in tables if name.startswith("novel_")}
     assert novel_tables == {
@@ -38,6 +39,7 @@ def test_migrate_creates_novel_tables(tmp_path):
         "novel_scene_goals",
         "novel_scene_narration_controls",
         "novel_project_style_guides",
+        "novel_project_briefs",
     }
 
     with sqlite3.connect(db_path) as conn:
@@ -53,6 +55,19 @@ def test_migrate_creates_novel_tables(tmp_path):
             ).fetchall()
         }
     assert "idx_novel_project_style_guides_project" in indexes
+    with sqlite3.connect(db_path) as conn:
+        brief_indexes = {
+            row[0]
+            for row in conn.execute(
+                """
+                SELECT name
+                FROM sqlite_master
+                WHERE type='index'
+                    AND tbl_name='novel_project_briefs'
+                """
+            ).fetchall()
+        }
+    assert "idx_novel_project_briefs_project" in brief_indexes
 
 
 def test_novel_project_crud_and_counts(tmp_path):
@@ -114,6 +129,121 @@ def test_project_style_guide_clear_returns_bool(tmp_path):
     assert store.clear_project_style_guide(novel_project["id"]) is True
     assert store.get_project_style_guide(novel_project["id"]) is None
     assert store.clear_project_style_guide(novel_project["id"]) is False
+
+
+def test_project_brief_set_update_get_preserve_fields(tmp_path):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    novel_project = store.create_project("Project Briefs", "field test")
+
+    type_set = store.set_project_brief_type(novel_project["id"], "novel")
+    assert type_set["project_id"] == novel_project["id"]
+    assert type_set["project_type"] == "novel"
+    assert type_set["premise_text"] == ""
+
+    fetched_after_type = store.get_project_brief(novel_project["id"])
+    assert fetched_after_type is not None
+    assert fetched_after_type["project_type"] == "novel"
+    assert fetched_after_type["premise_text"] == ""
+
+    premise_set = store.set_project_premise(
+        novel_project["id"],
+        "A detective awakens in an empty city.",
+    )
+    assert premise_set["project_type"] == "novel"
+    assert (
+        premise_set["premise_text"] == "A detective awakens in an empty city."
+    )
+
+    fetched_after_premise = store.get_project_brief(novel_project["id"])
+    assert fetched_after_premise is not None
+    assert fetched_after_premise["project_type"] == "novel"
+    assert (
+        fetched_after_premise["premise_text"] == "A detective awakens in an empty city."
+    )
+
+    updated_type = store.set_project_brief_type(novel_project["id"], "rp")
+    assert updated_type["id"] == premise_set["id"]
+    assert updated_type["project_type"] == "rp"
+    assert (
+        updated_type["premise_text"] == "A detective awakens in an empty city."
+    )
+
+
+def test_project_brief_clear_preserves_remaining_and_deletes_last_visible(tmp_path):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    novel_project = store.create_project("Project Brief Clear", "keep one")
+    store.set_project_brief_type(novel_project["id"], "serial")
+    store.set_project_premise(novel_project["id"], "An epic with no ending.")
+
+    assert store.clear_project_brief_type(novel_project["id"]) is True
+    only_premise = store.get_project_brief(novel_project["id"])
+    assert only_premise is not None
+    assert only_premise["project_type"] == ""
+    assert only_premise["premise_text"] == "An epic with no ending."
+
+    assert store.clear_project_premise(novel_project["id"]) is True
+    assert store.get_project_brief(novel_project["id"]) is None
+
+
+def test_project_brief_missing_project_raises(tmp_path):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+
+    try:
+        store.get_project_brief(999)
+    except ValueError as exc:
+        assert str(exc) == "Project not found"
+    else:
+        raise AssertionError("Expected ValueError for missing project")
+
+    try:
+        store.set_project_brief_type(999, "novel")
+    except ValueError as exc:
+        assert str(exc) == "Project not found"
+    else:
+        raise AssertionError("Expected ValueError for missing project")
+
+    try:
+        store.set_project_premise(999, "none")
+    except ValueError as exc:
+        assert str(exc) == "Project not found"
+    else:
+        raise AssertionError("Expected ValueError for missing project")
+
+    try:
+        store.clear_project_brief_type(999)
+    except ValueError as exc:
+        assert str(exc) == "Project not found"
+    else:
+        raise AssertionError("Expected ValueError for missing project")
+
+    try:
+        store.clear_project_premise(999)
+    except ValueError as exc:
+        assert str(exc) == "Project not found"
+    else:
+        raise AssertionError("Expected ValueError for missing project")
+
+
+def test_project_brief_invalid_type_does_not_mutate_existing_data(tmp_path):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    novel_project = store.create_project("Brief Validation", "unchanged")
+    original = store.set_project_brief_type(novel_project["id"], "novel")
+    original = store.set_project_premise(
+        novel_project["id"],
+        "A city made of mirrors.",
+    )
+
+    try:
+        store.set_project_brief_type(novel_project["id"], "invalid")
+    except ValueError as exc:
+        assert str(exc) == "Invalid project type"
+    else:
+        raise AssertionError("Expected ValueError for invalid project type")
+
+    after_invalid = store.get_project_brief(novel_project["id"])
+    assert after_invalid is not None
+    assert after_invalid["project_type"] == original["project_type"]
+    assert after_invalid["premise_text"] == original["premise_text"]
 
 
 def test_project_style_guide_missing_project_raises(tmp_path):
@@ -616,3 +746,57 @@ def test_export_project_markdown_omits_style_guide_when_absent_or_whitespace_onl
     store.set_project_style_guide(with_style_row["id"], "   \n  ")
     markdown_after_whitespace = store.export_project_markdown(with_style_row["id"])
     assert "## Style Guide" not in markdown_after_whitespace
+
+
+def test_export_project_markdown_includes_project_brief_and_orders_after_summary(tmp_path):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    novel_project = store.create_project(
+        "Brief Export Project",
+        "A summary that stays first.",
+    )
+    store.set_project_brief_type(novel_project["id"], "worldbuilding")
+    store.set_project_premise(
+        novel_project["id"],
+        "An atlas of the fractured moon.",
+    )
+    store.set_project_style_guide(novel_project["id"], "Tone: measured")
+    store.create_chapter(novel_project["id"], "First")
+
+    markdown = store.export_project_markdown(novel_project["id"])
+    assert "## Project Brief" in markdown
+    assert "Type: worldbuilding" in markdown
+    assert "Premise: An atlas of the fractured moon." in markdown
+    assert "## Style Guide" in markdown
+    assert (
+        markdown.index("## Summary")
+        < markdown.index("## Project Brief")
+        < markdown.index("## Style Guide")
+    )
+    assert "## Project Brief" in markdown
+    assert "## Style Guide" in markdown
+    assert markdown.index("## Project Brief") < markdown.index("## Style Guide")
+
+
+def test_export_project_markdown_omits_project_brief_when_empty(tmp_path):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    novel_project = store.create_project("Empty Brief Export", "no brief yet")
+    markdown = store.export_project_markdown(novel_project["id"])
+    assert "## Project Brief" not in markdown
+
+
+def test_export_project_markdown_project_brief_omits_blank_field_labels(tmp_path):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    type_only = store.create_project("Type Only", "classification")
+    premise_only = store.create_project("Premise Only", "story seed")
+
+    store.set_project_brief_type(type_only["id"], "other")
+    type_markdown = store.export_project_markdown(type_only["id"])
+    assert "## Project Brief" in type_markdown
+    assert "Type: other" in type_markdown
+    assert "Premise:" not in type_markdown
+
+    store.set_project_premise(premise_only["id"], "A lantern guards the harbor.")
+    premise_markdown = store.export_project_markdown(premise_only["id"])
+    assert "## Project Brief" in premise_markdown
+    assert "Premise: A lantern guards the harbor." in premise_markdown
+    assert "Type:" not in premise_markdown

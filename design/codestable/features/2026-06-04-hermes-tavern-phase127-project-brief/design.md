@@ -1,7 +1,7 @@
 ---
 doc_type: feature-design
 feature: "2026-06-04-hermes-tavern-phase127-project-brief"
-status: draft
+status: approved
 summary: >
   Project Brief v1 adds local project type and premise metadata for novel
   projects, with command inspection, Markdown export visibility, and offline
@@ -22,6 +22,8 @@ tags: [novel, project, metadata, export, offline]
 | Active Project | The per-gateway-scope project selected by `/rp project set <id>`. | Reuses Phase 121 active-project scope; no account/backend state. |
 
 Startup inspection found no active feature checklist: existing feature checklist root statuses are accepted/implemented/done/complete, Phase 126 is accepted, and Phase 127 is unused.
+
+Unattended S1 approval (2026-06-04): the cron controller promoted this draft for the single bounded S1 persistence/export slice after a read-only Codex architect pass confirmed the scope is limited to `src/hermes_tavern/db_novel.py` and `tests/test_hermes_tavern_novel_db.py`. S2/S3 remain subject to their own bounded architect/executor passes.
 
 ## 1. Decisions And Constraints
 

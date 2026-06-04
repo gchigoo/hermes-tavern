@@ -1,18 +1,29 @@
 doc_type: feature-checklist
 feature: "2026-06-04-hermes-tavern-phase127-project-brief"
 date: "2026-06-04"
-status: planned
+status: in_progress
 summary: >
-  PLAN ONLY - Project Brief v1 will add local project type and premise metadata
-  for novel projects, with inspect/set/clear commands and Markdown export
-  visibility. S1 is limited to DB persistence/export tests. Prompt assembly,
-  provider routing, content mode, outline editing, defaults, credentials, and
-  protected core files remain out of scope.
+  Project Brief v1 is in progress. S1 adds local project type and premise
+  metadata persistence plus Markdown export visibility for novel projects.
+  Runtime inspect/set/clear commands remain S2. Prompt assembly, provider
+  routing, content mode, outline editing, defaults, credentials, and protected
+  core files remain out of scope.
 
 steps:
   - id: S1
     name: "S1: Persist project brief metadata"
-    status: pending
+    status: completed
+    completed_at: "2026-06-04"
+    result: >
+      IMPLEMENTED - S1 added the local novel_project_briefs side table/index,
+      project brief store helpers for type/premise set/get/clear, strict
+      allowlisted project_type validation, missing-project errors, preservation
+      of sibling fields across updates, deletion/no visible getter result after
+      clearing the last field, and conditional Markdown export visibility after
+      Summary. Controller added a small mechanical export polish so blank labels
+      are omitted when only one brief field is present. Runtime commands,
+      README/help, project info command visibility, architecture/root-design
+      writeback, and acceptance remain deferred to S2/S3.
     description: >
       Add the novel_project_briefs side table, index, store helpers, type
       validation, and Markdown export visibility. Add focused novel DB tests for
@@ -22,7 +33,26 @@ steps:
       Focused novel DB tests pass. Only src/hermes_tavern/db_novel.py and
       tests/test_hermes_tavern_novel_db.py need changes in this slice.
     verification:
+      - command: "codex --profile architect exec --json --color never --disable image_generation --sandbox read-only --cd /Users/steven/Projects/hermes-tavern <Phase 127 S1 artifact prompt>"
+        result: "passed; artifact at /tmp/hermes-tavern-architect-phase127-s1.jsonl ended with RESULT: ARCHITECT_ARTIFACT and selected S1 only"
+      - command: "codex --profile executor exec --json --color never --disable image_generation --sandbox workspace-write --cd /Users/steven/Projects/hermes-tavern <Phase 127 S1 implementation prompt>"
+        result: "completed; JSONL at /tmp/hermes-tavern-executor-phase127-s1.jsonl; no rate-limit hits or failed command_execution records"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m py_compile src/hermes_tavern/db_novel.py tests/test_hermes_tavern_novel_db.py"
+        result: "passed (controller rerun)"
       - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel_db.py -q -o 'addopts=' -p no:cacheprovider"
+        result: "passed; 31 passed in 1.20s (controller rerun after mechanical export polish)"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts=' -p no:cacheprovider"
+        result: "passed; 837 passed in 34.08s (controller rerun)"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-04-hermes-tavern-phase127-project-brief/design.md --require doc_type --require status --require feature"
+        result: "passed (controller rerun)"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --yaml-only --file design/codestable/features/2026-06-04-hermes-tavern-phase127-project-brief/checklist.yaml"
+        result: "passed after final S1 status update (controller rerun)"
+      - command: "git diff --check"
+        result: "passed"
+      - command: "git diff --name-only -- run_agent.py cli.py gateway/run.py"
+        result: "passed; no protected core file diffs"
+      - command: "controller S1 diff allowlist/reverse-scope review"
+        result: "passed; implementation touched db_novel.py and novel DB tests only, plus controller CodeStable status docs; no runtime, prompt, provider, content-mode, generation, gateway, README, or protected core files changed"
 
   - id: S2
     name: "S2: Add project brief command surface"
@@ -56,14 +86,23 @@ steps:
 checks:
   - id: C1
     name: "C1: No active checklist precondition"
-    status: pending
+    status: passed
+    result: >
+      Passed before S1 execution: status search found Phase 127 as the only
+      planned/pending active feature after Phase 126 had already been accepted.
     criteria: >
       Before implementation, no other feature checklist is planned, pending,
       draft, or in progress; Phase 127 is the only new planned feature.
 
   - id: C2
     name: "C2: Persistence contract"
-    status: pending
+    status: passed
+    result: >
+      Passed by controller-run novel DB tests: novel_project_briefs persists
+      allowlisted project_type and premise_text locally, preserves sibling
+      fields, clears/deletes visible-empty rows, raises bounded missing-project
+      and invalid-type errors, and keeps invalid type attempts from mutating
+      existing brief data.
     criteria: >
       Project brief metadata is stored locally in novel_project_briefs, validates
       project_type, preserves unspecified fields on update, handles clear
@@ -87,7 +126,11 @@ checks:
 
   - id: C5
     name: "C5: Offline and local boundary"
-    status: pending
+    status: passed
+    result: >
+      Passed for S1: changes are local SQLite/export helpers and offline tests;
+      no provider calls, network calls, credential storage, content-mode changes,
+      model routing changes, prompt assembly, or generation behavior changes.
     criteria: >
       The feature has no provider calls, no network calls, no credential storage,
       no content-mode changes, no model routing changes, and no prompt assembly
@@ -95,7 +138,13 @@ checks:
 
   - id: C6
     name: "C6: Reverse-scope guard"
-    status: pending
+    status: passed
+    result: >
+      Passed for S1 by diff allowlist and protected-core guard. No protected core
+      files changed, and S1 did not add outline editing/storage, canon_policy,
+      default bindings, character/relationship state, cloud/collab, backend
+      accounts, minors/underage paths, provider safety bypass, import/archive,
+      trimming, summarization, vectorization, or regex postprocessors.
     criteria: >
       No protected core files are changed, and no outline editing/storage,
       canon_policy, default card/preset/lorebook binding, character state,

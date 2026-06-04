@@ -93,6 +93,15 @@ class NovelDBMixin:
                 updated_at TEXT NOT NULL DEFAULT (datetime('now'))
             );
 
+            CREATE TABLE IF NOT EXISTS novel_project_briefs (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                project_id INTEGER NOT NULL UNIQUE REFERENCES novel_projects(id) ON DELETE CASCADE,
+                project_type TEXT NOT NULL DEFAULT '',
+                premise_text TEXT NOT NULL DEFAULT '',
+                created_at TEXT NOT NULL DEFAULT (datetime('now')),
+                updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+            );
+
             CREATE INDEX IF NOT EXISTS idx_novel_projects_created
                 ON novel_projects(created_at);
             CREATE INDEX IF NOT EXISTS idx_novel_chapters_project
@@ -111,6 +120,8 @@ class NovelDBMixin:
                 ON novel_scene_narration_controls(scene_id);
             CREATE INDEX IF NOT EXISTS idx_novel_project_style_guides_project
                 ON novel_project_style_guides(project_id);
+            CREATE INDEX IF NOT EXISTS idx_novel_project_briefs_project
+                ON novel_project_briefs(project_id);
             """
         )
 
@@ -224,6 +235,150 @@ class NovelDBMixin:
             cursor = conn.execute(
                 "DELETE FROM novel_project_style_guides WHERE project_id = ?",
                 (project_id,),
+            )
+            return cursor.rowcount > 0
+
+    def get_project_brief(self, project_id: int) -> dict[str, Any] | None:
+        self.migrate()
+        with self.connect() as conn:
+            project = conn.execute(
+                "SELECT id FROM novel_projects WHERE id = ?",
+                (project_id,),
+            ).fetchone()
+            if project is None:
+                raise ValueError("Project not found")
+            row = conn.execute(
+                "SELECT * FROM novel_project_briefs WHERE project_id = ?",
+                (project_id,),
+            ).fetchone()
+        brief = _row_to_dict(row)
+        if brief is None:
+            return None
+        if not brief["project_type"].strip() and not brief["premise_text"].strip():
+            return None
+        return brief
+
+    def set_project_brief_type(self, project_id: int, project_type: str) -> dict[str, Any]:
+        self.migrate()
+        with self.connect() as conn:
+            project = conn.execute(
+                "SELECT id FROM novel_projects WHERE id = ?",
+                (project_id,),
+            ).fetchone()
+            if project is None:
+                raise ValueError("Project not found")
+            if project_type not in {"novel", "serial", "rp", "worldbuilding", "other"}:
+                raise ValueError("Invalid project type")
+            now = _utc_now()
+            conn.execute(
+                """
+                INSERT INTO novel_project_briefs (
+                    project_id, project_type, created_at, updated_at
+                )
+                VALUES (?, ?, ?, ?)
+                ON CONFLICT(project_id) DO UPDATE SET
+                    project_type = excluded.project_type,
+                    updated_at = excluded.updated_at
+                """,
+                (project_id, project_type, now, now),
+            )
+            row = conn.execute(
+                "SELECT * FROM novel_project_briefs WHERE project_id = ?",
+                (project_id,),
+            ).fetchone()
+        return _row_to_dict(row)
+
+    def clear_project_brief_type(self, project_id: int) -> bool:
+        self.migrate()
+        with self.connect() as conn:
+            project = conn.execute(
+                "SELECT id FROM novel_projects WHERE id = ?",
+                (project_id,),
+            ).fetchone()
+            if project is None:
+                raise ValueError("Project not found")
+            row = conn.execute(
+                "SELECT project_id, project_type, premise_text FROM novel_project_briefs WHERE project_id = ?",
+                (project_id,),
+            ).fetchone()
+            if row is None:
+                return False
+            if row["project_type"] == "":
+                return False
+            if row["premise_text"].strip() == "":
+                cursor = conn.execute(
+                    "DELETE FROM novel_project_briefs WHERE project_id = ?",
+                    (project_id,),
+                )
+                return cursor.rowcount > 0
+            cursor = conn.execute(
+                """
+                UPDATE novel_project_briefs
+                SET project_type = '', updated_at = ?
+                WHERE project_id = ?
+                """,
+                (_utc_now(), project_id),
+            )
+            return cursor.rowcount > 0
+
+    def set_project_premise(self, project_id: int, premise_text: str) -> dict[str, Any]:
+        self.migrate()
+        with self.connect() as conn:
+            project = conn.execute(
+                "SELECT id FROM novel_projects WHERE id = ?",
+                (project_id,),
+            ).fetchone()
+            if project is None:
+                raise ValueError("Project not found")
+            now = _utc_now()
+            conn.execute(
+                """
+                INSERT INTO novel_project_briefs (
+                    project_id, premise_text, created_at, updated_at
+                )
+                VALUES (?, ?, ?, ?)
+                ON CONFLICT(project_id) DO UPDATE SET
+                    premise_text = excluded.premise_text,
+                    updated_at = excluded.updated_at
+                """,
+                (project_id, premise_text, now, now),
+            )
+            row = conn.execute(
+                "SELECT * FROM novel_project_briefs WHERE project_id = ?",
+                (project_id,),
+            ).fetchone()
+        return _row_to_dict(row)
+
+    def clear_project_premise(self, project_id: int) -> bool:
+        self.migrate()
+        with self.connect() as conn:
+            project = conn.execute(
+                "SELECT id FROM novel_projects WHERE id = ?",
+                (project_id,),
+            ).fetchone()
+            if project is None:
+                raise ValueError("Project not found")
+            row = conn.execute(
+                "SELECT project_id, project_type, premise_text FROM novel_project_briefs WHERE project_id = ?",
+                (project_id,),
+            ).fetchone()
+            if row is None:
+                return False
+            if row["premise_text"] == "":
+                return False
+            if row["project_type"].strip() == "":
+                cursor = conn.execute(
+                    "DELETE FROM novel_project_briefs WHERE project_id = ?",
+                    (project_id,),
+                )
+                return cursor.rowcount > 0
+            cursor = conn.execute(
+                """
+                UPDATE novel_project_briefs
+                SET premise_text = '', updated_at = ?
+                WHERE project_id = ?
+                """,
+                (_utc_now(), project_id),
             )
             return cursor.rowcount > 0
 
@@ -768,6 +923,7 @@ class NovelDBMixin:
         canons = self.list_canon(project_id)
         timeline = self.list_timeline(project_id)
         style_guide = self.get_project_style_guide(project_id)
+        brief = self.get_project_brief(project_id)
 
         lines: list[str] = [
             f"# {novel_project['title']}",
@@ -776,6 +932,16 @@ class NovelDBMixin:
             novel_project["summary"] or "",
             "",
         ]
+        if brief is not None:
+            project_type = brief["project_type"].strip()
+            premise_text = brief["premise_text"].strip()
+            if project_type or premise_text:
+                lines.append("## Project Brief")
+                if project_type:
+                    lines.append(f"Type: {project_type}")
+                if premise_text:
+                    lines.append(f"Premise: {premise_text}")
+                lines.append("")
         style_text = style_guide["style_text"] if style_guide is not None else ""
         if style_text.strip():
             lines.extend(
