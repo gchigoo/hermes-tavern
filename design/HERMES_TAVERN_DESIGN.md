@@ -451,6 +451,14 @@ Commands:
 /rp lore debug
 ```
 
+Current matcher behavior:
+
+- Lorebook imports preserve raw ST lore keys and flags.
+- Runtime matching now applies a local pre-search regex complexity guard when `regex_enabled` entries are evaluated.
+- `regex` lore keys longer than 256 characters or with nested quantifier patterns are excluded before `re.search`, and exclusion reasons are surfaced in `/rp lore test`/`/rp lore debug`.
+- Regex compile failures remain surfaced as `regex error:` and do not crash matching.
+- The guard is matcher/runtime-only and does not mutate imported lorebook data.
+
 ### 6.7 Project / Novel
 
 Long-form writing requires a project layer above chat sessions.
@@ -942,6 +950,8 @@ Commands:
 /rp debug postprocess
 ```
 
+Phase 125 is intentionally separate from ST Regex-style output post-processing and does not implement `/rp regex` output rewrite hooks, postprocessing output mutation, or extension hook response rewrites.
+
 ---
 
 ## 15. Media Extensions
@@ -1352,6 +1362,10 @@ Acceptance:
 
 - triggered entries appear in debug context;
 - non-triggered entries show exclusion reason.
+
+Phase 7 matcher hardening note:
+- `/rp lore test` and `/rp lore debug` now include bounded rejection reasons for regex complexity guard (`pattern too long`, `nested quantifier`) added under Phase 125.
+- Acceptance report: `design/codestable/features/2026-06-04-hermes-tavern-phase125-lore-regex-guard/hermes-tavern-phase125-lore-regex-guard-acceptance.md`
 
 ### Phase 8: Memory and summaries v1
 

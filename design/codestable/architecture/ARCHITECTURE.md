@@ -68,7 +68,7 @@ prompt.py             PromptCompiler — assemble system prompt from card + pres
 macros.py             MacroContext + expand_macros() — deterministic ST-compatible template-only macro expansion, no execution semantics
 renderers.py          ChatRenderer, StoryRenderer — convert compiled prompt to provider messages
 preset_safety.py      PresetRiskLevel, classify_preset_text — risk classification for imported modules
-lorebook.py           match_lorebook_entries — keyword/regex match, token-budget enforcement
+lorebook.py           match_lorebook_entries — keyword/regex match, local regex complexity guard, token-budget enforcement
 memory.py             Memory fact / summary management helpers
 db_novel.py           Novel domain mixins for project/chapter/scene/scene-goal/canon/timeline CRUD and export
 runtime_novel.py      Novel command family handlers for /rp project/chapter/scene/scene-goal/canon/timeline
@@ -116,6 +116,7 @@ importers/
 - Phase 122: Scene goals (`/rp scene goal` set/inspect/clear), linked-session scene-goal prompt injection (before author note), and Markdown goal export visibility
 - Phase 123: Scene narration controls (`/rp scene narration` inspect/clear/pov/tense), linked-session scene-narration prompt injection (before scene goal), and Markdown narration visibility
 - Phase 124: Project style guide (`/rp project style` inspect/set/clear), linked-session project-style prompt injection, and Markdown style-guide export
+- Phase 125: Lore Regex Complexity Guard (regex lore keys longer than 256 chars or with nested quantified groups are excluded before Python `re.search`; bounded rejection reasons available via `/rp lore test`/debug; no importer, schema, command, provider, or postprocessor behavior changes)
 
 ### Plugin flow
 
@@ -242,3 +243,4 @@ These phases do not change schema or core prompt/generation assembly.
 - **Tavern export MEDIA contract**: `/rp export` returns quoted `MEDIA:"<path>"` markers so gateway adapters preserve attachment paths with spaces. Exports must not include raw event JSON or raw message metadata blobs.
 - **Phase 121 reverse-scope constraints**: no cloud sync, no collaboration/multi-user workflow, no novel import, no timeline graphics, no DB credential persistence.
 - **Tavern DB never persists `api_key` / `access_token`**: credentials resolved at runtime via `HermesRuntimeProviderResolver`, discarded after use.
+- **Tavern lore regex complexity guard**: lorebook regex keys are screened locally before matching. Entries with patterns longer than 256 characters or nested quantified groups (for example `(a+)+`, `(.+)*`, `([a-z]+){2,}`) are excluded with bounded reasons (`regex rejected: ...`), preserving raw imported lore data while preventing unbounded local matching behavior.
