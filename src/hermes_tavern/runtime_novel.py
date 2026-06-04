@@ -26,10 +26,16 @@ def project_command(runtime: Any, command: RPCommand, event: Any) -> str:
         return project_export(runtime, command, event)
     if subcommand == "style":
         return project_style(runtime, command, event)
+    if subcommand == "brief":
+        return project_brief(runtime, command, event)
     return (
         "Usage: /rp project create <title> | /rp project list | /rp project info <id> | /rp project set <id> "
         "| /rp project export [id] | /rp project style [project-id] | /rp project style inspect [project-id] | "
-        "/rp project style set [project-id] <text> | /rp project style clear [project-id]"
+        "/rp project style set [project-id] <text> | /rp project style clear [project-id] "
+        "| /rp project brief [project-id] | /rp project brief inspect [project-id] | "
+        "/rp project brief type set <project-id> <novel|serial|rp|worldbuilding|other> | "
+        "/rp project brief type clear <project-id> | /rp project brief premise set <project-id> <text> | "
+        "/rp project brief premise clear <project-id>"
     )
 
 
@@ -177,14 +183,27 @@ def project_info(runtime: Any, command: RPCommand) -> str:
     project = runtime.store.get_project(project_id)
     if project is None:
         return f"No novel project found: {project_id}"
-    return (
-        "Hermes Tavern project info:\n"
-        f"id: {project['id']}\n"
-        f"title: {project['title']}\n"
-        f"summary: {project['summary']}\n"
-        f"status: {project['status']}\n"
-        f"chapters: {project.get('chapter_count', 0)}"
-    )
+
+    lines = [
+        "Hermes Tavern project info:",
+        f"id: {project['id']}",
+        f"title: {project['title']}",
+        f"summary: {project['summary']}",
+        f"status: {project['status']}",
+        f"chapters: {project.get('chapter_count', 0)}",
+    ]
+    try:
+        brief = runtime.store.get_project_brief(project_id)
+    except ValueError:
+        return f"No novel project found: {project_id}"
+    if brief:
+        brief_type = (brief.get("project_type") or "").strip()
+        if brief_type:
+            lines.append(f"project_type: {brief_type}")
+        premise_text = (brief.get("premise_text") or "").strip()
+        if premise_text:
+            lines.append(f"premise: {_mobile_preview(premise_text, 220)}")
+    return "\n".join(lines)
 
 
 def project_set(runtime: Any, command: RPCommand, event: Any) -> str:
@@ -202,6 +221,147 @@ def project_set(runtime: Any, command: RPCommand, event: Any) -> str:
         return f"No novel project found: {project_id}"
     _project_set_active(runtime, event, project_id)
     return f"Active novel project set: [{project['id']}] {project['title']}"
+
+
+_PROJECT_BRIEF_USAGE = (
+    "Usage: /rp project brief [project-id] | /rp project brief inspect [project-id] | "
+    "/rp project brief type set <project-id> <novel|serial|rp|worldbuilding|other> | "
+    "/rp project brief type clear <project-id> | /rp project brief premise set <project-id> <text> | "
+    "/rp project brief premise clear <project-id>"
+)
+
+
+def project_brief(runtime: Any, command: RPCommand, event: Any) -> str:
+    if len(command.args) == 1:
+        project_id = _project_active_id(runtime, event)
+        if project_id is None:
+            return "No active novel project. Use /rp project set <id> or pass project-id."
+        return project_brief_inspect(runtime, project_id)
+
+    mode = command.args[1].lower()
+    if mode == "inspect":
+        if len(command.args) == 2:
+            project_id = _project_active_id(runtime, event)
+            if project_id is None:
+                return "No active novel project. Use /rp project set <id> or pass project-id."
+            return project_brief_inspect(runtime, project_id)
+        if len(command.args) != 3:
+            return _PROJECT_BRIEF_USAGE
+        project_id = _safe_int(command.args[2])
+        if project_id is None:
+            return _PROJECT_BRIEF_USAGE
+        return project_brief_inspect(runtime, project_id)
+
+    if mode == "type":
+        return project_brief_type(runtime, command)
+
+    if mode == "premise":
+        return project_brief_premise(runtime, command)
+
+    project_id = _safe_int(mode)
+    if project_id is None:
+        return _PROJECT_BRIEF_USAGE
+    if len(command.args) != 2:
+        return _PROJECT_BRIEF_USAGE
+    return project_brief_inspect(runtime, project_id)
+
+
+def project_brief_inspect(runtime: Any, project_id: int) -> str:
+    try:
+        brief = runtime.store.get_project_brief(project_id)
+    except ValueError:
+        return f"No novel project found: {project_id}"
+
+    if not brief:
+        return f"No project brief set for project [{project_id}]."
+
+    project_type = (brief.get("project_type") or "").strip()
+    premise_text = (brief.get("premise_text") or "").strip()
+    if not project_type and not premise_text:
+        return f"No project brief set for project [{project_id}]."
+
+    lines = [f"Project brief for project [{project_id}]:"]
+    if project_type:
+        lines.append(f"Type: {project_type}")
+    if premise_text:
+        lines.append(f"Premise: {_mobile_preview(premise_text, 220)}")
+    return "\n".join(lines)
+
+
+def project_brief_type(runtime: Any, command: RPCommand) -> str:
+    if len(command.args) < 3:
+        return _PROJECT_BRIEF_USAGE
+    action = command.args[2].lower()
+    if action == "set":
+        if len(command.args) != 5:
+            return _PROJECT_BRIEF_USAGE
+        project_id = _safe_int(command.args[3])
+        if project_id is None:
+            return _PROJECT_BRIEF_USAGE
+        brief_type = command.args[4].strip().lower()
+        if not brief_type:
+            return _PROJECT_BRIEF_USAGE
+        try:
+            runtime.store.set_project_brief_type(project_id, brief_type)
+        except ValueError as exc:
+            message = str(exc)
+            if message == "Project not found":
+                return f"No novel project found: {project_id}"
+            if message == "Invalid project type":
+                return "Invalid project type. Use novel, serial, rp, worldbuilding, or other."
+            raise
+        return f"Project type set for project [{project_id}]: {brief_type}"
+
+    if action == "clear":
+        if len(command.args) != 4:
+            return _PROJECT_BRIEF_USAGE
+        project_id = _safe_int(command.args[3])
+        if project_id is None:
+            return _PROJECT_BRIEF_USAGE
+        try:
+            runtime.store.clear_project_brief_type(project_id)
+        except ValueError:
+            return f"No novel project found: {project_id}"
+        return f"Project type cleared for project [{project_id}]."
+
+    return _PROJECT_BRIEF_USAGE
+
+
+def project_brief_premise(runtime: Any, command: RPCommand) -> str:
+    if len(command.args) < 3:
+        return _PROJECT_BRIEF_USAGE
+    action = command.args[2].lower()
+    if action == "set":
+        if len(command.args) < 5:
+            return _PROJECT_BRIEF_USAGE
+        project_id = _safe_int(command.args[3])
+        if project_id is None:
+            return _PROJECT_BRIEF_USAGE
+        premise_text = " ".join(command.args[4:]).strip()
+        if not premise_text:
+            return _PROJECT_BRIEF_USAGE
+        try:
+            runtime.store.set_project_premise(project_id, premise_text)
+        except ValueError:
+            return f"No novel project found: {project_id}"
+        return (
+            f"Project premise set for project [{project_id}]: "
+            f"{_mobile_preview(premise_text, 180)}"
+        )
+
+    if action == "clear":
+        if len(command.args) != 4:
+            return _PROJECT_BRIEF_USAGE
+        project_id = _safe_int(command.args[3])
+        if project_id is None:
+            return _PROJECT_BRIEF_USAGE
+        try:
+            runtime.store.clear_project_premise(project_id)
+        except ValueError:
+            return f"No novel project found: {project_id}"
+        return f"Project premise cleared for project [{project_id}]."
+
+    return _PROJECT_BRIEF_USAGE
 
 
 _PROJECT_STYLE_USAGE = (

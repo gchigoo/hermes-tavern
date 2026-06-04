@@ -25,6 +25,14 @@ class Event:
     text = ""
 
 
+PROJECT_BRIEF_USAGE = (
+    "Usage: /rp project brief [project-id] | /rp project brief inspect [project-id] | "
+    "/rp project brief type set <project-id> <novel|serial|rp|worldbuilding|other> | "
+    "/rp project brief type clear <project-id> | /rp project brief premise set <project-id> <text> | "
+    "/rp project brief premise clear <project-id>"
+)
+
+
 def test_novel_command_table_has_five_families():
     assert "project" in TAVERN_COMMAND_TABLE
     assert "chapter" in TAVERN_COMMAND_TABLE
@@ -45,6 +53,12 @@ def test_novel_command_table_has_five_families():
     assert "/rp project style inspect [project-id]" in TAVERN_COMMAND_TABLE["project"].help_lines
     assert "/rp project style set [project-id] <text>" in TAVERN_COMMAND_TABLE["project"].help_lines
     assert "/rp project style clear [project-id]" in TAVERN_COMMAND_TABLE["project"].help_lines
+    assert "/rp project brief [project-id]" in TAVERN_COMMAND_TABLE["project"].help_lines
+    assert "/rp project brief inspect [project-id]" in TAVERN_COMMAND_TABLE["project"].help_lines
+    assert "/rp project brief type set <project-id> <novel|serial|rp|worldbuilding|other>" in TAVERN_COMMAND_TABLE["project"].help_lines
+    assert "/rp project brief type clear <project-id>" in TAVERN_COMMAND_TABLE["project"].help_lines
+    assert "/rp project brief premise set <project-id> <text>" in TAVERN_COMMAND_TABLE["project"].help_lines
+    assert "/rp project brief premise clear <project-id>" in TAVERN_COMMAND_TABLE["project"].help_lines
 
 
 def test_project_routes_create_list_info_set(tmp_path):
@@ -175,6 +189,260 @@ def test_project_style_active_project_fallback_without_active_project(tmp_path):
         runtime.handle_command_sync(RPCommand("project", ["style", "clear"], "/rp project style clear"), Event())
         == fallback_message
     )
+
+
+def test_project_command_help_includes_brief_lines(tmp_path):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+
+    help_output = runtime.handle_command_sync(RPCommand("help", [], "/rp"), Event())
+
+    assert "/rp project brief [project-id]" in help_output
+    assert "/rp project brief inspect [project-id]" in help_output
+    assert "/rp project brief type set <project-id> <novel|serial|rp|worldbuilding|other>" in help_output
+    assert "/rp project brief type clear <project-id>" in help_output
+    assert "/rp project brief premise set <project-id> <text>" in help_output
+    assert "/rp project brief premise clear <project-id>" in help_output
+
+
+def test_project_brief_routes_explicit_id_flow(tmp_path):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    project = runtime.store.create_project("Atlas")
+
+    set_type = runtime.handle_command_sync(
+        RPCommand("project", ["brief", "type", "set", str(project["id"]), "novel"], "/rp project brief type set 1 novel"),
+        Event(),
+    )
+    assert set_type == f"Project type set for project [{project['id']}]: novel"
+    assert runtime.store.get_project_brief(project["id"])["project_type"] == "novel"
+
+    set_premise_text = (
+        "A courier arrives in a city with a hidden language under the pavement, then discovers a buried archive."
+    )
+    set_premise = runtime.handle_command_sync(
+        RPCommand(
+            "project",
+            ["brief", "premise", "set", str(project["id"]), "A", "courier", "arrives", "in", "a", "city", "with", "a", "hidden", "language", "under", "the", "pavement,", "then", "discovers", "a", "buried", "archive."],
+            "/rp project brief premise set 1 A courier arrives in a city with a hidden language under the pavement, then discovers a buried archive.",
+        ),
+        Event(),
+    )
+    assert set_premise == (
+        f"Project premise set for project [{project['id']}]: "
+        f"{_mobile_preview(set_premise_text, 180)}"
+    )
+    assert runtime.store.get_project_brief(project["id"])["premise_text"] == set_premise_text
+
+    inspect = runtime.handle_command_sync(
+        RPCommand("project", ["brief", str(project["id"])], "/rp project brief 1"),
+        Event(),
+    )
+    assert inspect == (
+        f"Project brief for project [{project['id']}]:\n"
+        "Type: novel\n"
+        f"Premise: {_mobile_preview(set_premise_text, 220)}"
+    )
+
+    update_type = runtime.handle_command_sync(
+        RPCommand("project", ["brief", "type", "set", str(project["id"]), "rp"], "/rp project brief type set 1 rp"),
+        Event(),
+    )
+    assert update_type == f"Project type set for project [{project['id']}]: rp"
+
+    clear_type = runtime.handle_command_sync(
+        RPCommand("project", ["brief", "type", "clear", str(project["id"])], "/rp project brief type clear 1"),
+        Event(),
+    )
+    assert clear_type == f"Project type cleared for project [{project['id']}]."
+
+    clear_premise = runtime.handle_command_sync(
+        RPCommand("project", ["brief", "premise", "clear", str(project["id"])], "/rp project brief premise clear 1"),
+        Event(),
+    )
+    assert clear_premise == f"Project premise cleared for project [{project['id']}]."
+
+    inspect_no_content = runtime.handle_command_sync(
+        RPCommand("project", ["brief", str(project["id"])], "/rp project brief 1"),
+        Event(),
+    )
+    assert inspect_no_content == f"No project brief set for project [{project['id']}]."
+
+
+def test_project_brief_active_inspect_fallback(tmp_path):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    project = runtime.store.create_project("Atlas")
+    runtime.handle_command_sync(RPCommand("project", ["set", str(project["id"])], "/rp project set 1"), Event())
+
+    runtime.handle_command_sync(
+        RPCommand(
+            "project",
+            ["brief", "type", "set", str(project["id"]), "worldbuilding"],
+            "/rp project brief type set 1 worldbuilding",
+        ),
+        Event(),
+    )
+    runtime.handle_command_sync(
+        RPCommand(
+            "project",
+            ["brief", "premise", "set", str(project["id"]), "A city built from memory."],
+            "/rp project brief premise set 1 A city built from memory.",
+        ),
+        Event(),
+    )
+
+    brief = runtime.handle_command_sync(RPCommand("project", ["brief"], "/rp project brief"), Event())
+    inspect_text = (
+        f"Project brief for project [{project['id']}]:\n"
+        "Type: worldbuilding\n"
+        f"Premise: {_mobile_preview('A city built from memory.', 220)}"
+    )
+    assert brief == inspect_text
+
+    inspect_with_keyword = runtime.handle_command_sync(
+        RPCommand("project", ["brief", "inspect"], "/rp project brief inspect"),
+        Event(),
+    )
+    assert inspect_with_keyword == inspect_text
+
+
+def test_project_brief_active_inspect_without_active_project_returns_guidance(tmp_path):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    fallback_message = "No active novel project. Use /rp project set <id> or pass project-id."
+
+    assert runtime.handle_command_sync(RPCommand("project", ["brief"], "/rp project brief"), Event()) == fallback_message
+    assert (
+        runtime.handle_command_sync(RPCommand("project", ["brief", "inspect"], "/rp project brief inspect"), Event())
+        == fallback_message
+    )
+
+
+def test_project_brief_mutating_commands_require_explicit_id(tmp_path):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    project = runtime.store.create_project("Atlas")
+    runtime.handle_command_sync(RPCommand("project", ["set", str(project["id"])], "/rp project set 1"), Event())
+
+    assert (
+        runtime.handle_command_sync(RPCommand("project", ["brief", "type", "set", "novel"], "/rp project brief type set novel"), Event())
+        == PROJECT_BRIEF_USAGE
+    )
+    assert (
+        runtime.handle_command_sync(RPCommand("project", ["brief", "premise", "set", "A", "story", "starts", "here"], "/rp project brief premise set A story starts here"), Event())
+        == PROJECT_BRIEF_USAGE
+    )
+    assert (
+        runtime.handle_command_sync(RPCommand("project", ["brief", "type", "clear"], "/rp project brief type clear"), Event())
+        == PROJECT_BRIEF_USAGE
+    )
+    assert (
+        runtime.handle_command_sync(RPCommand("project", ["brief", "premise", "clear"], "/rp project brief premise clear"), Event())
+        == PROJECT_BRIEF_USAGE
+    )
+
+
+def test_project_brief_boundary_args_return_usage(tmp_path):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+
+    invalids = [
+        RPCommand("project", ["brief", "inspect", "1", "extra"], "/rp project brief inspect 1 extra"),
+        RPCommand("project", ["brief", "type", "set", str(1)], "/rp project brief type set 1"),
+        RPCommand("project", ["brief", "type", "set", str(1), "novel", "extra"], "/rp project brief type set 1 novel extra"),
+        RPCommand("project", ["brief", "premise", "set", str(1)], "/rp project brief premise set 1"),
+        RPCommand("project", ["brief", "premise", "set", str(1), ""], "/rp project brief premise set 1"),
+    ]
+    for command in invalids:
+        assert runtime.handle_command_sync(command, Event()) == PROJECT_BRIEF_USAGE
+
+
+def test_project_brief_missing_or_non_numeric_id_cases(tmp_path):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+
+    command_ids = [
+        RPCommand("project", ["brief", "inspect", "not-a-number"], "/rp project brief inspect not-a-number"),
+        RPCommand("project", ["brief", "type", "set", "not-a-number", "novel"], "/rp project brief type set not-a-number novel"),
+        RPCommand("project", ["brief", "type", "clear", "not-a-number"], "/rp project brief type clear not-a-number"),
+        RPCommand("project", ["brief", "premise", "set", "not-a-number", "text"], "/rp project brief premise set not-a-number text"),
+        RPCommand("project", ["brief", "premise", "clear", "not-a-number"], "/rp project brief premise clear not-a-number"),
+    ]
+    for command in command_ids:
+        assert runtime.handle_command_sync(command, Event()) == PROJECT_BRIEF_USAGE
+
+
+@pytest.mark.parametrize(
+    "command, expected",
+    [
+        (RPCommand("project", ["brief", str(9999)], "/rp project brief 9999"), "No novel project found: 9999"),
+        (RPCommand("project", ["brief", "inspect", str(9999)], "/rp project brief inspect 9999"), "No novel project found: 9999"),
+        (RPCommand("project", ["brief", "type", "set", str(9999), "rp"], "/rp project brief type set 9999 rp"), "No novel project found: 9999"),
+        (RPCommand("project", ["brief", "type", "clear", str(9999)], "/rp project brief type clear 9999"), "No novel project found: 9999"),
+        (RPCommand("project", ["brief", "premise", "set", str(9999), "A", "line"], "/rp project brief premise set 9999 A line"), "No novel project found: 9999"),
+        (RPCommand("project", ["brief", "premise", "clear", str(9999)], "/rp project brief premise clear 9999"), "No novel project found: 9999"),
+    ],
+)
+def test_project_brief_missing_project_returns_not_found(tmp_path, command, expected):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    assert runtime.handle_command_sync(command, Event()) == expected
+
+
+def test_project_brief_invalid_type_message(tmp_path):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    project = runtime.store.create_project("Atlas")
+
+    response = runtime.handle_command_sync(
+        RPCommand("project", ["brief", "type", "set", str(project["id"]), "bad-value"], "/rp project brief type set 1 bad-value"),
+        Event(),
+    )
+    assert response == "Invalid project type. Use novel, serial, rp, worldbuilding, or other."
+
+
+def test_project_brief_and_info_includes_fields_only_when_present(tmp_path):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    project = runtime.store.create_project("Atlas")
+
+    info_without_brief = runtime.handle_command_sync(
+        RPCommand("project", ["info", str(project["id"])], "/rp project info 1"),
+        Event(),
+    )
+    assert "project_type:" not in info_without_brief
+    assert "premise:" not in info_without_brief
+
+    runtime.handle_command_sync(RPCommand("project", ["brief", "type", "set", str(project["id"]), "other"], "/rp project brief type set 1 other"), Event())
+    runtime.handle_command_sync(
+        RPCommand("project", ["brief", "premise", "set", str(project["id"]), "A city hears every whisper."], "/rp project brief premise set 1 A city hears every whisper."),
+        Event(),
+    )
+
+    info_with_brief = runtime.handle_command_sync(
+        RPCommand("project", ["info", str(project["id"])], "/rp project info 1"),
+        Event(),
+    )
+    assert "project_type: other" in info_with_brief
+    assert f"premise: {_mobile_preview('A city hears every whisper.', 220)}" in info_with_brief
+
+
+def test_project_brief_markers_do_not_leak_to_debug_prompt_or_context(tmp_path):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    store.save_card(parse_character_card({"name": "Alice", "description": "Scholar", "first_mes": "Hello."}))
+    runtime = TavernRuntime(store)
+    runtime.handle_command_sync(RPCommand("start", ["Alice"], "/rp start Alice"), Event())
+
+    project = store.create_project("Skyline")
+    chapter = store.create_chapter(project["id"], "Prologue")
+    scene = store.create_scene(chapter["id"], "Opening")
+    store.link_scene_session(
+        scene["id"],
+        store.get_active_session("telegram:chat:chat-1:thread:main:user:user-1")["id"],
+    )
+
+    store.set_project_brief_type(project["id"], "rp")
+    store.set_project_premise(project["id"], "marker: distinctive premise token")
+
+    prompt = runtime.handle_command_sync(RPCommand("debug", ["prompt"], "/rp debug prompt"), Event())
+    context = runtime.handle_command_sync(RPCommand("debug", ["context"], "/rp debug context"), Event())
+
+    for output in (prompt, context):
+        lowered = output.lower()
+        assert "project_brief" not in lowered
+        assert "project_type" not in lowered
+        assert "marker: distinctive premise token" not in lowered
 
 
 def test_project_style_bad_arguments_return_usage(tmp_path):

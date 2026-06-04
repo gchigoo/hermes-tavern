@@ -3,11 +3,13 @@ feature: "2026-06-04-hermes-tavern-phase127-project-brief"
 date: "2026-06-04"
 status: in_progress
 summary: >
-  Project Brief v1 is in progress. S1 adds local project type and premise
-  metadata persistence plus Markdown export visibility for novel projects.
-  Runtime inspect/set/clear commands remain S2. Prompt assembly, provider
-  routing, content mode, outline editing, defaults, credentials, and protected
-  core files remain out of scope.
+  Project Brief v1 is in progress. S1 added local project type and premise
+  metadata persistence plus Markdown export visibility for novel projects. S2
+  added runtime inspect/set/clear commands, project-info visibility, command
+  help, README command literals, and focused command/docs tests. Prompt assembly,
+  provider routing, content mode, outline editing, defaults, credentials,
+  protected core files, architecture/root-design writeback, and acceptance
+  remain out of scope until S3.
 
 steps:
   - id: S1
@@ -56,7 +58,20 @@ steps:
 
   - id: S2
     name: "S2: Add project brief command surface"
-    status: pending
+    status: completed
+    completed_at: "2026-06-04"
+    result: >
+      IMPLEMENTED - S2 added /rp project brief inspect/type/premise command
+      routing, active-project inspect fallback, explicit-id-only mutating
+      commands, bounded usage/missing-project/invalid-type/no-active messages,
+      project-info type/premise visibility, /rp help command-table lines, README
+      Core commands literals, and focused runtime/help/docs tests. Controller
+      made a small mechanical docs/test correction so mutating command literals
+      use required <project-id> syntax, added an explicit no-active inspect
+      regression, and reran targeted plus full verification from scratch. No
+      db_novel.py, prompt modules, provider/model/credential, content-mode,
+      generation, architecture/root-design, acceptance, or protected core files
+      changed.
     description: >
       Add /rp project brief inspect/type/premise command routing, bounded usage
       and error messages, command-table help, README Core commands visibility,
@@ -65,7 +80,18 @@ steps:
       /rp project brief commands work for normal and boundary cases, and command
       table plus README docs assertions pass.
     verification:
+      - command: "codex --profile architect exec --json --color never --disable image_generation --sandbox read-only --cd /Users/steven/Projects/hermes-tavern <Phase 127 S2 artifact prompt>"
+        result: "passed; artifact at /tmp/hermes-tavern-architect-phase127-s2.jsonl ended with RESULT: ARCHITECT_ARTIFACT and confirmed S2 may proceed unattended"
+      - command: "codex --profile executor exec --json --color never --disable image_generation --sandbox workspace-write --cd /Users/steven/Projects/hermes-tavern <Phase 127 S2 implementation prompt>"
+        result: "completed; JSONL at /tmp/hermes-tavern-executor-phase127-s2.jsonl; no rate-limit hits or failed command_execution records; executor reported focused tests green"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m py_compile src/hermes_tavern/runtime_novel.py src/hermes_tavern/commands.py tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_commands.py tests/test_hermes_tavern_readme_docs.py"
+        result: "passed (controller rerun after mechanical docs/test correction)"
       - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_commands.py tests/test_hermes_tavern_readme_docs.py -q -o 'addopts=' -p no:cacheprovider"
+        result: "passed; 133 passed in 2.73s (controller rerun after no-active inspect regression)"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts=' -p no:cacheprovider"
+        result: "passed; 855 passed in 33.29s (controller rerun)"
+      - command: "git diff --name-only -- run_agent.py cli.py gateway/run.py"
+        result: "passed; no protected core file diffs"
 
   - id: S3
     name: "S3: Verify and write architecture"
@@ -111,7 +137,14 @@ checks:
 
   - id: C3
     name: "C3: Command contract"
-    status: pending
+    status: passed
+    result: >
+      Passed by controller-run runtime/help/docs tests: /rp project brief supports
+      explicit and active inspect, explicit-id type/premise set and clear,
+      bounded usage for malformed or missing mutating IDs, missing-project and
+      invalid-type messages, no-active inspect guidance, and README/help command
+      literals. A reverse-scope regression confirms project brief type/premise
+      are not included in /rp debug prompt or /rp debug context.
     criteria: >
       /rp project brief inspect/type/premise commands provide bounded normal,
       usage, missing-active-project, missing-project, invalid-type, and blank
@@ -119,7 +152,13 @@ checks:
 
   - id: C4
     name: "C4: Export and info visibility"
-    status: pending
+    status: passed
+    result: >
+      Passed across S1/S2 controller-run tests: S1 DB/export tests proved project
+      Markdown export shows the Project Brief section only when type/premise is
+      present and omits it when empty; S2 runtime tests prove /rp project info
+      shows project_type and premise when present and omits both fields when no
+      brief exists.
     criteria: >
       /rp project info and project Markdown export show type/premise when present,
       while empty projects omit the Project Brief export section.
@@ -128,9 +167,11 @@ checks:
     name: "C5: Offline and local boundary"
     status: passed
     result: >
-      Passed for S1: changes are local SQLite/export helpers and offline tests;
-      no provider calls, network calls, credential storage, content-mode changes,
-      model routing changes, prompt assembly, or generation behavior changes.
+      Passed through S2: S1 changes are local SQLite/export helpers and offline
+      tests; S2 changes are local runtime command/info/help/README surfaces and
+      offline tests. No provider calls, network calls, credential storage,
+      content-mode changes, model routing changes, prompt assembly, or generation
+      behavior changes were added.
     criteria: >
       The feature has no provider calls, no network calls, no credential storage,
       no content-mode changes, no model routing changes, and no prompt assembly
@@ -140,11 +181,13 @@ checks:
     name: "C6: Reverse-scope guard"
     status: passed
     result: >
-      Passed for S1 by diff allowlist and protected-core guard. No protected core
-      files changed, and S1 did not add outline editing/storage, canon_policy,
-      default bindings, character/relationship state, cloud/collab, backend
-      accounts, minors/underage paths, provider safety bypass, import/archive,
-      trimming, summarization, vectorization, or regex postprocessors.
+      Passed through S2 by diff allowlist, protected-core guard, and debug
+      prompt/context no-leak regression. No protected core files changed, and the
+      feature has not added outline editing/storage, canon_policy, default
+      bindings, character/relationship state, cloud/collab, backend accounts,
+      minors/underage paths, provider safety bypass, import/archive, trimming,
+      summarization, vectorization, regex postprocessors, or project brief prompt
+      injection.
     criteria: >
       No protected core files are changed, and no outline editing/storage,
       canon_policy, default card/preset/lorebook binding, character state,

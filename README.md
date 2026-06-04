@@ -121,6 +121,9 @@ Expected behavior:
 /rp project create/list/info/set/export
 /rp project style [project-id] | /rp project style inspect [project-id]
 /rp project style set [project-id] <text> | /rp project style clear [project-id]
+/rp project brief [project-id] | /rp project brief inspect [project-id]
+/rp project brief type set <project-id> <novel|serial|rp|worldbuilding|other> | /rp project brief type clear <project-id>
+/rp project brief premise set <project-id> <text> | /rp project brief premise clear <project-id>
 /rp chapter create/list
 /rp scene create/list/start
 /rp scene goal <scene-id> [text] | /rp scene goal clear <scene-id>
