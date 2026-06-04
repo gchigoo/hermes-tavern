@@ -245,6 +245,15 @@ def test_readme_core_commands_include_project_brief_literals():
     assert "/rp project brief premise clear <project-id>" in core_commands
 
 
+def test_readme_core_commands_include_project_outline_literals():
+    core_commands = _readme_core_commands_text()
+
+    assert "/rp project outline [project-id]" in core_commands
+    assert "/rp project outline inspect [project-id]" in core_commands
+    assert "/rp project outline set [project-id] <text>" in core_commands
+    assert "/rp project outline clear [project-id]" in core_commands
+
+
 def test_readme_card_import_format_docs_are_accurate():
     card_import_lines = [
         line.strip()

@@ -22,6 +22,8 @@ def project_command(runtime: Any, command: RPCommand, event: Any) -> str:
         return project_info(runtime, command)
     if subcommand == "set":
         return project_set(runtime, command, event)
+    if subcommand == "outline":
+        return project_outline(runtime, command, event)
     if subcommand == "export":
         return project_export(runtime, command, event)
     if subcommand == "style":
@@ -35,7 +37,8 @@ def project_command(runtime: Any, command: RPCommand, event: Any) -> str:
         "| /rp project brief [project-id] | /rp project brief inspect [project-id] | "
         "/rp project brief type set <project-id> <novel|serial|rp|worldbuilding|other> | "
         "/rp project brief type clear <project-id> | /rp project brief premise set <project-id> <text> | "
-        "/rp project brief premise clear <project-id>"
+        "/rp project brief premise clear <project-id> | /rp project outline [project-id] | /rp project outline inspect [project-id] | "
+        "/rp project outline set [project-id] <text> | /rp project outline clear [project-id]"
     )
 
 
@@ -203,6 +206,13 @@ def project_info(runtime: Any, command: RPCommand) -> str:
         premise_text = (brief.get("premise_text") or "").strip()
         if premise_text:
             lines.append(f"premise: {_mobile_preview(premise_text, 220)}")
+    try:
+        outline = runtime.store.get_project_outline(project_id)
+    except ValueError:
+        return f"No novel project found: {project_id}"
+    outline_text = (outline.get("outline_text") or "").strip() if outline else ""
+    if outline_text:
+        lines.append(f"outline: {_mobile_preview(outline_text, 220)}")
     return "\n".join(lines)
 
 
@@ -362,6 +372,107 @@ def project_brief_premise(runtime: Any, command: RPCommand) -> str:
         return f"Project premise cleared for project [{project_id}]."
 
     return _PROJECT_BRIEF_USAGE
+
+
+_PROJECT_OUTLINE_USAGE = (
+    "Usage: /rp project outline [project-id] | /rp project outline inspect [project-id] | "
+    "/rp project outline set [project-id] <text> | /rp project outline clear [project-id]"
+)
+
+
+def project_outline(runtime: Any, command: RPCommand, event: Any) -> str:
+    if len(command.args) == 1:
+        project_id = _project_active_id(runtime, event)
+        if project_id is None:
+            return "No active novel project. Use /rp project set <id> or pass project-id."
+        return project_outline_inspect(runtime, project_id)
+
+    mode = command.args[1].lower()
+    if mode == "inspect":
+        if len(command.args) == 2:
+            project_id = _project_active_id(runtime, event)
+            if project_id is None:
+                return "No active novel project. Use /rp project set <id> or pass project-id."
+            return project_outline_inspect(runtime, project_id)
+        if len(command.args) != 3:
+            return _PROJECT_OUTLINE_USAGE
+        project_id = _safe_int(command.args[2])
+        if project_id is None:
+            return _PROJECT_OUTLINE_USAGE
+        return project_outline_inspect(runtime, project_id)
+
+    if mode == "clear":
+        if len(command.args) > 3:
+            return _PROJECT_OUTLINE_USAGE
+        if len(command.args) == 2:
+            project_id = _project_active_id(runtime, event)
+            if project_id is None:
+                return "No active novel project. Use /rp project set <id> or pass project-id."
+            return project_outline_clear(runtime, project_id)
+        project_id = _safe_int(command.args[2])
+        if project_id is None:
+            return _PROJECT_OUTLINE_USAGE
+        return project_outline_clear(runtime, project_id)
+
+    if mode == "set":
+        return project_outline_set(runtime, command, event)
+
+    project_id = _safe_int(mode)
+    if project_id is None:
+        return _PROJECT_OUTLINE_USAGE
+    if len(command.args) != 2:
+        return _PROJECT_OUTLINE_USAGE
+    return project_outline_inspect(runtime, project_id)
+
+
+def project_outline_inspect(runtime: Any, project_id: int) -> str:
+    try:
+        outline = runtime.store.get_project_outline(project_id)
+    except ValueError:
+        return f"No novel project found: {project_id}"
+
+    outline_text = (outline.get("outline_text") or "").strip() if outline else ""
+    if not outline_text:
+        return f"No project outline set for project [{project_id}]."
+    return f"Project outline for project [{project_id}]: {_mobile_preview(outline_text, 220)}"
+
+
+def project_outline_set(runtime: Any, command: RPCommand, event: Any) -> str:
+    if len(command.args) < 3:
+        return _PROJECT_OUTLINE_USAGE
+
+    explicit_project = _safe_int(command.args[2])
+    if explicit_project is None:
+        project_id = _project_active_id(runtime, event)
+        if project_id is None:
+            return "No active novel project. Use /rp project set <id> or pass project-id."
+        outline_text = " ".join(command.args[2:]).strip()
+    else:
+        project_id = explicit_project
+        if len(command.args) < 4:
+            return _PROJECT_OUTLINE_USAGE
+        outline_text = " ".join(command.args[3:]).strip()
+
+    if not outline_text:
+        return _PROJECT_OUTLINE_USAGE
+
+    try:
+        runtime.store.set_project_outline(project_id, outline_text)
+    except ValueError:
+        return f"No novel project found: {project_id}"
+
+    return (
+        f"Project outline set for project [{project_id}]: "
+        f"{_mobile_preview(outline_text, 180)}"
+    )
+
+
+def project_outline_clear(runtime: Any, project_id: int) -> str:
+    try:
+        runtime.store.clear_project_outline(project_id)
+    except ValueError:
+        return f"No novel project found: {project_id}"
+    return f"Project outline cleared for project [{project_id}]."
 
 
 _PROJECT_STYLE_USAGE = (

@@ -1,11 +1,13 @@
 doc_type: feature-checklist
 feature: "2026-06-04-hermes-tavern-phase128-project-outline"
 date: "2026-06-04"
-status: planned
+status: in_progress
 summary: >
   Project Outline v1 adds local project-scoped outline text with inspect/set/clear
   commands, project-info visibility, Markdown export visibility, and offline tests
-  while preserving prompt/provider/content-mode/generation behavior.
+  while preserving prompt/provider/content-mode/generation behavior. S1 persistence
+  and S2 command/info/help/docs visibility are complete; S3 acceptance and
+  architecture/root-design writeback remain planned.
 
 steps:
   - id: S1
@@ -24,7 +26,18 @@ steps:
 
   - id: S2
     name: "S2: Add project outline command surface"
-    status: planned
+    status: completed
+    completed_at: "2026-06-04"
+    result: >
+      IMPLEMENTED - S2 added /rp project outline inspect/set/clear command
+      routing, active-project fallback for inspect/set/clear, bounded usage,
+      missing-active and missing-project messages, /rp project info outline
+      preview, /rp help command-table lines, README Core commands literals, and
+      focused runtime/help/docs tests. Controller added small mechanical
+      explicit/active `outline inspect` assertions, then reran targeted and full
+      verification from scratch. No db_novel.py, prompt modules, provider/model/
+      credential, content-mode, generation, architecture/root-design, acceptance,
+      or protected core files changed.
     description: >
       Add /rp project outline inspect/set/clear routing, active-project fallback,
       project-info outline preview, help/README command visibility, and focused
@@ -39,6 +52,39 @@ steps:
     exit_signal: >
       Outline commands work for normal and boundary cases, docs/help assertions
       pass, and debug prompt/context do not include outline text.
+    verification:
+      - command: >-
+          codex --profile architect exec --json --color never --sandbox read-only --cd /Users/steven/Projects/hermes-tavern <Phase 128 S2 artifact prompt>
+        result: >
+          passed; artifact at /tmp/hermes-tavern-architect-phase128-s2.jsonl
+          ended with RESULT: PLANNING_ARTIFACT and selected S2 only.
+      - command: >-
+          codex --profile executor exec --json --color never --sandbox workspace-write --cd /Users/steven/Projects/hermes-tavern <Phase 128 S2 implementation prompt>
+        result: >
+          completed; JSONL at /tmp/hermes-tavern-executor-phase128-s2.jsonl;
+          one harmless failed read-only probe for plugins/hermes_tavern/runtime.py
+          occurred before Codex inspected the correct runtime file; no Codex
+          429/rate-limit/exhaustion signal; executor reported requested tests
+          green.
+      - command: >-
+          python -m py_compile src/hermes_tavern/runtime_novel.py src/hermes_tavern/commands.py tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_commands.py tests/test_hermes_tavern_readme_docs.py
+        result: "passed (controller rerun)"
+      - command: >-
+          python -m pytest tests/test_hermes_tavern_novel_runtime.py -q -o 'addopts=' -k "project_outline or project_info"
+        result: "passed; 5 passed, 79 deselected in 0.30s (controller rerun after inspect assertions)"
+      - command: >-
+          python -m pytest tests/test_hermes_tavern_commands.py::test_help_lists_project_outline_commands tests/test_hermes_tavern_readme_docs.py::test_readme_core_commands_include_project_outline_literals -q -o 'addopts='
+        result: "passed; 2 passed in 0.01s (controller rerun)"
+      - command: >-
+          python -m pytest tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_commands.py tests/test_hermes_tavern_readme_docs.py -q -o 'addopts='
+        result: "passed; 141 passed in 2.98s (controller rerun after inspect assertions)"
+      - command: >-
+          python -m pytest -q -o 'addopts='
+        result: "passed; 868 passed in 36.37s (controller rerun after inspect assertions)"
+      - command: "git diff --name-only -- run_agent.py cli.py gateway/run.py"
+        result: "passed; no protected core file diffs"
+      - command: "git diff --check"
+        result: "passed"
 
   - id: S3
     name: "S3: Verify and write architecture"
@@ -76,7 +122,13 @@ checks:
 
   - id: C3
     name: "C3: Command contract"
-    status: planned
+    status: completed
+    result: >
+      Passed by controller-run runtime/help/docs tests: /rp project outline
+      supports explicit-id and active-project inspect/set/clear forms, bounded
+      usage and blank-text handling, no-active guidance, missing-project messages,
+      project-info preview, README/help command literals, and prompt/context
+      no-leak regression for outline field names and distinctive outline text.
     criteria: >
       /rp project outline supports inspect/set/clear with explicit id and
       active-project fallback, and returns bounded usage, no-active, missing-project,
@@ -85,6 +137,12 @@ checks:
   - id: C4
     name: "C4: Info and export visibility"
     status: completed
+    result: >
+      Passed across S1/S2 controller-run tests: S1 DB/export tests proved project
+      Markdown export shows ## Outline only when outline text is present and orders
+      it after Project Brief and before Style Guide/Chapters; S2 runtime tests
+      prove /rp project info shows an outline preview only when visible outline
+      text exists.
     criteria: >
       /rp project info and project Markdown export show outline text only when
       present; export places ## Outline after Project Brief when present and
@@ -93,6 +151,12 @@ checks:
   - id: C5
     name: "C5: Offline and prompt-safe boundary"
     status: completed
+    result: >
+      Passed through S2: S1 changes were local SQLite/export helpers and offline
+      tests; S2 changes are local runtime command/info/help/README surfaces and
+      offline tests. No provider calls, network calls, credential storage,
+      content-mode changes, model routing changes, prompt assembly, or generation
+      behavior changes were added.
     criteria: >
       The feature has no provider calls, no network calls, no credential storage,
       no content-mode changes, no model routing changes, no prompt assembly changes,

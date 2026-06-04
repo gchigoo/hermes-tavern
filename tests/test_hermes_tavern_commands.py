@@ -132,6 +132,15 @@ def test_help_lists_project_brief_commands():
     assert "/rp project brief premise clear <project-id>" in help_text
 
 
+def test_help_lists_project_outline_commands():
+    help_text = _build_help_text()
+
+    assert "/rp project outline [project-id]" in help_text
+    assert "/rp project outline inspect [project-id]" in help_text
+    assert "/rp project outline set [project-id] <text>" in help_text
+    assert "/rp project outline clear [project-id]" in help_text
+
+
 class RecordingRuntime:
     def __init__(self):
         self.calls = []

@@ -288,6 +288,10 @@ TAVERN_COMMAND_TABLE: dict[str, TavernCommandEntry] = {
             "/rp project brief type clear <project-id>",
             "/rp project brief premise set <project-id> <text>",
             "/rp project brief premise clear <project-id>",
+            "/rp project outline [project-id]",
+            "/rp project outline inspect [project-id]",
+            "/rp project outline set [project-id] <text>",
+            "/rp project outline clear [project-id]",
         ],
     ),
     "chapter": TavernCommandEntry(

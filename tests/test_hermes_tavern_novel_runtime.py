@@ -31,6 +31,10 @@ PROJECT_BRIEF_USAGE = (
     "/rp project brief type clear <project-id> | /rp project brief premise set <project-id> <text> | "
     "/rp project brief premise clear <project-id>"
 )
+PROJECT_OUTLINE_USAGE = (
+    "Usage: /rp project outline [project-id] | /rp project outline inspect [project-id] | "
+    "/rp project outline set [project-id] <text> | /rp project outline clear [project-id]"
+)
 
 
 def test_novel_command_table_has_five_families():
@@ -59,6 +63,10 @@ def test_novel_command_table_has_five_families():
     assert "/rp project brief type clear <project-id>" in TAVERN_COMMAND_TABLE["project"].help_lines
     assert "/rp project brief premise set <project-id> <text>" in TAVERN_COMMAND_TABLE["project"].help_lines
     assert "/rp project brief premise clear <project-id>" in TAVERN_COMMAND_TABLE["project"].help_lines
+    assert "/rp project outline [project-id]" in TAVERN_COMMAND_TABLE["project"].help_lines
+    assert "/rp project outline inspect [project-id]" in TAVERN_COMMAND_TABLE["project"].help_lines
+    assert "/rp project outline set [project-id] <text>" in TAVERN_COMMAND_TABLE["project"].help_lines
+    assert "/rp project outline clear [project-id]" in TAVERN_COMMAND_TABLE["project"].help_lines
 
 
 def test_project_routes_create_list_info_set(tmp_path):
@@ -202,6 +210,17 @@ def test_project_command_help_includes_brief_lines(tmp_path):
     assert "/rp project brief type clear <project-id>" in help_output
     assert "/rp project brief premise set <project-id> <text>" in help_output
     assert "/rp project brief premise clear <project-id>" in help_output
+
+
+def test_project_command_help_includes_outline_lines(tmp_path):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+
+    help_output = runtime.handle_command_sync(RPCommand("help", [], "/rp"), Event())
+
+    assert "/rp project outline [project-id]" in help_output
+    assert "/rp project outline inspect [project-id]" in help_output
+    assert "/rp project outline set [project-id] <text>" in help_output
+    assert "/rp project outline clear [project-id]" in help_output
 
 
 def test_project_brief_routes_explicit_id_flow(tmp_path):
@@ -396,6 +415,7 @@ def test_project_brief_invalid_type_message(tmp_path):
 def test_project_brief_and_info_includes_fields_only_when_present(tmp_path):
     runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
     project = runtime.store.create_project("Atlas")
+    outline_text = "An old city where maps forget."
 
     info_without_brief = runtime.handle_command_sync(
         RPCommand("project", ["info", str(project["id"])], "/rp project info 1"),
@@ -403,6 +423,7 @@ def test_project_brief_and_info_includes_fields_only_when_present(tmp_path):
     )
     assert "project_type:" not in info_without_brief
     assert "premise:" not in info_without_brief
+    assert "outline:" not in info_without_brief
 
     runtime.handle_command_sync(RPCommand("project", ["brief", "type", "set", str(project["id"]), "other"], "/rp project brief type set 1 other"), Event())
     runtime.handle_command_sync(
@@ -416,6 +437,20 @@ def test_project_brief_and_info_includes_fields_only_when_present(tmp_path):
     )
     assert "project_type: other" in info_with_brief
     assert f"premise: {_mobile_preview('A city hears every whisper.', 220)}" in info_with_brief
+
+    runtime.store.set_project_outline(project["id"], outline_text)
+    info_with_outline = runtime.handle_command_sync(
+        RPCommand("project", ["info", str(project["id"])], "/rp project info 1"),
+        Event(),
+    )
+    assert f"outline: {_mobile_preview(outline_text, 220)}" in info_with_outline
+
+    runtime.store.clear_project_outline(project["id"])
+    info_without_outline = runtime.handle_command_sync(
+        RPCommand("project", ["info", str(project["id"])], "/rp project info 1"),
+        Event(),
+    )
+    assert "outline:" not in info_without_outline
 
 
 def test_project_brief_markers_do_not_leak_to_debug_prompt_or_context(tmp_path):
@@ -434,6 +469,7 @@ def test_project_brief_markers_do_not_leak_to_debug_prompt_or_context(tmp_path):
 
     store.set_project_brief_type(project["id"], "rp")
     store.set_project_premise(project["id"], "marker: distinctive premise token")
+    store.set_project_outline(project["id"], "marker: distinct outline token")
 
     prompt = runtime.handle_command_sync(RPCommand("debug", ["prompt"], "/rp debug prompt"), Event())
     context = runtime.handle_command_sync(RPCommand("debug", ["context"], "/rp debug context"), Event())
@@ -443,6 +479,9 @@ def test_project_brief_markers_do_not_leak_to_debug_prompt_or_context(tmp_path):
         assert "project_brief" not in lowered
         assert "project_type" not in lowered
         assert "marker: distinctive premise token" not in lowered
+        assert "project_outline" not in lowered
+        assert "outline_text" not in lowered
+        assert "marker: distinct outline token" not in lowered
 
 
 def test_project_style_bad_arguments_return_usage(tmp_path):
@@ -497,6 +536,129 @@ def test_project_style_set_stores_full_text_and_returns_mobile_preview(tmp_path)
     assert response == f"Project style guide set for project [1]: {_mobile_preview(long_text, 180)}"
     assert long_text not in response
     assert runtime.store.get_project_style_guide(1)["style_text"] == long_text
+
+
+def test_project_outline_routes_explicit_id_set_inspect_update_clear(tmp_path):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    project = runtime.store.create_project("Atlas")
+
+    set_first = runtime.handle_command_sync(
+        RPCommand("project", ["outline", "set", str(project["id"]), "Act", "one"], "/rp project outline set 1 Act one"),
+        Event(),
+    )
+    assert set_first == f"Project outline set for project [{project['id']}]: {_mobile_preview('Act one', 180)}"
+    assert runtime.store.get_project_outline(project["id"])["outline_text"] == "Act one"
+
+    inspect = runtime.handle_command_sync(
+        RPCommand("project", ["outline", str(project["id"])], "/rp project outline 1"),
+        Event(),
+    )
+    assert inspect == f"Project outline for project [{project['id']}]: {_mobile_preview('Act one', 220)}"
+
+    inspect_explicit = runtime.handle_command_sync(
+        RPCommand("project", ["outline", "inspect", str(project["id"])], "/rp project outline inspect 1"),
+        Event(),
+    )
+    assert inspect_explicit == f"Project outline for project [{project['id']}]: {_mobile_preview('Act one', 220)}"
+
+    set_update = runtime.handle_command_sync(
+        RPCommand("project", ["outline", "set", str(project["id"]), "Act", "two"], "/rp project outline set 1 Act two"),
+        Event(),
+    )
+    assert set_update == f"Project outline set for project [{project['id']}]: {_mobile_preview('Act two', 180)}"
+    assert runtime.store.get_project_outline(project["id"])["outline_text"] == "Act two"
+
+    cleared = runtime.handle_command_sync(
+        RPCommand("project", ["outline", "clear", str(project["id"])], "/rp project outline clear 1"),
+        Event(),
+    )
+    assert cleared == f"Project outline cleared for project [{project['id']}]."
+    assert runtime.store.get_project_outline(project["id"]) is None
+
+
+def test_project_outline_routes_active_project_fallback_forms(tmp_path):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    runtime.store.create_project("Atlas")
+
+    runtime.handle_command_sync(RPCommand("project", ["set", "1"], "/rp project set 1"), Event())
+
+    set_fallback = runtime.handle_command_sync(
+        RPCommand("project", ["outline", "set", "Act", "one"], "/rp project outline set Act one"),
+        Event(),
+    )
+    assert set_fallback == f"Project outline set for project [1]: {_mobile_preview('Act one', 180)}"
+
+    inspect_fallback = runtime.handle_command_sync(
+        RPCommand("project", ["outline"], "/rp project outline"),
+        Event(),
+    )
+    assert inspect_fallback == f"Project outline for project [1]: {_mobile_preview('Act one', 220)}"
+
+    inspect_subcommand_fallback = runtime.handle_command_sync(
+        RPCommand("project", ["outline", "inspect"], "/rp project outline inspect"),
+        Event(),
+    )
+    assert inspect_subcommand_fallback == f"Project outline for project [1]: {_mobile_preview('Act one', 220)}"
+
+    clear_fallback = runtime.handle_command_sync(
+        RPCommand("project", ["outline", "clear"], "/rp project outline clear"),
+        Event(),
+    )
+    assert clear_fallback == "Project outline cleared for project [1]."
+
+
+def test_project_outline_active_project_fallback_without_active_project(tmp_path):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    fallback_message = "No active novel project. Use /rp project set <id> or pass project-id."
+
+    assert runtime.handle_command_sync(RPCommand("project", ["outline"], "/rp project outline"), Event()) == fallback_message
+    assert runtime.handle_command_sync(RPCommand("project", ["outline", "inspect"], "/rp project outline inspect"), Event()) == fallback_message
+    assert (
+        runtime.handle_command_sync(
+            RPCommand("project", ["outline", "set", "Act", "one"], "/rp project outline set Act one"),
+            Event(),
+        )
+        == fallback_message
+    )
+    assert runtime.handle_command_sync(RPCommand("project", ["outline", "clear"], "/rp project outline clear"), Event()) == fallback_message
+
+
+def test_project_outline_bad_arguments_return_usage(tmp_path):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    runtime.store.create_project("Atlas")
+    runtime.handle_command_sync(RPCommand("project", ["set", "1"], "/rp project set 1"), Event())
+
+    command_ids = [
+        RPCommand("project", ["outline", "bad-id"], "/rp project outline bad-id"),
+        RPCommand("project", ["outline", "inspect", "1", "extra"], "/rp project outline inspect 1 extra"),
+        RPCommand("project", ["outline", "clear", "1", "extra"], "/rp project outline clear 1 extra"),
+        RPCommand("project", ["outline", "set"], "/rp project outline set"),
+        RPCommand("project", ["outline", "set", "1"], "/rp project outline set 1"),
+        RPCommand("project", ["outline", "set", ""], "/rp project outline set"),
+    ]
+    for command in command_ids:
+        assert runtime.handle_command_sync(command, Event()) == PROJECT_OUTLINE_USAGE
+
+
+def test_project_outline_missing_project_returns_not_found(tmp_path):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    tests = [
+        (RPCommand("project", ["outline", "9999"], "/rp project outline 9999"), "No novel project found: 9999"),
+        (
+            RPCommand("project", ["outline", "inspect", "9999"], "/rp project outline inspect 9999"),
+            "No novel project found: 9999",
+        ),
+        (
+            RPCommand("project", ["outline", "set", "9999", "Act", "one"], "/rp project outline set 9999 Act one"),
+            "No novel project found: 9999",
+        ),
+        (
+            RPCommand("project", ["outline", "clear", "9999"], "/rp project outline clear 9999"),
+            "No novel project found: 9999",
+        ),
+    ]
+    for command, expected in tests:
+        assert runtime.handle_command_sync(command, Event()) == expected
 
 
 def test_chapter_routes_require_active_or_explicit_project(tmp_path):
