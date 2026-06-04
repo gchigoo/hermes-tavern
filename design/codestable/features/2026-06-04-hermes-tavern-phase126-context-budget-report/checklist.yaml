@@ -1,7 +1,7 @@
 doc_type: feature-checklist
 feature: "2026-06-04-hermes-tavern-phase126-context-budget-report"
 date: "2026-06-04"
-status: planned
+status: in_progress
 summary: >
   Add a read-only /rp debug context command that reports estimated context
   composition and per-row token estimates without changing prompt assembly,
@@ -10,7 +10,19 @@ summary: >
 steps:
   - id: S1
     name: "S1: Add read-only debug context report"
-    status: pending
+    status: completed
+    completed_at: "2026-06-04"
+    result: >
+      IMPLEMENTED - /rp debug context [limit] [page] now routes through the
+      existing debug command family, compiles the active session prompt without
+      generation/provider calls, resolves secret-free model metadata, renders a
+      mobile context-budget report with estimated total tokens, row-level token
+      estimates, module/history/rendered-message counts, omitted-layer summary,
+      and prev/next pagination hints. Focused runtime and command tests cover
+      active/no-active/no-card/invalid-pagination/unknown-debug/read-only cases.
+      Executor had one intermediate focused-test failure while reconciling the
+      debug usage string, then reran green; controller reran focused, README-docs,
+      full-suite, whitespace, and protected-core checks from scratch.
     description: >
       Add runtime_debug.debug_context(), route /rp debug context [limit] [page]
       through TavernRuntime._debug_command, add command-table help, and add
@@ -19,6 +31,25 @@ steps:
     exit_signal: >
       Focused runtime tests pass; /rp debug context returns a mobile paginated
       report and does not append messages or call providers.
+    verification:
+      - command: "codex --profile architect exec --json --color never --sandbox read-only --cd /Users/steven/Projects/hermes-tavern <Phase 126 S1 artifact prompt>"
+        result: "passed; artifact at /tmp/hermes-tavern-architect-phase126-s1.jsonl confirmed S1 was safe and bounded under the unattended cron directive"
+      - command: "codex --profile executor exec --json --color never --disable image_generation --sandbox workspace-write --cd /Users/steven/Projects/hermes-tavern <Phase 126 S1 implementation prompt>"
+        result: "completed; JSONL at /tmp/hermes-tavern-executor-phase126-s1.jsonl; one intermediate focused-test failure was repaired before final executor summary"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m py_compile src/hermes_tavern/runtime_debug.py src/hermes_tavern/runtime.py src/hermes_tavern/commands.py tests/test_hermes_tavern_runtime.py tests/test_hermes_tavern_commands.py"
+        result: "passed (controller rerun)"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_runtime.py tests/test_hermes_tavern_commands.py -q -o 'addopts='"
+        result: "passed; 79 passed in 3.46s (controller rerun)"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_readme_docs.py -q -o 'addopts='"
+        result: "passed; 24 passed in 0.04s (controller command-surface guard)"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts='"
+        result: "passed; 829 passed in 30.59s (controller rerun)"
+      - command: "git diff --check"
+        result: "passed"
+      - command: "git diff --name-only -- run_agent.py cli.py gateway/run.py"
+        result: "passed; no protected core file diffs"
+      - command: "controller S1 diff allowlist/reverse-scope review"
+        result: "passed; only runtime_debug.py, runtime.py, commands.py, and focused runtime/command tests changed; S2 docs/README and S3 architecture/root-design/acceptance remain deferred"
 
   - id: S2
     name: "S2: Docs and command visibility"
@@ -44,14 +75,21 @@ steps:
 checks:
   - id: C1
     name: "C1: No existing active checklist"
-    status: pending
+    status: passed
+    result: >
+      Passed during Phase 126 planning/continuation checks: prior feature
+      checklists were closed and this Phase 126 checklist was the only planned
+      continuation before S1 implementation.
     criteria: >
       Existing feature checklists have no planned or in-progress status; this
       Phase 126 feature is the only new planned checklist.
 
   - id: C2
     name: "C2: Debug context command contract"
-    status: pending
+    status: passed
+    result: >
+      Controller-verified: /rp debug context [limit] [page] returns the active
+      session report and exact usage/no-session/no-card boundary messages.
     criteria: >
       /rp debug context [limit] [page] returns a read-only context budget report
       for active card-backed sessions and bounded usage/no-session/no-card
@@ -59,7 +97,11 @@ checks:
 
   - id: C3
     name: "C3: Report content"
-    status: pending
+    status: passed
+    result: >
+      Controller-verified: report includes renderer, model descriptor summary,
+      context window, estimated total tokens, module/history/rendered-message
+      counts, omitted-layer summary, and row-level token estimates.
     criteria: >
       The report includes renderer, model descriptor summary, context window
       when known, estimated total tokens, modules/history/rendered-message
@@ -67,21 +109,35 @@ checks:
 
   - id: C4
     name: "C4: Pagination and mobile safety"
-    status: pending
+    status: passed
+    result: >
+      Controller-verified: /rp debug context 2 1 and 2 2 emit next/prev hints,
+      row ranges, and single-line mobile previews through the existing preview
+      helper.
     criteria: >
       Row pagination uses the same limit/page style as /rp debug prompt and
       previews are single-line mobile-safe text.
 
   - id: C5
     name: "C5: Read-only and offline boundary"
-    status: pending
+    status: passed
+    result: >
+      Controller-verified: focused tests prove message counts and session
+      bindings do not change, an exploding generation adapter is not called, and
+      no provider or credential fields are introduced.
     criteria: >
       Running /rp debug context does not append messages, mutate sessions,
       call providers, persist credentials, or change prompt compilation output.
 
   - id: C6
     name: "C6: Reverse-scope guard"
-    status: pending
+    status: passed
+    result: >
+      Controller-verified: changed files are limited to the S1 allowlist and no
+      protected core files, README/docs, architecture/root-design, acceptance,
+      schema, provider routing, trimming/summarization/vectorization, regex
+      postprocessor, safety-bypass, minors/underage, cloud/collab, or archive
+      import/export scope was added.
     criteria: >
       No protected core files are changed, and no context trimming, summarization,
       vectorization, provider/model routing change, regex postprocessor,

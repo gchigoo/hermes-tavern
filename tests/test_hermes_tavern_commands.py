@@ -77,6 +77,12 @@ def test_help_output_is_generated_from_command_table_help_lines():
     assert _build_help_text().splitlines() == expected_lines
 
 
+def test_help_includes_rp_debug_context_usage():
+    help_text = _build_help_text()
+
+    assert "/rp debug context [limit] [page]" in help_text
+
+
 def test_help_lists_image_configuration_commands():
     help_text = _build_help_text()
 

@@ -265,6 +265,163 @@ async def test_runtime_debug_swipes_reports_candidate_metadata(tmp_path):
 
 
 @pytest.mark.asyncio
+async def test_runtime_debug_context_reports_budget_rows_and_metadata(tmp_path):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    store.migrate()
+    store.save_card(
+        parse_character_card(
+            {
+                "name": "Alice",
+                "description": "Scholar",
+                "first_mes": "Hello there.",
+            }
+        )
+    )
+    runtime = TavernRuntime(store)
+    await runtime.handle_command(RPCommand("start", ["Alice"], "/rp start Alice"), Event())
+
+    response = await runtime.handle_command(
+        RPCommand("debug", ["context"], "/rp debug context"),
+        Event(),
+    )
+
+    assert "Hermes Tavern context budget" in response
+    assert "card: Alice" in response
+    assert "renderer: chat" in response
+    assert "model: anthropic/claude-opus-4-6" in response
+    assert "context_window:" in response
+    assert "estimated_tokens:" in response
+    assert "modules:" in response
+    assert "history turns:" in response
+    assert "rendered messages:" in response
+    assert "omitted: preset none; lorebook none; persona none; author note none; memory summary none" in response
+    assert "tokens=" in response
+
+
+@pytest.mark.asyncio
+async def test_runtime_debug_context_paginates_mobile_rows(tmp_path):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    store.migrate()
+    store.save_card(parse_character_card({"name": "Alice", "description": "Scholar", "first_mes": "Hello there."}))
+    runtime = TavernRuntime(store)
+    await runtime.handle_command(RPCommand("start", ["Alice"], "/rp start Alice"), Event())
+    session = store.get_active_session("telegram:chat:chat-1:thread:main:user:user-1")
+    for i in range(3):
+        store.append_message(session["id"], "user", f"turn {i}")
+
+    page1 = await runtime.handle_command(
+        RPCommand("debug", ["context", "2", "1"], "/rp debug context 2 1"),
+        Event(),
+    )
+    page2 = await runtime.handle_command(
+        RPCommand("debug", ["context", "2", "2"], "/rp debug context 2 2"),
+        Event(),
+    )
+
+    assert "Hermes Tavern context budget" in page1
+    assert "showing rows" in page1
+    assert "next: /rp debug context 2 2" in page1
+    assert "prev: /rp debug context 2 1" in page2
+
+
+@pytest.mark.asyncio
+async def test_runtime_debug_context_requires_active_session(tmp_path):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+
+    response = await runtime.handle_command(
+        RPCommand("debug", ["context"], "/rp debug context"),
+        Event(),
+    )
+
+    assert response == "No active Hermes Tavern session."
+
+
+@pytest.mark.asyncio
+async def test_runtime_debug_context_requires_bound_card(tmp_path):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    store.migrate()
+    store.start_session("telegram:chat:chat-1:thread:main:user:user-1")
+    runtime = TavernRuntime(store)
+
+    response = await runtime.handle_command(
+        RPCommand("debug", ["context"], "/rp debug context"),
+        Event(),
+    )
+
+    assert response == "No character card bound to this session."
+
+
+@pytest.mark.asyncio
+async def test_runtime_debug_context_invalid_pagination(tmp_path):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    store.migrate()
+    store.save_card(parse_character_card({"name": "Alice", "description": "Scholar", "first_mes": "Hello there."}))
+    runtime = TavernRuntime(store)
+    await runtime.handle_command(RPCommand("start", ["Alice"], "/rp start Alice"), Event())
+
+    response = await runtime.handle_command(
+        RPCommand("debug", ["context", "bad", "1"], "/rp debug context bad 1"),
+        Event(),
+    )
+
+    assert response == "Usage: /rp debug context [limit] [page]"
+
+
+@pytest.mark.asyncio
+async def test_runtime_debug_context_unknown_subcommand_shows_usage(tmp_path):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    store.migrate()
+    store.save_card(parse_character_card({"name": "Alice", "description": "Scholar", "first_mes": "Hello there."}))
+    runtime = TavernRuntime(store)
+    await runtime.handle_command(RPCommand("start", ["Alice"], "/rp start Alice"), Event())
+
+    response = await runtime.handle_command(
+        RPCommand("debug", ["status"], "/rp debug status"),
+        Event(),
+    )
+
+    assert (
+        response
+        == "Usage: /rp debug [prompt [limit] [page]|context [limit] [page]|swipes]"
+    )
+
+
+@pytest.mark.asyncio
+async def test_runtime_debug_context_is_read_only_and_does_not_call_adapter(tmp_path):
+    class ExplodingAdapter:
+        def __init__(self):
+            self.called = False
+
+        def generate(self, *_args, **_kwargs):
+            self.called = True
+            raise AssertionError("adapter should not be called during debug context")
+
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    store.migrate()
+    store.save_card(parse_character_card({"name": "Alice", "description": "Scholar", "first_mes": "Hello there."}))
+    runtime = TavernRuntime(store)
+    await runtime.handle_command(RPCommand("start", ["Alice"], "/rp start Alice"), Event())
+    adapter = ExplodingAdapter()
+    runtime.hermes_adapter = adapter
+
+    session = store.get_active_session("telegram:chat:chat-1:thread:main:user:user-1")
+    session_before = dict(store.get_active_session("telegram:chat:chat-1:thread:main:user:user-1"))
+    messages_before = len(store.get_recent_messages(session["id"]))
+
+    response = await runtime.handle_command(
+        RPCommand("debug", ["context"], "/rp debug context"),
+        Event(),
+    )
+
+    assert "Hermes Tavern context budget" in response
+    assert adapter.called is False
+    session_after = store.get_active_session("telegram:chat:chat-1:thread:main:user:user-1")
+    messages_after = len(store.get_recent_messages(session["id"]))
+    assert messages_before == messages_after
+    assert session_before["card_id"] == session_after["card_id"]
+
+
+@pytest.mark.asyncio
 async def test_runtime_active_message_expands_macro_context_in_rendered_prompt(tmp_path):
     class CapturingAdapter:
         def __init__(self):

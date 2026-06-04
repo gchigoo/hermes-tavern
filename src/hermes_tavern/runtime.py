@@ -142,9 +142,11 @@ class TavernRuntime:
         action = command.args[0].lower() if command.args else "prompt"
         if action == "prompt":
             return self._debug_prompt(command, event)
+        if action == "context":
+            return self._debug_context(command, event)
         if action == "swipes":
             return self._debug_swipes(event)
-        return "Usage: /rp debug [prompt [limit] [page]|swipes]"
+        return "Usage: /rp debug [prompt [limit] [page]|context [limit] [page]|swipes]"
 
     async def handle_active_message(self, event: Any) -> str:
         return self.handle_active_message_sync(event)
@@ -197,6 +199,9 @@ class TavernRuntime:
 
     def _debug_prompt(self, command: RPCommand, event: Any) -> str:
         return runtime_debug.debug_prompt(self, command, event)
+
+    def _debug_context(self, command: RPCommand, event: Any) -> str:
+        return runtime_debug.debug_context(self, command, event)
 
     def _debug_swipes(self, event: Any) -> str:
         return runtime_turns.debug_swipes(self, event)

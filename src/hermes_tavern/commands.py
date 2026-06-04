@@ -158,7 +158,11 @@ TAVERN_COMMAND_TABLE: dict[str, TavernCommandEntry] = {
     # ── debug ──
     "debug": TavernCommandEntry(
         handler="_debug_command",
-        help_lines=["/rp debug prompt [limit] [page]", "/rp debug swipes"],
+        help_lines=[
+            "/rp debug prompt [limit] [page]",
+            "/rp debug context [limit] [page]",
+            "/rp debug swipes",
+        ],
     ),
     # ── model ──
     "model": TavernCommandEntry(

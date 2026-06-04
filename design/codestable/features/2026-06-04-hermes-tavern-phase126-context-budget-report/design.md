@@ -1,7 +1,7 @@
 ---
 doc_type: feature-design
 feature: "2026-06-04-hermes-tavern-phase126-context-budget-report"
-status: draft
+status: approved
 summary: >
   Context Budget Report v1 adds a read-only /rp debug context command that
   explains estimated prompt/context composition without changing prompt assembly,
@@ -11,8 +11,10 @@ tags: [debug, context, prompt, observability, long-form]
 
 # Phase 126: Context Budget Report v1
 
-> Planning note: drafted by the 2026-06-04 unattended Codex architect pass.
-> No implementation is approved or included in this planning-only commit.
+> Approval note: promoted for unattended S1 implementation by the 2026-06-04
+> Codex architect/controller pass. This approval is limited to the S1 read-only
+> debug context report; S2 docs visibility and S3 acceptance/writeback remain
+> deferred.
 
 ## 0. Terms
 

@@ -8,8 +8,10 @@ from typing import Any
 
 from hermes_tavern.commands import RPCommand
 from hermes_tavern.identity import session_key_from_event
+from hermes_tavern.model_router import ModelRouter
 from hermes_tavern.prompt import PromptCompiler
 from hermes_tavern.renderers import ChatRenderer
+from hermes_tavern.utils import estimate_tokens
 from hermes_tavern.runtime_utils import (
     parse_pagination,
     build_macro_context as _build_macro_context,
@@ -19,6 +21,7 @@ from hermes_tavern.runtime_utils import (
 
 _compiler = PromptCompiler()
 _chat_renderer = ChatRenderer()
+_router = ModelRouter()
 
 _ERROR = object()
 
@@ -96,6 +99,111 @@ def debug_prompt(runtime, command: RPCommand, event: Any) -> str:
         lines.append(f"prev: /rp debug prompt {limit} {page - 1}")
     if page < total_pages:
         lines.append(f"next: /rp debug prompt {limit} {page + 1}")
+    return "\n".join(lines)
+
+
+def debug_context(runtime, command: RPCommand, event: Any) -> str:
+    session_key = session_key_from_event(event)
+    session = runtime.store.get_active_session(session_key)
+    if session is None:
+        return "No active Hermes Tavern session."
+
+    context_args = (
+        command.args[1:] if command.args and command.args[0].lower() == "context" else command.args
+    )
+    parsed = parse_pagination(context_args, default_limit=8, max_limit=30)
+    if parsed is None:
+        return "Usage: /rp debug context [limit] [page]"
+    limit, page = parsed
+
+    history = runtime.store.get_recent_messages(session["id"], limit=20)
+    card = None
+    if session.get("card_id"):
+        card_row = runtime.store.get_card(session["card_id"])
+        if card_row:
+            card = _card_row_to_obj(card_row)
+    if card is None:
+        return "No character card bound to this session."
+
+    ctx = _compiler.compile(
+        card,
+        history,
+        "",
+        preset_modules=runtime._session_prompt_modules(session, "", history),
+        macro_context=_build_macro_context(card, session, event),
+    )
+    rendered = _chat_renderer.render(ctx)
+    model = _router.resolve(session_row=session, store=runtime.store)
+    model_window = model.context_window
+
+    rows: list[tuple[str, str, str, int]] = []
+    for i, module in enumerate(ctx.modules):
+        row_content = module.content
+        rows.append(
+            (
+                f"module {i}",
+                f"{module.role}/{module.name}",
+                row_content,
+                estimate_tokens(row_content),
+            )
+        )
+    for i, turn in enumerate(ctx.history):
+        row_content = turn.get("content", "")
+        rows.append(
+            (
+                f"history {i}",
+                turn.get("role", "unknown"),
+                row_content,
+                estimate_tokens(row_content),
+            )
+        )
+    for i, message in enumerate(rendered):
+        row_content = message.get("content", "")
+        rows.append(
+            (
+                f"rendered {i}",
+                message.get("role", "unknown"),
+                row_content,
+                estimate_tokens(row_content),
+            )
+        )
+
+    total = len(rows)
+    total_pages = max(1, math.ceil(total / limit))
+    page = min(page, total_pages)
+    start = (page - 1) * limit
+    shown_rows = rows[start:start + limit]
+
+    omitted = [
+        "preset none" if not session.get("preset_id") else None,
+        "lorebook none" if not session.get("lorebook_id") else None,
+        "persona none" if not session.get("persona_id") else None,
+        "author note none" if not (session.get("note_text") or "").strip() else None,
+        "memory summary none" if not runtime.store.get_session_summary(session_key) else None,
+    ]
+    omitted_parts = [item for item in omitted if item is not None]
+    omitted_summary = "omitted: none" if not omitted_parts else "omitted: " + "; ".join(omitted_parts)
+
+    lines = [
+        "Hermes Tavern context budget",
+        f"card: {ctx.card_name}",
+        "renderer: chat",
+        f"model: {model.provider}/{model.model_id}",
+        f"context_window: {model_window}",
+        f"estimated_tokens: {ctx.token_budget}",
+        f"modules: {len(ctx.modules)}",
+        f"history turns: {len(ctx.history)}",
+        f"rendered messages: {len(rendered)}",
+        omitted_summary,
+        f"showing rows {start + 1 if total else 0}-{start + len(shown_rows)} of {total} (page {page}/{total_pages})",
+        "---",
+    ]
+    for label, role, content, tokens in shown_rows:
+        lines.append(f"  [{label}] {role} tokens={tokens}: {_mobile_preview(content, 140)}")
+    if page > 1:
+        lines.append(f"prev: /rp debug context {limit} {page - 1}")
+    if page < total_pages:
+        lines.append(f"next: /rp debug context {limit} {page + 1}")
     return "\n".join(lines)
 
 
