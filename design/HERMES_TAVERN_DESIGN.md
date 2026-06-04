@@ -471,10 +471,17 @@ project:
   status: draft|in_progress|complete
 ```
 
-Future project metadata from the original vision remains deferred outside the current Phase 121–124 scope:
-`type`, `premise`, `outline`, `canon_policy`, `content_mode`,
-`default_card_id`, `default_preset_id`, and `default_lorebook_ids`.
-`style_guide` is now implemented as Phase 124 current project-scope behavior.
+Project Brief v1 makes `type` and `premise` current local metadata for novel
+projects: they are persisted in `novel_project_briefs.project_type` and
+`novel_project_briefs.premise_text`, visible through `/rp project brief ...`,
+`/rp project info`, and project Markdown export. These fields are informational
+only and do not feed prompt assembly, provider routing, content mode, or
+generation behavior. `style_guide` remains current Phase 124 project-scope
+behavior.
+
+Future project metadata from the original vision remains deferred outside the
+current scope: `outline`, `canon_policy`, `content_mode`, `default_card_id`,
+`default_preset_id`, and `default_lorebook_ids`.
 
 Sub-objects:
 
@@ -508,6 +515,12 @@ Commands:
 /rp project style inspect [project-id]
 /rp project style set [project-id] <text>
 /rp project style clear [project-id]
+/rp project brief [project-id]
+/rp project brief inspect [project-id]
+/rp project brief type set <project-id> <novel|serial|rp|worldbuilding|other>
+/rp project brief type clear <project-id>
+/rp project brief premise set <project-id> <text>
+/rp project brief premise clear <project-id>
 /rp chapter create [project-id] <title>
 /rp chapter list [project-id]
 /rp scene create <chapter-id> <title>
@@ -525,6 +538,10 @@ Commands:
 /rp timeline add <project-id> <date> <title> [description]
 /rp timeline list [project-id]
 ```
+
+Project Markdown export emits `## Project Brief` after `## Summary` only when
+`project_type` or `premise_text` is non-empty. Export labels are `Type:` and
+`Premise:`, and blank field labels are omitted.
 
 ---
 
@@ -893,6 +910,12 @@ deferred relationship state, deferred outline, and revision notes.
 /rp project style inspect [project-id]
 /rp project style set [project-id] <text>
 /rp project style clear [project-id]
+/rp project brief [project-id]
+/rp project brief inspect [project-id]
+/rp project brief type set <project-id> <novel|serial|rp|worldbuilding|other>
+/rp project brief type clear <project-id>
+/rp project brief premise set <project-id> <text>
+/rp project brief premise clear <project-id>
 /rp chapter create/list
 /rp scene create/list/start
 /rp scene goal <scene-id> [text]
@@ -904,6 +927,10 @@ deferred relationship state, deferred outline, and revision notes.
 /rp canon add/list/group
 /rp timeline add/list
 ```
+
+Project Brief commands are metadata-only. They expose local project type and
+premise for inspection/info/export, not prompt injection, content-mode changes,
+provider selection, or generation control.
 
 Future writing commands from the original vision remain deferred: outline editing,
 deferred write continue/rewrite/expand/compress, deferred project archive
@@ -1024,6 +1051,7 @@ lorebook_entries
 personas
 model_profiles
 novel_projects
+novel_project_briefs
 novel_chapters
 novel_scenes
 novel_scene_goals
@@ -1039,6 +1067,11 @@ relationship_states
 media_assets
 settings
 ```
+
+Current Project Brief table:
+`novel_project_briefs(id, project_id, project_type, premise_text, created_at, updated_at)`,
+with `project_id UNIQUE REFERENCES novel_projects(id) ON DELETE CASCADE` and
+`idx_novel_project_briefs_project ON novel_project_briefs(project_id)`.
 
 ### 16.2 Message table
 

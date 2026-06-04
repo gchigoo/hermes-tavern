@@ -1,15 +1,14 @@
 doc_type: feature-checklist
 feature: "2026-06-04-hermes-tavern-phase127-project-brief"
 date: "2026-06-04"
-status: in_progress
+status: accepted
 summary: >
-  Project Brief v1 is in progress. S1 added local project type and premise
-  metadata persistence plus Markdown export visibility for novel projects. S2
-  added runtime inspect/set/clear commands, project-info visibility, command
-  help, README command literals, and focused command/docs tests. Prompt assembly,
-  provider routing, content mode, outline editing, defaults, credentials,
-  protected core files, architecture/root-design writeback, and acceptance
-  remain out of scope until S3.
+  ACCEPTED - Project Brief v1 adds local novel project type and premise metadata
+  backed by novel_project_briefs, command inspection/set/clear, project-info
+  visibility, Markdown export visibility, acceptance evidence, and
+  architecture/root-design writeback. Prompt assembly, provider routing, content
+  mode, outline editing, defaults, credentials, protected core files,
+  minors/underage paths, and generation behavior remain unchanged/deferred.
 
 steps:
   - id: S1
@@ -95,7 +94,15 @@ steps:
 
   - id: S3
     name: "S3: Verify and write architecture"
-    status: pending
+    status: completed
+    completed_at: "2026-06-04"
+    result: >
+      ACCEPTED - S3 created the Phase 127 acceptance report, updated architecture
+      and root design to mark project type/premise current Project Brief metadata,
+      preserved deferred boundaries for outline, canon_policy, content_mode,
+      defaults, provider/generation/credential behavior, minors/underage paths,
+      and protected core files, and reran focused, plugin, full, YAML/frontmatter,
+      whitespace, protected-core, and docs-only reverse-scope verification.
     description: >
       Run focused/relevant verification, update architecture/root design to mark
       project type and premise current, create acceptance evidence, and preserve
@@ -105,9 +112,30 @@ steps:
       Architecture/root design and acceptance docs are updated after verification,
       and protected-core plus reverse-scope checks pass.
     verification:
+      - command: "codex --profile architect exec --json --color never --disable image_generation --sandbox read-only --cd /Users/steven/Projects/hermes-tavern <Phase 127 S3 artifact prompt>"
+        result: "passed; artifact at /tmp/hermes-tavern-architect-phase127-s3.jsonl ended with RESULT: ARCHITECT_ARTIFACT and selected S3 acceptance/writeback only"
+      - command: "codex --profile executor exec --json --color never --disable image_generation --sandbox workspace-write --cd /Users/steven/Projects/hermes-tavern <Phase 127 S3 docs/status prompt>"
+        result: "completed; JSONL at /tmp/hermes-tavern-executor-phase127-s3.jsonl drafted allowed docs/status files; one expected pre-read failed before the acceptance file existed and patch-context misses were recovered; no Codex 429/rate-limit/exhaustion signal occurred"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m py_compile src/hermes_tavern/db_novel.py src/hermes_tavern/runtime_novel.py src/hermes_tavern/commands.py tests/test_hermes_tavern_novel_db.py tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_commands.py tests/test_hermes_tavern_readme_docs.py"
+        result: "passed (controller rerun)"
       - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel_db.py tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_commands.py tests/test_hermes_tavern_readme_docs.py -q -o 'addopts=' -p no:cacheprovider"
-      - command: "git diff --check"
+        result: "passed; 164 passed in 4.47s (controller rerun)"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_*.py -q -o 'addopts=' -p no:cacheprovider"
+        result: "passed; 855 passed in 33.82s (controller rerun)"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts=' -p no:cacheprovider"
+        result: "passed; 855 passed in 32.78s (controller rerun)"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-04-hermes-tavern-phase127-project-brief/design.md --require doc_type --require status --require feature"
+        result: "passed; 1 passed, 0 failed"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-04-hermes-tavern-phase127-project-brief/hermes-tavern-phase127-project-brief-acceptance.md --require doc_type --require status --require feature"
+        result: "passed; 1 passed, 0 failed"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --yaml-only --file design/codestable/features/2026-06-04-hermes-tavern-phase127-project-brief/checklist.yaml"
+        result: "passed; 1 passed, 0 failed after final S3 status update"
       - command: "git diff --name-only -- run_agent.py cli.py gateway/run.py"
+        result: "passed; no protected core file diffs"
+      - command: "git diff --check"
+        result: "passed"
+      - command: "controller S3 diff allowlist/reverse-scope review"
+        result: "passed; only Phase 127 docs/status files, architecture, and root design changed; no source/runtime/test/README/provider/prompt/protected-core files changed"
 
 checks:
   - id: C1
@@ -195,6 +223,21 @@ checks:
       provider safety bypass, project import, archive ZIP workflow, context
       trimming, summarization, vectorization, or regex postprocessor is added.
 
+  - id: C7
+    name: "C7: Acceptance and architecture writeback"
+    status: passed
+    result: >
+      Passed by S3 controller verification: the acceptance report was created and
+      validated, architecture/root design now list Project Brief v1 as current
+      local metadata/info/export behavior, `type` and `premise` were removed from
+      the root design deferred metadata list, and the duplicate tail appendix
+      draft was integrated into the relevant sections. Final diff review stayed
+      docs/status-only with no source/runtime/test/README/protected-core changes.
+    criteria: >
+      Acceptance report, architecture writeback, root-design writeback, and final
+      checklist status accurately reflect controller-run verification and do not
+      expand implementation scope.
+
 verification:
   - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel_db.py tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_commands.py tests/test_hermes_tavern_readme_docs.py -q -o 'addopts=' -p no:cacheprovider"
     owner: executor
@@ -203,6 +246,8 @@ verification:
   - command: "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --yaml-only --file design/codestable/features/2026-06-04-hermes-tavern-phase127-project-brief/checklist.yaml"
     owner: controller
   - command: "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-04-hermes-tavern-phase127-project-brief/design.md --require doc_type --require status --require feature"
+    owner: controller
+  - command: "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-04-hermes-tavern-phase127-project-brief/hermes-tavern-phase127-project-brief-acceptance.md --require doc_type --require status --require feature"
     owner: controller
   - command: "git diff --check"
     owner: controller

@@ -118,6 +118,7 @@ importers/
 - Phase 124: Project style guide (`/rp project style` inspect/set/clear), linked-session project-style prompt injection, and Markdown style-guide export
 - Phase 125: Lore Regex Complexity Guard (regex lore keys longer than 256 chars or with nested quantified groups are excluded before Python `re.search`; bounded rejection reasons available via `/rp lore test`/debug; no importer, schema, command, provider, or postprocessor behavior changes)
 - Phase 126: Context Budget Report v1 (`/rp debug context [limit] [page]` renders a read-only prompt/context composition report with estimated tokens, omitted-layer summary, renderer/model/context-window metadata, and paginated rows; no prompt trimming, summarization, vectorization, provider tokenization/routing, storage, provider calls, or generation behavior changes)
+- Phase 127: Project Brief v1 metadata (`/rp project brief` + `/rp project info`, and `## Project Brief` export) backed by `novel_project_briefs`; metadata-only, no prompt/provider/routing/generation behavior changes
 
 ### Plugin flow
 
@@ -147,7 +148,9 @@ Macro expansion is one-pass and allowlist-based. Supported Phase 20 macros are
 `{{content_mode}}`, and `{{session_title}}`; names are case/whitespace tolerant,
 unknown macros are preserved, and replacement text is not recursively expanded.
 
-### /rp command surface (current through Phase 126)
+Project Brief is explicitly excluded from prompt assembly and session prompt module selection.
+
+### /rp command surface (current through Phase 127)
 
 ```
 /rp help | status | assets
@@ -174,6 +177,12 @@ unknown macros are preserved, and replacement text is not recursively expanded.
 /rp project style inspect [project-id]
 /rp project style set [project-id] <text>
 /rp project style clear [project-id]
+/rp project brief [project-id]
+/rp project brief inspect [project-id]
+/rp project brief type set <project-id> <novel|serial|rp|worldbuilding|other>
+/rp project brief type clear <project-id>
+/rp project brief premise set <project-id> <text>
+/rp project brief premise clear <project-id>
 /rp chapter create/list
 /rp scene create/list/start
 /rp scene goal <scene-id> [text]
@@ -186,7 +195,7 @@ unknown macros are preserved, and replacement text is not recursively expanded.
 /rp timeline add/list
 ```
 
-### DB schema (current through Phase 124)
+### DB schema (current through Phase 127)
 
 ```sql
 cards(id, name, data_json, source_path, created_at)
@@ -207,6 +216,10 @@ session_memory_facts(id, session_key, content, importance, source, created_at)
 session_summaries(id, session_key, content, created_at, updated_at)
 novel_projects(id, title, summary, status, created_at, updated_at)
 novel_project_style_guides(id, project_id, style_text, created_at, updated_at)
+novel_project_briefs(id, project_id, project_type, premise_text, created_at, updated_at)
+-- project_id REFERENCES novel_projects(id) ON DELETE CASCADE, unique per project
+-- project_type in {novel, serial, rp, worldbuilding, other}
+CREATE INDEX idx_novel_project_briefs_project ON novel_project_briefs(project_id)
 novel_chapters(id, project_id, title, chapter_number, summary, status, created_at, updated_at)
 novel_scenes(id, chapter_id, session_id TEXT, title, summary, scene_number, status, created_at, updated_at)
 novel_scene_goals(id, scene_id, goal_text, created_at, updated_at)
