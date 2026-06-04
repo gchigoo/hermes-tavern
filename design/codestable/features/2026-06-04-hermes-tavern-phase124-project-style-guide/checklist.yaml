@@ -1,6 +1,6 @@
 doc_type: feature-checklist
 feature: "2026-06-04-hermes-tavern-phase124-project-style-guide"
-status: in_progress
+status: accepted
 summary: >
   Project Style Guide v1 adds local project-scoped style-guide persistence,
   project command controls, linked-session prompt visibility, and Markdown
@@ -130,21 +130,38 @@ steps:
 
   - id: S5
     name: "Final verification and writeback"
-    status: pending
+    status: completed
+    completed_at: "2026-06-04"
+    result: >
+      ACCEPTED — phase 124 S5 acceptance-closure docs update completed.
+      Project Style Guide v1 is now reflected as current in architecture and root
+      design; the acceptance report is accepted after controller verification.
+      The executor's sandbox full-suite run hit unrelated image-provider failures,
+      but the controller reran the same full suite successfully.
     description: >
       Run targeted and full verification, validate CodeStable YAML/frontmatter,
       perform protected-core and reverse-scope checks, and write acceptance plus
       architecture/root-design updates.
     exit_signal: >
-      Full suite and scope guards pass; acceptance records the implemented Phase
-      124 contract and docs describe Project Style Guide v1 as current.
+      Full suite, CodeStable validators, protected-core guard, diff allowlist, and
+      reverse-scope checks passed under controller verification; acceptance records
+      the implemented Phase 124 contract and docs describe Project Style Guide v1
+      as current.
     verification:
       - command: "PYTHONDONTWRITEBYTECODE=1 python -m py_compile src/hermes_tavern/db_novel.py src/hermes_tavern/runtime_novel.py src/hermes_tavern/runtime_prompt_modules.py src/hermes_tavern/commands.py tests/test_hermes_tavern_novel_db.py tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_runtime.py tests/test_hermes_tavern_readme_docs.py tests/test_hermes_tavern_commands.py"
+        result: "passed (controller rerun after S5 docs/writeback)"
       - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel_db.py tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_runtime.py tests/test_hermes_tavern_readme_docs.py tests/test_hermes_tavern_commands.py -q -o 'addopts='"
+        result: "passed; 181 passed in 6.94s (controller rerun)"
       - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts='"
+        result: "passed; 816 passed in 31.64s (controller rerun; executor sandbox had unrelated image-provider failures)"
       - command: "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-04-hermes-tavern-phase124-project-style-guide/design.md --require doc_type --require status"
+        result: "passed; 1 passed, 0 failed (controller rerun)"
       - command: "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --yaml-only --file design/codestable/features/2026-06-04-hermes-tavern-phase124-project-style-guide/checklist.yaml"
+        result: "passed; 1 passed, 0 failed (controller rerun)"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-04-hermes-tavern-phase124-project-style-guide/hermes-tavern-phase124-project-style-guide-acceptance.md --require doc_type --require status"
+        result: "passed; 1 passed, 0 failed (controller rerun)"
       - command: "git diff --check"
+        result: "passed (controller rerun)"
 
 checks:
   - id: C1
@@ -175,7 +192,7 @@ checks:
     name: "Reverse scope"
     status: passed
     command: "git diff --name-only -- run_agent.py cli.py gateway/run.py"
-    result: "passed; no protected core file diffs and forbidden diff-term scan returned no hits"
+    result: "passed; no protected core file diffs, final S5 diff allowlist contains only the four docs/status files, and forbidden diff-term scan found no non-deferred scope expansion"
 
 verification_commands:
   - "PYTHONDONTWRITEBYTECODE=1 python -m py_compile src/hermes_tavern/db_novel.py src/hermes_tavern/runtime_novel.py src/hermes_tavern/runtime_prompt_modules.py src/hermes_tavern/commands.py tests/test_hermes_tavern_novel_db.py tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_runtime.py tests/test_hermes_tavern_readme_docs.py tests/test_hermes_tavern_commands.py"

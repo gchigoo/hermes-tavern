@@ -463,9 +463,10 @@ project:
   status: draft|in_progress|complete
 ```
 
-Future project metadata from the original vision remains out of the current Phase 121–123 scope:
-`type`, `premise`, `outline`, `style_guide`, `canon_policy`, `content_mode`,
+Future project metadata from the original vision remains deferred outside the current Phase 121–124 scope:
+`type`, `premise`, `outline`, `canon_policy`, `content_mode`,
 `default_card_id`, `default_preset_id`, and `default_lorebook_ids`.
+`style_guide` is now implemented as Phase 124 current project-scope behavior.
 
 Sub-objects:
 
@@ -495,6 +496,10 @@ Commands:
 /rp project info <id>
 /rp project set <id>
 /rp project export [id]
+/rp project style [project-id]
+/rp project style inspect [project-id]
+/rp project style set [project-id] <text>
+/rp project style clear [project-id]
 /rp chapter create [project-id] <title>
 /rp chapter list [project-id]
 /rp scene create <chapter-id> <title>
@@ -860,13 +865,17 @@ timeline
 canon
 ```
 
-Future novel-engine dimensions remain deferred: volume/arc, beat, character state,
-relationship state, style guide, outline, and revision notes.
+Future novel-engine dimensions remain deferred: volume/arc, beat, deferred character state,
+deferred relationship state, deferred outline, and revision notes.
 
 ### 13.2 Writing commands
 
 ```text
 /rp project create/list/info/set/export
+/rp project style [project-id]
+/rp project style inspect [project-id]
+/rp project style set [project-id] <text>
+/rp project style clear [project-id]
 /rp chapter create/list
 /rp scene create/list/start
 /rp scene goal <scene-id> [text]
@@ -1086,8 +1095,10 @@ chat export JSONL
 novel export Markdown
 ```
 
-Project archive ZIP remains a future exporter/importer; current Phase 121–123 only writes
+Project archive ZIP remains a future exporter/importer; current Phase 121–124 only writes
 local Markdown via `/rp project export [id]`.
+Project style guides are exported in Markdown as a top-level `## Style Guide`
+section after `## Summary` and before chapters when non-empty.
 Scene goals are exported in Markdown directly under the relevant scene heading
 as `Goal: <text>`, when set.
 Scene narration controls are also exported under scene headings with only
