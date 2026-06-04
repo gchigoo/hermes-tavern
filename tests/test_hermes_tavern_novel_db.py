@@ -28,6 +28,7 @@ def test_migrate_creates_novel_tables(tmp_path):
         "novel_scene_narration_controls",
         "novel_project_style_guides",
         "novel_project_briefs",
+        "novel_project_outlines",
     }.issubset(tables)
     novel_tables = {name for name in tables if name.startswith("novel_")}
     assert novel_tables == {
@@ -40,6 +41,7 @@ def test_migrate_creates_novel_tables(tmp_path):
         "novel_scene_narration_controls",
         "novel_project_style_guides",
         "novel_project_briefs",
+        "novel_project_outlines",
     }
 
     with sqlite3.connect(db_path) as conn:
@@ -118,6 +120,67 @@ def test_project_style_guide_set_update_get(tmp_path):
     assert updated["style_text"] == "voice: second-person\npace: methodical"
     assert updated["updated_at"] >= created["updated_at"]
     assert store.get_project_style_guide(novel_project["id"]) == updated
+
+
+def test_project_outline_set_update_get(tmp_path):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    novel_project = store.create_project("Plot Outline", "plot")
+
+    created = store.set_project_outline(
+        novel_project["id"],
+        "Act One: The world breaks.",
+    )
+    assert created["project_id"] == novel_project["id"]
+    assert created["outline_text"] == "Act One: The world breaks."
+
+    fetched = store.get_project_outline(novel_project["id"])
+    assert fetched is not None
+    assert fetched["outline_text"] == "Act One: The world breaks."
+
+    updated = store.set_project_outline(
+        novel_project["id"],
+        "Act One: The world mends.",
+    )
+    assert updated["id"] == created["id"]
+    assert updated["outline_text"] == "Act One: The world mends."
+    assert updated["updated_at"] >= created["updated_at"]
+    assert store.get_project_outline(novel_project["id"]) == updated
+
+
+def test_project_outline_clear_returns_bool(tmp_path):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    novel_project = store.create_project("Outline Memory")
+    assert store.clear_project_outline(novel_project["id"]) is False
+
+    store.set_project_outline(novel_project["id"], "opening arc")
+    assert store.clear_project_outline(novel_project["id"]) is True
+    assert store.get_project_outline(novel_project["id"]) is None
+    assert store.clear_project_outline(novel_project["id"]) is False
+
+
+def test_project_outline_missing_project_raises(tmp_path):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+
+    try:
+        store.get_project_outline(999)
+    except ValueError as exc:
+        assert str(exc) == "Project not found"
+    else:
+        raise AssertionError("Expected ValueError for missing project")
+
+    try:
+        store.set_project_outline(999, "text")
+    except ValueError as exc:
+        assert str(exc) == "Project not found"
+    else:
+        raise AssertionError("Expected ValueError for missing project")
+
+    try:
+        store.clear_project_outline(999)
+    except ValueError as exc:
+        assert str(exc) == "Project not found"
+    else:
+        raise AssertionError("Expected ValueError for missing project")
 
 
 def test_project_style_guide_clear_returns_bool(tmp_path):
@@ -775,6 +838,42 @@ def test_export_project_markdown_includes_project_brief_and_orders_after_summary
     assert "## Project Brief" in markdown
     assert "## Style Guide" in markdown
     assert markdown.index("## Project Brief") < markdown.index("## Style Guide")
+
+
+def test_export_project_markdown_includes_outline_and_orders_correctly(tmp_path):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    novel_project = store.create_project(
+        "Outline Export",
+        "A story with a map.",
+    )
+    store.set_project_brief_type(novel_project["id"], "novel")
+    store.set_project_outline(
+        novel_project["id"],
+        "Act One: The descent.\nAct Two: The reckoning.\nAct Three: The dawn.",
+    )
+    store.set_project_style_guide(
+        novel_project["id"],
+        "Tone: cinematic",
+    )
+
+    markdown = store.export_project_markdown(novel_project["id"])
+    assert "## Project Brief" in markdown
+    assert "## Outline" in markdown
+    assert "## Style Guide" in markdown
+    assert (
+        markdown.index("## Project Brief")
+        < markdown.index("## Outline")
+        < markdown.index("## Style Guide")
+    )
+
+
+def test_export_project_markdown_omits_outline_when_empty(tmp_path):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    novel_project = store.create_project("Outline Absent", "no outline yet")
+    store.set_project_style_guide(novel_project["id"], "Tone: terse")
+
+    markdown = store.export_project_markdown(novel_project["id"])
+    assert "## Outline" not in markdown
 
 
 def test_export_project_markdown_omits_project_brief_when_empty(tmp_path):

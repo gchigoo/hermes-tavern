@@ -10,7 +10,7 @@ summary: >
 steps:
   - id: S1
     name: "S1: Persist and export project outline metadata"
-    status: planned
+    status: completed
     description: >
       Add novel_project_outlines plus idx_novel_project_outlines_project to
       db_novel.py, implement get/set/clear store helpers, and include optional
@@ -61,14 +61,14 @@ steps:
 checks:
   - id: C1
     name: "C1: Active checklist precondition"
-    status: planned
+    status: completed
     criteria: >
       Before implementation, no other feature checklist is planned, pending, or
       in progress; this Phase 128 checklist is the only planned feature.
 
   - id: C2
     name: "C2: Persistence contract"
-    status: planned
+    status: completed
     criteria: >
       Project outline text is persisted locally in novel_project_outlines, is
       unique per project, supports set/update/get/clear, omits visible-empty rows,
@@ -84,7 +84,7 @@ checks:
 
   - id: C4
     name: "C4: Info and export visibility"
-    status: planned
+    status: completed
     criteria: >
       /rp project info and project Markdown export show outline text only when
       present; export places ## Outline after Project Brief when present and
@@ -92,7 +92,7 @@ checks:
 
   - id: C5
     name: "C5: Offline and prompt-safe boundary"
-    status: planned
+    status: completed
     criteria: >
       The feature has no provider calls, no network calls, no credential storage,
       no content-mode changes, no model routing changes, no prompt assembly changes,

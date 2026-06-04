@@ -102,6 +102,14 @@ class NovelDBMixin:
                 updated_at TEXT NOT NULL DEFAULT (datetime('now'))
             );
 
+            CREATE TABLE IF NOT EXISTS novel_project_outlines (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                project_id INTEGER NOT NULL UNIQUE REFERENCES novel_projects(id) ON DELETE CASCADE,
+                outline_text TEXT NOT NULL DEFAULT '',
+                created_at TEXT NOT NULL DEFAULT (datetime('now')),
+                updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+            );
+
             CREATE INDEX IF NOT EXISTS idx_novel_projects_created
                 ON novel_projects(created_at);
             CREATE INDEX IF NOT EXISTS idx_novel_chapters_project
@@ -122,6 +130,8 @@ class NovelDBMixin:
                 ON novel_project_style_guides(project_id);
             CREATE INDEX IF NOT EXISTS idx_novel_project_briefs_project
                 ON novel_project_briefs(project_id);
+            CREATE INDEX IF NOT EXISTS idx_novel_project_outlines_project
+                ON novel_project_outlines(project_id);
             """
         )
 
@@ -379,6 +389,64 @@ class NovelDBMixin:
                 WHERE project_id = ?
                 """,
                 (_utc_now(), project_id),
+            )
+            return cursor.rowcount > 0
+
+    def set_project_outline(self, project_id: int, outline_text: str) -> dict[str, Any]:
+        self.migrate()
+        with self.connect() as conn:
+            project = conn.execute(
+                "SELECT id FROM novel_projects WHERE id = ?",
+                (project_id,),
+            ).fetchone()
+            if project is None:
+                raise ValueError("Project not found")
+            now = _utc_now()
+            conn.execute(
+                """
+                INSERT INTO novel_project_outlines (
+                    project_id, outline_text, created_at, updated_at
+                )
+                VALUES (?, ?, ?, ?)
+                ON CONFLICT(project_id) DO UPDATE SET
+                    outline_text = excluded.outline_text,
+                    updated_at = excluded.updated_at
+                """,
+                (project_id, outline_text, now, now),
+            )
+            row = conn.execute(
+                "SELECT * FROM novel_project_outlines WHERE project_id = ?",
+                (project_id,),
+            ).fetchone()
+        return _row_to_dict(row)
+
+    def get_project_outline(self, project_id: int) -> dict[str, Any] | None:
+        self.migrate()
+        with self.connect() as conn:
+            project = conn.execute(
+                "SELECT id FROM novel_projects WHERE id = ?",
+                (project_id,),
+            ).fetchone()
+            if project is None:
+                raise ValueError("Project not found")
+            row = conn.execute(
+                "SELECT * FROM novel_project_outlines WHERE project_id = ?",
+                (project_id,),
+            ).fetchone()
+        return _row_to_dict(row)
+
+    def clear_project_outline(self, project_id: int) -> bool:
+        self.migrate()
+        with self.connect() as conn:
+            project = conn.execute(
+                "SELECT id FROM novel_projects WHERE id = ?",
+                (project_id,),
+            ).fetchone()
+            if project is None:
+                raise ValueError("Project not found")
+            cursor = conn.execute(
+                "DELETE FROM novel_project_outlines WHERE project_id = ?",
+                (project_id,),
             )
             return cursor.rowcount > 0
 
@@ -924,6 +992,7 @@ class NovelDBMixin:
         timeline = self.list_timeline(project_id)
         style_guide = self.get_project_style_guide(project_id)
         brief = self.get_project_brief(project_id)
+        outline = self.get_project_outline(project_id)
 
         lines: list[str] = [
             f"# {novel_project['title']}",
@@ -942,6 +1011,12 @@ class NovelDBMixin:
                 if premise_text:
                     lines.append(f"Premise: {premise_text}")
                 lines.append("")
+        if outline is not None and outline["outline_text"].strip():
+            lines.extend([
+                "## Outline",
+                outline["outline_text"],
+                "",
+            ])
         style_text = style_guide["style_text"] if style_guide is not None else ""
         if style_text.strip():
             lines.extend(
