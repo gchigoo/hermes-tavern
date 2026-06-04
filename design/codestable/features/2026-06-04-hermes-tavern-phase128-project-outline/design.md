@@ -1,12 +1,13 @@
 ---
 doc_type: feature-design
 feature: "2026-06-04-hermes-tavern-phase128-project-outline"
-status: draft
+status: approved
 summary: >
   Project Outline v1 adds local project-scoped outline text with command
-  inspection, project-info visibility, Markdown export visibility, and offline
-  tests. It does not affect prompt assembly, providers, content mode, or
-  generation behavior.
+  inspection, project-info visibility, and Markdown export visibility. S1
+  persistence, S2 command/help/docs, and S3 acceptance/writeback are complete.
+  It does not affect prompt assembly, providers, content mode, or generation
+  behavior.
 tags: [novel, project, outline, metadata, export, offline]
 ---
 
@@ -27,7 +28,10 @@ Startup inspection found no active feature checklist: Phase 121-127 checklists a
 
 ### Need
 
-The root design still defers `outline` after Phase 127 made project type and premise current. Long-form users need a simple local place to keep the project outline visible in project inspection and export without changing prompt or generation behavior.
+The root design previously deferred `outline` after Phase 127 made project type and
+premise current. Long-form users need a simple local place to keep project outline
+text visible in project inspection and export without changing prompt or generation
+behavior.
 
 ### Success
 

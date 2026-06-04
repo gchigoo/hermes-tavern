@@ -479,9 +479,15 @@ only and do not feed prompt assembly, provider routing, content mode, or
 generation behavior. `style_guide` remains current Phase 124 project-scope
 behavior.
 
+Project Outline v1 adds `outline` as a simple local metadata text stored in
+`novel_project_outlines.outline_text`, visible through `/rp project outline ...`,
+`/rp project info`, and project Markdown export. This outline text is also
+informational only and does not feed prompt assembly, provider routing, content
+mode, or generation behavior.
+
 Future project metadata from the original vision remains deferred outside the
-current scope: `outline`, `canon_policy`, `content_mode`, `default_card_id`,
-`default_preset_id`, and `default_lorebook_ids`.
+current scope: `canon_policy`, `content_mode`, `default_card_id`,
+`default_preset_id`, `default_lorebook_ids`, and default-binding metadata.
 
 Sub-objects:
 
@@ -521,6 +527,10 @@ Commands:
 /rp project brief type clear <project-id>
 /rp project brief premise set <project-id> <text>
 /rp project brief premise clear <project-id>
+/rp project outline [project-id]
+/rp project outline inspect [project-id]
+/rp project outline set [project-id] <text>
+/rp project outline clear [project-id]
 /rp chapter create [project-id] <title>
 /rp chapter list [project-id]
 /rp scene create <chapter-id> <title>
@@ -539,9 +549,10 @@ Commands:
 /rp timeline list [project-id]
 ```
 
-Project Markdown export emits `## Project Brief` after `## Summary` only when
-`project_type` or `premise_text` is non-empty. Export labels are `Type:` and
-`Premise:`, and blank field labels are omitted.
+Project Markdown export emits `## Project Brief` after `## Summary` and, when
+present, emits `## Outline` immediately after Project Brief and before Style
+Guide. Project Brief and Outline content are omitted when empty. Project Brief
+labels are `Type:` and `Premise:`, and blank field labels are omitted.
 
 ---
 
@@ -899,8 +910,8 @@ timeline
 canon
 ```
 
-Future novel-engine dimensions remain deferred: volume/arc, beat, deferred character state,
-deferred relationship state, deferred outline, and revision notes.
+Future novel-engine dimensions remain deferred: volume/arc, beats, deferred
+character state, relationship state, and revision notes.
 
 ### 13.2 Writing commands
 
@@ -916,6 +927,10 @@ deferred relationship state, deferred outline, and revision notes.
 /rp project brief type clear <project-id>
 /rp project brief premise set <project-id> <text>
 /rp project brief premise clear <project-id>
+/rp project outline [project-id]
+/rp project outline inspect [project-id]
+/rp project outline set [project-id] <text>
+/rp project outline clear [project-id]
 /rp chapter create/list
 /rp scene create/list/start
 /rp scene goal <scene-id> [text]
@@ -928,13 +943,13 @@ deferred relationship state, deferred outline, and revision notes.
 /rp timeline add/list
 ```
 
-Project Brief commands are metadata-only. They expose local project type and
-premise for inspection/info/export, not prompt injection, content-mode changes,
-provider selection, or generation control.
+Project Brief and Project Outline commands are metadata-only. They expose local
+project metadata for inspection/info/export, not prompt injection, content-mode
+changes, provider selection, or generation control.
 
-Future writing commands from the original vision remain deferred: outline editing,
-deferred write continue/rewrite/expand/compress, deferred project archive
-ZIP/export/import, and deferred character/relationship state.
+Future writing commands from the original vision remain deferred: outline
+generation/rewrite/expand/compress workflows, project archive
+ZIP/export/import, and character/relationship state.
 
 ### 13.3 Canon management
 
@@ -1051,6 +1066,7 @@ lorebook_entries
 personas
 model_profiles
 novel_projects
+novel_project_outlines
 novel_project_briefs
 novel_chapters
 novel_scenes
@@ -1072,6 +1088,11 @@ Current Project Brief table:
 `novel_project_briefs(id, project_id, project_type, premise_text, created_at, updated_at)`,
 with `project_id UNIQUE REFERENCES novel_projects(id) ON DELETE CASCADE` and
 `idx_novel_project_briefs_project ON novel_project_briefs(project_id)`.
+
+Current Project Outline table:
+`novel_project_outlines(id, project_id, outline_text, created_at, updated_at)`,
+with `project_id UNIQUE REFERENCES novel_projects(id) ON DELETE CASCADE` and
+`idx_novel_project_outlines_project ON novel_project_outlines(project_id)`.
 
 ### 16.2 Message table
 
@@ -1147,10 +1168,12 @@ chat export JSONL
 novel export Markdown
 ```
 
-Project archive ZIP remains a future exporter/importer; current Phase 121–124 only writes
+Project archive ZIP remains a future exporter/importer; current Phase 121–128 writes
 local Markdown via `/rp project export [id]`.
-Project style guides are exported in Markdown as a top-level `## Style Guide`
-section after `## Summary` and before chapters when non-empty.
+Project Brief and Project Outline are exported as optional top-level `## Project Brief`
+and `## Outline` sections after `## Summary` when non-empty. Project style guides
+are exported as a top-level `## Style Guide` section after optional Project Brief
+and Outline and before Chapters when non-empty.
 Scene goals are exported in Markdown directly under the relevant scene heading
 as `Goal: <text>`, when set.
 Scene narration controls are also exported under scene headings with only

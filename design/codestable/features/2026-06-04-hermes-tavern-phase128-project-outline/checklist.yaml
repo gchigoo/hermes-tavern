@@ -1,13 +1,13 @@
 doc_type: feature-checklist
 feature: "2026-06-04-hermes-tavern-phase128-project-outline"
 date: "2026-06-04"
-status: in_progress
+status: accepted
 summary: >
   Project Outline v1 adds local project-scoped outline text with inspect/set/clear
   commands, project-info visibility, Markdown export visibility, and offline tests
   while preserving prompt/provider/content-mode/generation behavior. S1 persistence
-  and S2 command/info/help/docs visibility are complete; S3 acceptance and
-  architecture/root-design writeback remain planned.
+  S2 command/info/help/docs visibility, and S3 acceptance plus architecture/root
+  design writeback are complete.
 
 steps:
   - id: S1
@@ -88,7 +88,17 @@ steps:
 
   - id: S3
     name: "S3: Verify and write architecture"
-    status: planned
+    status: completed
+    completed_at: "2026-06-04"
+    result: >
+      ACCEPTED - S3 converted the S1-only acceptance evidence into final feature
+      acceptance, advanced architecture/root-design docs to Phase 128 current
+      behavior, marked the design approved, and reran controller-owned focused,
+      plugin, full, YAML/frontmatter, whitespace, protected-core, and reverse-scope
+      verification. No source, tests, README, prompt modules, providers, model
+      routing, content mode, generation, credentials, import/archive, character/
+      relationship state, minors/underage path, safety-bypass, or protected core
+      files changed in S3.
     description: >
       Run focused, plugin, full, YAML/frontmatter, whitespace, protected-core,
       and reverse-scope verification. Create acceptance evidence and update
@@ -102,7 +112,45 @@ steps:
       - design/HERMES_TAVERN_DESIGN.md
     exit_signal: >
       Acceptance docs and architecture/root-design writeback are complete after
-      verification, with protected-core and reverse-scope checks passing.
+      controller verification and reverse-scope confirmation.
+    verification:
+      - command: >-
+          codex --profile architect exec --json --color never --sandbox read-only --cd /Users/steven/Projects/hermes-tavern <Phase 128 S3 artifact prompt>
+        result: >
+          passed; artifact at /tmp/hermes-tavern-architect-phase128-s3.jsonl
+          ended with RESULT: PLANNING_ARTIFACT and selected docs/status-only S3.
+      - command: >-
+          codex --profile executor exec --json --color never --sandbox workspace-write --cd /Users/steven/Projects/hermes-tavern <Phase 128 S3 docs/writeback prompt>
+        result: >
+          completed; JSONL at /tmp/hermes-tavern-executor-phase128-s3.jsonl;
+          executor applied only the five allowed docs/status files, with harmless
+          failed read/path probes and patch-context misses before successful edits;
+          no Codex 429/rate-limit/exhaustion signal.
+      - command: >-
+          PYTHONDONTWRITEBYTECODE=1 python -m py_compile src/hermes_tavern/db_novel.py src/hermes_tavern/runtime_novel.py src/hermes_tavern/commands.py tests/test_hermes_tavern_novel_db.py tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_commands.py tests/test_hermes_tavern_readme_docs.py
+        result: "passed (controller rerun)"
+      - command: >-
+          PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel_db.py tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_commands.py tests/test_hermes_tavern_readme_docs.py -q -o 'addopts=' -p no:cacheprovider
+        result: "passed; 177 passed in 5.49s (controller rerun)"
+      - command: >-
+          PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_*.py -q -o 'addopts=' -p no:cacheprovider
+        result: "passed; 868 passed in 35.79s (controller rerun)"
+      - command: >-
+          PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts=' -p no:cacheprovider
+        result: "passed; 868 passed in 35.81s (controller rerun)"
+      - command: >-
+          PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-04-hermes-tavern-phase128-project-outline/design.md --require doc_type --require status --require feature
+        result: "passed (controller rerun after final status edits)"
+      - command: >-
+          PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-04-hermes-tavern-phase128-project-outline/hermes-tavern-phase128-project-outline-acceptance.md --require doc_type --require status --require feature
+        result: "passed (controller rerun after final status edits)"
+      - command: >-
+          PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --yaml-only --file design/codestable/features/2026-06-04-hermes-tavern-phase128-project-outline/checklist.yaml
+        result: "passed (controller rerun after final status edits)"
+      - command: "git diff --name-only -- run_agent.py cli.py gateway/run.py"
+        result: "passed; no protected core file diffs"
+      - command: "git diff --check"
+        result: "passed"
 
 checks:
   - id: C1
@@ -164,9 +212,15 @@ checks:
 
   - id: C6
     name: "C6: Reverse-scope guard"
-    status: planned
+    status: completed
     criteria: >
       No protected core files are changed, and no structured beat engine,
       outline generation, rewrite/expand/compress command, archive import/export,
       character/relationship state, cloud/collab, minors/underage path, provider
       safety bypass, or credential persistence is introduced.
+    result: >
+      Passed by controller diff/status review and protected-core guard: S3 changed
+      only design/checklist/acceptance/architecture/root-design docs and introduced
+      no protected core file, prompt assembly, provider/model routing, content-mode,
+      generation, credential, import/archive, structured beat, character/relationship
+      state, cloud/collab, minors/underage, or provider-safety-bypass changes.

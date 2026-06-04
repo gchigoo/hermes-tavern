@@ -119,6 +119,7 @@ importers/
 - Phase 125: Lore Regex Complexity Guard (regex lore keys longer than 256 chars or with nested quantified groups are excluded before Python `re.search`; bounded rejection reasons available via `/rp lore test`/debug; no importer, schema, command, provider, or postprocessor behavior changes)
 - Phase 126: Context Budget Report v1 (`/rp debug context [limit] [page]` renders a read-only prompt/context composition report with estimated tokens, omitted-layer summary, renderer/model/context-window metadata, and paginated rows; no prompt trimming, summarization, vectorization, provider tokenization/routing, storage, provider calls, or generation behavior changes)
 - Phase 127: Project Brief v1 metadata (`/rp project brief` + `/rp project info`, and `## Project Brief` export) backed by `novel_project_briefs`; metadata-only, no prompt/provider/routing/generation behavior changes
+- Phase 128: Project Outline v1 metadata (`/rp project outline` + `## Outline`) backed by `novel_project_outlines`; metadata-only, no prompt/provider/routing/content-mode/generation behavior changes
 
 ### Plugin flow
 
@@ -148,9 +149,10 @@ Macro expansion is one-pass and allowlist-based. Supported Phase 20 macros are
 `{{content_mode}}`, and `{{session_title}}`; names are case/whitespace tolerant,
 unknown macros are preserved, and replacement text is not recursively expanded.
 
-Project Brief is explicitly excluded from prompt assembly and session prompt module selection.
+Project Brief and Project Outline are explicitly excluded from prompt assembly and
+session prompt module selection.
 
-### /rp command surface (current through Phase 127)
+### /rp command surface (current through Phase 128)
 
 ```
 /rp help | status | assets
@@ -183,6 +185,10 @@ Project Brief is explicitly excluded from prompt assembly and session prompt mod
 /rp project brief type clear <project-id>
 /rp project brief premise set <project-id> <text>
 /rp project brief premise clear <project-id>
+/rp project outline [project-id]
+/rp project outline inspect [project-id]
+/rp project outline set [project-id] <text>
+/rp project outline clear [project-id]
 /rp chapter create/list
 /rp scene create/list/start
 /rp scene goal <scene-id> [text]
@@ -195,7 +201,7 @@ Project Brief is explicitly excluded from prompt assembly and session prompt mod
 /rp timeline add/list
 ```
 
-### DB schema (current through Phase 127)
+### DB schema (current through Phase 128)
 
 ```sql
 cards(id, name, data_json, source_path, created_at)
@@ -220,6 +226,9 @@ novel_project_briefs(id, project_id, project_type, premise_text, created_at, upd
 -- project_id REFERENCES novel_projects(id) ON DELETE CASCADE, unique per project
 -- project_type in {novel, serial, rp, worldbuilding, other}
 CREATE INDEX idx_novel_project_briefs_project ON novel_project_briefs(project_id)
+novel_project_outlines(id, project_id, outline_text, created_at, updated_at)
+-- project_id REFERENCES novel_projects(id) ON DELETE CASCADE, unique per project
+CREATE INDEX idx_novel_project_outlines_project ON novel_project_outlines(project_id)
 novel_chapters(id, project_id, title, chapter_number, summary, status, created_at, updated_at)
 novel_scenes(id, chapter_id, session_id TEXT, title, summary, scene_number, status, created_at, updated_at)
 novel_scene_goals(id, scene_id, goal_text, created_at, updated_at)
