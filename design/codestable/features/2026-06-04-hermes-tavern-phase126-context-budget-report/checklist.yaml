@@ -53,12 +53,40 @@ steps:
 
   - id: S2
     name: "S2: Docs and command visibility"
-    status: pending
+    status: completed
+    completed_at: "2026-06-04"
+    result: >
+      IMPLEMENTED - README.md Core commands now lists /rp debug context [limit]
+      [page] beside /rp debug prompt and /rp debug swipes. A focused README-docs
+      assertion locks the exact literal into the Core commands block. Codex
+      executor changed only README.md and tests/test_hermes_tavern_readme_docs.py;
+      controller reran py_compile, targeted command/README-docs tests,
+      full-suite, YAML/frontmatter validators, whitespace check, and protected-core
+      guard from scratch. S3 acceptance/writeback remains pending.
     description: >
       Update README/docs command visibility if required by existing docs tests.
       Add or adjust command/docs assertions for /rp debug context [limit] [page].
     exit_signal: >
       Command-table and README/docs tests pass with /rp debug context visible.
+    verification:
+      - command: "codex --profile architect exec --json --color never --sandbox read-only --cd /Users/steven/Projects/hermes-tavern <Phase 126 S2 artifact prompt>"
+        result: "passed; artifact at /tmp/hermes-tavern-architect-phase126-s2.jsonl confirmed README Core commands visibility was the only missing S2 scope"
+      - command: "codex --profile executor exec --json --color never --disable image_generation --sandbox workspace-write --cd /Users/steven/Projects/hermes-tavern <Phase 126 S2 implementation prompt>"
+        result: "completed; JSONL at /tmp/hermes-tavern-executor-phase126-s2.jsonl; executor edited only README.md and tests/test_hermes_tavern_readme_docs.py"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m py_compile tests/test_hermes_tavern_readme_docs.py tests/test_hermes_tavern_commands.py"
+        result: "passed (controller rerun)"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_commands.py tests/test_hermes_tavern_readme_docs.py -q -o 'addopts='"
+        result: "passed; 53 passed in 0.06s (controller rerun)"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts='"
+        result: "passed; 830 passed in 34.35s (controller rerun)"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-04-hermes-tavern-phase126-context-budget-report/design.md --require doc_type --require status"
+        result: "passed (controller rerun)"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --yaml-only --file design/codestable/features/2026-06-04-hermes-tavern-phase126-context-budget-report/checklist.yaml"
+        result: "passed after controller checklist status update"
+      - command: "git diff --check"
+        result: "passed (controller rerun)"
+      - command: "git diff --name-only -- run_agent.py cli.py gateway/run.py"
+        result: "passed; no protected core file diffs"
 
   - id: S3
     name: "S3: Acceptance and architecture writeback"

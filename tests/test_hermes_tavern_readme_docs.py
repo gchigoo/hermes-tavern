@@ -203,6 +203,12 @@ def test_readme_core_commands_keep_operator_anchors():
     assert missing == []
 
 
+def test_readme_core_commands_includes_debug_context_literal():
+    core_commands = _readme_core_commands_text()
+
+    assert "/rp debug context [limit] [page]" in core_commands
+
+
 def test_readme_core_commands_includes_scene_goal_literals():
     core_commands = _readme_core_commands_text()
 

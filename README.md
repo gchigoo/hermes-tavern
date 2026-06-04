@@ -129,7 +129,7 @@ Expected behavior:
 /rp scene narration pov <scene-id> <label>
 /rp scene narration tense <scene-id> <past|present>
 /rp canon add/list/group | /rp timeline add/list
-/rp debug prompt [limit] [page] | /rp debug swipes
+/rp debug prompt [limit] [page] | /rp debug context [limit] [page] | /rp debug swipes
 ```
 
 ## Development
