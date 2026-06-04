@@ -1,0 +1,118 @@
+doc_type: feature-checklist
+feature: "2026-06-04-hermes-tavern-phase127-project-brief"
+date: "2026-06-04"
+status: planned
+summary: >
+  PLAN ONLY - Project Brief v1 will add local project type and premise metadata
+  for novel projects, with inspect/set/clear commands and Markdown export
+  visibility. S1 is limited to DB persistence/export tests. Prompt assembly,
+  provider routing, content mode, outline editing, defaults, credentials, and
+  protected core files remain out of scope.
+
+steps:
+  - id: S1
+    name: "S1: Persist project brief metadata"
+    status: pending
+    description: >
+      Add the novel_project_briefs side table, index, store helpers, type
+      validation, and Markdown export visibility. Add focused novel DB tests for
+      migration, set/update/get/clear, missing project, invalid type, export
+      inclusion, and empty export omission.
+    exit_signal: >
+      Focused novel DB tests pass. Only src/hermes_tavern/db_novel.py and
+      tests/test_hermes_tavern_novel_db.py need changes in this slice.
+    verification:
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel_db.py -q -o 'addopts=' -p no:cacheprovider"
+
+  - id: S2
+    name: "S2: Add project brief command surface"
+    status: pending
+    description: >
+      Add /rp project brief inspect/type/premise command routing, bounded usage
+      and error messages, command-table help, README Core commands visibility,
+      and focused runtime/help/docs tests.
+    exit_signal: >
+      /rp project brief commands work for normal and boundary cases, and command
+      table plus README docs assertions pass.
+    verification:
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_commands.py tests/test_hermes_tavern_readme_docs.py -q -o 'addopts=' -p no:cacheprovider"
+
+  - id: S3
+    name: "S3: Verify and write architecture"
+    status: pending
+    description: >
+      Run focused/relevant verification, update architecture/root design to mark
+      project type and premise current, create acceptance evidence, and preserve
+      deferred boundaries for outline, content mode, defaults, provider behavior,
+      and other future metadata.
+    exit_signal: >
+      Architecture/root design and acceptance docs are updated after verification,
+      and protected-core plus reverse-scope checks pass.
+    verification:
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel_db.py tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_commands.py tests/test_hermes_tavern_readme_docs.py -q -o 'addopts=' -p no:cacheprovider"
+      - command: "git diff --check"
+      - command: "git diff --name-only -- run_agent.py cli.py gateway/run.py"
+
+checks:
+  - id: C1
+    name: "C1: No active checklist precondition"
+    status: pending
+    criteria: >
+      Before implementation, no other feature checklist is planned, pending,
+      draft, or in progress; Phase 127 is the only new planned feature.
+
+  - id: C2
+    name: "C2: Persistence contract"
+    status: pending
+    criteria: >
+      Project brief metadata is stored locally in novel_project_briefs, validates
+      project_type, preserves unspecified fields on update, handles clear
+      operations, and raises bounded ValueError messages for missing projects or
+      invalid type.
+
+  - id: C3
+    name: "C3: Command contract"
+    status: pending
+    criteria: >
+      /rp project brief inspect/type/premise commands provide bounded normal,
+      usage, missing-active-project, missing-project, invalid-type, and blank
+      premise behavior.
+
+  - id: C4
+    name: "C4: Export and info visibility"
+    status: pending
+    criteria: >
+      /rp project info and project Markdown export show type/premise when present,
+      while empty projects omit the Project Brief export section.
+
+  - id: C5
+    name: "C5: Offline and local boundary"
+    status: pending
+    criteria: >
+      The feature has no provider calls, no network calls, no credential storage,
+      no content-mode changes, no model routing changes, and no prompt assembly
+      or generation behavior changes.
+
+  - id: C6
+    name: "C6: Reverse-scope guard"
+    status: pending
+    criteria: >
+      No protected core files are changed, and no outline editing/storage,
+      canon_policy, default card/preset/lorebook binding, character state,
+      relationship state, cloud/collab, backend account, minors/underage path,
+      provider safety bypass, project import, archive ZIP workflow, context
+      trimming, summarization, vectorization, or regex postprocessor is added.
+
+verification:
+  - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel_db.py tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_commands.py tests/test_hermes_tavern_readme_docs.py -q -o 'addopts=' -p no:cacheprovider"
+    owner: executor
+  - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_*.py -q -o 'addopts=' -p no:cacheprovider"
+    owner: controller
+  - command: "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --yaml-only --file design/codestable/features/2026-06-04-hermes-tavern-phase127-project-brief/checklist.yaml"
+    owner: controller
+  - command: "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-04-hermes-tavern-phase127-project-brief/design.md --require doc_type --require status --require feature"
+    owner: controller
+  - command: "git diff --check"
+    owner: controller
+  - command: "git diff --name-only -- run_agent.py cli.py gateway/run.py"
+    owner: controller
