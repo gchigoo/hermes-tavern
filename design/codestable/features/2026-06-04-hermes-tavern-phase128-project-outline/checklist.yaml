@@ -1,0 +1,108 @@
+doc_type: feature-checklist
+feature: "2026-06-04-hermes-tavern-phase128-project-outline"
+date: "2026-06-04"
+status: planned
+summary: >
+  Project Outline v1 adds local project-scoped outline text with inspect/set/clear
+  commands, project-info visibility, Markdown export visibility, and offline tests
+  while preserving prompt/provider/content-mode/generation behavior.
+
+steps:
+  - id: S1
+    name: "S1: Persist and export project outline metadata"
+    status: planned
+    description: >
+      Add novel_project_outlines plus idx_novel_project_outlines_project to
+      db_novel.py, implement get/set/clear store helpers, and include optional
+      ## Outline in export_project_markdown. Add focused DB/export tests only.
+    allowed_files:
+      - src/hermes_tavern/db_novel.py
+      - tests/test_hermes_tavern_novel_db.py
+    exit_signal: >
+      Focused novel DB tests pass, export includes/omits/orders Outline correctly,
+      and no runtime/help/README/prompt/provider/protected-core files change.
+
+  - id: S2
+    name: "S2: Add project outline command surface"
+    status: planned
+    description: >
+      Add /rp project outline inspect/set/clear routing, active-project fallback,
+      project-info outline preview, help/README command visibility, and focused
+      runtime/help/docs tests including no prompt/context leak regression.
+    allowed_files:
+      - src/hermes_tavern/runtime_novel.py
+      - src/hermes_tavern/commands.py
+      - README.md
+      - tests/test_hermes_tavern_novel_runtime.py
+      - tests/test_hermes_tavern_commands.py
+      - tests/test_hermes_tavern_readme_docs.py
+    exit_signal: >
+      Outline commands work for normal and boundary cases, docs/help assertions
+      pass, and debug prompt/context do not include outline text.
+
+  - id: S3
+    name: "S3: Verify and write architecture"
+    status: planned
+    description: >
+      Run focused, plugin, full, YAML/frontmatter, whitespace, protected-core,
+      and reverse-scope verification. Create acceptance evidence and update
+      architecture/root design to mark Project Outline v1 current while preserving
+      deferred boundaries.
+    allowed_files:
+      - design/codestable/features/2026-06-04-hermes-tavern-phase128-project-outline/design.md
+      - design/codestable/features/2026-06-04-hermes-tavern-phase128-project-outline/checklist.yaml
+      - design/codestable/features/2026-06-04-hermes-tavern-phase128-project-outline/hermes-tavern-phase128-project-outline-acceptance.md
+      - design/codestable/architecture/ARCHITECTURE.md
+      - design/HERMES_TAVERN_DESIGN.md
+    exit_signal: >
+      Acceptance docs and architecture/root-design writeback are complete after
+      verification, with protected-core and reverse-scope checks passing.
+
+checks:
+  - id: C1
+    name: "C1: Active checklist precondition"
+    status: planned
+    criteria: >
+      Before implementation, no other feature checklist is planned, pending, or
+      in progress; this Phase 128 checklist is the only planned feature.
+
+  - id: C2
+    name: "C2: Persistence contract"
+    status: planned
+    criteria: >
+      Project outline text is persisted locally in novel_project_outlines, is
+      unique per project, supports set/update/get/clear, omits visible-empty rows,
+      and raises bounded missing-project errors.
+
+  - id: C3
+    name: "C3: Command contract"
+    status: planned
+    criteria: >
+      /rp project outline supports inspect/set/clear with explicit id and
+      active-project fallback, and returns bounded usage, no-active, missing-project,
+      blank-text, and cleared messages.
+
+  - id: C4
+    name: "C4: Info and export visibility"
+    status: planned
+    criteria: >
+      /rp project info and project Markdown export show outline text only when
+      present; export places ## Outline after Project Brief when present and
+      before Style Guide or Chapters.
+
+  - id: C5
+    name: "C5: Offline and prompt-safe boundary"
+    status: planned
+    criteria: >
+      The feature has no provider calls, no network calls, no credential storage,
+      no content-mode changes, no model routing changes, no prompt assembly changes,
+      and no generation behavior changes.
+
+  - id: C6
+    name: "C6: Reverse-scope guard"
+    status: planned
+    criteria: >
+      No protected core files are changed, and no structured beat engine,
+      outline generation, rewrite/expand/compress command, archive import/export,
+      character/relationship state, cloud/collab, minors/underage path, provider
+      safety bypass, or credential persistence is introduced.
