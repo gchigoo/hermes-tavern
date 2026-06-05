@@ -126,6 +126,7 @@ importers/
 - Phase 132: Location Metadata v1 (`/rp location ...`) backed by `novel_locations`; metadata-only, no prompt/provider/model-routing/content-mode/generation side effects. Export is optional and local-only as `## Locations`.
 - Phase 133: Organization Metadata v1 (`/rp organization ...`) backed by `novel_organizations`; metadata-only, no prompt/provider/model-routing/content-mode/generation side effects. Export is optional and local-only as `## Organizations`.
 - Phase 134: Plot Thread Metadata v1 (`/rp plot thread ...`) backed by `novel_plot_threads`; metadata-only, no prompt/provider/model-routing/content-mode/generation side effects. Export is optional and local-only as `## Plot Threads`.
+- Phase 135: Style Sample Metadata v1 (`/rp style sample ...`) backed by `novel_style_samples`; metadata-only, no prompt/provider/model-routing/content-mode/generation side effects. Export is optional and local-only as `## Style Samples`.
 
 ### Plugin flow
 
@@ -156,14 +157,15 @@ Macro expansion is one-pass and allowlist-based. Supported Phase 20 macros are
 unknown macros are preserved, and replacement text is not recursively expanded.
 
 Project Brief, Project Outline, Relationship State, Character State, Location,
-Organization, and Plot Thread metadata are explicitly excluded from prompt assembly, session
-prompt module selection, debug prompt/context payloads, and context-budget
-reporting. Organization, relationship, character-state, location, and plot-thread metadata are
-also excluded from vectorization/retrieval, provider/model routing, content mode,
+Organization, Plot Thread, and Style Sample metadata are explicitly excluded
+from prompt assembly, session prompt module selection, debug prompt/context
+payloads, and context-budget reporting. Relationship, character-state,
+location, organization, plot-thread, and style-sample metadata are also
+excluded from vectorization/retrieval, provider/model routing, content mode,
 credentials, automation, summarization, and generation; they are visible only
 through command output and Markdown export.
 
-### /rp command surface (current through Phase 134)
+### /rp command surface (current through Phase 135)
 
 ```
 /rp help | status | assets
@@ -234,6 +236,11 @@ through command output and Markdown export.
 /rp plot thread inspect <plot-thread-id>
 /rp plot thread update <plot-thread-id> <description...>
 /rp plot thread delete <plot-thread-id>
+/rp style sample add <project-id> <label> <sample...>
+/rp style sample list [project-id]
+/rp style sample inspect <style-sample-id>
+/rp style sample update <style-sample-id> <sample...>
+/rp style sample delete <style-sample-id>
 /rp relationship add <project-id> <label> <state...>
 /rp relationship list [project-id]
 /rp relationship inspect <relationship-id>
@@ -241,7 +248,7 @@ through command output and Markdown export.
 /rp relationship delete <relationship-id>
 ```
 
-### DB schema (current through Phase 134)
+### DB schema (current through Phase 135)
 
 ```sql
 cards(id, name, data_json, source_path, created_at)
@@ -290,6 +297,9 @@ CREATE INDEX idx_novel_organizations_project ON novel_organizations(project_id)
 novel_plot_threads(id, project_id, label, description_text, created_at, updated_at)
 -- project_id REFERENCES novel_projects(id) ON DELETE CASCADE
 CREATE INDEX idx_novel_plot_threads_project ON novel_plot_threads(project_id)
+novel_style_samples(id, project_id, label, sample_text, created_at, updated_at)
+-- project_id REFERENCES novel_projects(id) ON DELETE CASCADE
+CREATE INDEX idx_novel_style_samples_project ON novel_style_samples(project_id)
 ```
 
 Phase 129 adds explicit semantics on existing summary columns:
@@ -336,6 +346,17 @@ payloads, context-budget payloads, vectorization/retrieval,
 provider/model routing, content mode, credentials, automation,
 summarization, or generation.
 
+Phase 135 adds `novel_style_samples` as project-scoped style-sample metadata.
+Style samples are managed through `/rp style sample add/list/inspect/update/delete`
+and emitted as optional `## Style Samples` Markdown metadata after `## Style Guide`
+when present, or after `## Project Brief`/`## Outline` when no style guide exists.
+The section appears before `## Locations`, `## Organizations`, `## Plot Threads`,
+`## Characters`, `## Relationships`, and `## Chapters`, and is omitted when no
+style-sample rows exist. They are not selected for prompt modules,
+debug/context payloads, context-budget reporting, vectorization/retrieval,
+provider/model routing, content mode, credentials, automation, summarization,
+or generation.
+
 Phase 26 adds in-memory quick-action tracking on `TavernStore` only:
 `_last_card_id`, `_last_preset_id`, `_last_lorebook_id`, and
 `_last_persona_id`. These IDs are not persisted and reset when the runtime
@@ -372,4 +393,5 @@ These phases do not change schema or core prompt/generation assembly.
 - **Phase 132 location boundary**: location metadata is export-visible only. It is excluded from prompt modules, debug prompt/context output, context-budget payloads, vectorization/retrieval, provider/model routing, content mode decisions, credentials, automation, summarization, and generation.
 - **Phase 133 organization boundary**: organization metadata is export-visible only. It is excluded from prompt modules, debug prompt/context output, context-budget payloads, vectorization/retrieval, provider/model routing, content mode decisions, credentials, automation, summarization, and generation.
 - **Phase 134 plot-thread boundary**: plot-thread metadata is export-visible only. It is excluded from prompt modules, debug prompt/context output, context-budget payloads, vectorization/retrieval, provider/model routing, content mode decisions, credentials, automation, summarization, and generation.
+- **Phase 135 style-sample boundary**: style-sample metadata is export-visible only. It is excluded from prompt modules, debug prompt/context output, context-budget reporting, vectorization/retrieval, provider/model routing, content mode decisions, credentials, automation, summarization, and generation.
 - **Tavern lore regex complexity guard**: lorebook regex keys are screened locally before matching. Entries with patterns longer than 256 characters or nested quantified groups (for example `(a+)+`, `(.+)*`, `([a-z]+){2,}`) are excluded with bounded reasons (`regex rejected: ...`), preserving raw imported lore data while preventing unbounded local matching behavior.

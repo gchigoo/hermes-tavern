@@ -1,25 +1,28 @@
 doc_type: feature-checklist
 feature: "2026-06-05-hermes-tavern-phase135-style-sample-metadata"
 date: "2026-06-05"
-status: in_progress
+status: accepted
 summary: >
-  IN PROGRESS - Style Sample Metadata v1 now adds local project-scoped
-  prose/style sample notes backed by `novel_style_samples`, managed through
-  `/rp style sample ...`, visible in help/README and optional `## Style Samples`
-  Markdown export, while remaining outside prompt/debug/context-budget/provider/
-  model/content-mode/generation/credential/retrieval/vectorization/automation
-  paths. S1 implementation is complete; S2 acceptance and architecture/root
-  design writeback remain pending.
+  ACCEPTED - Style Sample Metadata v1 adds local project-scoped prose/style
+  sample notes backed by `novel_style_samples`, managed through `/rp style
+  sample ...`, visible in help/README and optional `## Style Samples` Markdown
+  export, while remaining outside prompt/debug/context-budget/provider/model/
+  content-mode/generation/credential/retrieval/vectorization/automation/media/
+  TTS/image paths. S1 implementation and S2 acceptance/architecture/root-design
+  writeback are complete.
 
 implementation_readiness: >
-  S1 COMPLETE - Codex architect selected this feature as a new planning-only
-  phase; the controller materialized the design/checklist artifacts, validated
-  frontmatter/YAML, ran full pytest, then ran a fresh read-only Codex architect
-  S1 validation pass for this tick. The controller promoted the design to
-  approved, smoke-tested the executor profile, ran the bounded executor S1
-  implementation pass, made one tiny controller consistency fix to call
-  `self.migrate()` in `get_style_sample`, and reran controller verification from
-  scratch. Next step is S2 acceptance/writeback.
+  ACCEPTED - Codex architect selected this feature as a planning-only phase;
+  the controller materialized the design/checklist artifacts, validated
+  frontmatter/YAML, ran full pytest, promoted the design to approved, ran a
+  Codex architect S1 validation pass, smoke-tested the executor profile, ran the
+  bounded executor S1 implementation pass, made one tiny controller consistency
+  fix to call `self.migrate()` in `get_style_sample`, reran controller
+  verification from scratch, then ran a Codex architect S2 artifact pass and a
+  bounded executor docs/writeback pass. The controller patched docs/status
+  details and reran focused/Tavern/full pytest, YAML/frontmatter validators,
+  reverse-scope guards, stale-wording guards, and `git diff --check` before
+  accepting S2.
 
 planning_verification:
   - command: >-
@@ -159,14 +162,14 @@ steps:
 
   - id: S2
     name: "S2: Verify/Accept/Write Architecture"
-    status: pending
+    status: completed
     description: >
-      Controller-owned phase after S1. Run focused, plugin, full,
+      Controller-owned phase after S1. Focused, plugin, full,
       YAML/frontmatter, reverse-scope, stale-wording, and whitespace
-      verification. Create the acceptance report and update architecture/root
-      design to mark style-sample metadata current while preserving deferred
-      automation/retrieval/provider/generation/default-binding/policy/archive/
-      graph boundaries.
+      verification are complete. The acceptance report and architecture/root
+      design writeback mark style-sample metadata current while preserving
+      deferred automation/retrieval/provider/generation/default-binding/policy/
+      archive/graph boundaries.
     allowed_files:
       - design/codestable/features/2026-06-05-hermes-tavern-phase135-style-sample-metadata/design.md
       - design/codestable/features/2026-06-05-hermes-tavern-phase135-style-sample-metadata/checklist.yaml
@@ -187,28 +190,41 @@ steps:
       S2.
     verification:
       - command: >-
+          codex --profile architect exec --json --color never --disable image_generation --sandbox read-only --cd /Users/steven/Projects/hermes-tavern < /tmp/hermes-tavern-phase135-s2-architect-prompt.txt > /tmp/hermes-tavern-architect-phase135-s2.jsonl
+        result: "passed - exit 0; JSONL recorded `RESULT: S2_ARTIFACT`; no failed command-execution records."
+      - command: >-
+          codex --profile executor exec --json --color never --disable image_generation --sandbox read-only --cd /Users/steven/Projects/hermes-tavern < /tmp/hermes-tavern-executor-smoke-prompt.txt > /tmp/hermes-tavern-executor-phase135-s2-smoke.jsonl
+        result: "passed - exit 0; executor profile smoke returned `EXECUTOR_SMOKE_OK`."
+      - command: >-
+          codex --profile executor exec --json --color never --disable image_generation --sandbox workspace-write --cd /Users/steven/Projects/hermes-tavern < /tmp/hermes-tavern-phase135-s2-executor-prompt.txt > /tmp/hermes-tavern-executor-phase135-s2.jsonl
+        result: "passed - exit 0; executor drafted allowed docs/status writeback; controller reviewed and tightened wording."
+      - command: >-
           PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel_db.py tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_commands.py tests/test_hermes_tavern_readme_docs.py -q -o 'addopts=' -p no:cacheprovider
-        result: "not_run; controller-owned during S2"
+        result: "passed - 267 passed in 8.72s after final S2 docs/status patch."
       - command: >-
           PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_*.py -q -o 'addopts=' -p no:cacheprovider
-        result: "not_run; controller-owned during S2"
+        result: "passed - 958 passed in 44.70s after final S2 docs/status patch."
       - command: >-
           PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts=' -p no:cacheprovider
-        result: "not_run; controller-owned during S2"
+        result: "passed - 958 passed in 48.37s after final S2 docs/status patch."
       - command: >-
           python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-05-hermes-tavern-phase135-style-sample-metadata/design.md --require doc_type --require status --require feature
-        result: "not_run; controller-owned during S2"
+        result: "passed"
       - command: >-
           python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-05-hermes-tavern-phase135-style-sample-metadata/hermes-tavern-phase135-style-sample-metadata-acceptance.md --require doc_type --require status --require feature
-        result: "not_run; controller-owned during S2"
+        result: "passed"
       - command: >-
           python design/codestable/tools/validate-yaml.py --yaml-only --file design/codestable/features/2026-06-05-hermes-tavern-phase135-style-sample-metadata/checklist.yaml
-        result: "not_run; controller-owned during S2"
+        result: "passed"
       - command: >-
           git diff --name-only -- README.md src tests run_agent.py cli.py gateway/run.py build/lib
-        result: "not_run; expected empty in S2"
+        result: "passed - no output; S2 diff is docs/status-only."
+      - command: "stale current-doc wording scan for style samples deferred/current-through-Phase-134"
+        result: "passed - no stale style-sample deferred/current-through-Phase-134 wording in `ARCHITECTURE.md` or root design current sections."
+      - command: "deferred-boundary preservation scan"
+        result: "passed - intended deferred relationship graph/rename/automatic extraction/default binding/canon-content/archive/retrieval/vectorization/automation/provider/cloud/collab/safety boundaries remain documented."
       - command: "git diff --check"
-        result: "not_run; controller-owned during S2"
+        result: "passed"
 
 checks:
   - id: C1
@@ -302,7 +318,15 @@ checks:
 
   - id: C7
     name: "C7: Architecture and root design writeback"
-    status: pending
+    status: completed
+    completed_at: "2026-06-05"
+    result: >
+      PASSED - S2 acceptance updates `ARCHITECTURE.md` and root
+      `HERMES_TAVERN_DESIGN.md` to mark style-sample metadata current, add
+      schema/command/export/boundary notes, remove current-doc stale wording
+      that still listed style samples as deferred, and preserve the remaining
+      deferred automation/retrieval/provider/generation/default-binding/policy/
+      archive/graph/cloud/collab/safety boundaries.
     criteria: >
       S2 acceptance updates architecture and root design to mark style-sample
       metadata current, adds schema/command/export/boundary notes, and removes
