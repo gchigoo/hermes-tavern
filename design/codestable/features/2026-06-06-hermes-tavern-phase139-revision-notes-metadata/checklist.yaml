@@ -1,0 +1,167 @@
+doc_type: feature-checklist
+feature: "2026-06-06-hermes-tavern-phase139-revision-notes-metadata"
+date: "2026-06-06"
+status: planned
+summary: >
+  Planned - Revision Notes Metadata v1 adds local project-scoped revision-note
+  rows managed through nested /rp project revision add/list/inspect/update/delete
+  commands and optional project Markdown export visibility only. It must remain
+  metadata-only/inert and must not edit src/hermes_tavern/runtime.py.
+
+implementation_readiness: >
+  PLANNED - Codex architect selected revision notes as the next bounded local
+  metadata phase and a follow-up architect refinement corrected routing to the
+  existing /rp project command family. Controller validation must still promote
+  this draft/planned artifact before S1 implementation.
+
+planning_verification:
+  - command: >-
+      codex --profile architect exec --json --color never --disable image_generation --sandbox read-only --cd /Users/steven/Projects/hermes-tavern <Phase 139 planning prompt>
+    result: >-
+      passed; JSONL at /tmp/hermes-tavern-architect-phase139.jsonl; RESULT:
+      PLANNING_ARTIFACT; selected revision-note metadata. Two no-match rg probes
+      returned exit 1 while proving no active checklist/revision implementation.
+  - command: >-
+      codex --profile architect exec --json --color never --disable image_generation --sandbox read-only --cd /Users/steven/Projects/hermes-tavern <Phase 139 routing-refinement prompt>
+    result: >-
+      passed; JSONL at /tmp/hermes-tavern-architect-phase139-refine.jsonl;
+      RESULT: PLANNING_ARTIFACT_REVISED; corrected command surface to nested
+      /rp project revision ... so S1 need not edit src/hermes_tavern/runtime.py.
+
+steps:
+  - id: S1
+    name: "S1: Implement local project revision-note metadata"
+    status: planned
+    description: >
+      Add novel_revision_notes persistence, create/list/inspect/update/delete
+      store helpers, nested /rp project revision add/list/inspect/update/delete
+      command handling, help/README command literals, optional project Markdown
+      export visibility, and focused offline tests. Keep revision notes
+      metadata-only/inert.
+    allowed_files:
+      - src/hermes_tavern/db_novel.py
+      - src/hermes_tavern/runtime_novel.py
+      - src/hermes_tavern/commands.py
+      - README.md
+      - tests/test_hermes_tavern_novel_db.py
+      - tests/test_hermes_tavern_novel_runtime.py
+      - tests/test_hermes_tavern_commands.py
+      - tests/test_hermes_tavern_readme_docs.py
+    prohibited_files:
+      - src/hermes_tavern/runtime.py
+      - run_agent.py
+      - cli.py
+      - gateway/run.py
+      - src/hermes_tavern/runtime_prompt_modules.py
+      - src/hermes_tavern/prompt.py
+      - src/hermes_tavern/runtime_prompt_manager.py
+      - src/hermes_tavern/runtime_debug.py
+      - src/hermes_tavern/model_router.py
+      - src/hermes_tavern/provider_bridge.py
+      - src/hermes_tavern/adapters.py
+      - src/hermes_tavern/runtime_model.py
+      - src/hermes_tavern/runtime_generation.py
+      - src/hermes_tavern/runtime_content.py
+      - src/hermes_tavern/memory.py
+      - src/hermes_tavern/runtime_memory.py
+      - src/hermes_tavern/images.py
+      - src/hermes_tavern/runtime_images.py
+      - "src/hermes_tavern/importers/**"
+      - "plugins/**"
+      - "build/lib/**"
+      - design/codestable/architecture/ARCHITECTURE.md
+      - design/HERMES_TAVERN_DESIGN.md
+      - "design/codestable/** status/checklist/acceptance writeback during S1"
+    exact_scope:
+      - "Create novel_revision_notes with project_id, label, note_text, timestamps, and idx_novel_revision_notes_project."
+      - "Support /rp project revision add <project-id> <label> <note...>."
+      - "Support /rp project revision list <project-id>."
+      - "Support /rp project revision inspect <note-id>."
+      - "Support /rp project revision update <note-id> <note...>."
+      - "Support /rp project revision delete <note-id>."
+      - "Route through runtime_novel.project_command under the existing project command family."
+      - "Do not add a top-level revision key to TAVERN_COMMAND_TABLE."
+      - "Do not edit src/hermes_tavern/runtime.py."
+      - "Keep labels immutable in v1; update changes note_text only."
+      - "Order list/export rows by id ASC."
+      - "Emit optional ## Revision Notes only when rows exist in project Markdown export."
+      - "Keep revision note text absent from debug prompt, debug context, prompt modules, context-budget output, provider/model routing, content mode, retrieval/vectorization, and generation."
+      - "Use neutral fictional writing examples only; do not add minor/underage/age fields or examples."
+    verification:
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m py_compile src/hermes_tavern/db_novel.py src/hermes_tavern/runtime_novel.py src/hermes_tavern/commands.py tests/test_hermes_tavern_novel_db.py tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_commands.py tests/test_hermes_tavern_readme_docs.py"
+        expected: "passes"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel_db.py tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_commands.py tests/test_hermes_tavern_readme_docs.py -q -o 'addopts=' -p no:cacheprovider"
+        expected: "passes"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_*.py -q -o 'addopts=' -p no:cacheprovider"
+        expected: "passes"
+      - command: "git diff --name-only -- src/hermes_tavern/runtime.py run_agent.py cli.py gateway/run.py src/hermes_tavern/runtime_prompt_modules.py src/hermes_tavern/prompt.py src/hermes_tavern/runtime_prompt_manager.py src/hermes_tavern/runtime_debug.py src/hermes_tavern/model_router.py src/hermes_tavern/provider_bridge.py src/hermes_tavern/adapters.py src/hermes_tavern/runtime_model.py src/hermes_tavern/runtime_generation.py src/hermes_tavern/runtime_content.py src/hermes_tavern/memory.py src/hermes_tavern/runtime_memory.py src/hermes_tavern/images.py src/hermes_tavern/runtime_images.py src/hermes_tavern/importers plugins build/lib design/HERMES_TAVERN_DESIGN.md design/codestable/architecture/ARCHITECTURE.md"
+        expected: "empty output during S1 implementation"
+      - command: "git diff --check"
+        expected: "passes"
+
+acceptance:
+  - id: AC1
+    criteria: "Migration creates novel_revision_notes and idx_novel_revision_notes_project."
+    status: planned
+  - id: AC2
+    criteria: "Store helpers create, list, inspect, update, and delete revision notes with deterministic id ASC ordering."
+    status: planned
+  - id: AC3
+    criteria: "Missing projects, missing notes, blank labels, and blank note text return bounded behavior."
+    status: planned
+  - id: AC4
+    criteria: "/rp project revision add/list/inspect/update/delete works through runtime_novel.project_command."
+    status: planned
+  - id: AC5
+    criteria: "No top-level revision entry is added to TAVERN_COMMAND_TABLE and src/hermes_tavern/runtime.py remains unchanged."
+    status: planned
+  - id: AC6
+    criteria: "README Core commands, /rp help, command tests, and docs tests include nested project revision literals."
+    status: planned
+  - id: AC7
+    criteria: "Project Markdown export includes ## Revision Notes only when rows exist and omits it when empty."
+    status: planned
+  - id: AC8
+    criteria: "Distinctive revision note text does not appear in /rp debug prompt or /rp debug context."
+    status: planned
+  - id: AC9
+    criteria: "Reverse-scope diff checks show no protected core, runtime.py, prompt/debug/context-budget, provider/model/content/generation, retrieval/vectorization, media, importer, plugin shim, build, archive, graph, automatic extraction, or safety-bypass changes."
+    status: planned
+
+checks:
+  - id: C1
+    name: "Metadata schema"
+    status: planned
+    criteria: "novel_revision_notes exists with project ownership and indexed project lookup."
+  - id: C2
+    name: "Project command route"
+    status: planned
+    criteria: "Revision commands are nested under /rp project revision and do not require a runtime.py shim."
+  - id: C3
+    name: "Command surface"
+    status: planned
+    criteria: "/rp project revision add/list/inspect/update/delete are visible and bounded."
+  - id: C4
+    name: "Export visibility"
+    status: planned
+    criteria: "Revision notes appear only as optional project-level Markdown export metadata."
+  - id: C5
+    name: "No prompt/provider side effects"
+    status: planned
+    criteria: "Revision note text stays out of prompt/debug/context paths and no prohibited files change."
+
+risks:
+  - id: R1
+    risk: "A top-level /rp revision route would require a prohibited runtime.py shim."
+    mitigation: "Nest under /rp project revision and assert no top-level revision command table entry."
+  - id: R2
+    risk: "Users may assume revision notes trigger generated rewrites or versioning."
+    mitigation: "Keep command/docs wording metadata-only/inert and defer rewrite/version workflows."
+  - id: R3
+    risk: "Export ordering can become unstable as project metadata sections grow."
+    mitigation: "Add focused inclusion, omission, and ordering tests for ## Revision Notes."
+
+verification_notes: |
+  - Planning artifact only; executor intentionally not run in this tick because this is a brand-new draft/planned feature.
+  - Controller corrected the first architect artifact's unsafe top-level /rp revision route by running a read-only Codex architect refinement and materializing the nested /rp project revision route instead.
+  - Next tick should validate/promote this artifact, smoke-test Codex executor, then implement S1 within the allowed files only.
