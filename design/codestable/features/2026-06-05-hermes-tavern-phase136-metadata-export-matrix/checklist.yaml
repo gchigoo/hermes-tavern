@@ -1,20 +1,25 @@
 doc_type: feature-checklist
-status: in_progress
+status: accepted
 feature: "2026-06-05-hermes-tavern-phase136-metadata-export-matrix"
 date: "2026-06-05"
 summary: >
-  Planned test-only hardening slice for current novel project metadata Markdown
-  export ordering and runtime file export coverage after Phase 135. No source,
-  product, architecture, provider, prompt, generation, retrieval, credential,
-  importer, archive, graph, or protected core behavior changes are in scope.
+  ACCEPTED - Novel Metadata Export Matrix v1 adds test-only regression coverage
+  for current project metadata Markdown export ordering, optional-section
+  omission, and `/rp project export [id]` local file export. S1 implementation
+  and S2 docs/status acceptance are complete with no source/product,
+  architecture, provider, prompt, generation, retrieval, credential, importer,
+  archive, graph, or protected core behavior changes.
 
 implementation_readiness: >
-  IN_PROGRESS - Codex architect produced a read-only planning artifact; the
-  controller materialized and validated the design/checklist, promoted the
+  ACCEPTED - Codex architect produced the original Phase 136 planning artifact;
+  the controller materialized and validated the design/checklist, promoted the
   design to approved, smoke-tested the executor profile, ran the bounded Codex
   executor S1 test-only slice, inspected the resulting tests, and reran
-  controller verification from scratch. S1 is complete; S2 acceptance/status is
-  still planned.
+  controller verification from scratch. For S2, Codex architect produced a
+  docs/status-only acceptance artifact, the controller smoke-tested the executor
+  profile, the bounded executor drafted the acceptance report/checklist status
+  notes, and the controller reran focused/Tavern/full pytest, frontmatter/YAML
+  validators, reverse-scope guards, and `git diff --check` before accepting.
 
 likely_touched_files:
   - tests/test_hermes_tavern_novel_db.py
@@ -78,13 +83,19 @@ steps:
 
   - id: S2
     name: "S2: Verify and accept test-only phase"
-    status: planned
+    status: completed
+    completed_at: "2026-06-05"
     description: >
       Controller-owned acceptance/status pass after S1. Rerun focused, Tavern,
       full, YAML/frontmatter, reverse-scope, and whitespace checks; create the
       acceptance artifact and mark the checklist accepted only after all checks
       pass. No architecture or root-design writeback is expected because the
       phase changes tests only.
+    result: >
+      ACCEPTED - Codex executor drafted the Phase 136 acceptance artifact;
+      controller reran focused DB/runtime tests, Tavern plugin tests, full
+      pytest, design/acceptance/checklist validators, reverse-scope guards, and
+      `git diff --check`, then finalized the acceptance report and checklist.
     allowed_files:
       - design/codestable/features/2026-06-05-hermes-tavern-phase136-metadata-export-matrix/design.md
       - design/codestable/features/2026-06-05-hermes-tavern-phase136-metadata-export-matrix/checklist.yaml
@@ -101,25 +112,31 @@ steps:
       - "build/lib/**"
     verification:
       - command: >-
+          PYTHONDONTWRITEBYTECODE=1 python -m py_compile tests/test_hermes_tavern_novel_db.py tests/test_hermes_tavern_novel_runtime.py
+        result: "passed (controller rerun; no output)"
+      - command: >-
           PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel_db.py tests/test_hermes_tavern_novel_runtime.py -q -o 'addopts=' -p no:cacheprovider
-        expected_result: "passes"
+        result: "passed (controller rerun; 199 passed in 9.68s)"
       - command: >-
           PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_*.py -q -o 'addopts=' -p no:cacheprovider
-        expected_result: "passes"
+        result: "passed (controller rerun; 961 passed in 44.29s)"
       - command: >-
           PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts=' -p no:cacheprovider
-        expected_result: "passes"
+        result: "passed (controller rerun; 961 passed in 43.26s)"
       - command: >-
           python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-05-hermes-tavern-phase136-metadata-export-matrix/design.md --require doc_type --require status --require feature
-        expected_result: "passes"
+        result: "passed"
+      - command: >-
+          python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-05-hermes-tavern-phase136-metadata-export-matrix/hermes-tavern-phase136-metadata-export-matrix-acceptance.md --require doc_type --require status --require feature
+        result: "passed"
       - command: >-
           python design/codestable/tools/validate-yaml.py --yaml-only --file design/codestable/features/2026-06-05-hermes-tavern-phase136-metadata-export-matrix/checklist.yaml
-        expected_result: "passes"
+        result: "passed"
       - command: >-
           git diff --name-only -- README.md src tests run_agent.py cli.py gateway/run.py design/HERMES_TAVERN_DESIGN.md design/codestable/architecture/ARCHITECTURE.md build/lib
-        expected_result: "empty output for S2 docs/status-only pass"
+        result: "passed (empty output for S2 docs/status-only pass)"
       - command: "git diff --check"
-        expected_result: "passes"
+        result: "passed"
 
 checks:
   - id: C1
@@ -189,7 +206,8 @@ checks:
     result: >
       PASSED - Controller reran py_compile, focused DB/runtime tests (199
       passed), Tavern plugin tests (961 passed), full pytest (961 passed),
-      YAML/frontmatter validation, reverse-scope guards, and `git diff --check`.
+      design/acceptance/checklist validation, reverse-scope guards, and
+      `git diff --check` before final S2 acceptance.
     criteria: >
       Focused tests, Tavern plugin test glob, YAML/frontmatter validation, and
       whitespace checks pass before acceptance.
