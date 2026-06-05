@@ -129,6 +129,7 @@ importers/
 - Phase 135: Style Sample Metadata v1 (`/rp style sample ...`) backed by `novel_style_samples`; metadata-only, no prompt/provider/model-routing/content-mode/generation side effects. Export is optional and local-only as `## Style Samples`.
 - Phase 137: Default Bindings Metadata v1 (`/rp binding set/list/inspect/clear`) backed by `novel_default_bindings`; metadata-only, command/export visible only. Unique scope constraint uses `UNIQUE(scope_type, scope_id, asset_type)` with `idx_novel_default_bindings_scope`. No prompt/debug/context/provider/model/content/generation/media/archival/graph/safety behavior changes.
 - Phase 138: Scene Beat Metadata v1 (`/rp scene beat add/list/inspect/update/delete`) backed by `novel_scene_beats`; metadata-only, command/export visible only for owning scene. No prompt/debug/context/provider/model/content/credential/retrieval/vectorization/generation/media/archive/graph/extraction/safety behavior changes.
+- Phase 139: Revision Notes Metadata v1 (`/rp project revision add/list/inspect/update/delete`) backed by `novel_revision_notes`; metadata-only, command/export-visible only, and no prompt/debug/context/provider/model/content/credential/retrieval/vectorization/generation/media/archive/graph/extraction/safety behavior changes.
 
 ### Plugin flow
 
@@ -159,16 +160,17 @@ Macro expansion is one-pass and allowlist-based. Supported Phase 20 macros are
 unknown macros are preserved, and replacement text is not recursively expanded.
 
 Project Brief, Project Outline, Relationship State, Character State, Location,
-Organization, Plot Thread, Style Sample, Default Bindings, and Scene Beat
-metadata are
+Organization, Plot Thread, Style Sample, Default Bindings, Revision Notes, and
+Scene Beat metadata are
 explicitly excluded from prompt assembly, session prompt module selection, debug
 prompt/context payloads, and context-budget reporting. Relationship, character-state,
-location, organization, plot-thread, style-sample, default-binding, and scene-beat metadata are also excluded
+location, organization, plot-thread, style-sample, default-binding,
+revision-note, and scene-beat metadata are also excluded
 from vectorization/retrieval, provider/model routing, content mode,
 credentials, automation, summarization, and generation; they are visible only
 through command output and Markdown export.
 
-### /rp command surface (current through Phase 138)
+### /rp command surface (current through Phase 139)
 
 ```
 /rp help | status | assets
@@ -222,6 +224,11 @@ through command output and Markdown export.
 /rp scene beat inspect <beat-id>
 /rp scene beat update <beat-id> <beat...>
 /rp scene beat delete <beat-id>
+/rp project revision add <project-id> <label> <note...>
+/rp project revision list [project-id]
+/rp project revision inspect <note-id>
+/rp project revision update <note-id> <note...>
+/rp project revision delete <note-id>
 /rp canon add/list/group
 /rp timeline add/list
 /rp character state add <project-id> <label> <state...>
@@ -260,7 +267,7 @@ through command output and Markdown export.
 /rp relationship delete <relationship-id>
 ```
 
-### DB schema (current through Phase 138)
+### DB schema (current through Phase 139)
 
 ```sql
 cards(id, name, data_json, source_path, created_at)
@@ -312,6 +319,17 @@ CREATE INDEX idx_novel_plot_threads_project ON novel_plot_threads(project_id)
 novel_style_samples(id, project_id, label, sample_text, created_at, updated_at)
 -- project_id REFERENCES novel_projects(id) ON DELETE CASCADE
 CREATE INDEX idx_novel_style_samples_project ON novel_style_samples(project_id)
+novel_revision_notes(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    project_id INTEGER NOT NULL REFERENCES novel_projects(id) ON DELETE CASCADE,
+    label TEXT NOT NULL,
+    note_text TEXT NOT NULL,
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+)
+CREATE INDEX idx_novel_revision_notes_project
+    ON novel_revision_notes(project_id, id)
+
 novel_default_bindings(
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     scope_type TEXT NOT NULL,
@@ -408,6 +426,14 @@ prompt/compiler, prompt modules, debug prompt/context, context-budget reporting,
 provider/model routing, content mode, credentials, generation, retrieval/vectorization,
 media/TTS/image, archive, ST importer/exporter, graph, or safety-bypass behavior.
 
+Phase 139 adds `novel_revision_notes` and `/rp project revision ...`
+command-family metadata for local project-scoped revision notes (`label`,
+`note_text`). These rows are metadata-only and command/export visible only.
+Revision-note rows are excluded from prompt/compiler, prompt modules, debug
+prompt/context, context-budget reporting, provider/model routing, content mode,
+credentials, generation, retrieval/vectorization, media/TTS/image, archive, ST
+importer/exporter, graph, or safety-bypass behavior.
+
 Phase 26 adds in-memory quick-action tracking on `TavernStore` only:
 `_last_card_id`, `_last_preset_id`, `_last_lorebook_id`, and
 `_last_persona_id`. These IDs are not persisted and reset when the runtime
@@ -447,4 +473,5 @@ These phases do not change schema or core prompt/generation assembly.
 - **Phase 135 style-sample boundary**: style-sample metadata is export-visible only. It is excluded from prompt modules, debug prompt/context output, context-budget reporting, vectorization/retrieval, provider/model routing, content mode decisions, credentials, automation, summarization, and generation.
 - **Phase 137 default binding boundary**: default-binding metadata is command/export-visible only. It is excluded from prompt modules, debug prompt/context output, context-budget reporting, vectorization/retrieval, provider/model routing, content mode decisions, credentials, generation, media/TTS/image flow, archive, ST importer/exporter, graph, and safety-bypass behavior.
 - **Phase 138 scene-beat boundary**: scene-beat metadata is command/export-visible only. It is excluded from prompt modules, debug prompt/context output, context-budget reporting, vectorization/retrieval, provider/model routing, content mode decisions, credentials, generation, media/TTS/image flow, archive, ST importer/exporter, graph, and safety-bypass behavior.
+- **Phase 139 revision-notes boundary**: revision-note metadata is command/export-visible only. It is excluded from prompt modules, debug prompt/context output, context-budget reporting, vectorization/retrieval, provider/model routing, content mode decisions, credentials, generation, media/TTS/image flow, archive, ST importer/exporter, graph, and safety-bypass behavior.
 - **Tavern lore regex complexity guard**: lorebook regex keys are screened locally before matching. Entries with patterns longer than 256 characters or nested quantified groups (for example `(a+)+`, `(.+)*`, `([a-z]+){2,}`) are excluded with bounded reasons (`regex rejected: ...`), preserving raw imported lore data while preventing unbounded local matching behavior.

@@ -529,8 +529,16 @@ through `/rp scene beat add/list/inspect/update/delete`, persisted in
 Scene beats are command/export visible only, scene-local, and intentionally omit
 any automatic sequencing or generation behavior.
 
+Revision Notes Metadata v1 is current local project-scoped metadata and is managed
+through `/rp project revision add/list/inspect/update/delete`, persisted in
+`novel_revision_notes(id, project_id, label, note_text, created_at, updated_at)`.
+Revision notes are informational-only: command/export visible local metadata that
+does not alter prompt module injection, provider routing, context-budget reporting,
+retrieval/vectorization, content mode, credentials, generation, archive/import,
+ST importer/exporter, automatic extraction, graph, or safety behavior.
+
 Default-binding metadata, relationship state, character state, location,
-organization, plot-thread, style-sample metadata, and scene beats are
+organization, plot-thread, style-sample metadata, revision notes, and scene beats are
 informational-only:
 they do not participate in prompt module injection, provider routing, context
 budget reporting, vectorization/retrieval, content-mode behavior, credential
@@ -549,6 +557,7 @@ locations
 organizations
 plot threads
 style samples
+revision notes
 scene beats
 ```
 
@@ -636,6 +645,11 @@ Commands:
 /rp scene beat inspect <beat-id>
 /rp scene beat update <beat-id> <beat...>
 /rp scene beat delete <beat-id>
+/rp project revision add <project-id> <label> <note...>
+/rp project revision list [project-id]
+/rp project revision inspect <note-id>
+/rp project revision update <note-id> <note...>
+/rp project revision delete <note-id>
 /rp canon add <project-id> <title> <content>
 /rp canon list [project-id] [group]
 /rp canon group [project-id] <group>
@@ -654,6 +668,9 @@ when at least one location row exists.
 falls back to being emitted after Project Brief, Outline, and Style Guide (when present)
 before `## Characters`, `## Relationships`, and `## Chapters`.
 `## Locations` and `## Organizations` are omitted when empty.
+`## Revision Notes` is exported as an optional section for project-scoped revision
+rows after `## Relationships` and before `## Default Bindings`/`## Chapters`. It
+is omitted when empty.
 Character-state metadata is exported as optional `## Characters` after
 `## Organizations`/`## Locations` and before `## Relationships` when rows exist.
 Relationship-state metadata is exported as optional `## Relationships` after
@@ -1039,8 +1056,7 @@ scene beats
 ```
 
 Future novel-engine dimensions remain deferred: volume/arc, location map/
-geocode derivatives, revision notes, relationship graph/rename/automatic
-extraction.
+geocode derivatives, relationship graph/rename/automatic extraction.
 
 ### 13.2 Writing commands
 
@@ -1107,6 +1123,11 @@ extraction.
 /rp scene beat inspect <beat-id>
 /rp scene beat update <beat-id> <beat...>
 /rp scene beat delete <beat-id>
+/rp project revision add <project-id> <label> <note...>
+/rp project revision list [project-id]
+/rp project revision inspect <note-id>
+/rp project revision update <note-id> <note...>
+/rp project revision delete <note-id>
 /rp canon add/list/group
 /rp timeline add/list
 ```
@@ -1324,6 +1345,11 @@ Current style-sample metadata table:
 with `project_id REFERENCES novel_projects(id) ON DELETE CASCADE` and
 `idx_novel_style_samples_project ON novel_style_samples(project_id)`.
 
+Current revision-note metadata table:
+`novel_revision_notes(id, project_id, label, note_text, created_at, updated_at)`,
+with `project_id REFERENCES novel_projects(id) ON DELETE CASCADE` and
+`idx_novel_revision_notes_project ON novel_revision_notes(project_id, id)`.
+
 ### 16.2 Message table
 
 ```sql
@@ -1374,11 +1400,11 @@ ST preset JSON
 ST lorebook/world info JSON
 ```
 
-Hermes Tavern native project archives are deferred; the current Phase 121–138
+Hermes Tavern native project archives are deferred; the current Phase 121–139
 implementation provides Markdown export only, not project/novel import.
 Relationship-state, character-state, location, organization, plot-thread, and
-style-sample rows, plus scene-beat rows, remain local metadata and are not bound
-to ST card objects in this phase.
+style-sample rows, plus revision-note and scene-beat rows, remain local metadata
+and are not bound to ST card objects in this phase.
 
 Later:
 
@@ -1401,7 +1427,7 @@ chat export JSONL
 novel export Markdown
 ```
 
-Project archive ZIP remains a future exporter/importer; current Phase 121–138 writes
+Project archive ZIP remains a future exporter/importer; current Phase 121–139 writes
 local Markdown via `/rp project export [id]`.
 Project Brief and Project Outline are exported as optional top-level `## Project Brief`
 and `## Outline` sections after `## Summary` when non-empty. Project style guides
@@ -1411,6 +1437,8 @@ present, or after Project Brief/Outline when no Style Guide is present, before
 `## Locations`, `## Organizations`, `## Plot Threads`, `## Characters`,
 `## Relationships`, and `## Chapters`. `## Style Samples` is omitted when no
 style-sample rows exist.
+`## Revision Notes` appears after `## Relationships` and before `## Default Bindings`
+when revision-note rows exist. It is omitted when no revision-note rows exist.
 `## Default Bindings` appears after `## Relationships` and before `## Chapters`,
 and is omitted when no default-binding rows exist.
 `## Locations` appears after Style Samples when present; otherwise it follows
