@@ -121,6 +121,16 @@ def test_help_lists_project_style_commands():
     assert "/rp project style clear [project-id]" in help_text
 
 
+def test_help_lists_style_sample_commands():
+    help_text = _build_help_text()
+
+    assert "/rp style sample add <project-id> <label> <sample...>" in help_text
+    assert "/rp style sample list [project-id]" in help_text
+    assert "/rp style sample inspect <style-sample-id>" in help_text
+    assert "/rp style sample update <style-sample-id> <sample...>" in help_text
+    assert "/rp style sample delete <style-sample-id>" in help_text
+
+
 def test_help_lists_chapter_and_scene_summary_commands():
     help_text = _build_help_text()
 

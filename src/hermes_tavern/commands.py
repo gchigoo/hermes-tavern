@@ -270,6 +270,16 @@ TAVERN_COMMAND_TABLE: dict[str, TavernCommandEntry] = {
         ],
     ),
     # ── novel layer ──
+    "style": TavernCommandEntry(
+        handler="_style_command",
+        help_lines=[
+            "/rp style sample add <project-id> <label> <sample...>",
+            "/rp style sample list [project-id]",
+            "/rp style sample inspect <style-sample-id>",
+            "/rp style sample update <style-sample-id> <sample...>",
+            "/rp style sample delete <style-sample-id>",
+        ],
+    ),
     "character": TavernCommandEntry(
         handler="_character_command",
         help_lines=[

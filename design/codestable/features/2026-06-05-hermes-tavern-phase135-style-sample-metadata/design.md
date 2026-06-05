@@ -1,7 +1,7 @@
 ---
 doc_type: feature-design
 feature: "2026-06-05-hermes-tavern-phase135-style-sample-metadata"
-status: draft
+status: approved
 date: "2026-06-05"
 summary: >
   Style Sample Metadata v1 adds local project-scoped prose/style excerpts with

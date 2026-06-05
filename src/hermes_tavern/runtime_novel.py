@@ -203,6 +203,31 @@ def plot_command(runtime: Any, command: RPCommand, event: Any) -> str:
     return _PLOT_THREAD_USAGE
 
 
+def style_command(runtime: Any, command: RPCommand, event: Any) -> str:
+    if not command.args:
+        return _STYLE_SAMPLE_USAGE
+
+    if command.args[0].lower() != "sample":
+        return _STYLE_SAMPLE_USAGE
+
+    if len(command.args) < 2:
+        return _STYLE_SAMPLE_USAGE
+
+    subcommand = command.args[1].lower()
+    if subcommand == "add":
+        return style_sample_add(runtime, command, event)
+    if subcommand == "list":
+        return style_sample_list(runtime, command, event)
+    if subcommand == "inspect":
+        return style_sample_inspect(runtime, command)
+    if subcommand == "update":
+        return style_sample_update(runtime, command)
+    if subcommand == "delete":
+        return style_sample_delete(runtime, command)
+
+    return _STYLE_SAMPLE_USAGE
+
+
 def _safe_int(text: str) -> int | None:
     try:
         return int(text)
@@ -238,6 +263,14 @@ _PLOT_THREAD_USAGE = (
     "/rp plot thread list [project-id] | /rp plot thread inspect <plot-thread-id> | "
     "/rp plot thread update <plot-thread-id> <description...> | "
     "/rp plot thread delete <plot-thread-id>"
+)
+
+
+_STYLE_SAMPLE_USAGE = (
+    "Usage: /rp style sample add <project-id> <label> <sample...> | "
+    "/rp style sample list [project-id] | /rp style sample inspect <style-sample-id> | "
+    "/rp style sample update <style-sample-id> <sample...> | "
+    "/rp style sample delete <style-sample-id>"
 )
 
 
@@ -1692,6 +1725,117 @@ def plot_thread_delete(runtime: Any, command: RPCommand) -> str:
         return f"No plot thread found: {plot_thread_id}"
 
     return f"Plot thread deleted for plot thread [{plot_thread_id}]."
+
+
+def style_sample_add(runtime: Any, command: RPCommand, event: Any) -> str:
+    del event
+    if len(command.args) < 5:
+        return _STYLE_SAMPLE_USAGE
+
+    project_id = _safe_int(command.args[2])
+    if project_id is None:
+        return _STYLE_SAMPLE_USAGE
+
+    label = command.args[3].strip()
+    if not label:
+        return _STYLE_SAMPLE_USAGE
+
+    sample_text = " ".join(command.args[4:]).strip()
+    if not sample_text:
+        return _STYLE_SAMPLE_USAGE
+
+    try:
+        style_sample = runtime.store.create_style_sample(project_id, label, sample_text)
+    except ValueError:
+        return f"No novel project found: {project_id}"
+
+    return (
+        f"Style sample added: [{style_sample['id']}] {style_sample['label']} -> "
+        f"{_mobile_preview(style_sample['sample_text'], 180)}"
+    )
+
+
+def style_sample_list(runtime: Any, command: RPCommand, event: Any) -> str:
+    project_id, err = _resolve_project_id(
+        runtime,
+        command,
+        event=event,
+        usage="Usage: /rp style sample list [project-id]",
+        default_ok=True,
+        fallback_index=2,
+    )
+    if project_id is None:
+        return err or _STYLE_SAMPLE_USAGE
+
+    try:
+        style_samples = runtime.store.list_style_samples(project_id)
+    except ValueError:
+        return f"No novel project found: {project_id}"
+
+    if not style_samples:
+        return f"No style samples for project [{project_id}]."
+
+    lines = [f"Hermes Tavern style samples for project [{project_id}]:"]
+    for sample in style_samples:
+        lines.append(
+            f"  - [{sample['id']}] {sample['label']}: "
+            f"{_mobile_preview(sample['sample_text'], 120)}"
+        )
+    return "\n".join(lines)
+
+
+def style_sample_inspect(runtime: Any, command: RPCommand) -> str:
+    if len(command.args) != 3:
+        return _STYLE_SAMPLE_USAGE
+
+    style_sample_id = _safe_int(command.args[2])
+    if style_sample_id is None:
+        return _STYLE_SAMPLE_USAGE
+
+    style_sample = runtime.store.get_style_sample(style_sample_id)
+    if style_sample is None:
+        return f"No style sample found: {style_sample_id}"
+
+    return (
+        f"Style sample for [{style_sample_id}] (project [{style_sample['project_id']}]): "
+        f"{style_sample['label']}: {_mobile_preview(style_sample['sample_text'], 220)}"
+    )
+
+
+def style_sample_update(runtime: Any, command: RPCommand) -> str:
+    if len(command.args) < 4:
+        return _STYLE_SAMPLE_USAGE
+
+    style_sample_id = _safe_int(command.args[2])
+    if style_sample_id is None:
+        return _STYLE_SAMPLE_USAGE
+
+    sample_text = " ".join(command.args[3:]).strip()
+    if not sample_text:
+        return _STYLE_SAMPLE_USAGE
+
+    style_sample = runtime.store.update_style_sample(style_sample_id, sample_text)
+    if style_sample is None:
+        return f"No style sample found: {style_sample_id}"
+
+    return (
+        f"Style sample updated for style sample [{style_sample_id}]: "
+        f"{_mobile_preview(style_sample['sample_text'], 180)}"
+    )
+
+
+def style_sample_delete(runtime: Any, command: RPCommand) -> str:
+    if len(command.args) != 3:
+        return _STYLE_SAMPLE_USAGE
+
+    style_sample_id = _safe_int(command.args[2])
+    if style_sample_id is None:
+        return _STYLE_SAMPLE_USAGE
+
+    if not runtime.store.delete_style_sample(style_sample_id):
+        return f"No style sample found: {style_sample_id}"
+
+    return f"Style sample deleted for style sample [{style_sample_id}]."
 
 
 def character_state_add(runtime: Any, command: RPCommand, event: Any) -> str:

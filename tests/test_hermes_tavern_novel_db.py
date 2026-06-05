@@ -27,6 +27,7 @@ def test_migrate_creates_novel_tables(tmp_path):
         "novel_scene_goals",
         "novel_scene_narration_controls",
         "novel_project_style_guides",
+        "novel_style_samples",
         "novel_project_briefs",
         "novel_project_outlines",
         "novel_relationship_states",
@@ -45,6 +46,7 @@ def test_migrate_creates_novel_tables(tmp_path):
         "novel_scene_goals",
         "novel_scene_narration_controls",
         "novel_project_style_guides",
+        "novel_style_samples",
         "novel_project_briefs",
         "novel_project_outlines",
         "novel_relationship_states",
@@ -67,6 +69,20 @@ def test_migrate_creates_novel_tables(tmp_path):
             ).fetchall()
         }
     assert "idx_novel_project_style_guides_project" in indexes
+
+    with sqlite3.connect(db_path) as conn:
+        style_sample_indexes = {
+            row[0]
+            for row in conn.execute(
+                """
+                SELECT name
+                FROM sqlite_master
+                WHERE type='index'
+                    AND tbl_name='novel_style_samples'
+                """
+            ).fetchall()
+        }
+    assert "idx_novel_style_samples_project" in style_sample_indexes
     with sqlite3.connect(db_path) as conn:
         brief_indexes = {
             row[0]
@@ -390,6 +406,87 @@ def test_character_state_blank_label_and_state_rejected(tmp_path):
         assert str(exc) == "Character state text cannot be blank"
     else:
         raise AssertionError("Expected ValueError for blank state text on update")
+
+
+def test_style_sample_crud_and_missing_owner_errors(tmp_path):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    project = store.create_project("Style Samples")
+
+    created = store.create_style_sample(
+        project["id"],
+        "sea-letters",
+        "Short, salt-rough prose with rope metaphors.",
+    )
+    assert created["project_id"] == project["id"]
+    assert created["label"] == "sea-letters"
+    assert created["sample_text"] == "Short, salt-rough prose with rope metaphors."
+
+    listed = store.list_style_samples(project["id"])
+    assert len(listed) == 1
+    assert listed[0]["id"] == created["id"]
+    assert listed[0]["label"] == created["label"]
+    assert listed[0]["sample_text"] == created["sample_text"]
+
+    fetched = store.get_style_sample(created["id"])
+    assert fetched is not None
+    assert fetched["sample_text"] == created["sample_text"]
+
+    updated = store.update_style_sample(created["id"], "Shorter, saltier prose with knots and oaths.")
+    assert updated is not None
+    assert updated["id"] == created["id"]
+    assert updated["sample_text"] == "Shorter, saltier prose with knots and oaths."
+    assert updated["updated_at"] >= created["updated_at"]
+
+    assert store.delete_style_sample(created["id"]) is True
+    assert store.get_style_sample(created["id"]) is None
+    assert store.delete_style_sample(created["id"]) is False
+
+    try:
+        store.create_style_sample(999, "missing", "No project.")
+    except ValueError as exc:
+        assert str(exc) == "Project not found"
+    else:
+        raise AssertionError("Expected ValueError for missing project")
+
+    try:
+        store.list_style_samples(999)
+    except ValueError as exc:
+        assert str(exc) == "Project not found"
+    else:
+        raise AssertionError("Expected ValueError for missing project")
+
+    assert store.update_style_sample(999, "No sample yet") is None
+
+
+def test_style_sample_blank_label_and_text_rejected(tmp_path):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    project = store.create_project("Style Samples")
+
+    try:
+        store.create_style_sample(project["id"], " ", "Sample text")
+    except ValueError as exc:
+        assert str(exc) == "Style sample label cannot be blank"
+    else:
+        raise AssertionError("Expected ValueError for blank label")
+
+    try:
+        store.create_style_sample(project["id"], "sea-letters", "   ")
+    except ValueError as exc:
+        assert str(exc) == "Style sample text cannot be blank"
+    else:
+        raise AssertionError("Expected ValueError for blank sample text")
+
+    created = store.create_style_sample(
+        project["id"],
+        "sea-letters",
+        "first text",
+    )
+    try:
+        store.update_style_sample(created["id"], "   ")
+    except ValueError as exc:
+        assert str(exc) == "Style sample text cannot be blank"
+    else:
+        raise AssertionError("Expected ValueError for blank sample text on update")
 
 
 def test_location_state_crud_and_missing_owner_errors(tmp_path):

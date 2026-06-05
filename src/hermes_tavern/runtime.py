@@ -520,6 +520,9 @@ class TavernRuntime:
     def _project_command(self, command: RPCommand, event: Any) -> str:
         return runtime_novel.project_command(self, command, event)
 
+    def _style_command(self, command: RPCommand, event: Any) -> str:
+        return runtime_novel.style_command(self, command, event)
+
     def _chapter_command(self, command: RPCommand, event: Any) -> str:
         return runtime_novel.chapter_command(self, command, event)
 

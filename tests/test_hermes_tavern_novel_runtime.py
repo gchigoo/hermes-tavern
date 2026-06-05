@@ -65,6 +65,12 @@ PLOT_THREAD_USAGE = (
     "/rp plot thread update <plot-thread-id> <description...> | "
     "/rp plot thread delete <plot-thread-id>"
 )
+STYLE_SAMPLE_USAGE = (
+    "Usage: /rp style sample add <project-id> <label> <sample...> | "
+    "/rp style sample list [project-id] | /rp style sample inspect <style-sample-id> | "
+    "/rp style sample update <style-sample-id> <sample...> | "
+    "/rp style sample delete <style-sample-id>"
+)
 
 
 def test_novel_command_table_has_expected_families():
@@ -78,11 +84,27 @@ def test_novel_command_table_has_expected_families():
     assert "location" in TAVERN_COMMAND_TABLE
     assert "organization" in TAVERN_COMMAND_TABLE
     assert "plot" in TAVERN_COMMAND_TABLE
+    assert "style" in TAVERN_COMMAND_TABLE
 
-    for name in ("character", "relationship", "project", "chapter", "scene", "canon", "timeline", "location", "organization", "plot"):
+    for name in (
+        "character",
+        "relationship",
+        "project",
+        "chapter",
+        "scene",
+        "canon",
+        "timeline",
+        "location",
+        "organization",
+        "plot",
+        "style",
+    ):
         entry = TAVERN_COMMAND_TABLE[name]
         if name == "character":
             assert entry.handler == "_character_command"
+            continue
+        if name == "style":
+            assert entry.handler == "_style_command"
             continue
         assert entry.handler == f"_{name}_command"
     assert "/rp scene goal <scene-id> [text]" in TAVERN_COMMAND_TABLE["scene"].help_lines
@@ -130,6 +152,11 @@ def test_novel_command_table_has_expected_families():
     assert "/rp plot thread inspect <plot-thread-id>" in TAVERN_COMMAND_TABLE["plot"].help_lines
     assert "/rp plot thread update <plot-thread-id> <description...>" in TAVERN_COMMAND_TABLE["plot"].help_lines
     assert "/rp plot thread delete <plot-thread-id>" in TAVERN_COMMAND_TABLE["plot"].help_lines
+    assert "/rp style sample add <project-id> <label> <sample...>" in TAVERN_COMMAND_TABLE["style"].help_lines
+    assert "/rp style sample list [project-id]" in TAVERN_COMMAND_TABLE["style"].help_lines
+    assert "/rp style sample inspect <style-sample-id>" in TAVERN_COMMAND_TABLE["style"].help_lines
+    assert "/rp style sample update <style-sample-id> <sample...>" in TAVERN_COMMAND_TABLE["style"].help_lines
+    assert "/rp style sample delete <style-sample-id>" in TAVERN_COMMAND_TABLE["style"].help_lines
 
 
 def test_project_routes_create_list_info_set(tmp_path):
@@ -1904,6 +1931,7 @@ def test_project_export_includes_locations_only_when_present_and_in_order(tmp_pa
 
     runtime.store.create_project("Atlas", "A quiet beginning")
     runtime.store.set_project_style_guide(1, "Tone: grounded")
+    runtime.store.create_style_sample(1, "sea-song", "Bells and gulls in low light.")
     runtime.store.create_location(1, "Harbor", "A lamp posts the river mouth.")
     runtime.store.create_organization(1, "Harbor Office", "Tracks trade by bell schedule and fog signal.")
     runtime.store.create_character_state(1, "mara", "Always curious.")
@@ -1920,13 +1948,16 @@ def test_project_export_includes_locations_only_when_present_and_in_order(tmp_pa
     from pathlib import Path
     exported = Path(file_path).read_text(encoding="utf-8")
     assert "## Style Guide" in exported
+    assert "## Style Samples" in exported
     assert "## Locations" in exported
     assert "## Organizations" in exported
     assert "## Characters" in exported
     assert "## Relationships" in exported
     assert "## Chapters" in exported
+    assert "### sea-song" in exported
     assert (
         exported.index("## Style Guide")
+        < exported.index("## Style Samples")
         < exported.index("## Locations")
         < exported.index("## Organizations")
         < exported.index("## Characters")
@@ -1958,6 +1989,35 @@ def test_project_export_includes_locations_only_when_present_and_in_order(tmp_pa
     exported_no_locations = Path(file_path_no_locations).read_text(encoding="utf-8")
     assert "## Locations" not in exported_no_locations
     assert "## Organizations" not in exported_no_locations
+
+
+def test_project_export_includes_style_samples_after_outline_without_style_guide(tmp_path, monkeypatch):
+    monkeypatch.setenv("HERMES_HOME", str(tmp_path / "hermes home"))
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+
+    runtime.store.create_project("Atlas", "A quiet harbor")
+    runtime.store.set_project_outline(1, "Act one opens at the harbor with the bell.")
+    runtime.store.create_style_sample(
+        1,
+        "sea-song",
+        "Low bells and foghorns shape every exchange.",
+    )
+    runtime.store.create_character_state(1, "mara", "Calm under pressure.")
+
+    response = runtime.handle_command_sync(
+        RPCommand("project", ["export", "1"], "/rp project export 1"),
+        Event(),
+    )
+    file_path = response.split("file: ", 1)[1].splitlines()[0].strip()
+
+    from pathlib import Path
+
+    exported = Path(file_path).read_text(encoding="utf-8")
+    assert "## Style Guide" not in exported
+    assert "## Style Samples" in exported
+    assert exported.index("## Style Samples") < exported.index("## Characters")
+    assert "## Outline" in exported
+    assert exported.index("## Outline") < exported.index("## Style Samples")
 
 
 def test_scene_create_list_and_start_links_session(tmp_path):
@@ -2933,6 +2993,223 @@ def test_plot_thread_no_active_project_and_list_falls_back_to_usage(tmp_path):
     )
 
 
+def test_style_sample_routes_add_list_inspect_update_delete(tmp_path):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    project = runtime.store.create_project("Atlas")
+
+    add = runtime.handle_command_sync(
+        RPCommand(
+            "style",
+            [
+                "sample",
+                "add",
+                str(project["id"]),
+                "sea-letters",
+                "Short, salt-rough prose with rope metaphors.",
+            ],
+            "/rp style sample add 1 sea-letters Short, salt-rough prose with rope metaphors.",
+        ),
+        Event(),
+    )
+    assert add == (
+        "Style sample added: [1] sea-letters -> "
+        "Short, salt-rough prose with rope metaphors."
+    )
+
+    runtime.handle_command_sync(
+        RPCommand(
+            "style",
+            [
+                "sample",
+                "add",
+                str(project["id"]),
+                "harbor-call",
+                "Tides roll through every scene, then pull away.",
+            ],
+            "/rp style sample add 1 harbor-call Tides roll through every scene, then pull away.",
+        ),
+        Event(),
+    )
+
+    list_output = runtime.handle_command_sync(
+        RPCommand("style", ["sample", "list", str(project["id"])], "/rp style sample list 1"),
+        Event(),
+    )
+    assert (
+        list_output
+        == "Hermes Tavern style samples for project [1]:\n"
+        "  - [1] sea-letters: Short, salt-rough prose with rope metaphors.\n"
+        "  - [2] harbor-call: Tides roll through every scene, then pull away."
+    )
+
+    inspect = runtime.handle_command_sync(
+        RPCommand("style", ["sample", "inspect", "1"], "/rp style sample inspect 1"),
+        Event(),
+    )
+    assert inspect == "Style sample for [1] (project [1]): sea-letters: Short, salt-rough prose with rope metaphors."
+
+    update = runtime.handle_command_sync(
+        RPCommand(
+            "style",
+            ["sample", "update", "1", "Shorter, saltier prose with knots and oaths."],
+            "/rp style sample update 1 Shorter, saltier prose with knots and oaths.",
+        ),
+        Event(),
+    )
+    assert update == "Style sample updated for style sample [1]: Shorter, saltier prose with knots and oaths."
+    assert runtime.store.get_style_sample(1)["sample_text"] == "Shorter, saltier prose with knots and oaths."
+
+    delete = runtime.handle_command_sync(
+        RPCommand("style", ["sample", "delete", "1"], "/rp style sample delete 1"),
+        Event(),
+    )
+    assert delete == "Style sample deleted for style sample [1]."
+    assert runtime.store.get_style_sample(1) is None
+
+    list_after_delete = runtime.handle_command_sync(
+        RPCommand("style", ["sample", "list", str(project["id"])], "/rp style sample list 1"),
+        Event(),
+    )
+    assert list_after_delete == "Hermes Tavern style samples for project [1]:\n  - [2] harbor-call: Tides roll through every scene, then pull away."
+
+
+def test_style_sample_list_uses_active_project_fallback(tmp_path):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    runtime.store.create_project("Atlas")
+    runtime.store.create_project("Boreal")
+    runtime.handle_command_sync(
+        RPCommand("project", ["set", "2"], "/rp project set 2"),
+        Event(),
+    )
+
+    runtime.handle_command_sync(
+        RPCommand(
+            "style",
+            [
+                "sample",
+                "add",
+                "2",
+                "fog-lore",
+                "A heavy fog tells truth only to those with sharp hearing.",
+            ],
+            "/rp style sample add 2 fog-lore A heavy fog tells truth only to those with sharp hearing.",
+        ),
+        Event(),
+    )
+
+    listed = runtime.handle_command_sync(
+        RPCommand("style", ["sample", "list"], "/rp style sample list"),
+        Event(),
+    )
+    assert listed == "Hermes Tavern style samples for project [2]:\n  - [1] fog-lore: A heavy fog tells truth only to those with sharp hearing."
+
+
+def test_style_sample_routes_require_explicit_project_for_add_and_non_blank_values(tmp_path):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    runtime.store.create_project("Atlas")
+
+    assert (
+        runtime.handle_command_sync(
+            RPCommand(
+                "style",
+                ["sample", "add", "missing-id", "sea-letters", "Sample text"],
+                "/rp style sample add missing-id sea-letters Sample text",
+            ),
+            Event(),
+        )
+        == STYLE_SAMPLE_USAGE
+    )
+    assert (
+        runtime.handle_command_sync(
+            RPCommand(
+                "style",
+                ["sample", "add", "1", "", "Sample text"],
+                "/rp style sample add 1  Sea sample text",
+            ),
+            Event(),
+        )
+        == STYLE_SAMPLE_USAGE
+    )
+    assert (
+        runtime.handle_command_sync(
+            RPCommand(
+                "style",
+                ["sample", "add", "1", "sea-letters", "   "],
+                "/rp style sample add 1 sea-letters   ",
+            ),
+            Event(),
+        )
+        == STYLE_SAMPLE_USAGE
+    )
+
+
+def test_style_sample_not_found_and_missing_project_errors(tmp_path):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    runtime.store.create_project("Atlas")
+
+    assert (
+        runtime.handle_command_sync(
+            RPCommand(
+                "style",
+                [
+                    "sample",
+                    "add",
+                    "9999",
+                    "sea-letters",
+                    "No project.",
+                ],
+                "/rp style sample add 9999 sea-letters No project.",
+            ),
+            Event(),
+        )
+        == "No novel project found: 9999"
+    )
+    assert (
+        runtime.handle_command_sync(
+            RPCommand("style", ["sample", "list", "9999"], "/rp style sample list 9999"),
+            Event(),
+        )
+        == "No novel project found: 9999"
+    )
+    assert (
+        runtime.handle_command_sync(
+            RPCommand("style", ["sample", "inspect", "9999"], "/rp style sample inspect 9999"),
+            Event(),
+        )
+        == "No style sample found: 9999"
+    )
+    assert (
+        runtime.handle_command_sync(
+            RPCommand(
+                "style",
+                ["sample", "update", "9999", "Revision text"],
+                "/rp style sample update 9999 Revision text",
+            ),
+            Event(),
+        )
+        == "No style sample found: 9999"
+    )
+    assert (
+        runtime.handle_command_sync(
+            RPCommand("style", ["sample", "delete", "9999"], "/rp style sample delete 9999"),
+            Event(),
+        )
+        == "No style sample found: 9999"
+    )
+
+
+def test_style_sample_no_active_project_and_list_falls_back_to_usage(tmp_path):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+
+    assert (
+        runtime.handle_command_sync(
+            RPCommand("style", ["sample", "list"], "/rp style sample list"),
+            Event(),
+        )
+        == "Usage: /rp style sample list [project-id]"
+    )
+
+
 def test_plot_thread_markers_do_not_leak_to_debug_prompt_or_context(tmp_path):
     store = TavernStore(tmp_path / "tavern.sqlite3")
     store.save_card(parse_character_card({"name": "Alice", "description": "Scholar", "first_mes": "Hello."}))
@@ -2956,3 +3233,28 @@ def test_plot_thread_markers_do_not_leak_to_debug_prompt_or_context(tmp_path):
     context = runtime.handle_command_sync(RPCommand("debug", ["context"], "/rp debug context"), Event())
     assert "marker: distinctive plot thread token" not in prompt
     assert "marker: distinctive plot thread token" not in context
+
+
+def test_style_sample_markers_do_not_leak_to_debug_prompt_or_context(tmp_path):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    store.save_card(parse_character_card({"name": "Alice", "description": "Scholar", "first_mes": "Hello."}))
+    runtime = TavernRuntime(store)
+    runtime.handle_command_sync(RPCommand("start", ["Alice"], "/rp start Alice"), Event())
+
+    project = store.create_project("Atlas")
+    chapter = store.create_chapter(project["id"], "Prologue")
+    scene = store.create_scene(chapter["id"], "Opening")
+    store.link_scene_session(
+        scene["id"],
+        store.get_active_session("telegram:chat:chat-1:thread:main:user:user-1")["id"],
+    )
+    store.create_style_sample(
+        project["id"],
+        "storm-signal",
+        "marker: distinctive style sample token",
+    )
+
+    prompt = runtime.handle_command_sync(RPCommand("debug", ["prompt"], "/rp debug prompt"), Event())
+    context = runtime.handle_command_sync(RPCommand("debug", ["context"], "/rp debug context"), Event())
+    assert "marker: distinctive style sample token" not in prompt
+    assert "marker: distinctive style sample token" not in context

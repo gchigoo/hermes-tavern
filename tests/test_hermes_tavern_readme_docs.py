@@ -243,6 +243,16 @@ def test_readme_core_commands_include_project_style_literals():
     assert "/rp project style clear [project-id]" in core_commands
 
 
+def test_readme_core_commands_include_style_sample_literals():
+    core_commands = _readme_core_commands_text()
+
+    assert "/rp style sample add <project-id> <label> <sample...>" in core_commands
+    assert "/rp style sample list [project-id]" in core_commands
+    assert "/rp style sample inspect <style-sample-id>" in core_commands
+    assert "/rp style sample update <style-sample-id> <sample...>" in core_commands
+    assert "/rp style sample delete <style-sample-id>" in core_commands
+
+
 def test_readme_core_commands_include_project_brief_literals():
     core_commands = _readme_core_commands_text()
 

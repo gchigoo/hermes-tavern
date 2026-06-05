@@ -128,6 +128,15 @@ class NovelDBMixin:
                 updated_at TEXT NOT NULL DEFAULT (datetime('now'))
             );
 
+            CREATE TABLE IF NOT EXISTS novel_style_samples (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                project_id INTEGER NOT NULL REFERENCES novel_projects(id) ON DELETE CASCADE,
+                label TEXT NOT NULL,
+                sample_text TEXT NOT NULL,
+                created_at TEXT NOT NULL DEFAULT (datetime('now')),
+                updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+            );
+
             CREATE TABLE IF NOT EXISTS novel_character_states (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 project_id INTEGER NOT NULL REFERENCES novel_projects(id) ON DELETE CASCADE,
@@ -161,6 +170,8 @@ class NovelDBMixin:
                 ON novel_project_outlines(project_id);
             CREATE INDEX IF NOT EXISTS idx_novel_locations_project
                 ON novel_locations(project_id);
+            CREATE INDEX IF NOT EXISTS idx_novel_style_samples_project
+                ON novel_style_samples(project_id);
             CREATE TABLE IF NOT EXISTS novel_organizations (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 project_id INTEGER NOT NULL REFERENCES novel_projects(id) ON DELETE CASCADE,
@@ -298,6 +309,115 @@ class NovelDBMixin:
             cursor = conn.execute(
                 "DELETE FROM novel_project_style_guides WHERE project_id = ?",
                 (project_id,),
+            )
+            return cursor.rowcount > 0
+
+    def create_style_sample(
+        self,
+        project_id: int,
+        label: str,
+        sample_text: str,
+    ) -> dict[str, Any]:
+        label = (label or "").strip()
+        sample_text = (sample_text or "").strip()
+        if not label:
+            raise ValueError("Style sample label cannot be blank")
+        if not sample_text:
+            raise ValueError("Style sample text cannot be blank")
+
+        self.migrate()
+        with self.connect() as conn:
+            project = conn.execute(
+                "SELECT id FROM novel_projects WHERE id = ?",
+                (project_id,),
+            ).fetchone()
+            if project is None:
+                raise ValueError("Project not found")
+            now = _utc_now()
+            cursor = conn.execute(
+                """
+                INSERT INTO novel_style_samples (
+                    project_id,
+                    label,
+                    sample_text,
+                    created_at,
+                    updated_at
+                )
+                VALUES (?, ?, ?, ?, ?)
+                """,
+                (project_id, label, sample_text, now, now),
+            )
+            style_sample_id = cursor.lastrowid
+            row = conn.execute(
+                "SELECT * FROM novel_style_samples WHERE id = ?",
+                (style_sample_id,),
+            ).fetchone()
+        return _row_to_dict(row)
+
+    def list_style_samples(self, project_id: int) -> list[dict[str, Any]]:
+        self.migrate()
+        with self.connect() as conn:
+            project = conn.execute(
+                "SELECT id FROM novel_projects WHERE id = ?",
+                (project_id,),
+            ).fetchone()
+            if project is None:
+                raise ValueError("Project not found")
+            rows = conn.execute(
+                """
+                SELECT *
+                FROM novel_style_samples
+                WHERE project_id = ?
+                ORDER BY id ASC
+                """,
+                (project_id,),
+            ).fetchall()
+        return [_row_to_dict(row) for row in rows]
+
+    def get_style_sample(self, style_sample_id: int) -> dict[str, Any] | None:
+        self.migrate()
+        with self.connect() as conn:
+            row = conn.execute(
+                "SELECT * FROM novel_style_samples WHERE id = ?",
+                (style_sample_id,),
+            ).fetchone()
+        return _row_to_dict(row)
+
+    def update_style_sample(
+        self,
+        style_sample_id: int,
+        sample_text: str,
+    ) -> dict[str, Any] | None:
+        sample_text = (sample_text or "").strip()
+        if not sample_text:
+            raise ValueError("Style sample text cannot be blank")
+
+        now = _utc_now()
+        self.migrate()
+        with self.connect() as conn:
+            cursor = conn.execute(
+                """
+                UPDATE novel_style_samples
+                SET sample_text = ?,
+                    updated_at = ?
+                WHERE id = ?
+                """,
+                (sample_text, now, style_sample_id),
+            )
+            if cursor.rowcount == 0:
+                return None
+            row = conn.execute(
+                "SELECT * FROM novel_style_samples WHERE id = ?",
+                (style_sample_id,),
+            ).fetchone()
+        return _row_to_dict(row)
+
+    def delete_style_sample(self, style_sample_id: int) -> bool:
+        self.migrate()
+        with self.connect() as conn:
+            cursor = conn.execute(
+                "DELETE FROM novel_style_samples WHERE id = ?",
+                (style_sample_id,),
             )
             return cursor.rowcount > 0
 
@@ -1624,6 +1744,7 @@ class NovelDBMixin:
         canons = self.list_canon(project_id)
         timeline = self.list_timeline(project_id)
         style_guide = self.get_project_style_guide(project_id)
+        style_samples = self.list_style_samples(project_id)
         brief = self.get_project_brief(project_id)
         outline = self.get_project_outline(project_id)
         locations = self.list_locations(project_id)
@@ -1662,6 +1783,19 @@ class NovelDBMixin:
                     "",
                 ]
             )
+
+        if style_samples:
+            lines.extend(
+                [
+                    "## Style Samples",
+                    "",
+                ]
+            )
+            for sample in style_samples:
+                lines.append(f"### {sample['label']}")
+                lines.append("")
+                lines.append(sample['sample_text'])
+                lines.append("")
 
         if locations:
             lines.extend(
