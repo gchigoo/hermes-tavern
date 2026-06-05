@@ -300,6 +300,16 @@ TAVERN_COMMAND_TABLE: dict[str, TavernCommandEntry] = {
             "/rp location delete <location-id>",
         ],
     ),
+    "organization": TavernCommandEntry(
+        handler="_organization_command",
+        help_lines=[
+            "/rp organization add <project-id> <label> <description...>",
+            "/rp organization list [project-id]",
+            "/rp organization inspect <organization-id>",
+            "/rp organization update <organization-id> <description...>",
+            "/rp organization delete <organization-id>",
+        ],
+    ),
     "project": TavernCommandEntry(
         handler="_project_command",
         help_lines=[

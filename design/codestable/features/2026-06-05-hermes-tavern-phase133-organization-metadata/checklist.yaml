@@ -1,0 +1,246 @@
+doc_type: feature-checklist
+feature: "2026-06-05-hermes-tavern-phase133-organization-metadata"
+date: "2026-06-05"
+status: in_progress
+summary: >
+  Organization Metadata v1 is in progress. S1 implemented local
+  project-scoped organization rows, `/rp organization ...` commands,
+  help/README literals, optional Markdown export visibility, and focused
+  no-leak tests. S2 acceptance/status/writeback remains planned.
+
+steps:
+  - id: S1
+    name: "S1: Organization Metadata implementation"
+    status: completed
+    completed_at: "2026-06-05"
+    result: >
+      IMPLEMENTED - S1 added local project-scoped organization persistence,
+      `/rp organization add/list/inspect/update/delete`, help/README command
+      literals, optional Markdown export visibility, and focused DB/runtime/docs
+      tests. The executor reported a focused pass and image-suite failures in its
+      own environment; the controller reran verification from scratch and passed
+      py_compile, focused tests, Tavern glob tests, full pytest,
+      YAML/frontmatter validation, protected-source/writeback-doc reverse-scope
+      guards, and whitespace checks.
+    description: >
+      Add local project-scoped organization persistence, the `/rp organization
+      add/list/inspect/update/delete` command family, help/README command
+      literals, optional Markdown export visibility, and focused DB/runtime/docs
+      tests. Keep implementation inside the allowed plugin/source/docs/test
+      files and avoid prompt/provider/model/content-mode/generation/retrieval
+      paths.
+    allowed_files:
+      - src/hermes_tavern/db_novel.py
+      - src/hermes_tavern/runtime_novel.py
+      - src/hermes_tavern/runtime.py
+      - src/hermes_tavern/commands.py
+      - README.md
+      - tests/test_hermes_tavern_novel_db.py
+      - tests/test_hermes_tavern_novel_runtime.py
+      - tests/test_hermes_tavern_commands.py
+      - tests/test_hermes_tavern_readme_docs.py
+    prohibited_files:
+      - run_agent.py
+      - cli.py
+      - gateway/run.py
+      - src/hermes_tavern/runtime_prompt_modules.py
+      - src/hermes_tavern/prompt.py
+      - src/hermes_tavern/runtime_debug.py
+      - src/hermes_tavern/model_router.py
+      - src/hermes_tavern/provider_bridge.py
+      - src/hermes_tavern/adapters.py
+      - src/hermes_tavern/runtime_model.py
+      - src/hermes_tavern/runtime_generation.py
+      - src/hermes_tavern/runtime_content.py
+      - src/hermes_tavern/importers/**
+      - build/lib/**
+      - design/codestable/**
+      - design/HERMES_TAVERN_DESIGN.md
+    explicit_non_goals:
+      - No organization graph, hierarchy model, membership roster, affiliation edges, automatic extraction, summarization, vectorization, retrieval, provider calls, generation changes, or scheduled update cycle.
+      - No prompt module injection, debug/context-budget inclusion, model routing, content-mode behavior, credential persistence, ST asset importer/exporter, cloud/collaboration, backend account, minors/underage, or provider-safety-bypass behavior.
+      - No broad runtime/db refactor beyond the minimum local command and metadata surface.
+      - No acceptance report, architecture writeback, or root design writeback in S1.
+    exit_signal: >
+      Organization persistence, commands, help/docs, export visibility, and
+      no-leak tests pass in focused verification; no protected core, prompt,
+      provider, router, credential, content-mode, generation,
+      retrieval/vectorization, cloud/collab, minors/underage, ST asset
+      importer/exporter, build-artifact, architecture writeback, root-design
+      writeback, or safety-bypass file changes are present.
+    verification:
+      - command: >-
+          codex --profile architect exec --json --color never --sandbox read-only --cd /Users/steven/Projects/hermes-tavern <Phase 133 artifact prompt>
+        result: "passed; JSONL at /tmp/hermes-tavern-architect-phase133.jsonl; RESULT: PLANNING_ARTIFACT; MODE: READY_TO_IMPLEMENT_S1"
+      - command: >-
+          codex --profile executor exec --json --color never --disable image_generation --sandbox read-only --cd /Users/steven/Projects/hermes-tavern <executor smoke prompt>
+        result: "passed; JSONL at /tmp/hermes-tavern-executor-phase133-smoke.jsonl; EXECUTOR_SMOKE_OK"
+      - command: >-
+          codex --profile executor exec --json --color never --disable image_generation --sandbox workspace-write --cd /Users/steven/Projects/hermes-tavern <Phase 133 S1 implementation prompt>
+        result: >-
+          passed; JSONL at /tmp/hermes-tavern-executor-phase133-s1.jsonl; executor implemented S1 and reported focused tests passed, then reported 8 image-suite failures that controller reran cleanly.
+      - command: >-
+          PYTHONDONTWRITEBYTECODE=1 python -m py_compile src/hermes_tavern/db_novel.py src/hermes_tavern/runtime_novel.py src/hermes_tavern/runtime.py src/hermes_tavern/commands.py tests/test_hermes_tavern_novel_db.py tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_commands.py tests/test_hermes_tavern_readme_docs.py
+        result: "passed (no errors)"
+      - command: >-
+          PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel_db.py tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_commands.py tests/test_hermes_tavern_readme_docs.py -q -o 'addopts=' -p no:cacheprovider
+        result: "243 passed in 7.74s"
+      - command: >-
+          PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_*.py -q -o 'addopts=' -p no:cacheprovider
+        result: "934 passed in 40.71s"
+      - command: >-
+          PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts=' -p no:cacheprovider
+        result: "934 passed in 39.62s"
+      - command: >-
+          python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-05-hermes-tavern-phase133-organization-metadata/design.md --require doc_type --require status --require feature
+        result: "passed"
+      - command: >-
+          python design/codestable/tools/validate-yaml.py --yaml-only --file design/codestable/features/2026-06-05-hermes-tavern-phase133-organization-metadata/checklist.yaml
+        result: "passed after controller status update"
+      - command: >-
+          git diff --name-only -- run_agent.py cli.py gateway/run.py src/hermes_tavern/runtime_prompt_modules.py src/hermes_tavern/prompt.py src/hermes_tavern/runtime_debug.py src/hermes_tavern/model_router.py src/hermes_tavern/provider_bridge.py src/hermes_tavern/adapters.py src/hermes_tavern/runtime_model.py src/hermes_tavern/runtime_generation.py src/hermes_tavern/runtime_content.py src/hermes_tavern/importers build/lib
+        result: "empty (no protected core/prompt/provider/generation/importer/build changes)"
+      - command: >-
+          git diff --name-only -- design/HERMES_TAVERN_DESIGN.md design/codestable/architecture/ARCHITECTURE.md
+        result: "empty (no S2 architecture/root-design writeback changes in S1)"
+      - command: "git diff --check"
+        result: "passed"
+
+  - id: S2
+    name: "S2: Verify/Accept/Write Architecture"
+    status: planned
+    description: >
+      Controller-owned phase after S1. Run focused, plugin, full,
+      YAML/frontmatter, reverse-scope, stale-wording, and whitespace
+      verification. Create the acceptance report and update architecture/root
+      design to mark organization metadata current while preserving deferred
+      automation/retrieval/provider/generation/default-binding/policy
+      boundaries.
+    allowed_files:
+      - design/codestable/features/2026-06-05-hermes-tavern-phase133-organization-metadata/design.md
+      - design/codestable/features/2026-06-05-hermes-tavern-phase133-organization-metadata/checklist.yaml
+      - design/codestable/features/2026-06-05-hermes-tavern-phase133-organization-metadata/hermes-tavern-phase133-organization-metadata-acceptance.md
+      - design/codestable/architecture/ARCHITECTURE.md
+      - design/HERMES_TAVERN_DESIGN.md
+    prohibited_files:
+      - README.md
+      - src/**
+      - tests/**
+      - run_agent.py
+      - cli.py
+      - gateway/run.py
+      - build/lib/**
+    exit_signal: >
+      Acceptance report and architecture/root-design writeback are complete; the
+      feature is accepted with no README/source/test/protected-core/build diff in
+      S2.
+    verification:
+      - command: >-
+          PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel_db.py tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_commands.py tests/test_hermes_tavern_readme_docs.py -q -o 'addopts=' -p no:cacheprovider
+        result: pending
+      - command: >-
+          PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_*.py -q -o 'addopts=' -p no:cacheprovider
+        result: pending
+      - command: >-
+          PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts=' -p no:cacheprovider
+        result: pending
+      - command: >-
+          python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-05-hermes-tavern-phase133-organization-metadata/design.md --require doc_type --require status --require feature
+        result: pending
+      - command: >-
+          python design/codestable/tools/validate-yaml.py --yaml-only --file design/codestable/features/2026-06-05-hermes-tavern-phase133-organization-metadata/checklist.yaml
+        result: pending
+      - command: >-
+          git diff --name-only -- README.md src tests run_agent.py cli.py gateway/run.py build/lib
+        result: pending
+      - command: "git diff --check"
+        result: pending
+
+checks:
+  - id: C1
+    name: "C1: Active checklist precondition"
+    status: completed
+    completed_at: "2026-06-05"
+    result: >
+      PASSED - Controller found no unrelated active recent feature checklist;
+      Phase 133 was selected after Phases 130, 131, and 132 were accepted.
+    criteria: >
+      Before implementation, no unrelated feature checklist is planned, pending,
+      or in progress; this Phase 133 checklist is the only active feature.
+
+  - id: C2
+    name: "C2: Persistence contract"
+    status: completed
+    completed_at: "2026-06-05"
+    result: >
+      PASSED - `novel_organizations` migration/index, project foreign key,
+      CRUD/list helpers, missing project/ID behavior, blank-label rejection, and
+      blank-description rejection are covered by focused DB tests.
+    criteria: >
+      `novel_organizations` migration, project foreign key/index, CRUD/list
+      helpers, missing project/ID behavior, blank-label rejection, and
+      blank-description rejection are covered by focused DB tests.
+
+  - id: C3
+    name: "C3: Command contract"
+    status: completed
+    completed_at: "2026-06-05"
+    result: >
+      PASSED - `/rp organization add/list/inspect/update/delete` handlers and
+      command literals return bounded normal/error messages, require explicit
+      project ID for add, support active-project fallback for list only, and are
+      visible through help and README guards.
+    criteria: >
+      `/rp organization add/list/inspect/update/delete` command literals return
+      compact normal and error messages, require explicit project ID for add,
+      support active-project fallback for list only, and are visible through
+      help and README guards.
+
+  - id: C4
+    name: "C4: Markdown export"
+    status: completed
+    completed_at: "2026-06-05"
+    result: >
+      PASSED - Project Markdown export emits optional `## Organizations` only
+      when rows exist, orders it after Locations and before Characters,
+      Relationships, and Chapters, and omits it for projects without
+      organization rows.
+    criteria: >
+      Project Markdown export includes `## Organizations` only when organization
+      rows exist, orders it after Locations and before Characters/Relationships/
+      Chapters, and omits it for projects without organization rows.
+
+  - id: C5
+    name: "C5: Offline no-leak boundary"
+    status: completed
+    completed_at: "2026-06-05"
+    result: >
+      PASSED - Focused no-leak tests confirm distinctive organization text stays
+      out of `/rp debug prompt` and `/rp debug context`; protected prompt,
+      context-budget, provider, model routing, content mode, generation,
+      vectorization/retrieval, credentials, and summarization paths are
+      unchanged.
+    criteria: >
+      Organization text does not appear in `/rp debug prompt` or `/rp debug
+      context`; prompt module selection, context-budget composition, provider
+      calls, model routing, content mode, credentials, generation,
+      vectorization/retrieval, and summarization behavior remain unchanged.
+
+  - id: C6
+    name: "C6: Reverse-scope verification"
+    status: completed
+    completed_at: "2026-06-05"
+    result: >
+      PASSED - Controller reverse-scope checks found no protected core,
+      prompt/provider/model/generation, credential, cloud/collab,
+      minors/underage, ST importer/exporter, build-artifact, architecture
+      writeback, root-design writeback, or provider-safety-bypass file changes
+      in S1. CodeStable feature artifacts were intentionally materialized by the
+      controller before executor implementation.
+    criteria: >
+      No protected core files, build artifacts, prompt/provider/model/generation
+      files, credential paths, cloud/collab paths, minors/underage paths, ST
+      asset importer/exporter paths, default-binding behavior, canon/content-mode
+      policy behavior, archive import/export behavior, CodeStable
+      acceptance/status files, root design writeback, or provider-safety-bypass
+      behavior are changed in S1.

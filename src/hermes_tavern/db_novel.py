@@ -161,6 +161,16 @@ class NovelDBMixin:
                 ON novel_project_outlines(project_id);
             CREATE INDEX IF NOT EXISTS idx_novel_locations_project
                 ON novel_locations(project_id);
+            CREATE TABLE IF NOT EXISTS novel_organizations (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                project_id INTEGER NOT NULL REFERENCES novel_projects(id) ON DELETE CASCADE,
+                label TEXT NOT NULL,
+                description_text TEXT NOT NULL,
+                created_at TEXT NOT NULL DEFAULT (datetime('now')),
+                updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+            );
+            CREATE INDEX IF NOT EXISTS idx_novel_organizations_project
+                ON novel_organizations(project_id);
             CREATE INDEX IF NOT EXISTS idx_novel_relationship_states_project
                 ON novel_relationship_states(project_id);
             CREATE INDEX IF NOT EXISTS idx_novel_character_states_project
@@ -600,6 +610,100 @@ class NovelDBMixin:
             cursor = conn.execute(
                 "DELETE FROM novel_locations WHERE id = ?",
                 (location_id,),
+            )
+            return cursor.rowcount > 0
+
+    def create_organization(self, project_id: int, label: str, description_text: str) -> dict[str, Any]:
+        if not (label or "").strip():
+            raise ValueError("Organization label cannot be blank")
+        if not (description_text or "").strip():
+            raise ValueError("Organization description cannot be blank")
+        self.migrate()
+        with self.connect() as conn:
+            project = conn.execute(
+                "SELECT id FROM novel_projects WHERE id = ?",
+                (project_id,),
+            ).fetchone()
+            if project is None:
+                raise ValueError("Project not found")
+            now = _utc_now()
+            cursor = conn.execute(
+                """
+                INSERT INTO novel_organizations (
+                    project_id, label, description_text, created_at, updated_at
+                )
+                VALUES (?, ?, ?, ?, ?)
+                """,
+                (project_id, label, description_text, now, now),
+            )
+            row_id = cursor.lastrowid
+            row = conn.execute(
+                "SELECT * FROM novel_organizations WHERE id = ?",
+                (row_id,),
+            ).fetchone()
+        return _row_to_dict(row)
+
+    def list_organizations(self, project_id: int) -> list[dict[str, Any]]:
+        self.migrate()
+        with self.connect() as conn:
+            project = conn.execute(
+                "SELECT id FROM novel_projects WHERE id = ?",
+                (project_id,),
+            ).fetchone()
+            if project is None:
+                raise ValueError("Project not found")
+            rows = conn.execute(
+                """
+                SELECT *
+                FROM novel_organizations
+                WHERE project_id = ?
+                ORDER BY id ASC
+                """,
+                (project_id,),
+            ).fetchall()
+        return [_row_to_dict(row) for row in rows]
+
+    def get_organization(self, organization_id: int) -> dict[str, Any] | None:
+        self.migrate()
+        with self.connect() as conn:
+            row = conn.execute(
+                "SELECT * FROM novel_organizations WHERE id = ?",
+                (organization_id,),
+            ).fetchone()
+        return _row_to_dict(row)
+
+    def update_organization(self, organization_id: int, description_text: str) -> dict[str, Any]:
+        if not (description_text or "").strip():
+            raise ValueError("Organization description cannot be blank")
+        self.migrate()
+        with self.connect() as conn:
+            row = conn.execute(
+                "SELECT id FROM novel_organizations WHERE id = ?",
+                (organization_id,),
+            ).fetchone()
+            if row is None:
+                raise ValueError("Organization not found")
+            now = _utc_now()
+            conn.execute(
+                """
+                UPDATE novel_organizations
+                SET description_text = ?, updated_at = ?
+                WHERE id = ?
+                """,
+                (description_text, now, organization_id),
+            )
+            updated = conn.execute(
+                "SELECT * FROM novel_organizations WHERE id = ?",
+                (organization_id,),
+            ).fetchone()
+        return _row_to_dict(updated)
+
+    def delete_organization(self, organization_id: int) -> bool:
+        self.migrate()
+        with self.connect() as conn:
+            cursor = conn.execute(
+                "DELETE FROM novel_organizations WHERE id = ?",
+                (organization_id,),
             )
             return cursor.rowcount > 0
 
@@ -1463,6 +1567,20 @@ class NovelDBMixin:
             )
             for location in locations:
                 lines.append(f"- {location['label']}: {location['description_text']}")
+            lines.append("")
+
+        organizations = self.list_organizations(project_id)
+        if organizations:
+            lines.extend(
+                [
+                    "## Organizations",
+                    "",
+                ]
+            )
+            for organization in organizations:
+                lines.append(
+                    f"- {organization['label']}: {organization['description_text']}"
+                )
             lines.append("")
 
         characters = self.list_character_states(project_id)

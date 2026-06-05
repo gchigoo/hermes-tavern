@@ -53,9 +53,15 @@ LOCATION_USAGE = (
     "/rp location update <location-id> <description...> | "
     "/rp location delete <location-id>"
 )
+ORGANIZATION_USAGE = (
+    "Usage: /rp organization add <project-id> <label> <description...> | "
+    "/rp organization list [project-id] | /rp organization inspect <organization-id> | "
+    "/rp organization update <organization-id> <description...> | "
+    "/rp organization delete <organization-id>"
+)
 
 
-def test_novel_command_table_has_five_families():
+def test_novel_command_table_has_expected_families():
     assert "character" in TAVERN_COMMAND_TABLE
     assert "relationship" in TAVERN_COMMAND_TABLE
     assert "project" in TAVERN_COMMAND_TABLE
@@ -64,8 +70,9 @@ def test_novel_command_table_has_five_families():
     assert "canon" in TAVERN_COMMAND_TABLE
     assert "timeline" in TAVERN_COMMAND_TABLE
     assert "location" in TAVERN_COMMAND_TABLE
+    assert "organization" in TAVERN_COMMAND_TABLE
 
-    for name in ("character", "relationship", "project", "chapter", "scene", "canon", "timeline", "location"):
+    for name in ("character", "relationship", "project", "chapter", "scene", "canon", "timeline", "location", "organization"):
         entry = TAVERN_COMMAND_TABLE[name]
         if name == "character":
             assert entry.handler == "_character_command"
@@ -106,6 +113,11 @@ def test_novel_command_table_has_five_families():
     assert "/rp location inspect <location-id>" in TAVERN_COMMAND_TABLE["location"].help_lines
     assert "/rp location update <location-id> <description...>" in TAVERN_COMMAND_TABLE["location"].help_lines
     assert "/rp location delete <location-id>" in TAVERN_COMMAND_TABLE["location"].help_lines
+    assert "/rp organization add <project-id> <label> <description...>" in TAVERN_COMMAND_TABLE["organization"].help_lines
+    assert "/rp organization list [project-id]" in TAVERN_COMMAND_TABLE["organization"].help_lines
+    assert "/rp organization inspect <organization-id>" in TAVERN_COMMAND_TABLE["organization"].help_lines
+    assert "/rp organization update <organization-id> <description...>" in TAVERN_COMMAND_TABLE["organization"].help_lines
+    assert "/rp organization delete <organization-id>" in TAVERN_COMMAND_TABLE["organization"].help_lines
 
 
 def test_project_routes_create_list_info_set(tmp_path):
@@ -296,6 +308,18 @@ def test_project_command_help_includes_location_lines(tmp_path):
     assert "/rp location inspect <location-id>" in help_output
     assert "/rp location update <location-id> <description...>" in help_output
     assert "/rp location delete <location-id>" in help_output
+
+
+def test_project_command_help_includes_organization_lines(tmp_path):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+
+    help_output = runtime.handle_command_sync(RPCommand("help", [], "/rp"), Event())
+
+    assert "/rp organization add <project-id> <label> <description...>" in help_output
+    assert "/rp organization list [project-id]" in help_output
+    assert "/rp organization inspect <organization-id>" in help_output
+    assert "/rp organization update <organization-id> <description...>" in help_output
+    assert "/rp organization delete <organization-id>" in help_output
 
 
 def test_project_brief_routes_explicit_id_flow(tmp_path):
@@ -994,6 +1018,225 @@ def test_location_no_active_project_and_list_falls_back_to_usage(tmp_path):
     )
 
 
+def test_organization_routes_add_list_inspect_update_delete(tmp_path):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    project = runtime.store.create_project("Atlas")
+
+    add = runtime.handle_command_sync(
+        RPCommand(
+            "organization",
+            ["add", str(project["id"]), "lighthouse", "Monitors storms and keeps peace beacons."],
+            "/rp organization add 1 lighthouse Monitors storms and keeps peace beacons.",
+        ),
+        Event(),
+    )
+    assert add == "Organization added: [1] lighthouse -> Monitors storms and keeps peace beacons."
+    added_organization = runtime.store.get_organization(1)
+    assert added_organization is not None
+    assert added_organization["label"] == "lighthouse"
+    assert (
+        added_organization["description_text"] == "Monitors storms and keeps peace beacons."
+    )
+
+    list_output = runtime.handle_command_sync(
+        RPCommand(
+            "organization",
+            ["list", str(project["id"])],
+            "/rp organization list 1",
+        ),
+        Event(),
+    )
+    assert list_output == (
+        "Hermes Tavern organizations for project [1]:\n"
+        "  - [1] lighthouse: Monitors storms and keeps peace beacons."
+    )
+
+    inspect = runtime.handle_command_sync(
+        RPCommand("organization", ["inspect", "1"], "/rp organization inspect 1"),
+        Event(),
+    )
+    assert inspect == "Organization for [1] (project [1]): lighthouse: Monitors storms and keeps peace beacons."
+
+    update = runtime.handle_command_sync(
+        RPCommand(
+            "organization",
+            ["update", "1", "Signals storms through bells and colored fire."],
+            "/rp organization update 1 Signals storms through bells and colored fire.",
+        ),
+        Event(),
+    )
+    assert (
+        update
+        == "Organization updated for organization [1]: "
+        "Signals storms through bells and colored fire."
+    )
+    assert runtime.store.get_organization(1)["description_text"] == "Signals storms through bells and colored fire."
+
+    delete = runtime.handle_command_sync(
+        RPCommand("organization", ["delete", "1"], "/rp organization delete 1"),
+        Event(),
+    )
+    assert delete == "Organization deleted for organization [1]."
+    assert runtime.store.get_organization(1) is None
+
+    list_after_delete = runtime.handle_command_sync(
+        RPCommand("organization", ["list", str(project["id"])], "/rp organization list 1"),
+        Event(),
+    )
+    assert list_after_delete == "No organizations for project 1."
+
+
+def test_organization_list_uses_active_project_fallback(tmp_path):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    runtime.store.create_project("Atlas")
+    runtime.store.create_project("Boreal")
+    runtime.handle_command_sync(
+        RPCommand("project", ["set", "2"], "/rp project set 2"),
+        Event(),
+    )
+
+    runtime.handle_command_sync(
+        RPCommand(
+            "organization",
+            ["add", "2", "lighthouse", "Signals storms through bells."],
+            "/rp organization add 2 lighthouse Signals storms through bells.",
+        ),
+        Event(),
+    )
+
+    listed = runtime.handle_command_sync(
+        RPCommand("organization", ["list"], "/rp organization list"),
+        Event(),
+    )
+    assert listed == (
+        "Hermes Tavern organizations for project [2]:\n"
+        "  - [1] lighthouse: Signals storms through bells."
+    )
+
+
+def test_organization_routes_require_explicit_project_for_add_and_non_blank_values(tmp_path):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    runtime.store.create_project("Atlas")
+
+    assert (
+        runtime.handle_command_sync(
+            RPCommand(
+                "organization",
+                ["add", "lighthouse", "Signals", "storms"],
+                "/rp organization add lighthouse Signals storms",
+            ),
+            Event(),
+        )
+        == ORGANIZATION_USAGE
+    )
+    assert (
+        runtime.handle_command_sync(
+            RPCommand(
+                "organization",
+                ["add", "1", "", "Signals"],
+                "/rp organization add 1  Signals",
+            ),
+            Event(),
+        )
+        == ORGANIZATION_USAGE
+    )
+    assert (
+        runtime.handle_command_sync(
+            RPCommand(
+                "organization",
+                ["add", "1", "lighthouse", "   "],
+                "/rp organization add 1 lighthouse   ",
+            ),
+            Event(),
+        )
+        == ORGANIZATION_USAGE
+    )
+
+
+def test_organization_not_found_and_missing_project_errors(tmp_path):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    runtime.store.create_project("Atlas")
+
+    assert (
+        runtime.handle_command_sync(
+            RPCommand(
+                "organization",
+                ["add", "9999", "lighthouse", "Monitors storms."],
+                "/rp organization add 9999 lighthouse Monitors storms.",
+            ),
+            Event(),
+        )
+        == "No novel project found: 9999"
+    )
+    assert (
+        runtime.handle_command_sync(
+            RPCommand("organization", ["list", "9999"], "/rp organization list 9999"),
+            Event(),
+        )
+        == "No novel project found: 9999"
+    )
+    assert (
+        runtime.handle_command_sync(
+            RPCommand("organization", ["inspect", "9999"], "/rp organization inspect 9999"),
+            Event(),
+        )
+        == "No organization found: 9999"
+    )
+    assert (
+        runtime.handle_command_sync(
+            RPCommand("organization", ["update", "9999", "Signals"], "/rp organization update 9999 Signals"),
+            Event(),
+        )
+        == "No organization found: 9999"
+    )
+    assert (
+        runtime.handle_command_sync(
+            RPCommand("organization", ["delete", "9999"], "/rp organization delete 9999"),
+            Event(),
+        )
+        == "No organization found: 9999"
+    )
+
+
+def test_organization_no_active_project_and_list_falls_back_to_usage(tmp_path):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+
+    assert (
+        runtime.handle_command_sync(
+            RPCommand("organization", ["list"], "/rp organization list"),
+            Event(),
+        )
+        == "Usage: /rp organization list [project-id]"
+    )
+
+
+def test_organization_markers_do_not_leak_to_debug_prompt_or_context(tmp_path):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    store.save_card(parse_character_card({"name": "Alice", "description": "Scholar", "first_mes": "Hello."}))
+    runtime = TavernRuntime(store)
+    runtime.handle_command_sync(RPCommand("start", ["Alice"], "/rp start Alice"), Event())
+
+    project = store.create_project("Skyline")
+    chapter = store.create_chapter(project["id"], "Prologue")
+    scene = store.create_scene(chapter["id"], "Opening")
+    store.link_scene_session(
+        scene["id"],
+        store.get_active_session("telegram:chat:chat-1:thread:main:user:user-1")["id"],
+    )
+
+    store.create_organization(
+        project["id"],
+        "watchtower",
+        "marker: distinctive organization token",
+    )
+
+    prompt = runtime.handle_command_sync(RPCommand("debug", ["prompt"], "/rp debug prompt"), Event())
+    context = runtime.handle_command_sync(RPCommand("debug", ["context"], "/rp debug context"), Event())
+
+    assert "marker: distinctive organization token" not in prompt
+    assert "marker: distinctive organization token" not in context
+
+
 def test_project_style_bad_arguments_return_usage(tmp_path):
     runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
     runtime.store.create_project("Atlas")
@@ -1638,6 +1881,7 @@ def test_project_export_includes_locations_only_when_present_and_in_order(tmp_pa
     runtime.store.create_project("Atlas", "A quiet beginning")
     runtime.store.set_project_style_guide(1, "Tone: grounded")
     runtime.store.create_location(1, "Harbor", "A lamp posts the river mouth.")
+    runtime.store.create_organization(1, "Harbor Office", "Tracks trade by bell schedule and fog signal.")
     runtime.store.create_character_state(1, "mara", "Always curious.")
     runtime.store.create_relationship_state(
         1,
@@ -1653,26 +1897,43 @@ def test_project_export_includes_locations_only_when_present_and_in_order(tmp_pa
     exported = Path(file_path).read_text(encoding="utf-8")
     assert "## Style Guide" in exported
     assert "## Locations" in exported
+    assert "## Organizations" in exported
     assert "## Characters" in exported
     assert "## Relationships" in exported
     assert "## Chapters" in exported
     assert (
         exported.index("## Style Guide")
         < exported.index("## Locations")
+        < exported.index("## Organizations")
         < exported.index("## Characters")
         < exported.index("## Relationships")
         < exported.index("## Chapters")
     )
     assert "- Harbor: A lamp posts the river mouth." in exported
+    assert "- Harbor Office: Tracks trade by bell schedule and fog signal." in exported
 
     runtime.store.create_project("Boreal")
-    response_no_locations = runtime.handle_command_sync(
+    runtime.store.create_organization(2, "Dock Keepers", "Maintains tide gates and signal flags.")
+    response_locations_absent = runtime.handle_command_sync(
         RPCommand("project", ["export", "2"], "/rp project export 2"),
+        Event(),
+    )
+    file_path_locations_absent = response_locations_absent.split("file: ", 1)[1].splitlines()[0].strip()
+    exported_locations_absent = Path(file_path_locations_absent).read_text(encoding="utf-8")
+    assert "## Organizations" in exported_locations_absent
+    assert "## Locations" not in exported_locations_absent
+    assert exported_locations_absent.index("## Organizations") < exported_locations_absent.index("## Chapters")
+    assert "- Dock Keepers: Maintains tide gates and signal flags." in exported_locations_absent
+
+    runtime.store.create_project("Boreal Empty")
+    response_no_locations = runtime.handle_command_sync(
+        RPCommand("project", ["export", "3"], "/rp project export 3"),
         Event(),
     )
     file_path_no_locations = response_no_locations.split("file: ", 1)[1].splitlines()[0].strip()
     exported_no_locations = Path(file_path_no_locations).read_text(encoding="utf-8")
     assert "## Locations" not in exported_no_locations
+    assert "## Organizations" not in exported_no_locations
 
 
 def test_scene_create_list_and_start_links_session(tmp_path):

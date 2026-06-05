@@ -541,6 +541,9 @@ class TavernRuntime:
     def _character_command(self, command: RPCommand, event: Any) -> str:
         return runtime_novel.character_command(self, command, event)
 
+    def _organization_command(self, command: RPCommand, event: Any) -> str:
+        return runtime_novel.organization_command(self, command, event)
+
     def _status(self, event: Any) -> str:
         return runtime_lifecycle.status(self, event)
 

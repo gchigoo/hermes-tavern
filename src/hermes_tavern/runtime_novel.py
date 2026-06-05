@@ -159,6 +159,25 @@ def location_command(runtime: Any, command: RPCommand, event: Any) -> str:
     return _LOCATION_USAGE
 
 
+def organization_command(runtime: Any, command: RPCommand, event: Any) -> str:
+    if not command.args:
+        return _ORGANIZATION_USAGE
+
+    subcommand = command.args[0].lower()
+    if subcommand == "add":
+        return organization_add(runtime, command, event)
+    if subcommand == "list":
+        return organization_list(runtime, command, event)
+    if subcommand == "inspect":
+        return organization_inspect(runtime, command)
+    if subcommand == "update":
+        return organization_update(runtime, command)
+    if subcommand == "delete":
+        return organization_delete(runtime, command)
+
+    return _ORGANIZATION_USAGE
+
+
 def _safe_int(text: str) -> int | None:
     try:
         return int(text)
@@ -179,6 +198,14 @@ _LOCATION_USAGE = (
     "/rp location list [project-id] | /rp location inspect <location-id> | "
     "/rp location update <location-id> <description...> | "
     "/rp location delete <location-id>"
+)
+
+
+_ORGANIZATION_USAGE = (
+    "Usage: /rp organization add <project-id> <label> <description...> | "
+    "/rp organization list [project-id] | /rp organization inspect <organization-id> | "
+    "/rp organization update <organization-id> <description...> | "
+    "/rp organization delete <organization-id>"
 )
 
 
@@ -1395,6 +1422,125 @@ def location_delete(runtime: Any, command: RPCommand) -> str:
         return f"No location found: {location_id}"
 
     return f"Location deleted for location [{location_id}]."
+
+
+def organization_add(runtime: Any, command: RPCommand, event: Any) -> str:
+    del event
+    if len(command.args) < 4:
+        return _ORGANIZATION_USAGE
+
+    project_id = _safe_int(command.args[1])
+    if project_id is None:
+        return _ORGANIZATION_USAGE
+
+    label = command.args[2].strip()
+    if not label:
+        return _ORGANIZATION_USAGE
+
+    description_text = " ".join(command.args[3:]).strip()
+    if not description_text:
+        return _ORGANIZATION_USAGE
+
+    try:
+        organization = runtime.store.create_organization(
+            project_id,
+            label,
+            description_text,
+        )
+    except ValueError:
+        return f"No novel project found: {project_id}"
+
+    return (
+        f"Organization added: [{organization['id']}] {organization['label']} -> "
+        f"{_mobile_preview(organization['description_text'], 180)}"
+    )
+
+
+def organization_list(runtime: Any, command: RPCommand, event: Any) -> str:
+    project_id, err = _resolve_project_id(
+        runtime,
+        command,
+        event=event,
+        usage="Usage: /rp organization list [project-id]",
+        default_ok=True,
+        fallback_index=1,
+    )
+    if project_id is None:
+        return err or _ORGANIZATION_USAGE
+
+    try:
+        organizations = runtime.store.list_organizations(project_id)
+    except ValueError:
+        return f"No novel project found: {project_id}"
+
+    if not organizations:
+        return f"No organizations for project {project_id}."
+
+    lines = [f"Hermes Tavern organizations for project [{project_id}]:"]
+    for organization in organizations:
+        lines.append(
+            f"  - [{organization['id']}] {organization['label']}: "
+            f"{_mobile_preview(organization['description_text'], 120)}"
+        )
+    return "\n".join(lines)
+
+
+def organization_inspect(runtime: Any, command: RPCommand) -> str:
+    if len(command.args) != 2:
+        return _ORGANIZATION_USAGE
+
+    organization_id = _safe_int(command.args[1])
+    if organization_id is None:
+        return _ORGANIZATION_USAGE
+
+    organization = runtime.store.get_organization(organization_id)
+    if organization is None:
+        return f"No organization found: {organization_id}"
+
+    return (
+        f"Organization for [{organization_id}] (project [{organization['project_id']}]): "
+        f"{organization['label']}: {_mobile_preview(organization['description_text'], 220)}"
+    )
+
+
+def organization_update(runtime: Any, command: RPCommand) -> str:
+    if len(command.args) < 3:
+        return _ORGANIZATION_USAGE
+
+    organization_id = _safe_int(command.args[1])
+    if organization_id is None:
+        return _ORGANIZATION_USAGE
+
+    description_text = " ".join(command.args[2:]).strip()
+    if not description_text:
+        return _ORGANIZATION_USAGE
+
+    try:
+        organization = runtime.store.update_organization(
+            organization_id,
+            description_text,
+        )
+    except ValueError:
+        return f"No organization found: {organization_id}"
+
+    return (
+        f"Organization updated for organization [{organization['id']}]: "
+        f"{_mobile_preview(organization['description_text'], 180)}"
+    )
+
+
+def organization_delete(runtime: Any, command: RPCommand) -> str:
+    if len(command.args) != 2:
+        return _ORGANIZATION_USAGE
+
+    organization_id = _safe_int(command.args[1])
+    if organization_id is None:
+        return _ORGANIZATION_USAGE
+
+    if not runtime.store.delete_organization(organization_id):
+        return f"No organization found: {organization_id}"
+
+    return f"Organization deleted for organization [{organization_id}]."
 
 
 def character_state_add(runtime: Any, command: RPCommand, event: Any) -> str:

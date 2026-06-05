@@ -148,6 +148,11 @@ Expected behavior:
 /rp location inspect <location-id>
 /rp location update <location-id> <description...>
 /rp location delete <location-id>
+/rp organization add <project-id> <label> <description...>
+/rp organization list [project-id]
+/rp organization inspect <organization-id>
+/rp organization update <organization-id> <description...>
+/rp organization delete <organization-id>
 /rp relationship add <project-id> <label> <state...>
 /rp relationship list [project-id]
 /rp relationship inspect <relationship-id>

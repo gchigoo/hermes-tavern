@@ -293,6 +293,16 @@ def test_readme_core_commands_include_location_state_literals():
     assert "/rp location delete <location-id>" in core_commands
 
 
+def test_readme_core_commands_include_organization_state_literals():
+    core_commands = _readme_core_commands_text()
+
+    assert "/rp organization add <project-id> <label> <description...>" in core_commands
+    assert "/rp organization list [project-id]" in core_commands
+    assert "/rp organization inspect <organization-id>" in core_commands
+    assert "/rp organization update <organization-id> <description...>" in core_commands
+    assert "/rp organization delete <organization-id>" in core_commands
+
+
 def test_readme_card_import_format_docs_are_accurate():
     card_import_lines = [
         line.strip()

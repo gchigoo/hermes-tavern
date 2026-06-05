@@ -32,6 +32,7 @@ def test_migrate_creates_novel_tables(tmp_path):
         "novel_relationship_states",
         "novel_locations",
         "novel_character_states",
+        "novel_organizations",
     }.issubset(tables)
     novel_tables = {name for name in tables if name.startswith("novel_")}
     assert novel_tables == {
@@ -48,6 +49,7 @@ def test_migrate_creates_novel_tables(tmp_path):
         "novel_relationship_states",
         "novel_locations",
         "novel_character_states",
+        "novel_organizations",
     }
 
     with sqlite3.connect(db_path) as conn:
@@ -115,6 +117,19 @@ def test_migrate_creates_novel_tables(tmp_path):
             ).fetchall()
         }
     assert "idx_novel_locations_project" in location_indexes
+    with sqlite3.connect(db_path) as conn:
+        organization_indexes = {
+            row[0]
+            for row in conn.execute(
+                """
+                SELECT name
+                FROM sqlite_master
+                WHERE type='index'
+                    AND tbl_name='novel_organizations'
+                """
+            ).fetchall()
+        }
+    assert "idx_novel_organizations_project" in organization_indexes
 
 
 def test_novel_project_crud_and_counts(tmp_path):
@@ -439,6 +454,92 @@ def test_location_blank_label_and_description_rejected(tmp_path):
         store.update_location(created["id"], "   ")
     except ValueError as exc:
         assert str(exc) == "Location description cannot be blank"
+    else:
+        raise AssertionError("Expected ValueError for blank description on update")
+
+
+def test_organization_state_crud_and_missing_owner_errors(tmp_path):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    project = store.create_project("Organization Metadata")
+
+    created = store.create_organization(
+        project["id"],
+        "lighthouse-order",
+        "Protects travelers and records weather.",
+    )
+    assert created["project_id"] == project["id"]
+    assert created["label"] == "lighthouse-order"
+    assert created["description_text"] == "Protects travelers and records weather."
+
+    listed = store.list_organizations(project["id"])
+    assert len(listed) == 1
+    assert listed[0]["id"] == created["id"]
+    assert listed[0]["label"] == created["label"]
+    assert listed[0]["description_text"] == created["description_text"]
+
+    fetched = store.get_organization(created["id"])
+    assert fetched is not None
+    assert fetched["description_text"] == created["description_text"]
+
+    updated = store.update_organization(created["id"], "Protects travelers and logs storm patterns.")
+    assert updated["id"] == created["id"]
+    assert updated["label"] == created["label"]
+    assert updated["description_text"] == "Protects travelers and logs storm patterns."
+    assert updated["updated_at"] >= created["updated_at"]
+
+    assert store.delete_organization(created["id"]) is True
+    assert store.get_organization(created["id"]) is None
+    assert store.delete_organization(created["id"]) is False
+
+    try:
+        store.create_organization(999, "lighthouse-order", "missing")
+    except ValueError as exc:
+        assert str(exc) == "Project not found"
+    else:
+        raise AssertionError("Expected ValueError for missing project")
+
+    try:
+        store.list_organizations(999)
+    except ValueError as exc:
+        assert str(exc) == "Project not found"
+    else:
+        raise AssertionError("Expected ValueError for missing project")
+
+    try:
+        store.update_organization(999, "stale")
+    except ValueError as exc:
+        assert str(exc) == "Organization not found"
+    else:
+        raise AssertionError("Expected ValueError for missing organization")
+
+
+def test_organization_blank_label_and_description_rejected(tmp_path):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    project = store.create_project("Organization Metadata")
+
+    try:
+        store.create_organization(project["id"], " ", "Description text")
+    except ValueError as exc:
+        assert str(exc) == "Organization label cannot be blank"
+    else:
+        raise AssertionError("Expected ValueError for blank label")
+
+    try:
+        store.create_organization(project["id"], "lighthouse-order", "   ")
+    except ValueError as exc:
+        assert str(exc) == "Organization description cannot be blank"
+    else:
+        raise AssertionError("Expected ValueError for blank description")
+
+    created = store.create_organization(
+        project["id"],
+        "lighthouse-order",
+        "first",
+    )
+    try:
+        store.update_organization(created["id"], "   ")
+    except ValueError as exc:
+        assert str(exc) == "Organization description cannot be blank"
     else:
         raise AssertionError("Expected ValueError for blank description on update")
 

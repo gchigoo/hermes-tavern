@@ -170,6 +170,16 @@ def test_help_lists_location_commands():
     assert "/rp location delete <location-id>" in help_text
 
 
+def test_help_lists_organization_commands():
+    help_text = _build_help_text()
+
+    assert "/rp organization add <project-id> <label> <description...>" in help_text
+    assert "/rp organization list [project-id]" in help_text
+    assert "/rp organization inspect <organization-id>" in help_text
+    assert "/rp organization update <organization-id> <description...>" in help_text
+    assert "/rp organization delete <organization-id>" in help_text
+
+
 def test_help_lists_character_state_commands():
     help_text = _build_help_text()
 
