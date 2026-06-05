@@ -497,7 +497,7 @@ organizational notes through `/rp organization ...`, persisted in
 Organization rows are local notes only and do not imply hierarchy, membership,
 affiliations, or bindings.
 
-Current phase includes command-managed default-binding metadata via
+Default Binding Metadata v1 includes command-managed default-binding metadata via
 `novel_default_bindings` (for `project`/`chapter`/`scene` scope + one of
 `card`/`preset`/`lorebook`/`persona` assets) and export visibility only. The
 scalar defaults `default_card_id`, `default_preset_id`, and `default_lorebook_ids`
@@ -523,8 +523,15 @@ Plot threads are now current local metadata and are managed through
 Style samples are now current local metadata and are managed through
 `novel_style_samples(id, project_id, label, sample_text, created_at, updated_at)`.
 
+Scene Beat Metadata v1 is current local scene-scoped metadata and is managed
+through `/rp scene beat add/list/inspect/update/delete`, persisted in
+`novel_scene_beats(id, scene_id, label, beat_text, created_at, updated_at)`.
+Scene beats are command/export visible only, scene-local, and intentionally omit
+any automatic sequencing or generation behavior.
+
 Default-binding metadata, relationship state, character state, location,
-organization, plot-thread, and style-sample metadata are informational-only:
+organization, plot-thread, style-sample metadata, and scene beats are
+informational-only:
 they do not participate in prompt module injection, provider routing, context
 budget reporting, vectorization/retrieval, content-mode behavior, credential
 persistence, automation/summarization, or generation.
@@ -542,12 +549,14 @@ locations
 organizations
 plot threads
 style samples
+scene beats
 ```
 
 Scene objects include:
 
 ```text
 goal text
+beat label + beat text
 POV label
 tense: past|present
 ```
@@ -622,6 +631,11 @@ Commands:
 /rp scene narration clear <scene-id>
 /rp scene narration pov <scene-id> <label>
 /rp scene narration tense <scene-id> <past|present>
+/rp scene beat add <scene-id> <label> <beat...>
+/rp scene beat list <scene-id>
+/rp scene beat inspect <beat-id>
+/rp scene beat update <beat-id> <beat...>
+/rp scene beat delete <beat-id>
 /rp canon add <project-id> <title> <content>
 /rp canon list [project-id] [group]
 /rp canon group [project-id] <group>
@@ -1021,11 +1035,12 @@ location notes
 organization notes
 plot threads
 style samples
+scene beats
 ```
 
-Future novel-engine dimensions remain deferred: volume/arc, beats, location map/
-geocode derivatives, revision notes, and relationship graph/rename/
-automatic extraction.
+Future novel-engine dimensions remain deferred: volume/arc, location map/
+geocode derivatives, revision notes, relationship graph/rename/automatic
+extraction.
 
 ### 13.2 Writing commands
 
@@ -1087,6 +1102,11 @@ automatic extraction.
 /rp scene narration clear <scene-id>
 /rp scene narration pov <scene-id> <label>
 /rp scene narration tense <scene-id> <past|present>
+/rp scene beat add <scene-id> <label> <beat...>
+/rp scene beat list <scene-id>
+/rp scene beat inspect <beat-id>
+/rp scene beat update <beat-id> <beat...>
+/rp scene beat delete <beat-id>
 /rp canon add/list/group
 /rp timeline add/list
 ```
@@ -1116,6 +1136,11 @@ Style-sample metadata is command-driven local-only: it is surfaced for
 add/list/inspect/update/delete, optional Markdown export, and is excluded from
 prompt/debug, context-budget reporting, retrieval/vectorization, provider/model
 routing, content-mode decisions, credentials, and generation.
+Scene-beat metadata is command-driven local-only: it is surfaced for
+add/list/inspect/update/delete, optional owning-scene Markdown export, and is
+excluded from prompt/debug, context-budget reporting, retrieval/vectorization,
+provider/model routing, content-mode decisions, credentials, generation, media,
+archive, graph, automatic extraction, and safety behavior.
 Relationship state is metadata-only and local-only: command-driven relationship
 notes for inspection/list/update/delete and optional Markdown export, no prompt,
 context-budget, retrieval/vectorization, provider/model/routing, content-mode,
@@ -1349,11 +1374,11 @@ ST preset JSON
 ST lorebook/world info JSON
 ```
 
-Hermes Tavern native project archives are deferred; the current Phase 121–137
+Hermes Tavern native project archives are deferred; the current Phase 121–138
 implementation provides Markdown export only, not project/novel import.
 Relationship-state, character-state, location, organization, plot-thread, and
-style-sample rows remain local metadata and are not bound to ST card objects in
-this phase.
+style-sample rows, plus scene-beat rows, remain local metadata and are not bound
+to ST card objects in this phase.
 
 Later:
 
@@ -1376,7 +1401,7 @@ chat export JSONL
 novel export Markdown
 ```
 
-Project archive ZIP remains a future exporter/importer; current Phase 121–137 writes
+Project archive ZIP remains a future exporter/importer; current Phase 121–138 writes
 local Markdown via `/rp project export [id]`.
 Project Brief and Project Outline are exported as optional top-level `## Project Brief`
 and `## Outline` sections after `## Summary` when non-empty. Project style guides
@@ -1411,6 +1436,9 @@ before scene goal, narration controls, and session content, and whitespace-only
 summaries are omitted.
 Scene goals are exported in Markdown directly under the relevant scene heading
 as `Goal: <text>`, when set.
+Scene beats are exported for the owning scene as bullet lines:
+`- <label>: <beat_text>`. They are omitted when no beats exist and appear
+after `Goal:` (if present) and before narration controls/session content.
 Scene narration controls are also exported under scene headings with only
 non-empty fields:
 - `Scene narration controls:`

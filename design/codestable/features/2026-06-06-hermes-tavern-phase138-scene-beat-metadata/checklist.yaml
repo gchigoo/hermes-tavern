@@ -1,23 +1,28 @@
 doc_type: feature-checklist
 feature: "2026-06-06-hermes-tavern-phase138-scene-beat-metadata"
 date: "2026-06-06"
-status: implemented
+status: accepted
 summary: >
-  IMPLEMENTED - Scene Beat Metadata v1 adds local scene-scoped beat rows with
+  ACCEPTED - Scene Beat Metadata v1 adds local scene-scoped beat rows with
   /rp scene beat add/list/inspect/update/delete command visibility and optional
   per-scene project Markdown export visibility only. It remains metadata-only/
   inert: controller verification confirms no prompt/debug/context-budget,
   active-session, provider/model routing, content-mode, credential,
   retrieval/vectorization, generation, media, archive, graph, automatic
-  extraction, protected core, runtime.py, architecture, or root-design changes.
+  extraction, protected core, runtime.py, architecture, or root-design behavior
+  changes beyond S2 documentation writeback.
 
 implementation_readiness: >
-  IMPLEMENTED - Codex architect selected scene beats as the next bounded
+  ACCEPTED - Codex architect selected scene beats as the next bounded
   metadata-only phase and produced design/checklist artifacts. The controller
   materialized and validated the artifacts, then Codex executor implemented S1.
   Controller review added one small export scoping/empty-block regression test,
   reran py_compile, focused pytest, Tavern-wide pytest, full pytest, YAML
-  validators, reverse-scope diff guards, and git diff --check from scratch.
+  validators, reverse-scope diff guards, and git diff --check from scratch. For
+  S2, Codex architect produced a docs/status-only acceptance/writeback artifact,
+  Codex executor drafted the acceptance/checklist/architecture/root-design
+  updates, and the controller patched root-design omissions, finalized statuses,
+  and reran all verification gates before accepting.
 
 planning_verification:
   - command: >-
@@ -104,9 +109,36 @@ steps:
       - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_*.py -q -o 'addopts=' -p no:cacheprovider"
         expected: "passes"
       - command: "git diff --name-only -- run_agent.py cli.py gateway/run.py src/hermes_tavern/runtime.py src/hermes_tavern/runtime_prompt_modules.py src/hermes_tavern/prompt.py src/hermes_tavern/runtime_prompt_manager.py src/hermes_tavern/runtime_debug.py src/hermes_tavern/model_router.py src/hermes_tavern/provider_bridge.py src/hermes_tavern/adapters.py src/hermes_tavern/runtime_model.py src/hermes_tavern/runtime_generation.py src/hermes_tavern/runtime_content.py src/hermes_tavern/memory.py src/hermes_tavern/runtime_memory.py src/hermes_tavern/images.py src/hermes_tavern/runtime_images.py src/hermes_tavern/importers plugins build/lib design/HERMES_TAVERN_DESIGN.md design/codestable/architecture/ARCHITECTURE.md"
-        expected: "empty output"
+        expected: "empty output during S1 implementation"
       - command: "git diff --check"
         expected: "passes"
+  - id: S2
+    name: "S2: Verify/accept/write current docs"
+    status: completed
+    completed_at: "2026-06-06"
+    result: >
+      ACCEPTED - S2 docs/status writeback created the Phase 138 acceptance
+      report, updated architecture/root-design current behavior for scene-beat
+      metadata, removed stale beats-deferred/root-design wording, and finalized
+      checklist/acceptance statuses after controller reran focused/Tavern/full
+      pytest, YAML/frontmatter validators, protected reverse-scope guards,
+      stale-wording scans, and git diff --check.
+    description: >
+      Controller-owned acceptance/writeback after S1 passes.
+    allowed_files:
+      - design/codestable/features/2026-06-06-hermes-tavern-phase138-scene-beat-metadata/checklist.yaml
+      - design/codestable/features/2026-06-06-hermes-tavern-phase138-scene-beat-metadata/hermes-tavern-phase138-scene-beat-metadata-acceptance.md
+      - design/codestable/architecture/ARCHITECTURE.md
+      - design/HERMES_TAVERN_DESIGN.md
+    prohibited_files:
+      - README.md
+      - "src/**"
+      - "tests/**"
+      - run_agent.py
+      - cli.py
+      - gateway/run.py
+      - "plugins/**"
+      - "build/lib/**"
 
 acceptance:
   - id: AC1
@@ -131,26 +163,55 @@ acceptance:
     criteria: "Distinctive beat text does not appear in /rp debug prompt or /rp debug context."
     status: completed
   - id: AC8
-    criteria: "Reverse-scope diff checks show no protected core, runtime.py, prompt/debug/context-budget, provider/model/content/generation, retrieval/vectorization, media, importer, plugin shim, build, architecture/root-design, archive, graph, automatic extraction, or safety-bypass changes."
+    criteria: "Reverse-scope diff checks show no protected core, runtime.py, prompt/debug/context-budget, provider/model/content/generation, retrieval/vectorization, media, importer, plugin shim, build, archive, graph, automatic extraction, or safety-bypass changes."
+    status: completed
+  - id: AC9
+    criteria: "Architecture/root-design writeback reflects Phase 138 as current and removes stale beats-deferred wording."
     status: completed
 
 checks:
   - id: C1
     name: "Metadata schema"
     status: completed
+    completed_at: "2026-06-06"
+    result: >
+      PASSED - DB tests and architecture writeback cover novel_scene_beats with
+      scene_id, label, beat_text, timestamps, and idx_novel_scene_beats_scene.
     criteria: "novel_scene_beats exists with scene ownership and indexed scene lookup."
   - id: C2
     name: "Command surface"
     status: completed
+    completed_at: "2026-06-06"
+    result: >
+      PASSED - /rp scene beat add/list/inspect/update/delete appears in command
+      table, runtime help, README Core commands, and focused command/docs tests.
     criteria: "/rp scene beat commands are visible and bounded."
   - id: C3
     name: "Export visibility"
     status: completed
+    completed_at: "2026-06-06"
+    result: >
+      PASSED - Export tests cover owning-scene inclusion, empty omission, and
+      cross-scene scoping for scene-beat rows.
     criteria: "Scene beats appear only under the owning scene in local Markdown export."
   - id: C4
     name: "No prompt/provider side effects"
     status: completed
+    completed_at: "2026-06-06"
+    result: >
+      PASSED - No-leak tests prove distinctive scene-beat text is absent from
+      debug prompt/context, and S2 protected-scope diff guard was empty for all
+      source, tests, README, core, plugin, gateway, and build paths.
     criteria: "No beat text appears in prompt/debug/context paths and no prohibited files change."
+  - id: C5
+    name: "S2 docs/status writeback"
+    status: completed
+    completed_at: "2026-06-06"
+    result: >
+      PASSED - Acceptance report, checklist, architecture, and root design were
+      updated; controller reran focused/Tavern/full pytest, validators,
+      protected reverse-scope guard, stale-wording guard, and git diff --check.
+    criteria: "Acceptance report, checklist checks, architecture.md, and HERMES_TAVERN_DESIGN.md are finalized after controller verification."
 
 risks:
   - id: R1
@@ -164,14 +225,15 @@ risks:
     mitigation: "Do not refactor; keep S1 to the bounded table, commands, export, docs, and tests."
 
 verification_notes: |
-  - Codex executor run completed with implementation changes in the allowed S1 files; JSONL: /tmp/hermes-tavern-executor-phase138.jsonl.
-  - Codex executor py_compile passed and focused pytest passed with 300 passed; its Tavern-wide run hit the known transient image-provider mock failure path in tests/test_hermes_tavern_images.py.
-  - Controller added one small export scoping/empty-block regression test to close AC6 coverage.
-  - Controller reran py_compile for the changed source/test files: passed with no output.
-  - Controller reran focused DB/runtime/command/README docs pytest: 301 passed in 10.96s.
-  - Controller reran full Tavern glob: 992 passed in 42.27s.
-  - Controller reran full pytest from the repo root: 992 passed in 41.75s.
-  - Controller reran design/checklist YAML validators: both passed, 1 file each.
-  - Controller reran the protected reverse-scope diff guard: empty output.
+  - Codex S1 executor JSONL: /tmp/hermes-tavern-executor-phase138.jsonl.
+  - Codex S2 architect JSONL: /tmp/hermes-tavern-architect-phase138-s2.jsonl; RESULT: ACCEPTANCE_ARTIFACT_READY.
+  - Codex S2 executor JSONL: /tmp/hermes-tavern-executor-phase138-s2.jsonl; executor drafted docs/status only and did not edit source/tests/README.
+  - Controller patched root-design omissions after executor draft so scene beats are listed in §13.1, §13.2, and §17.1/§17.2, then finalized statuses.
+  - Controller reran py_compile for changed source/test evidence files: passed with no output.
+  - Controller reran focused DB/runtime/command/README docs pytest: 301 passed in 11.54s.
+  - Controller reran Tavern-wide pytest: 992 passed in 43.25s.
+  - Controller reran full pytest: 992 passed in 51.42s.
+  - Controller reran design/acceptance/checklist validators: all passed, 1 file each.
+  - Controller reran protected S2 reverse-scope diff guard for src/tests/README/core/plugins/build paths: empty output.
+  - Controller reran stale-wording guard for Phase 137 headings, Phase 121–137 root-design text, old beats-deferred root-design wording, and the pre-final acceptance typo: empty output.
   - Controller reran git diff --check: passed with no output.
-  - No protected core, runtime.py, prompt/debug/context-budget, provider/model/content/generation, retrieval/vectorization, media, importer, plugin shim, build, architecture, or root-design files changed.
