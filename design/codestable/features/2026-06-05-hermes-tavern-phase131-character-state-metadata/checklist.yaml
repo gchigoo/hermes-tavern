@@ -1,17 +1,26 @@
 doc_type: feature-checklist
 feature: "2026-06-05-hermes-tavern-phase131-character-state-metadata"
 date: "2026-06-05"
-status: planned
+status: in_progress
 summary: >
-  Character State Metadata v1 will add local project-scoped character notes
-  backed by `novel_character_states`, managed through `/rp character state ...`
-  commands, optionally visible in Markdown export, and verified to remain outside
-  prompt/debug/provider/generation/context-budget/vectorization/retrieval paths.
+  Character State Metadata v1 adds local project-scoped character notes backed by
+  `novel_character_states`, managed through `/rp character state ...` commands,
+  optionally visible in Markdown export, and verified to remain outside prompt/
+  debug/provider/generation/context-budget/vectorization/retrieval paths. S1
+  implementation is complete with controller-run focused, plugin, and full
+  verification; S2 acceptance/writeback remains planned.
 
 steps:
   - id: S1
     name: "S1: Character State Metadata implementation"
-    status: planned
+    status: completed
+    completed_at: "2026-06-05"
+    result: >
+      IMPLEMENTED - S1 added local project-scoped character-state persistence,
+      `/rp character state add/list/inspect/update/delete`, help/README command
+      literals, optional Markdown export visibility, and focused DB/runtime/docs
+      tests. Controller verified py_compile, focused tests, Tavern glob tests,
+      full pytest, protected-file reverse-scope guard, and whitespace checks.
     description: >
       Add local project-scoped character-state persistence, the `/rp character
       state ...` command family, help/README command literals, optional Markdown
@@ -36,16 +45,31 @@ steps:
       or safety-bypass file changes are present.
     verification:
       - command: >-
+          codex --profile architect exec --json --color never --disable image_generation --sandbox read-only --cd /Users/steven/Projects/hermes-tavern <Phase 131 S1 artifact prompt>
+        result: "passed; JSONL at /tmp/hermes-tavern-architect-phase131-s1.jsonl; STATUS: READY; RESULT: PLANNING_ARTIFACT READY"
+      - command: >-
+          codex --profile executor exec --json --color never --disable image_generation --sandbox read-only --cd /Users/steven/Projects/hermes-tavern <executor smoke prompt>
+        result: "passed; JSONL at /tmp/hermes-tavern-executor-phase131-smoke.jsonl; EXECUTOR_SMOKE_OK"
+      - command: >-
+          codex --profile executor exec --json --color never --disable image_generation --sandbox workspace-write --cd /Users/steven/Projects/hermes-tavern <Phase 131 S1 implementation prompt>
+        result: "passed; JSONL at /tmp/hermes-tavern-executor-phase131-s1.jsonl; executor reported 218 focused tests passed"
+      - command: >-
           PYTHONDONTWRITEBYTECODE=1 python -m py_compile src/hermes_tavern/db_novel.py src/hermes_tavern/runtime_novel.py src/hermes_tavern/runtime.py src/hermes_tavern/commands.py tests/test_hermes_tavern_novel_db.py tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_commands.py tests/test_hermes_tavern_readme_docs.py
-        owner: executor
+        result: "passed (no errors)"
       - command: >-
           PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel_db.py tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_commands.py tests/test_hermes_tavern_readme_docs.py -q -o 'addopts=' -p no:cacheprovider
-        owner: executor
+        result: "218 passed in 8.54s"
       - command: >-
-          git diff --name-only -- run_agent.py cli.py gateway/run.py src/hermes_tavern/runtime_prompt_modules.py src/hermes_tavern/prompt.py src/hermes_tavern/runtime_debug.py src/hermes_tavern/model_router.py src/hermes_tavern/provider_bridge.py src/hermes_tavern/adapters.py src/hermes_tavern/runtime_model.py src/hermes_tavern/runtime_generation.py
-        owner: executor
+          PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_*.py -q -o 'addopts=' -p no:cacheprovider
+        result: "909 passed in 39.05s"
+      - command: >-
+          PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts=' -p no:cacheprovider
+        result: "909 passed in 36.70s"
+      - command: >-
+          git diff --name-only -- run_agent.py cli.py gateway/run.py src/hermes_tavern/runtime_prompt_modules.py src/hermes_tavern/prompt.py src/hermes_tavern/runtime_debug.py src/hermes_tavern/model_router.py src/hermes_tavern/provider_bridge.py src/hermes_tavern/adapters.py src/hermes_tavern/runtime_model.py src/hermes_tavern/runtime_generation.py src/hermes_tavern/runtime_content.py build/lib
+        result: "empty (no protected core/prompt/provider/generation/build changes)"
       - command: "git diff --check"
-        owner: executor
+        result: "passed (no whitespace issues)"
 
   - id: S2
     name: "S2: Verify/Accept/Write Architecture"
@@ -87,14 +111,24 @@ steps:
 checks:
   - id: C1
     name: "C1: Active checklist precondition"
-    status: pending
+    status: completed
+    completed_at: "2026-06-05"
+    result: >
+      PASSED - Phase 131 was the only planned/in-progress feature checklist at
+      S1 start; Phase 130 was accepted and no unrelated active checklist was
+      selected.
     criteria: >
       Before implementation, no unrelated feature checklist is planned, pending,
       or in progress; this Phase 131 checklist is the only active feature.
 
   - id: C2
     name: "C2: Persistence contract"
-    status: pending
+    status: completed
+    completed_at: "2026-06-05"
+    result: >
+      PASSED - `novel_character_states` migration, project foreign key/index,
+      CRUD/list helpers, missing project/ID behavior, blank-label rejection, and
+      blank-state rejection are covered by focused DB tests.
     criteria: >
       `novel_character_states` migration, project foreign key/index, CRUD/list
       helpers, missing project/ID behavior, blank-label rejection, and blank-state
@@ -102,7 +136,13 @@ checks:
 
   - id: C3
     name: "C3: Command contract"
-    status: pending
+    status: completed
+    completed_at: "2026-06-05"
+    result: >
+      PASSED - `/rp character state add/list/inspect/update/delete` handlers and
+      command literals return bounded normal/error messages, require explicit
+      project ID for add, support active-project fallback for list only, and are
+      visible through help and README guards.
     criteria: >
       `/rp character state add/list/inspect/update/delete` command literals
       return compact normal and error messages, support active-project fallback
@@ -110,7 +150,12 @@ checks:
 
   - id: C4
     name: "C4: Markdown export"
-    status: pending
+    status: completed
+    completed_at: "2026-06-05"
+    result: >
+      PASSED - Markdown export emits optional `## Characters` only when rows
+      exist, orders it after Style Guide and before Relationships/Chapters, and
+      omits it for projects without character-state rows.
     criteria: >
       Project Markdown export includes `## Characters` only when character-state
       rows exist, orders it after Style Guide and before Relationships/Chapters,
@@ -118,7 +163,13 @@ checks:
 
   - id: C5
     name: "C5: Offline no-leak boundary"
-    status: pending
+    status: completed
+    completed_at: "2026-06-05"
+    result: >
+      PASSED - Focused no-leak tests confirm distinctive character-state text
+      stays out of `/rp debug prompt` and `/rp debug context`; protected prompt,
+      provider, model routing, content mode, generation, vectorization/retrieval,
+      credentials, and summarization paths are unchanged.
     criteria: >
       Character-state text does not appear in `/rp debug prompt` or
       `/rp debug context`; prompt module selection, provider calls, model routing,
@@ -127,7 +178,13 @@ checks:
 
   - id: C6
     name: "C6: Reverse-scope verification"
-    status: pending
+    status: completed
+    completed_at: "2026-06-05"
+    result: >
+      PASSED - Controller reverse-scope checks found no protected core,
+      build-artifact, prompt/provider/model/generation, credential, cloud/collab,
+      ST importer/exporter, minors/underage, or provider-safety-bypass file
+      changes in S1.
     criteria: >
       No protected core files, build artifacts, provider/model/generation files,
       credential paths, cloud/collab paths, minors/underage paths, ST asset

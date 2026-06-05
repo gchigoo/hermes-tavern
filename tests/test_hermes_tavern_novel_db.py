@@ -30,6 +30,7 @@ def test_migrate_creates_novel_tables(tmp_path):
         "novel_project_briefs",
         "novel_project_outlines",
         "novel_relationship_states",
+        "novel_character_states",
     }.issubset(tables)
     novel_tables = {name for name in tables if name.startswith("novel_")}
     assert novel_tables == {
@@ -44,6 +45,7 @@ def test_migrate_creates_novel_tables(tmp_path):
         "novel_project_briefs",
         "novel_project_outlines",
         "novel_relationship_states",
+        "novel_character_states",
     }
 
     with sqlite3.connect(db_path) as conn:
@@ -85,6 +87,19 @@ def test_migrate_creates_novel_tables(tmp_path):
             ).fetchall()
         }
     assert "idx_novel_relationship_states_project" in relationship_indexes
+    with sqlite3.connect(db_path) as conn:
+        character_indexes = {
+            row[0]
+            for row in conn.execute(
+                """
+                SELECT name
+                FROM sqlite_master
+                WHERE type='index'
+                    AND tbl_name='novel_character_states'
+                """
+            ).fetchall()
+        }
+    assert "idx_novel_character_states_project" in character_indexes
 
 
 def test_novel_project_crud_and_counts(tmp_path):
@@ -249,6 +264,87 @@ def test_relationship_state_crud_and_missing_owner_errors(tmp_path):
         assert str(exc) == "Project not found"
     else:
         raise AssertionError("Expected ValueError for missing project")
+
+
+def test_character_state_crud_and_missing_owner_errors(tmp_path):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    project = store.create_project("Character State")
+
+    created = store.create_character_state(
+        project["id"],
+        "mara-ilya",
+        "Trust is built on silence and hard bargains.",
+    )
+    assert created["project_id"] == project["id"]
+    assert created["label"] == "mara-ilya"
+    assert created["state_text"] == "Trust is built on silence and hard bargains."
+
+    listed = store.list_character_states(project["id"])
+    assert len(listed) == 1
+    assert listed[0]["id"] == created["id"]
+    assert listed[0]["label"] == created["label"]
+
+    fetched = store.get_character_state(created["id"])
+    assert fetched is not None
+    assert fetched["state_text"] == created["state_text"]
+
+    updated = store.update_character_state(created["id"], "Trust frays, then strengthens.")
+    assert updated["id"] == created["id"]
+    assert updated["state_text"] == "Trust frays, then strengthens."
+    assert updated["label"] == created["label"]
+    assert updated["updated_at"] >= created["updated_at"]
+
+    assert store.delete_character_state(created["id"]) is True
+    assert store.get_character_state(created["id"]) is None
+    assert store.delete_character_state(created["id"]) is False
+
+    try:
+        store.create_character_state(999, "mara-ilya", "missing")
+    except ValueError as exc:
+        assert str(exc) == "Project not found"
+    else:
+        raise AssertionError("Expected ValueError for missing project")
+
+    try:
+        store.list_character_states(999)
+    except ValueError as exc:
+        assert str(exc) == "Project not found"
+    else:
+        raise AssertionError("Expected ValueError for missing project")
+
+    try:
+        store.update_character_state(999, "stale")
+    except ValueError as exc:
+        assert str(exc) == "Character state not found"
+    else:
+        raise AssertionError("Expected ValueError for missing character state")
+
+
+def test_character_state_blank_label_and_state_rejected(tmp_path):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    project = store.create_project("Character State")
+
+    try:
+        store.create_character_state(project["id"], " ", "State text")
+    except ValueError as exc:
+        assert str(exc) == "Character state label cannot be blank"
+    else:
+        raise AssertionError("Expected ValueError for blank label")
+
+    try:
+        store.create_character_state(project["id"], "mara-ilya", "   ")
+    except ValueError as exc:
+        assert str(exc) == "Character state text cannot be blank"
+    else:
+        raise AssertionError("Expected ValueError for blank state text")
+
+    created = store.create_character_state(project["id"], "mara-ilya", "first")
+    try:
+        store.update_character_state(created["id"], "   ")
+    except ValueError as exc:
+        assert str(exc) == "Character state text cannot be blank"
+    else:
+        raise AssertionError("Expected ValueError for blank state text on update")
 
 
 def test_project_style_guide_clear_returns_bool(tmp_path):
@@ -1042,6 +1138,11 @@ def test_export_project_markdown_includes_relationships_after_style_guide_before
 
     project = store.create_project("Relationship Export", "interpersonal arc")
     store.set_project_style_guide(project["id"], "Tone: intimate")
+    store.create_character_state(
+        project["id"],
+        "mara",
+        "Confidence with a scar.",
+    )
     store.create_relationship_state(
         project["id"],
         "mara-elya",
@@ -1057,15 +1158,58 @@ def test_export_project_markdown_includes_relationships_after_style_guide_before
     markdown = store.export_project_markdown(project["id"])
 
     assert "## Style Guide" in markdown
+    assert "## Characters" in markdown
     assert "## Relationships" in markdown
     assert "## Chapters" in markdown
     assert (
         markdown.index("## Style Guide")
+        < markdown.index("## Characters")
         < markdown.index("## Relationships")
         < markdown.index("## Chapters")
     )
+    assert "Confidence with a scar." in markdown
     assert "Trust deepens through shared danger." in markdown
     assert "Arguments hide an old wound." in markdown
+
+
+def test_export_project_markdown_omits_characters_when_empty(tmp_path):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    project = store.create_project("Characters Missing", "no character rows")
+    markdown = store.export_project_markdown(project["id"])
+
+    assert "## Characters" not in markdown
+
+
+def test_export_project_markdown_orders_sections_with_characters(tmp_path):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    project = store.create_project("Character Section Order", "ordered for export")
+    store.set_project_brief_type(project["id"], "novel")
+    store.set_project_outline(project["id"], "Act One")
+    store.set_project_style_guide(project["id"], "Tone: clean")
+    store.create_character_state(
+        project["id"],
+        "mara",
+        "Confidence with a scar.",
+    )
+    store.create_relationship_state(
+        project["id"],
+        "mara-elya",
+        "Trust deepens through shared danger.",
+    )
+    store.create_chapter(project["id"], "Opening")
+
+    markdown = store.export_project_markdown(project["id"])
+    assert (
+        markdown.index("## Summary")
+        < markdown.index("## Project Brief")
+        < markdown.index("## Outline")
+        < markdown.index("## Style Guide")
+        < markdown.index("## Characters")
+        < markdown.index("## Relationships")
+        < markdown.index("## Chapters")
+        < markdown.index("## Canon")
+        < markdown.index("## Timeline")
+    )
 
 
 def test_export_project_markdown_omits_relationships_when_empty(tmp_path):

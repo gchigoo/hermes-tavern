@@ -119,6 +119,15 @@ class NovelDBMixin:
                 updated_at TEXT NOT NULL DEFAULT (datetime('now'))
             );
 
+            CREATE TABLE IF NOT EXISTS novel_character_states (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                project_id INTEGER NOT NULL REFERENCES novel_projects(id) ON DELETE CASCADE,
+                label TEXT NOT NULL,
+                state_text TEXT NOT NULL,
+                created_at TEXT NOT NULL DEFAULT (datetime('now')),
+                updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+            );
+
             CREATE INDEX IF NOT EXISTS idx_novel_projects_created
                 ON novel_projects(created_at);
             CREATE INDEX IF NOT EXISTS idx_novel_chapters_project
@@ -143,6 +152,8 @@ class NovelDBMixin:
                 ON novel_project_outlines(project_id);
             CREATE INDEX IF NOT EXISTS idx_novel_relationship_states_project
                 ON novel_relationship_states(project_id);
+            CREATE INDEX IF NOT EXISTS idx_novel_character_states_project
+                ON novel_character_states(project_id);
             """
         )
 
@@ -546,6 +557,100 @@ class NovelDBMixin:
             cursor = conn.execute(
                 "DELETE FROM novel_relationship_states WHERE id = ?",
                 (relationship_id,),
+            )
+            return cursor.rowcount > 0
+
+    def create_character_state(self, project_id: int, label: str, state_text: str) -> dict[str, Any]:
+        if not (label or "").strip():
+            raise ValueError("Character state label cannot be blank")
+        if not (state_text or "").strip():
+            raise ValueError("Character state text cannot be blank")
+        self.migrate()
+        with self.connect() as conn:
+            project = conn.execute(
+                "SELECT id FROM novel_projects WHERE id = ?",
+                (project_id,),
+            ).fetchone()
+            if project is None:
+                raise ValueError("Project not found")
+            now = _utc_now()
+            cursor = conn.execute(
+                """
+                INSERT INTO novel_character_states (
+                    project_id, label, state_text, created_at, updated_at
+                )
+                VALUES (?, ?, ?, ?, ?)
+                """,
+                (project_id, label, state_text, now, now),
+            )
+            row_id = cursor.lastrowid
+            row = conn.execute(
+                "SELECT * FROM novel_character_states WHERE id = ?",
+                (row_id,),
+            ).fetchone()
+        return _row_to_dict(row)
+
+    def list_character_states(self, project_id: int) -> list[dict[str, Any]]:
+        self.migrate()
+        with self.connect() as conn:
+            project = conn.execute(
+                "SELECT id FROM novel_projects WHERE id = ?",
+                (project_id,),
+            ).fetchone()
+            if project is None:
+                raise ValueError("Project not found")
+            rows = conn.execute(
+                """
+                SELECT *
+                FROM novel_character_states
+                WHERE project_id = ?
+                ORDER BY id ASC
+                """,
+                (project_id,),
+            ).fetchall()
+        return [_row_to_dict(row) for row in rows]
+
+    def get_character_state(self, character_state_id: int) -> dict[str, Any] | None:
+        self.migrate()
+        with self.connect() as conn:
+            row = conn.execute(
+                "SELECT * FROM novel_character_states WHERE id = ?",
+                (character_state_id,),
+            ).fetchone()
+        return _row_to_dict(row)
+
+    def update_character_state(self, character_state_id: int, state_text: str) -> dict[str, Any]:
+        if not (state_text or "").strip():
+            raise ValueError("Character state text cannot be blank")
+        self.migrate()
+        with self.connect() as conn:
+            row = conn.execute(
+                "SELECT id FROM novel_character_states WHERE id = ?",
+                (character_state_id,),
+            ).fetchone()
+            if row is None:
+                raise ValueError("Character state not found")
+            now = _utc_now()
+            conn.execute(
+                """
+                UPDATE novel_character_states
+                SET state_text = ?, updated_at = ?
+                WHERE id = ?
+                """,
+                (state_text, now, character_state_id),
+            )
+            updated = conn.execute(
+                "SELECT * FROM novel_character_states WHERE id = ?",
+                (character_state_id,),
+            ).fetchone()
+        return _row_to_dict(updated)
+
+    def delete_character_state(self, character_state_id: int) -> bool:
+        self.migrate()
+        with self.connect() as conn:
+            cursor = conn.execute(
+                "DELETE FROM novel_character_states WHERE id = ?",
+                (character_state_id,),
             )
             return cursor.rowcount > 0
 
@@ -1242,6 +1347,18 @@ class NovelDBMixin:
                     "",
                 ]
             )
+
+        characters = self.list_character_states(project_id)
+        if characters:
+            lines.extend(
+                [
+                    "## Characters",
+                    "",
+                ]
+            )
+            for character in characters:
+                lines.append(f"- {character['label']}: {character['state_text']}")
+            lines.append("")
 
         if relationships:
             lines.extend(

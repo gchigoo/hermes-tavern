@@ -99,6 +99,28 @@ def timeline_command(runtime: Any, command: RPCommand, event: Any) -> str:
     return "Usage: /rp timeline add <project-id> <date> <title> [description...] | /rp timeline list [project-id]"
 
 
+def character_command(runtime: Any, command: RPCommand, event: Any) -> str:
+    if len(command.args) < 2:
+        return _CHARACTER_USAGE
+
+    if command.args[0].lower() != "state":
+        return _CHARACTER_USAGE
+
+    subcommand = command.args[1].lower()
+    if subcommand == "add":
+        return character_state_add(runtime, command, event)
+    if subcommand == "list":
+        return character_state_list(runtime, command, event)
+    if subcommand == "inspect":
+        return character_state_inspect(runtime, command)
+    if subcommand == "update":
+        return character_state_update(runtime, command)
+    if subcommand == "delete":
+        return character_state_delete(runtime, command)
+
+    return _CHARACTER_USAGE
+
+
 def relationship_command(runtime: Any, command: RPCommand, event: Any) -> str:
     if not command.args:
         return _RELATIONSHIP_USAGE
@@ -130,6 +152,14 @@ _RELATIONSHIP_USAGE = (
     "/rp relationship list [project-id] | /rp relationship inspect <relationship-id> | "
     "/rp relationship update <relationship-id> <state...> | "
     "/rp relationship delete <relationship-id>"
+)
+
+
+_CHARACTER_USAGE = (
+    "Usage: /rp character state add <project-id> <label> <state...> | "
+    "/rp character state list [project-id] | /rp character state inspect <character-state-id> | "
+    "/rp character state update <character-state-id> <state...> | "
+    "/rp character state delete <character-state-id>"
 )
 
 
@@ -1222,3 +1252,124 @@ def relationship_delete(runtime: Any, command: RPCommand) -> str:
         return f"No relationship state found: {relationship_id}"
 
     return f"Relationship state deleted for relationship [{relationship_id}]."
+
+
+def character_state_add(runtime: Any, command: RPCommand, event: Any) -> str:
+    del event
+    if len(command.args) < 5:
+        return _CHARACTER_USAGE
+
+    project_id = _safe_int(command.args[2])
+    if project_id is None:
+        return _CHARACTER_USAGE
+
+    label = command.args[3].strip()
+    if not label:
+        return _CHARACTER_USAGE
+
+    state_text = " ".join(command.args[4:]).strip()
+    if not state_text:
+        return _CHARACTER_USAGE
+
+    try:
+        character_state = runtime.store.create_character_state(
+            project_id,
+            label,
+            state_text,
+        )
+    except ValueError as exc:
+        if str(exc) == "Project not found":
+            return f"No novel project found: {project_id}"
+        return _CHARACTER_USAGE
+
+    return (
+        f"Character state added: [{character_state['id']}] {character_state['label']} -> "
+        f"{_mobile_preview(character_state['state_text'], 180)}"
+    )
+
+
+def character_state_list(runtime: Any, command: RPCommand, event: Any) -> str:
+    project_id, err = _resolve_project_id(
+        runtime,
+        command,
+        event=event,
+        usage="Usage: /rp character state list [project-id]",
+        default_ok=True,
+        fallback_index=2,
+    )
+    if project_id is None:
+        return err or _CHARACTER_USAGE
+
+    try:
+        character_states = runtime.store.list_character_states(project_id)
+    except ValueError:
+        return f"No novel project found: {project_id}"
+
+    if not character_states:
+        return f"No character states for project [{project_id}]."
+
+    lines = [f"Hermes Tavern characters for project [{project_id}]:"]
+    for character_state in character_states:
+        lines.append(
+            f"  - [{character_state['id']}] {character_state['label']}: "
+            f"{_mobile_preview(character_state['state_text'], 120)}"
+        )
+    return "\n".join(lines)
+
+
+def character_state_inspect(runtime: Any, command: RPCommand) -> str:
+    if len(command.args) != 3:
+        return _CHARACTER_USAGE
+
+    character_state_id = _safe_int(command.args[2])
+    if character_state_id is None:
+        return _CHARACTER_USAGE
+
+    character_state = runtime.store.get_character_state(character_state_id)
+    if character_state is None:
+        return f"No character state found: {character_state_id}"
+
+    return (
+        f"Character state for [{character_state_id}] (project [{character_state['project_id']}]): "
+        f"{character_state['label']}: {_mobile_preview(character_state['state_text'], 220)}"
+    )
+
+
+def character_state_update(runtime: Any, command: RPCommand) -> str:
+    if len(command.args) < 4:
+        return _CHARACTER_USAGE
+
+    character_state_id = _safe_int(command.args[2])
+    if character_state_id is None:
+        return _CHARACTER_USAGE
+
+    state_text = " ".join(command.args[3:]).strip()
+    if not state_text:
+        return _CHARACTER_USAGE
+
+    try:
+        character_state = runtime.store.update_character_state(
+            character_state_id,
+            state_text,
+        )
+    except ValueError:
+        return f"No character state found: {character_state_id}"
+
+    return (
+        f"Character state updated for character [{character_state['id']}]: "
+        f"{_mobile_preview(character_state['state_text'], 180)}"
+    )
+
+
+def character_state_delete(runtime: Any, command: RPCommand) -> str:
+    if len(command.args) != 3:
+        return _CHARACTER_USAGE
+
+    character_state_id = _safe_int(command.args[2])
+    if character_state_id is None:
+        return _CHARACTER_USAGE
+
+    if not runtime.store.delete_character_state(character_state_id):
+        return f"No character state found: {character_state_id}"
+
+    return f"Character state deleted for character [{character_state_id}]."

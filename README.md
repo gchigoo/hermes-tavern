@@ -138,6 +138,11 @@ Expected behavior:
 /rp scene narration pov <scene-id> <label>
 /rp scene narration tense <scene-id> <past|present>
 /rp canon add/list/group | /rp timeline add/list
+/rp character state add <project-id> <label> <state...>
+/rp character state list [project-id]
+/rp character state inspect <character-state-id>
+/rp character state update <character-state-id> <state...>
+/rp character state delete <character-state-id>
 /rp relationship add <project-id> <label> <state...>
 /rp relationship list [project-id]
 /rp relationship inspect <relationship-id>

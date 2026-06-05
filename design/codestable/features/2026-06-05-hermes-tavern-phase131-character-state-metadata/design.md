@@ -1,7 +1,7 @@
 ---
 doc_type: feature-design
 feature: "2026-06-05-hermes-tavern-phase131-character-state-metadata"
-status: draft
+status: approved
 date: "2026-06-05"
 summary: >
   Character State Metadata v1 adds local project-scoped character notes with

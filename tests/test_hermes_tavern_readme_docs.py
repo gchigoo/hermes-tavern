@@ -263,6 +263,16 @@ def test_readme_core_commands_include_project_outline_literals():
     assert "/rp project outline clear [project-id]" in core_commands
 
 
+def test_readme_core_commands_include_character_state_literals():
+    core_commands = _readme_core_commands_text()
+
+    assert "/rp character state add <project-id> <label> <state...>" in core_commands
+    assert "/rp character state list [project-id]" in core_commands
+    assert "/rp character state inspect <character-state-id>" in core_commands
+    assert "/rp character state update <character-state-id> <state...>" in core_commands
+    assert "/rp character state delete <character-state-id>" in core_commands
+
+
 def test_readme_core_commands_include_relationship_state_literals():
     core_commands = _readme_core_commands_text()
 
