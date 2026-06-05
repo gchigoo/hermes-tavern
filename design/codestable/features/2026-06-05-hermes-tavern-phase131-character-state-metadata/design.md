@@ -205,7 +205,9 @@ No pre-feature micro-refactor.
 
 ## 4. Architecture Writeback
 
-After S1 verification, S2 should update:
+S2 completed the architecture/root-design writeback and acceptance closure:
 
-- `design/codestable/architecture/ARCHITECTURE.md`: add Phase 131 to the capability summary, command surface, DB schema, and metadata-only boundary notes.
-- `design/HERMES_TAVERN_DESIGN.md`: move character state from deferred future sub-objects into current local metadata scope, document command literals and Markdown export placement, and keep locations, organizations, plot threads, relationship graph/rename/automatic extraction, style samples, automation, retrieval, and provider/generation paths deferred.
+- `design/codestable/architecture/ARCHITECTURE.md`: Phase 131 is included in the capability summary, command surface, DB schema, metadata-only boundary notes, and known constraints.
+- `design/HERMES_TAVERN_DESIGN.md`: character state moved from deferred future sub-objects into current local metadata scope; command literals and Markdown export placement are documented; locations/organizations/plot threads/relationship graph/rename/automatic extraction and automation/vectorization/retrieval/provider/generation paths remain deferred/out of scope.
+
+Controller verification passed focused tests, Tavern plugin tests, full pytest, design/acceptance/checklist validators, reverse-scope guards, and whitespace checks before final acceptance.

@@ -70,8 +70,8 @@ renderers.py          ChatRenderer, StoryRenderer — convert compiled prompt to
 preset_safety.py      PresetRiskLevel, classify_preset_text — risk classification for imported modules
 lorebook.py           match_lorebook_entries — keyword/regex match, local regex complexity guard, token-budget enforcement
 memory.py             Memory fact / summary management helpers
-db_novel.py           Novel domain mixins for project/chapter/scene/scene-goal/canon/timeline/relationship-state CRUD and export
-runtime_novel.py      Novel command family handlers for /rp project/chapter/scene/scene-goal/canon/timeline/relationship
+db_novel.py           Novel domain mixins for project/chapter/scene/scene-goal/canon/timeline/relationship/character-state CRUD and export
+runtime_novel.py      Novel command family handlers for /rp project/chapter/scene/scene-goal/canon/timeline/relationship/character state
 runtime_prompt_modules.py  Scene-goal, scene narration, project-style, and canon prompt module resolvers for linked novel sessions
 model_router.py       resolve model descriptor from session row and store
 provider_bridge.py    resolve_runtime_provider + validate_provider_base_url — runtime credential resolution (no DB persistence); URL safety validator rejects non-https and private/loopback hosts
@@ -122,6 +122,7 @@ importers/
 - Phase 128: Project Outline v1 metadata (`/rp project outline` + `## Outline`) backed by `novel_project_outlines`; metadata-only, no prompt/provider/routing/content-mode/generation behavior changes
 - Phase 129: Chapter and Scene Summary metadata (`/rp chapter summary`, `/rp scene summary`) backed by existing `novel_chapters.summary` / `novel_scenes.summary`; metadata-only, no prompt/provider/routing/content-mode/generation changes
 - Phase 130: Relationship State Metadata v1 (`/rp relationship ...`) backed by `novel_relationship_states`; metadata-only, no prompt/provider/routing/content-mode/generation changes.
+- Phase 131: Character State Metadata v1 (`/rp character state ...`) backed by `novel_character_states`; metadata-only, no prompt/debug/context-budget/vectorization/retrieval/provider/model-routing/content-mode/generation/credential side effects. Export is optional and local-only as `## Characters`.
 
 ### Plugin flow
 
@@ -151,12 +152,14 @@ Macro expansion is one-pass and allowlist-based. Supported Phase 20 macros are
 `{{content_mode}}`, and `{{session_title}}`; names are case/whitespace tolerant,
 unknown macros are preserved, and replacement text is not recursively expanded.
 
-Project Brief, Project Outline, and Relationship State metadata are explicitly
-excluded from prompt assembly and session prompt module selection. Chapter/scene
-summary metadata is also excluded from prompt assembly and debug payloads; these
-metadata surfaces are visible only through command output and Markdown export.
+Project Brief, Project Outline, Relationship State, and Character State metadata are
+explicitly excluded from prompt assembly, session prompt module selection, debug
+prompt/context payloads, and context-budget reporting. Relationship/character-state
+metadata is also excluded from vectorization/retrieval, provider/model routing,
+content mode, credentials, and generation. These metadata surfaces are visible
+only through command output and Markdown export.
 
-### /rp command surface (current through Phase 130)
+### /rp command surface (current through Phase 131)
 
 ```
 /rp help | status | assets
@@ -207,6 +210,11 @@ metadata surfaces are visible only through command output and Markdown export.
 /rp scene narration tense <scene-id> <past|present>
 /rp canon add/list/group
 /rp timeline add/list
+/rp character state add <project-id> <label> <state...>
+/rp character state list [project-id]
+/rp character state inspect <character-state-id>
+/rp character state update <character-state-id> <state...>
+/rp character state delete <character-state-id>
 /rp relationship add <project-id> <label> <state...>
 /rp relationship list [project-id]
 /rp relationship inspect <relationship-id>
@@ -214,7 +222,7 @@ metadata surfaces are visible only through command output and Markdown export.
 /rp relationship delete <relationship-id>
 ```
 
-### DB schema (current through Phase 130)
+### DB schema (current through Phase 131)
 
 ```sql
 cards(id, name, data_json, source_path, created_at)
@@ -251,6 +259,9 @@ novel_timeline(id, project_id, event_date, title, description, chapter_id, sort_
 novel_relationship_states(id, project_id, label, state_text, created_at, updated_at)
 -- project_id REFERENCES novel_projects(id) ON DELETE CASCADE
 CREATE INDEX idx_novel_relationship_states_project ON novel_relationship_states(project_id)
+novel_character_states(id, project_id, label, state_text, created_at, updated_at)
+-- project_id REFERENCES novel_projects(id) ON DELETE CASCADE
+CREATE INDEX idx_novel_character_states_project ON novel_character_states(project_id)
 ```
 
 Phase 129 adds explicit semantics on existing summary columns:
@@ -266,6 +277,12 @@ Phase 130 adds `novel_relationship_states` as project-scoped relationship-state
 metadata. Relationship-state rows are managed through `/rp relationship ...` and
 exported as optional `## Relationships` Markdown metadata; they are not selected
 for prompt modules, debug/context-budget payloads, vectorization/retrieval,
+provider/model routing, content mode, credentials, or generation.
+
+Phase 131 adds `novel_character_states` as project-scoped character metadata.
+Character-state rows are managed through `/rp character state ...` and emitted as
+optional `## Characters` Markdown metadata; they are not selected for prompt
+modules, debug/context-budget payloads, vectorization/retrieval,
 provider/model routing, content mode, credentials, or generation.
 
 Phase 26 adds in-memory quick-action tracking on `TavernStore` only:
@@ -300,4 +317,5 @@ These phases do not change schema or core prompt/generation assembly.
 - **Tavern DB never persists `api_key` / `access_token`**: credentials resolved at runtime via `HermesRuntimeProviderResolver`, discarded after use.
 - **Phase 129 summary metadata boundary**: chapter/scene summary text is metadata-only and export-visible but not injected into prompt modules, context budgeting, vectorization, retrieval, provider routing, or generation.
 - **Phase 130 relationship-state boundary**: relationship-state metadata is export-visible only. It is excluded from prompt modules, debug prompt/context output, context-budget payloads, vectorization/retrieval, provider/model selection, content mode decisions, credentials, and generation.
+- **Phase 131 character-state boundary**: character-state metadata is export-visible only. It is excluded from prompt modules, debug prompt/context output, context-budget payloads, vectorization/retrieval, provider/model routing, content mode decisions, credentials, and generation.
 - **Tavern lore regex complexity guard**: lorebook regex keys are screened locally before matching. Entries with patterns longer than 256 characters or nested quantified groups (for example `(a+)+`, `(.+)*`, `([a-z]+){2,}`) are excluded with bounded reasons (`regex rejected: ...`), preserving raw imported lore data while preventing unbounded local matching behavior.

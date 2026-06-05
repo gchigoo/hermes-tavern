@@ -1,14 +1,14 @@
 doc_type: feature-checklist
 feature: "2026-06-05-hermes-tavern-phase131-character-state-metadata"
 date: "2026-06-05"
-status: in_progress
+status: accepted
 summary: >
-  Character State Metadata v1 adds local project-scoped character notes backed by
-  `novel_character_states`, managed through `/rp character state ...` commands,
-  optionally visible in Markdown export, and verified to remain outside prompt/
-  debug/provider/generation/context-budget/vectorization/retrieval paths. S1
-  implementation is complete with controller-run focused, plugin, and full
-  verification; S2 acceptance/writeback remains planned.
+  ACCEPTED - Character State Metadata v1 adds local project-scoped character notes
+  backed by `novel_character_states`, managed through `/rp character state ...`
+  commands, optionally visible in Markdown export, and verified to remain outside
+  prompt/debug/provider/generation/context-budget/vectorization/retrieval paths.
+  S1 implementation and S2 acceptance/writeback passed controller-run focused,
+  plugin, full, frontmatter/YAML, reverse-scope, and whitespace verification.
 
 steps:
   - id: S1
@@ -73,12 +73,19 @@ steps:
 
   - id: S2
     name: "S2: Verify/Accept/Write Architecture"
-    status: planned
+    status: completed
+    completed_at: "2026-06-05"
     description: >
       Run focused, plugin, full, YAML/frontmatter, reverse-scope, and whitespace
       verification. Create the acceptance report and update architecture/root
       design to mark character-state metadata current while preserving deferred
       automation/retrieval/provider/generation boundaries.
+    result: >
+      ACCEPTED - S2 finalized the acceptance report and merged Character State
+      Metadata v1 into architecture/root design as current local metadata with
+      optional `## Characters` export visibility. Controller verification passed
+      focused tests, Tavern glob tests, full pytest, design/acceptance/checklist
+      validators, reverse-scope guards, and whitespace checks.
     allowed_files:
       - design/codestable/features/2026-06-05-hermes-tavern-phase131-character-state-metadata/design.md
       - design/codestable/features/2026-06-05-hermes-tavern-phase131-character-state-metadata/checklist.yaml
@@ -86,27 +93,44 @@ steps:
       - design/codestable/architecture/ARCHITECTURE.md
       - design/HERMES_TAVERN_DESIGN.md
     exit_signal: >
-      Acceptance report and architecture/root-design writeback are complete, the
-      checklist is accepted, and verification confirms the feature remains local
-      metadata/export-only.
+      Acceptance report and architecture/root-design writeback are complete; the
+      feature is accepted with no protected source/test/build/core diff in S2.
     verification:
       - command: >-
+          codex --profile architect exec --json --color never --disable image_generation --sandbox read-only --cd /Users/steven/Projects/hermes-tavern <Phase 131 S2 artifact prompt>
+        result: "passed; JSONL at /tmp/hermes-tavern-architect-phase131-s2.jsonl; STATUS: READY; RESULT: PLANNING_ARTIFACT"
+      - command: >-
+          codex --profile executor exec --json --color never --disable image_generation --sandbox read-only --cd /Users/steven/Projects/hermes-tavern <executor smoke prompt>
+        result: "passed; JSONL at /tmp/hermes-tavern-executor-phase131-s2-smoke.jsonl; EXECUTOR_SMOKE_OK"
+      - command: >-
+          codex --profile executor exec --json --color never --disable image_generation --sandbox workspace-write --cd /Users/steven/Projects/hermes-tavern <Phase 131 S2 docs/status prompt>
+        result: "passed; JSONL at /tmp/hermes-tavern-executor-phase131-s2.jsonl; executor drafted docs/status only"
+      - command: >-
+          PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel_db.py tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_commands.py tests/test_hermes_tavern_readme_docs.py -q -o 'addopts=' -p no:cacheprovider
+        result: "218 passed in 6.45s"
+      - command: >-
           PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_*.py -q -o 'addopts=' -p no:cacheprovider
-        owner: controller
+        result: "909 passed in 41.14s"
       - command: >-
           PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts=' -p no:cacheprovider
-        owner: controller
+        result: "909 passed in 42.02s"
       - command: >-
           python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-05-hermes-tavern-phase131-character-state-metadata/design.md --require doc_type --require status --require feature
-        owner: controller
+        result: "passed"
+      - command: >-
+          python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-05-hermes-tavern-phase131-character-state-metadata/hermes-tavern-phase131-character-state-metadata-acceptance.md --require doc_type --require status --require feature
+        result: "passed"
       - command: >-
           python design/codestable/tools/validate-yaml.py --yaml-only --file design/codestable/features/2026-06-05-hermes-tavern-phase131-character-state-metadata/checklist.yaml
-        owner: controller
+        result: "passed"
       - command: >-
-          git diff --name-only -- run_agent.py cli.py gateway/run.py src/hermes_tavern/runtime_prompt_modules.py src/hermes_tavern/prompt.py src/hermes_tavern/runtime_debug.py src/hermes_tavern/model_router.py src/hermes_tavern/provider_bridge.py src/hermes_tavern/adapters.py src/hermes_tavern/runtime_model.py src/hermes_tavern/runtime_generation.py
-        owner: controller
+          git diff --name-only -- README.md src tests run_agent.py cli.py gateway/run.py build/lib
+        result: "empty (no README/source/test/protected-core/build changes in S2)"
+      - command: >-
+          git diff --name-only -- run_agent.py cli.py gateway/run.py src/hermes_tavern/runtime_prompt_modules.py src/hermes_tavern/prompt.py src/hermes_tavern/runtime_debug.py src/hermes_tavern/model_router.py src/hermes_tavern/provider_bridge.py src/hermes_tavern/adapters.py src/hermes_tavern/runtime_model.py src/hermes_tavern/runtime_generation.py src/hermes_tavern/runtime_content.py build/lib
+        result: "empty (no protected prompt/provider/generation/build changes)"
       - command: "git diff --check"
-        owner: controller
+        result: "passed"
 
 checks:
   - id: C1
