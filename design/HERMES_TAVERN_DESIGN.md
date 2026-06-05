@@ -491,6 +491,12 @@ environment metadata through `/rp location ...`, persisted in
 Location rows are local notes only and do not imply maps, address parsing,
 coordinates, or asset bindings.
 
+Organization Metadata v1 adds local project-scoped organization rows as plain
+organizational notes through `/rp organization ...`, persisted in
+`novel_organizations(id, project_id, label, description_text, created_at, updated_at)`.
+Organization rows are local notes only and do not imply hierarchy, membership,
+affiliations, or bindings.
+
 Future project metadata from the original vision remains deferred outside the
 current scope: `canon_policy`, `content_mode`, `default_card_id`,
 `default_preset_id`, `default_lorebook_ids`, and default-binding metadata.
@@ -503,10 +509,13 @@ Character state is also now current local metadata and is managed through
 Location metadata is also now current local metadata and is managed through
 `novel_locations(id, project_id, label, description_text, created_at, updated_at)`.
 
-Relationship, character-state, and location metadata remain informational-only: they do not
-participate in prompt module injection, provider routing, context budget
-reporting, vectorization/retrieval, content-mode behavior, credential
-persistence, or generation.
+Organization metadata is also now current local metadata and is managed through
+`novel_organizations(id, project_id, label, description_text, created_at, updated_at)`.
+
+Relationship, character-state, location, and organization metadata remain
+informational-only: they do not participate in prompt module injection,
+provider routing, context budget reporting, vectorization/retrieval,
+content-mode behavior, credential persistence, or generation.
 
 Sub-objects:
 
@@ -518,6 +527,7 @@ timeline events
 character states
 relationships
 locations
+organizations
 ```
 
 Scene objects include:
@@ -528,8 +538,8 @@ POV label
 tense: past|present
 ```
 
-Future sub-objects from the original vision remain deferred: organizations,
-plot threads, relationship graph/rename/automatic extraction, and style samples.
+Future sub-objects from the original vision remain deferred: plot threads,
+relationship graph/rename/automatic extraction, and style samples.
 
 Commands:
 
@@ -568,6 +578,11 @@ Commands:
 /rp location inspect <location-id>
 /rp location update <location-id> <description...>
 /rp location delete <location-id>
+/rp organization add <project-id> <label> <description...>
+/rp organization list [project-id]
+/rp organization inspect <organization-id>
+/rp organization update <organization-id> <description...>
+/rp organization delete <organization-id>
 /rp chapter create [project-id] <title>
 /rp chapter list [project-id]
 /rp chapter summary <chapter-id> [text]
@@ -594,14 +609,20 @@ Project Markdown export emits `## Project Brief` after `## Summary` and, when
 present, emits `## Outline` immediately after Project Brief and before Style
 Guide. Project Brief and Outline content are omitted when empty. Project Brief
 labels are `Type:` and `Premise:`, and blank field labels are omitted. Location
-metadata is exported as optional `## Locations` immediately after Style Guide and
-before `## Characters`, `## Relationships`, and Chapters when rows exist.
-Character-state metadata is exported as optional `## Characters` after Locations
-and before `## Relationships` when rows exist. Relationship-state metadata is
-exported as optional `## Relationships` after Locations/Characters and before
-Chapters when rows exist. Each metadata section is omitted when empty. Chapter
-and scene summaries are metadata-only: they are emitted as `Summary:` lines
-directly under chapter and scene headings in the same export pass. Blank or
+metadata is exported as optional `## Locations` immediately after Style Guide
+when at least one location row exists.
+`## Organizations` is exported as an optional section immediately after
+`## Locations` when organization rows exist. If no Locations section exists, it
+falls back to being emitted after Project Brief, Outline, and Style Guide (when present)
+before `## Characters`, `## Relationships`, and `## Chapters`.
+`## Locations` and `## Organizations` are omitted when empty.
+Character-state metadata is exported as optional `## Characters` after
+`## Organizations`/`## Locations` and before `## Relationships` when rows exist.
+Relationship-state metadata is exported as optional `## Relationships` after
+Characters/Organizations/Locations and before `## Chapters` when rows exist.
+Each metadata section is omitted when empty. Chapter and scene summaries are
+metadata-only: they are emitted as `Summary:` lines directly under chapter and
+scene headings in the same export pass. Blank or
 whitespace-only summary values are omitted.
 
 ---
@@ -969,6 +990,7 @@ canon
 character states
 relationship states
 location notes
+organization notes
 ```
 
 Future novel-engine dimensions remain deferred: volume/arc, beats, location map/geocode
@@ -1002,6 +1024,11 @@ derivatives, revision notes, and relationship graph/rename/automatic extraction.
 /rp location inspect <location-id>
 /rp location update <location-id> <description...>
 /rp location delete <location-id>
+/rp organization add <project-id> <label> <description...>
+/rp organization list [project-id]
+/rp organization inspect <organization-id>
+/rp organization update <organization-id> <description...>
+/rp organization delete <organization-id>
 /rp relationship add <project-id> <label> <state...>
 /rp relationship list [project-id]
 /rp relationship inspect <relationship-id>
@@ -1036,6 +1063,10 @@ Location metadata is command-driven local-only: it is surfaced for
 add/inspect/list/update/delete, optional Markdown export, and is excluded from
 prompt/debug, context-budget reporting, retrieval/vectorization, provider/model
 routing, content-mode decisions, credentials, and generation.
+Organization metadata is command-driven local-only: it is surfaced for
+add/inspect/list/update/delete, optional Markdown export, and is excluded from
+prompt/debug, context-budget reporting, retrieval/vectorization, provider/model
+routing, content-mode decisions, credentials, and generation.
 Relationship state is metadata-only and local-only: command-driven relationship
 notes for inspection/list/update/delete and optional Markdown export, no prompt,
 context-budget, retrieval/vectorization, provider/model/routing, content-mode,
@@ -1043,7 +1074,8 @@ credential, or generation side effect.
 
 Future writing commands from the original vision remain deferred: outline
 generation/rewrite/expand/compress workflows, project archive
-ZIP/export/import, and relationship graph/rename/automatic extraction.
+ZIP/export/import, relationship graph/rename/automatic extraction, and
+style samples.
 
 ### 13.3 Canon management
 
@@ -1061,8 +1093,11 @@ Future canon commands from the original vision remain deferred: `/rp canon check
 
 Cross-cutting deferred novel constraints remain explicit in this slice:
 relationship graph/rename/automatic extraction, project archive ZIP/import
-workflows, cloud collaboration, no provider credential persistence, no
-minors/underage handling, and no provider safety bypass pathways.
+workflows, default binding metadata, canon-policy/content-mode metadata,
+provider routing, generation side effects, retrieval/vectorization/automation
+coupling, archive ZIP/import/export workflows, cloud collaboration, no provider
+credential persistence, no minors/underage handling, and no provider safety
+bypass pathways.
 
 ---
 
@@ -1175,6 +1210,7 @@ novel_timeline
 novel_character_states
 novel_relationship_states
 novel_locations
+novel_organizations
 media_assets
 settings
 ```
@@ -1202,6 +1238,11 @@ Current location metadata table:
 `novel_locations(id, project_id, label, description_text, created_at, updated_at)`,
 with `project_id REFERENCES novel_projects(id) ON DELETE CASCADE` and
 `idx_novel_locations_project ON novel_locations(project_id)`.
+
+Current organization metadata table:
+`novel_organizations(id, project_id, label, description_text, created_at, updated_at)`,
+with `project_id REFERENCES novel_projects(id) ON DELETE CASCADE` and
+`idx_novel_organizations_project ON novel_organizations(project_id)`.
 
 ### 16.2 Message table
 
@@ -1253,10 +1294,10 @@ ST preset JSON
 ST lorebook/world info JSON
 ```
 
-Hermes Tavern native project archives are deferred; the current Phase 121–132
+Hermes Tavern native project archives are deferred; the current Phase 121–133
 implementation provides Markdown export only, not project/novel import.
-Character-state and location rows remain local metadata and are not bound to ST card objects in
-this phase.
+Relationship-state, character-state, location, and organization rows remain local
+metadata and are not bound to ST card objects in this phase.
 
 Later:
 
@@ -1279,18 +1320,22 @@ chat export JSONL
 novel export Markdown
 ```
 
-Project archive ZIP remains a future exporter/importer; current Phase 121–132 writes
+Project archive ZIP remains a future exporter/importer; current Phase 121–133 writes
 local Markdown via `/rp project export [id]`.
 Project Brief and Project Outline are exported as optional top-level `## Project Brief`
 and `## Outline` sections after `## Summary` when non-empty. Project style guides
 are exported as a top-level `## Style Guide` section after optional Project Brief
 and Outline and before Chapters when non-empty. `## Locations` appears after
-Style Guide and before Characters, Relationships, and Chapters when at least one
-location row exists; this section is omitted when empty. `## Characters` appears
-after Locations when at least one character-state row exists, before
-`## Relationships`; both sections are omitted when empty. `## Relationships` is
-exported after `## Characters` and before Chapters when at least one
-relationship-state row exists; it is omitted when empty.
+Style Guide and before Organizations, Characters, Relationships, and Chapters
+when at least one location row exists; this section is omitted when empty.
+`## Organizations` appears after Locations when present, or after Project Brief,
+Outline, and Style Guide when no Locations section exists, before Characters,
+Relationships, and Chapters. `## Organizations` is omitted when empty.
+`## Characters` appears after Locations/Organizations when at least one
+character-state row exists, before `## Relationships`; both sections are omitted
+when empty. `## Relationships` is exported after Locations/Organizations/Characters
+and before Chapters when at least one relationship-state row exists; it is omitted
+when empty.
 Chapter summaries are exported as `Summary: <text>` immediately under chapter headings
 when non-empty.
 Scene summaries are exported as `Summary: <text>` immediately under scene headings,

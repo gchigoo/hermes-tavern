@@ -1,12 +1,14 @@
 doc_type: feature-checklist
 feature: "2026-06-05-hermes-tavern-phase133-organization-metadata"
 date: "2026-06-05"
-status: in_progress
+status: accepted
 summary: >
-  Organization Metadata v1 is in progress. S1 implemented local
-  project-scoped organization rows, `/rp organization ...` commands,
-  help/README literals, optional Markdown export visibility, and focused
-  no-leak tests. S2 acceptance/status/writeback remains planned.
+  ACCEPTED - Organization Metadata v1 adds local project-scoped organization
+  notes backed by `novel_organizations`, managed through `/rp organization ...`,
+  visible in help/README and optional `## Organizations` Markdown export, and
+  excluded from prompt/debug/context-budget/provider/model/content/retrieval/
+  vectorization/automation/generation paths. S2 finalized acceptance and
+  architecture/root-design writeback after controller verification.
 
 steps:
   - id: S1
@@ -108,7 +110,14 @@ steps:
 
   - id: S2
     name: "S2: Verify/Accept/Write Architecture"
-    status: planned
+    status: completed
+    completed_at: "2026-06-05"
+    result: >
+      ACCEPTED - Controller reran focused, Tavern glob, and full pytest gates;
+      validated design, acceptance, and checklist artifacts; confirmed S2 had no
+      README/source/test/core/build/prompt/provider/model/content/generation/
+      importer diffs; cleared stale Phase 132 / organization-deferred wording;
+      and finalized architecture/root-design writeback plus acceptance status.
     description: >
       Controller-owned phase after S1. Run focused, plugin, full,
       YAML/frontmatter, reverse-scope, stale-wording, and whitespace
@@ -137,24 +146,33 @@ steps:
     verification:
       - command: >-
           PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel_db.py tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_commands.py tests/test_hermes_tavern_readme_docs.py -q -o 'addopts=' -p no:cacheprovider
-        result: pending
+        result: "243 passed in 7.78s"
       - command: >-
           PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_*.py -q -o 'addopts=' -p no:cacheprovider
-        result: pending
+        result: "934 passed in 39.86s"
       - command: >-
           PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts=' -p no:cacheprovider
-        result: pending
+        result: "934 passed in 39.88s"
       - command: >-
           python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-05-hermes-tavern-phase133-organization-metadata/design.md --require doc_type --require status --require feature
-        result: pending
+        result: "passed"
+      - command: >-
+          python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-05-hermes-tavern-phase133-organization-metadata/hermes-tavern-phase133-organization-metadata-acceptance.md --require doc_type --require status --require feature
+        result: "passed"
       - command: >-
           python design/codestable/tools/validate-yaml.py --yaml-only --file design/codestable/features/2026-06-05-hermes-tavern-phase133-organization-metadata/checklist.yaml
-        result: pending
+        result: "passed after controller final status update"
       - command: >-
           git diff --name-only -- README.md src tests run_agent.py cli.py gateway/run.py build/lib
-        result: pending
+        result: "empty (no README/source/test/core/build diff in S2)"
+      - command: >-
+          git diff --name-only -- run_agent.py cli.py gateway/run.py src/hermes_tavern/runtime_prompt_modules.py src/hermes_tavern/prompt.py src/hermes_tavern/runtime_debug.py src/hermes_tavern/model_router.py src/hermes_tavern/provider_bridge.py src/hermes_tavern/adapters.py src/hermes_tavern/runtime_model.py src/hermes_tavern/runtime_generation.py src/hermes_tavern/runtime_content.py src/hermes_tavern/importers build/lib
+        result: "empty (no protected prompt/provider/model/content/generation/importer/build diff)"
+      - command: >-
+          rg -n "current through Phase 132|Phase 121-132|Phase 121–132|Future sub-objects from the original vision remain deferred: organizations|organizations, plot threads|Relationship/character-state/location metadata|Relationship, character-state, and location metadata remain|Character-state and location rows remain" design/codestable/architecture/ARCHITECTURE.md design/HERMES_TAVERN_DESIGN.md
+        result: "empty (no stale current-doc wording)"
       - command: "git diff --check"
-        result: pending
+        result: "passed"
 
 checks:
   - id: C1

@@ -95,7 +95,7 @@ style samples risk being confused with prompt style-guide injection.
 3. Use top-level `/rp organization ...` commands, matching other project-linked novel families.
 4. Require an explicit project ID for `add`; allow active-project fallback for `list` only.
 5. Inspect/update/delete operate by organization ID.
-6. Export organizations as `## Organizations` after Locations and before Characters/Relationships/Chapters. If no Locations section exists, Organizations still appears after Style Guide/Outline/Brief and before Characters/Relationships/Chapters.
+6. Export organizations as `## Organizations` after Locations and before Characters/Relationships/Chapters. If no Locations section exists, Organizations still appears after Project Brief, Outline, and Style Guide, before Characters/Relationships/Chapters.
 7. Keep organization metadata absent from prompt/debug/context-budget/provider/generation paths.
 
 ## 2. Names And Flow
@@ -236,7 +236,16 @@ refactor is not a precondition for this feature and must not be mixed into S1.
 
 ## 4. Architecture Writeback
 
-S2 should update:
+S2 acceptance/writeback is complete:
 
-- `design/codestable/architecture/ARCHITECTURE.md`: Phase 133 capability summary, command surface, DB schema, metadata-only boundary notes, and known constraints.
-- `design/HERMES_TAVERN_DESIGN.md`: move organizations from deferred future sub-objects into current local metadata scope; document command literals and Markdown export placement; keep plot threads, relationship graph/rename/automatic extraction, style samples, project-default bindings, canon policy, content-mode metadata, automation, vectorization, retrieval, provider routing, and generation deferred/out of scope.
+- Architecture writeback is finalized in `design/codestable/architecture/ARCHITECTURE.md`
+  for Phase 133 capability summary, command surface, DB schema, and boundary notes.
+- Root-design writeback is finalized in `design/HERMES_TAVERN_DESIGN.md`
+  for current organization metadata scope, command literals, schema shape, and Markdown export
+  ordering rules.
+- Controller verification passed focused, Tavern glob, and full pytest gates; design,
+  acceptance, and checklist validators; source/protected-path reverse-scope guards;
+  stale-wording scans; and whitespace checks.
+- Phase 133 is accepted. Plot threads, relationship graph/rename/automatic extraction,
+  style samples, default bindings, provider/generation/retrieval/vectorization/automation,
+  archive import/export, cloud/collaboration, and safety-bypass behavior remain deferred.
