@@ -485,6 +485,12 @@ Project Outline v1 adds `outline` as a simple local metadata text stored in
 informational only and does not feed prompt assembly, provider routing, content
 mode, or generation behavior.
 
+Location Metadata v1 adds local project-scoped location rows as plain scene
+environment metadata through `/rp location ...`, persisted in
+`novel_locations(id, project_id, label, description_text, created_at, updated_at)`.
+Location rows are local notes only and do not imply maps, address parsing,
+coordinates, or asset bindings.
+
 Future project metadata from the original vision remains deferred outside the
 current scope: `canon_policy`, `content_mode`, `default_card_id`,
 `default_preset_id`, `default_lorebook_ids`, and default-binding metadata.
@@ -494,7 +500,10 @@ Relationship state is now current local metadata and is managed through
 Character state is also now current local metadata and is managed through
 `novel_character_states(id, project_id, label, state_text, created_at, updated_at)`.
 
-Relationship and character-state metadata remain informational-only: they do not
+Location metadata is also now current local metadata and is managed through
+`novel_locations(id, project_id, label, description_text, created_at, updated_at)`.
+
+Relationship, character-state, and location metadata remain informational-only: they do not
 participate in prompt module injection, provider routing, context budget
 reporting, vectorization/retrieval, content-mode behavior, credential
 persistence, or generation.
@@ -508,6 +517,7 @@ canon facts
 timeline events
 character states
 relationships
+locations
 ```
 
 Scene objects include:
@@ -518,9 +528,8 @@ POV label
 tense: past|present
 ```
 
-Future sub-objects from the original vision remain deferred: locations,
-organizations, plot threads, relationship graph/rename/automatic extraction, and
-style samples.
+Future sub-objects from the original vision remain deferred: organizations,
+plot threads, relationship graph/rename/automatic extraction, and style samples.
 
 Commands:
 
@@ -554,6 +563,11 @@ Commands:
 /rp relationship inspect <relationship-id>
 /rp relationship update <relationship-id> <state...>
 /rp relationship delete <relationship-id>
+/rp location add <project-id> <label> <description...>
+/rp location list [project-id]
+/rp location inspect <location-id>
+/rp location update <location-id> <description...>
+/rp location delete <location-id>
 /rp chapter create [project-id] <title>
 /rp chapter list [project-id]
 /rp chapter summary <chapter-id> [text]
@@ -579,12 +593,14 @@ Commands:
 Project Markdown export emits `## Project Brief` after `## Summary` and, when
 present, emits `## Outline` immediately after Project Brief and before Style
 Guide. Project Brief and Outline content are omitted when empty. Project Brief
-labels are `Type:` and `Premise:`, and blank field labels are omitted. Character-state
-metadata is exported as optional `## Characters` immediately after Style Guide
-and before `## Relationships` when rows exist. Each section is omitted when empty.
-Relationship-state metadata is exported as optional `## Relationships` after
-Style Guide and before Chapters when rows exist, and omitted when empty.
-Chapter and scene summaries are metadata-only: they are emitted as `Summary:` lines
+labels are `Type:` and `Premise:`, and blank field labels are omitted. Location
+metadata is exported as optional `## Locations` immediately after Style Guide and
+before `## Characters`, `## Relationships`, and Chapters when rows exist.
+Character-state metadata is exported as optional `## Characters` after Locations
+and before `## Relationships` when rows exist. Relationship-state metadata is
+exported as optional `## Relationships` after Locations/Characters and before
+Chapters when rows exist. Each metadata section is omitted when empty. Chapter
+and scene summaries are metadata-only: they are emitted as `Summary:` lines
 directly under chapter and scene headings in the same export pass. Blank or
 whitespace-only summary values are omitted.
 
@@ -778,15 +794,17 @@ project summary
 canon facts
 character state
 relationship state
+location metadata
 timeline events
 retrieval snippets
 style samples
 user preferences for this project
 ```
 
-Character-state metadata is command-managed local state only. It is intentionally
-outside automatic memory extraction, update-cycle output, vectorization/retrieval
-indexing, and summarization inputs.
+Character-state and location metadata are command-managed local state only. They are
+intentionally outside automatic memory extraction, update-cycle output, vectorization/
+retrieval indexing, scheduled summarization inputs, and generation/similar
+refresh cycles.
 
 ### 10.2 Update cycle
 
@@ -797,8 +815,8 @@ After each assistant turn:
 3. update volatile state if needed;
 4. schedule summarization if history crosses threshold;
 5. update vector index if enabled;
-6. Character-state metadata is excluded from this cycle; it is updated only via
-   `/rp character state ...` commands.
+6. Character-state and location metadata are excluded from this cycle; they are
+   updated only via `/rp character state ...` and `/rp location ...` commands.
 
 ### 10.3 Summarization profiles
 
@@ -950,10 +968,11 @@ timeline
 canon
 character states
 relationship states
+location notes
 ```
 
-Future novel-engine dimensions remain deferred: volume/arc, beats,
-relationship graph/rename/automatic extraction, and revision notes.
+Future novel-engine dimensions remain deferred: volume/arc, beats, location map/geocode
+derivatives, revision notes, and relationship graph/rename/automatic extraction.
 
 ### 13.2 Writing commands
 
@@ -978,6 +997,11 @@ relationship graph/rename/automatic extraction, and revision notes.
 /rp character state inspect <character-state-id>
 /rp character state update <character-state-id> <state...>
 /rp character state delete <character-state-id>
+/rp location add <project-id> <label> <description...>
+/rp location list [project-id]
+/rp location inspect <location-id>
+/rp location update <location-id> <description...>
+/rp location delete <location-id>
 /rp relationship add <project-id> <label> <state...>
 /rp relationship list [project-id]
 /rp relationship inspect <relationship-id>
@@ -1006,6 +1030,10 @@ Chapter and scene summaries are metadata-only and local-only: command-driven
 metadata for prose visibility and export, no model/provider/routing side effect.
 Character-state metadata is command-driven local-only: it is surfaced for
 inspection/list/update/delete and optional Markdown export, and is excluded from
+prompt/debug, context-budget reporting, retrieval/vectorization, provider/model
+routing, content-mode decisions, credentials, and generation.
+Location metadata is command-driven local-only: it is surfaced for
+add/inspect/list/update/delete, optional Markdown export, and is excluded from
 prompt/debug, context-budget reporting, retrieval/vectorization, provider/model
 routing, content-mode decisions, credentials, and generation.
 Relationship state is metadata-only and local-only: command-driven relationship
@@ -1146,6 +1174,7 @@ novel_canon
 novel_timeline
 novel_character_states
 novel_relationship_states
+novel_locations
 media_assets
 settings
 ```
@@ -1168,6 +1197,11 @@ Current character-state metadata table:
 `novel_character_states(id, project_id, label, state_text, created_at, updated_at)`,
 with `project_id REFERENCES novel_projects(id) ON DELETE CASCADE` and
 `idx_novel_character_states_project ON novel_character_states(project_id)`.
+
+Current location metadata table:
+`novel_locations(id, project_id, label, description_text, created_at, updated_at)`,
+with `project_id REFERENCES novel_projects(id) ON DELETE CASCADE` and
+`idx_novel_locations_project ON novel_locations(project_id)`.
 
 ### 16.2 Message table
 
@@ -1219,9 +1253,9 @@ ST preset JSON
 ST lorebook/world info JSON
 ```
 
-Hermes Tavern native project archives are deferred; the current Phase 121–131
+Hermes Tavern native project archives are deferred; the current Phase 121–132
 implementation provides Markdown export only, not project/novel import.
-Character-state rows remain local metadata and are not bound to ST card objects in
+Character-state and location rows remain local metadata and are not bound to ST card objects in
 this phase.
 
 Later:
@@ -1245,16 +1279,18 @@ chat export JSONL
 novel export Markdown
 ```
 
-Project archive ZIP remains a future exporter/importer; current Phase 121–131 writes
+Project archive ZIP remains a future exporter/importer; current Phase 121–132 writes
 local Markdown via `/rp project export [id]`.
 Project Brief and Project Outline are exported as optional top-level `## Project Brief`
 and `## Outline` sections after `## Summary` when non-empty. Project style guides
 are exported as a top-level `## Style Guide` section after optional Project Brief
-and Outline and before Chapters when non-empty. `## Characters` appears after
-Style Guide when at least one character-state row exists, before `## Relationships`;
-both sections are omitted when empty. `## Relationships` is exported after
-`## Characters` and before Chapters when at least one relationship-state row exists;
-it is omitted when empty.
+and Outline and before Chapters when non-empty. `## Locations` appears after
+Style Guide and before Characters, Relationships, and Chapters when at least one
+location row exists; this section is omitted when empty. `## Characters` appears
+after Locations when at least one character-state row exists, before
+`## Relationships`; both sections are omitted when empty. `## Relationships` is
+exported after `## Characters` and before Chapters when at least one
+relationship-state row exists; it is omitted when empty.
 Chapter summaries are exported as `Summary: <text>` immediately under chapter headings
 when non-empty.
 Scene summaries are exported as `Summary: <text>` immediately under scene headings,
