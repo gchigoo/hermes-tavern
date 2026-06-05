@@ -180,6 +180,16 @@ def test_help_lists_organization_commands():
     assert "/rp organization delete <organization-id>" in help_text
 
 
+def test_help_lists_plot_thread_commands():
+    help_text = _build_help_text()
+
+    assert "/rp plot thread add <project-id> <label> <description...>" in help_text
+    assert "/rp plot thread list [project-id]" in help_text
+    assert "/rp plot thread inspect <plot-thread-id>" in help_text
+    assert "/rp plot thread update <plot-thread-id> <description...>" in help_text
+    assert "/rp plot thread delete <plot-thread-id>" in help_text
+
+
 def test_help_lists_character_state_commands():
     help_text = _build_help_text()
 

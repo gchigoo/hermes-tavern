@@ -303,6 +303,16 @@ def test_readme_core_commands_include_organization_state_literals():
     assert "/rp organization delete <organization-id>" in core_commands
 
 
+def test_readme_core_commands_include_plot_thread_literals():
+    core_commands = _readme_core_commands_text()
+
+    assert "/rp plot thread add <project-id> <label> <description...>" in core_commands
+    assert "/rp plot thread list [project-id]" in core_commands
+    assert "/rp plot thread inspect <plot-thread-id>" in core_commands
+    assert "/rp plot thread update <plot-thread-id> <description...>" in core_commands
+    assert "/rp plot thread delete <plot-thread-id>" in core_commands
+
+
 def test_readme_card_import_format_docs_are_accurate():
     card_import_lines = [
         line.strip()

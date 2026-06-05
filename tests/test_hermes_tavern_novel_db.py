@@ -33,6 +33,7 @@ def test_migrate_creates_novel_tables(tmp_path):
         "novel_locations",
         "novel_character_states",
         "novel_organizations",
+        "novel_plot_threads",
     }.issubset(tables)
     novel_tables = {name for name in tables if name.startswith("novel_")}
     assert novel_tables == {
@@ -50,6 +51,7 @@ def test_migrate_creates_novel_tables(tmp_path):
         "novel_locations",
         "novel_character_states",
         "novel_organizations",
+        "novel_plot_threads",
     }
 
     with sqlite3.connect(db_path) as conn:
@@ -130,6 +132,19 @@ def test_migrate_creates_novel_tables(tmp_path):
             ).fetchall()
         }
     assert "idx_novel_organizations_project" in organization_indexes
+    with sqlite3.connect(db_path) as conn:
+        plot_indexes = {
+            row[0]
+            for row in conn.execute(
+                """
+                SELECT name
+                FROM sqlite_master
+                WHERE type='index'
+                    AND tbl_name='novel_plot_threads'
+                """
+            ).fetchall()
+        }
+    assert "idx_novel_plot_threads_project" in plot_indexes
 
 
 def test_novel_project_crud_and_counts(tmp_path):
@@ -1573,3 +1588,130 @@ def test_export_project_markdown_project_brief_omits_blank_field_labels(tmp_path
     assert "## Project Brief" in premise_markdown
     assert "Premise: A lantern guards the harbor." in premise_markdown
     assert "Type:" not in premise_markdown
+
+
+def test_plot_thread_crud_and_missing_owner_errors(tmp_path):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    project = store.create_project("Plot Thread State")
+
+    created = store.create_plot_thread(
+        project["id"],
+        "missing-heir",
+        "The heirship claim is unresolved.",
+    )
+    assert created["project_id"] == project["id"]
+    assert created["label"] == "missing-heir"
+    assert created["description_text"] == "The heirship claim is unresolved."
+
+    listed = store.list_plot_threads(project["id"])
+    assert len(listed) == 1
+    assert listed[0]["id"] == created["id"]
+    assert listed[0]["label"] == created["label"]
+
+    fetched = store.get_plot_thread(created["id"])
+    assert fetched is not None
+    assert fetched["description_text"] == created["description_text"]
+
+    updated = store.update_plot_thread(created["id"], "Heir claim appears in old ledgers.")
+    assert updated["id"] == created["id"]
+    assert updated["description_text"] == "Heir claim appears in old ledgers."
+    assert updated["updated_at"] >= created["updated_at"]
+
+    assert store.delete_plot_thread(created["id"]) is True
+    assert store.get_plot_thread(created["id"]) is None
+    assert store.delete_plot_thread(created["id"]) is False
+
+    try:
+        store.create_plot_thread(999, "missing-heir", "missing")
+    except ValueError as exc:
+        assert str(exc) == "Project not found"
+    else:
+        raise AssertionError("Expected ValueError for missing project")
+
+    try:
+        store.list_plot_threads(999)
+    except ValueError as exc:
+        assert str(exc) == "Project not found"
+    else:
+        raise AssertionError("Expected ValueError for missing project")
+
+    try:
+        store.update_plot_thread(999, "stale")
+    except ValueError as exc:
+        assert str(exc) == "Plot thread not found"
+    else:
+        raise AssertionError("Expected ValueError for missing plot thread")
+
+
+def test_plot_thread_blank_label_and_description_rejected(tmp_path):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    project = store.create_project("Plot Thread State")
+
+    try:
+        store.create_plot_thread(project["id"], " ", "Description text")
+    except ValueError as exc:
+        assert str(exc) == "Plot thread label cannot be blank"
+    else:
+        raise AssertionError("Expected ValueError for blank label")
+
+    try:
+        store.create_plot_thread(project["id"], "missing-heir", "   ")
+    except ValueError as exc:
+        assert str(exc) == "Plot thread description cannot be blank"
+    else:
+        raise AssertionError("Expected ValueError for blank description")
+
+    created = store.create_plot_thread(
+        project["id"],
+        "missing-heir",
+        "First pass.",
+    )
+    try:
+        store.update_plot_thread(created["id"], "   ")
+    except ValueError as exc:
+        assert str(exc) == "Plot thread description cannot be blank"
+    else:
+        raise AssertionError("Expected ValueError for blank description on update")
+
+
+def test_export_project_markdown_includes_plot_threads_in_order(tmp_path):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    project = store.create_project("Atlas", "Quiet harbor")
+
+    store.create_location(1, "Harbor", "A foghorn guides cargo by night.")
+    store.create_organization(1, "Harbor Office", "Maintains tide charts.")
+    store.create_plot_thread(
+        project["id"],
+        "missing-heir",
+        "A missing letter ties two families together.",
+    )
+    store.create_character_state(1, "mara", "Keeps the keys.")
+    store.create_relationship_state(1, "mara-elya", "A bond of loyalty.")
+    store.create_chapter(1, "Opening")
+
+    markdown = store.export_project_markdown(project["id"])
+    assert "## Locations" in markdown
+    assert "## Organizations" in markdown
+    assert "## Plot Threads" in markdown
+    assert "## Characters" in markdown
+    assert "## Relationships" in markdown
+    assert "## Chapters" in markdown
+    assert (
+        markdown.index("## Locations")
+        < markdown.index("## Organizations")
+        < markdown.index("## Plot Threads")
+        < markdown.index("## Characters")
+        < markdown.index("## Relationships")
+        < markdown.index("## Chapters")
+    )
+    assert "- missing-heir: A missing letter ties two families together." in markdown
+
+
+def test_export_project_markdown_omits_plot_threads_if_empty(tmp_path):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    store.create_project("Quiet Harbor")
+    store.create_location(1, "Harbor", "A foghorn guides cargo by night.")
+
+    markdown = store.export_project_markdown(1)
+    assert "## Plot Threads" not in markdown
+    assert "## Locations" in markdown

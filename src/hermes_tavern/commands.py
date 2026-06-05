@@ -310,6 +310,16 @@ TAVERN_COMMAND_TABLE: dict[str, TavernCommandEntry] = {
             "/rp organization delete <organization-id>",
         ],
     ),
+    "plot": TavernCommandEntry(
+        handler="_plot_command",
+        help_lines=[
+            "/rp plot thread add <project-id> <label> <description...>",
+            "/rp plot thread list [project-id]",
+            "/rp plot thread inspect <plot-thread-id>",
+            "/rp plot thread update <plot-thread-id> <description...>",
+            "/rp plot thread delete <plot-thread-id>",
+        ],
+    ),
     "project": TavernCommandEntry(
         handler="_project_command",
         help_lines=[

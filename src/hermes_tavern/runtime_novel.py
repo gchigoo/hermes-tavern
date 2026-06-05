@@ -178,6 +178,31 @@ def organization_command(runtime: Any, command: RPCommand, event: Any) -> str:
     return _ORGANIZATION_USAGE
 
 
+def plot_command(runtime: Any, command: RPCommand, event: Any) -> str:
+    if not command.args:
+        return _PLOT_THREAD_USAGE
+
+    if command.args[0].lower() != "thread":
+        return _PLOT_THREAD_USAGE
+
+    if len(command.args) < 2:
+        return _PLOT_THREAD_USAGE
+
+    subcommand = command.args[1].lower()
+    if subcommand == "add":
+        return plot_thread_add(runtime, command, event)
+    if subcommand == "list":
+        return plot_thread_list(runtime, command, event)
+    if subcommand == "inspect":
+        return plot_thread_inspect(runtime, command)
+    if subcommand == "update":
+        return plot_thread_update(runtime, command)
+    if subcommand == "delete":
+        return plot_thread_delete(runtime, command)
+
+    return _PLOT_THREAD_USAGE
+
+
 def _safe_int(text: str) -> int | None:
     try:
         return int(text)
@@ -206,6 +231,13 @@ _ORGANIZATION_USAGE = (
     "/rp organization list [project-id] | /rp organization inspect <organization-id> | "
     "/rp organization update <organization-id> <description...> | "
     "/rp organization delete <organization-id>"
+)
+
+_PLOT_THREAD_USAGE = (
+    "Usage: /rp plot thread add <project-id> <label> <description...> | "
+    "/rp plot thread list [project-id] | /rp plot thread inspect <plot-thread-id> | "
+    "/rp plot thread update <plot-thread-id> <description...> | "
+    "/rp plot thread delete <plot-thread-id>"
 )
 
 
@@ -1541,6 +1573,125 @@ def organization_delete(runtime: Any, command: RPCommand) -> str:
         return f"No organization found: {organization_id}"
 
     return f"Organization deleted for organization [{organization_id}]."
+
+
+def plot_thread_add(runtime: Any, command: RPCommand, event: Any) -> str:
+    del event
+    if len(command.args) < 5:
+        return _PLOT_THREAD_USAGE
+
+    project_id = _safe_int(command.args[2])
+    if project_id is None:
+        return _PLOT_THREAD_USAGE
+
+    label = command.args[3].strip()
+    if not label:
+        return _PLOT_THREAD_USAGE
+
+    description_text = " ".join(command.args[4:]).strip()
+    if not description_text:
+        return _PLOT_THREAD_USAGE
+
+    try:
+        plot_thread = runtime.store.create_plot_thread(
+            project_id,
+            label,
+            description_text,
+        )
+    except ValueError:
+        return f"No novel project found: {project_id}"
+
+    return (
+        f"Plot thread added: [{plot_thread['id']}] {plot_thread['label']} -> "
+        f"{_mobile_preview(plot_thread['description_text'], 180)}"
+    )
+
+
+def plot_thread_list(runtime: Any, command: RPCommand, event: Any) -> str:
+    project_id, err = _resolve_project_id(
+        runtime,
+        command,
+        event=event,
+        usage="Usage: /rp plot thread list [project-id]",
+        default_ok=True,
+        fallback_index=2,
+    )
+    if project_id is None:
+        return err or _PLOT_THREAD_USAGE
+
+    try:
+        plot_threads = runtime.store.list_plot_threads(project_id)
+    except ValueError:
+        return f"No novel project found: {project_id}"
+
+    if not plot_threads:
+        return f"No plot threads for project {project_id}."
+
+    lines = [f"Hermes Tavern plot threads for project [{project_id}]:"]
+    for plot_thread in plot_threads:
+        lines.append(
+            f"  - [{plot_thread['id']}] {plot_thread['label']}: "
+            f"{_mobile_preview(plot_thread['description_text'], 120)}"
+        )
+    return "\n".join(lines)
+
+
+def plot_thread_inspect(runtime: Any, command: RPCommand) -> str:
+    if len(command.args) != 3:
+        return _PLOT_THREAD_USAGE
+
+    plot_thread_id = _safe_int(command.args[2])
+    if plot_thread_id is None:
+        return _PLOT_THREAD_USAGE
+
+    plot_thread = runtime.store.get_plot_thread(plot_thread_id)
+    if plot_thread is None:
+        return f"No plot thread found: {plot_thread_id}"
+
+    return (
+        f"Plot thread for [{plot_thread_id}] (project [{plot_thread['project_id']}]): "
+        f"{plot_thread['label']}: {_mobile_preview(plot_thread['description_text'], 220)}"
+    )
+
+
+def plot_thread_update(runtime: Any, command: RPCommand) -> str:
+    if len(command.args) < 4:
+        return _PLOT_THREAD_USAGE
+
+    plot_thread_id = _safe_int(command.args[2])
+    if plot_thread_id is None:
+        return _PLOT_THREAD_USAGE
+
+    description_text = " ".join(command.args[3:]).strip()
+    if not description_text:
+        return _PLOT_THREAD_USAGE
+
+    try:
+        plot_thread = runtime.store.update_plot_thread(
+            plot_thread_id,
+            description_text,
+        )
+    except ValueError:
+        return f"No plot thread found: {plot_thread_id}"
+
+    return (
+        f"Plot thread updated for plot thread [{plot_thread['id']}]: "
+        f"{_mobile_preview(plot_thread['description_text'], 180)}"
+    )
+
+
+def plot_thread_delete(runtime: Any, command: RPCommand) -> str:
+    if len(command.args) != 3:
+        return _PLOT_THREAD_USAGE
+
+    plot_thread_id = _safe_int(command.args[2])
+    if plot_thread_id is None:
+        return _PLOT_THREAD_USAGE
+
+    if not runtime.store.delete_plot_thread(plot_thread_id):
+        return f"No plot thread found: {plot_thread_id}"
+
+    return f"Plot thread deleted for plot thread [{plot_thread_id}]."
 
 
 def character_state_add(runtime: Any, command: RPCommand, event: Any) -> str:

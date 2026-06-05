@@ -148,6 +148,11 @@ Expected behavior:
 /rp location inspect <location-id>
 /rp location update <location-id> <description...>
 /rp location delete <location-id>
+/rp plot thread add <project-id> <label> <description...>
+/rp plot thread list [project-id]
+/rp plot thread inspect <plot-thread-id>
+/rp plot thread update <plot-thread-id> <description...>
+/rp plot thread delete <plot-thread-id>
 /rp organization add <project-id> <label> <description...>
 /rp organization list [project-id]
 /rp organization inspect <organization-id>

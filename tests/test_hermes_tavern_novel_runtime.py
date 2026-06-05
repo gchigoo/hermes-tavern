@@ -59,6 +59,12 @@ ORGANIZATION_USAGE = (
     "/rp organization update <organization-id> <description...> | "
     "/rp organization delete <organization-id>"
 )
+PLOT_THREAD_USAGE = (
+    "Usage: /rp plot thread add <project-id> <label> <description...> | "
+    "/rp plot thread list [project-id] | /rp plot thread inspect <plot-thread-id> | "
+    "/rp plot thread update <plot-thread-id> <description...> | "
+    "/rp plot thread delete <plot-thread-id>"
+)
 
 
 def test_novel_command_table_has_expected_families():
@@ -71,8 +77,9 @@ def test_novel_command_table_has_expected_families():
     assert "timeline" in TAVERN_COMMAND_TABLE
     assert "location" in TAVERN_COMMAND_TABLE
     assert "organization" in TAVERN_COMMAND_TABLE
+    assert "plot" in TAVERN_COMMAND_TABLE
 
-    for name in ("character", "relationship", "project", "chapter", "scene", "canon", "timeline", "location", "organization"):
+    for name in ("character", "relationship", "project", "chapter", "scene", "canon", "timeline", "location", "organization", "plot"):
         entry = TAVERN_COMMAND_TABLE[name]
         if name == "character":
             assert entry.handler == "_character_command"
@@ -118,6 +125,11 @@ def test_novel_command_table_has_expected_families():
     assert "/rp organization inspect <organization-id>" in TAVERN_COMMAND_TABLE["organization"].help_lines
     assert "/rp organization update <organization-id> <description...>" in TAVERN_COMMAND_TABLE["organization"].help_lines
     assert "/rp organization delete <organization-id>" in TAVERN_COMMAND_TABLE["organization"].help_lines
+    assert "/rp plot thread add <project-id> <label> <description...>" in TAVERN_COMMAND_TABLE["plot"].help_lines
+    assert "/rp plot thread list [project-id]" in TAVERN_COMMAND_TABLE["plot"].help_lines
+    assert "/rp plot thread inspect <plot-thread-id>" in TAVERN_COMMAND_TABLE["plot"].help_lines
+    assert "/rp plot thread update <plot-thread-id> <description...>" in TAVERN_COMMAND_TABLE["plot"].help_lines
+    assert "/rp plot thread delete <plot-thread-id>" in TAVERN_COMMAND_TABLE["plot"].help_lines
 
 
 def test_project_routes_create_list_info_set(tmp_path):
@@ -320,6 +332,18 @@ def test_project_command_help_includes_organization_lines(tmp_path):
     assert "/rp organization inspect <organization-id>" in help_output
     assert "/rp organization update <organization-id> <description...>" in help_output
     assert "/rp organization delete <organization-id>" in help_output
+
+
+def test_project_command_help_includes_plot_thread_lines(tmp_path):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+
+    help_output = runtime.handle_command_sync(RPCommand("help", [], "/rp"), Event())
+
+    assert "/rp plot thread add <project-id> <label> <description...>" in help_output
+    assert "/rp plot thread list [project-id]" in help_output
+    assert "/rp plot thread inspect <plot-thread-id>" in help_output
+    assert "/rp plot thread update <plot-thread-id> <description...>" in help_output
+    assert "/rp plot thread delete <plot-thread-id>" in help_output
 
 
 def test_project_brief_routes_explicit_id_flow(tmp_path):
@@ -2708,3 +2732,227 @@ def test_project_style_module_skips_only_style_on_db_error(tmp_path, monkeypatch
     assert "Hermes Tavern prompt debug" in prompt
     assert "system/project_style:" not in prompt
     assert "system/canon:World" in prompt
+
+
+def test_plot_thread_routes_add_list_inspect_update_delete(tmp_path):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    project = runtime.store.create_project("Atlas")
+
+    add = runtime.handle_command_sync(
+        RPCommand(
+            "plot",
+            ["thread", "add", str(project["id"]), "missing-heir", "The heir has vanished."],
+            "/rp plot thread add 1 missing-heir The heir has vanished.",
+        ),
+        Event(),
+    )
+    assert add == (
+        "Plot thread added: [1] missing-heir -> "
+        "The heir has vanished."
+    )
+
+    runtime.handle_command_sync(
+        RPCommand(
+            "plot",
+            [
+                "thread",
+                "add",
+                str(project["id"]),
+                "rising-tension",
+                "A debt ledger is missing pages.",
+            ],
+            "/rp plot thread add 1 rising-tension A debt ledger is missing pages.",
+        ),
+        Event(),
+    )
+
+    list_output = runtime.handle_command_sync(
+        RPCommand("plot", ["thread", "list", str(project["id"])], "/rp plot thread list 1"),
+        Event(),
+    )
+    assert (
+        list_output
+        == "Hermes Tavern plot threads for project [1]:\n"
+        "  - [1] missing-heir: The heir has vanished.\n"
+        "  - [2] rising-tension: A debt ledger is missing pages."
+    )
+
+    inspect = runtime.handle_command_sync(
+        RPCommand("plot", ["thread", "inspect", "1"], "/rp plot thread inspect 1"),
+        Event(),
+    )
+    assert inspect == "Plot thread for [1] (project [1]): missing-heir: The heir has vanished."
+
+    update = runtime.handle_command_sync(
+        RPCommand(
+            "plot",
+            ["thread", "update", "1", "Clue appears in", "an", "old", "ledger."],
+            "/rp plot thread update 1 Clue appears in an old ledger.",
+        ),
+        Event(),
+    )
+    assert update == "Plot thread updated for plot thread [1]: Clue appears in an old ledger."
+    assert runtime.store.get_plot_thread(1)["description_text"] == "Clue appears in an old ledger."
+
+    delete = runtime.handle_command_sync(
+        RPCommand("plot", ["thread", "delete", "1"], "/rp plot thread delete 1"),
+        Event(),
+    )
+    assert delete == "Plot thread deleted for plot thread [1]."
+    assert runtime.store.get_plot_thread(1) is None
+
+    list_after_delete = runtime.handle_command_sync(
+        RPCommand("plot", ["thread", "list", str(project["id"])], "/rp plot thread list 1"),
+        Event(),
+    )
+    assert (
+        list_after_delete
+        == "Hermes Tavern plot threads for project [1]:\n"
+        "  - [2] rising-tension: A debt ledger is missing pages."
+    )
+
+
+def test_plot_thread_list_uses_active_project_fallback(tmp_path):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    runtime.store.create_project("Atlas")
+    runtime.store.create_project("Boreal")
+    runtime.handle_command_sync(
+        RPCommand("project", ["set", "2"], "/rp project set 2"),
+        Event(),
+    )
+
+    runtime.handle_command_sync(
+        RPCommand(
+            "plot",
+            ["thread", "add", "2", "harbor", "A ledger marks unresolved debt."],
+            "/rp plot thread add 2 harbor A ledger marks unresolved debt.",
+        ),
+        Event(),
+    )
+
+    listed = runtime.handle_command_sync(
+        RPCommand("plot", ["thread", "list"], "/rp plot thread list"),
+        Event(),
+    )
+    assert (
+        listed
+        == "Hermes Tavern plot threads for project [2]:\n"
+        "  - [1] harbor: A ledger marks unresolved debt."
+    )
+
+
+def test_plot_thread_routes_require_explicit_project_for_add_and_non_blank_values(tmp_path):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    runtime.store.create_project("Atlas")
+
+    assert (
+        runtime.handle_command_sync(
+            RPCommand("plot", ["thread", "add", "missing-heir", "A", "first"], "/rp plot thread add missing-heir A first"),
+            Event(),
+        )
+        == PLOT_THREAD_USAGE
+    )
+    assert (
+        runtime.handle_command_sync(
+            RPCommand("plot", ["thread", "add", "1", "", "A"], "/rp plot thread add 1  A"),
+            Event(),
+        )
+        == PLOT_THREAD_USAGE
+    )
+    assert (
+        runtime.handle_command_sync(
+            RPCommand("plot", ["thread", "add", "1", "missing-heir", "   "], "/rp plot thread add 1 missing-heir   "),
+            Event(),
+        )
+        == PLOT_THREAD_USAGE
+    )
+
+
+def test_plot_thread_not_found_and_missing_project_errors(tmp_path):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    runtime.store.create_project("Atlas")
+
+    assert (
+        runtime.handle_command_sync(
+            RPCommand(
+                "plot",
+                ["thread", "add", "9999", "missing-heir", "A", "clue"],
+                "/rp plot thread add 9999 missing-heir A clue",
+            ),
+            Event(),
+        )
+        == "No novel project found: 9999"
+    )
+    assert (
+        runtime.handle_command_sync(
+            RPCommand("plot", ["thread", "list", "9999"], "/rp plot thread list 9999"),
+            Event(),
+        )
+        == "No novel project found: 9999"
+    )
+    assert (
+        runtime.handle_command_sync(
+            RPCommand(
+                "plot",
+                ["thread", "inspect", "9999"],
+                "/rp plot thread inspect 9999",
+            ),
+            Event(),
+        )
+        == "No plot thread found: 9999"
+    )
+    assert (
+        runtime.handle_command_sync(
+            RPCommand(
+                "plot",
+                ["thread", "update", "9999", "New", "clue"],
+                "/rp plot thread update 9999 New clue",
+            ),
+            Event(),
+        )
+        == "No plot thread found: 9999"
+    )
+    assert (
+        runtime.handle_command_sync(
+            RPCommand("plot", ["thread", "delete", "9999"], "/rp plot thread delete 9999"),
+            Event(),
+        )
+        == "No plot thread found: 9999"
+    )
+
+
+def test_plot_thread_no_active_project_and_list_falls_back_to_usage(tmp_path):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+
+    assert (
+        runtime.handle_command_sync(
+            RPCommand("plot", ["thread", "list"], "/rp plot thread list"),
+            Event(),
+        )
+        == "Usage: /rp plot thread list [project-id]"
+    )
+
+
+def test_plot_thread_markers_do_not_leak_to_debug_prompt_or_context(tmp_path):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    store.save_card(parse_character_card({"name": "Alice", "description": "Scholar", "first_mes": "Hello."}))
+    runtime = TavernRuntime(store)
+    runtime.handle_command_sync(RPCommand("start", ["Alice"], "/rp start Alice"), Event())
+
+    project = store.create_project("Atlas")
+    chapter = store.create_chapter(project["id"], "Prologue")
+    scene = store.create_scene(chapter["id"], "Opening")
+    store.link_scene_session(
+        scene["id"],
+        store.get_active_session("telegram:chat:chat-1:thread:main:user:user-1")["id"],
+    )
+    store.create_plot_thread(
+        project["id"],
+        "ominous",
+        "marker: distinctive plot thread token",
+    )
+
+    prompt = runtime.handle_command_sync(RPCommand("debug", ["prompt"], "/rp debug prompt"), Event())
+    context = runtime.handle_command_sync(RPCommand("debug", ["context"], "/rp debug context"), Event())
+    assert "marker: distinctive plot thread token" not in prompt
+    assert "marker: distinctive plot thread token" not in context
