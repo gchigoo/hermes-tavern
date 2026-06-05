@@ -29,6 +29,7 @@ def test_migrate_creates_novel_tables(tmp_path):
         "novel_project_style_guides",
         "novel_project_briefs",
         "novel_project_outlines",
+        "novel_relationship_states",
     }.issubset(tables)
     novel_tables = {name for name in tables if name.startswith("novel_")}
     assert novel_tables == {
@@ -42,6 +43,7 @@ def test_migrate_creates_novel_tables(tmp_path):
         "novel_project_style_guides",
         "novel_project_briefs",
         "novel_project_outlines",
+        "novel_relationship_states",
     }
 
     with sqlite3.connect(db_path) as conn:
@@ -68,8 +70,21 @@ def test_migrate_creates_novel_tables(tmp_path):
                     AND tbl_name='novel_project_briefs'
                 """
             ).fetchall()
-        }
+    }
     assert "idx_novel_project_briefs_project" in brief_indexes
+    with sqlite3.connect(db_path) as conn:
+        relationship_indexes = {
+            row[0]
+            for row in conn.execute(
+                """
+                SELECT name
+                FROM sqlite_master
+                WHERE type='index'
+                    AND tbl_name='novel_relationship_states'
+                """
+            ).fetchall()
+        }
+    assert "idx_novel_relationship_states_project" in relationship_indexes
 
 
 def test_novel_project_crud_and_counts(tmp_path):
@@ -167,6 +182,59 @@ def test_project_outline_missing_project_raises(tmp_path):
         assert str(exc) == "Project not found"
     else:
         raise AssertionError("Expected ValueError for missing project")
+
+
+def test_relationship_state_crud_and_missing_owner_errors(tmp_path):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    project = store.create_project("Relationship State")
+
+    created = store.create_relationship_state(
+        project["id"],
+        "mara-elya",
+        "Trust is built on silence and hard bargains.",
+    )
+    assert created["project_id"] == project["id"]
+    assert created["label"] == "mara-elya"
+    assert created["state_text"] == "Trust is built on silence and hard bargains."
+
+    listed = store.list_relationship_states(project["id"])
+    assert len(listed) == 1
+    assert listed[0]["id"] == created["id"]
+    assert listed[0]["label"] == created["label"]
+
+    fetched = store.get_relationship_state(created["id"])
+    assert fetched is not None
+    assert fetched["state_text"] == created["state_text"]
+
+    updated = store.update_relationship_state(created["id"], "Trust frays, then strengthens.")
+    assert updated["id"] == created["id"]
+    assert updated["state_text"] == "Trust frays, then strengthens."
+    assert updated["updated_at"] >= created["updated_at"]
+
+    assert store.delete_relationship_state(created["id"]) is True
+    assert store.get_relationship_state(created["id"]) is None
+    assert store.delete_relationship_state(created["id"]) is False
+
+    try:
+        store.create_relationship_state(999, "mara-elya", "missing")
+    except ValueError as exc:
+        assert str(exc) == "Project not found"
+    else:
+        raise AssertionError("Expected ValueError for missing project")
+
+    try:
+        store.list_relationship_states(999)
+    except ValueError as exc:
+        assert str(exc) == "Project not found"
+    else:
+        raise AssertionError("Expected ValueError for missing project")
+
+    try:
+        store.update_relationship_state(999, "stale")
+    except ValueError as exc:
+        assert str(exc) == "Relationship state not found"
+    else:
+        raise AssertionError("Expected ValueError for missing relationship state")
 
     try:
         store.set_project_outline(999, "text")
@@ -967,6 +1035,48 @@ def test_export_project_markdown_includes_nonempty_style_guide_and_orders_after_
         markdown.index("## Style Guide") : markdown.index("## Chapters")
     ]
     assert "Tone: lyrical\nWorldbuilding: dense, sensory" in style_section
+
+
+def test_export_project_markdown_includes_relationships_after_style_guide_before_chapters(tmp_path):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+
+    project = store.create_project("Relationship Export", "interpersonal arc")
+    store.set_project_style_guide(project["id"], "Tone: intimate")
+    store.create_relationship_state(
+        project["id"],
+        "mara-elya",
+        "Trust deepens through shared danger.",
+    )
+    store.create_relationship_state(
+        project["id"],
+        "mara-kai",
+        "Arguments hide an old wound.",
+    )
+    store.create_chapter(project["id"], "Opening")
+
+    markdown = store.export_project_markdown(project["id"])
+
+    assert "## Style Guide" in markdown
+    assert "## Relationships" in markdown
+    assert "## Chapters" in markdown
+    assert (
+        markdown.index("## Style Guide")
+        < markdown.index("## Relationships")
+        < markdown.index("## Chapters")
+    )
+    assert "Trust deepens through shared danger." in markdown
+    assert "Arguments hide an old wound." in markdown
+
+
+def test_export_project_markdown_omits_relationships_when_empty(tmp_path):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+
+    project = store.create_project("Relationships Missing", "no relationship rows")
+    store.set_project_style_guide(project["id"], "Tone: quiet")
+
+    markdown = store.export_project_markdown(project["id"])
+
+    assert "## Relationships" not in markdown
 
 
 def test_export_project_markdown_omits_style_guide_when_absent_or_whitespace_only(tmp_path):

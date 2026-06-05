@@ -110,6 +110,15 @@ class NovelDBMixin:
                 updated_at TEXT NOT NULL DEFAULT (datetime('now'))
             );
 
+            CREATE TABLE IF NOT EXISTS novel_relationship_states (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                project_id INTEGER NOT NULL REFERENCES novel_projects(id) ON DELETE CASCADE,
+                label TEXT NOT NULL,
+                state_text TEXT NOT NULL,
+                created_at TEXT NOT NULL DEFAULT (datetime('now')),
+                updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+            );
+
             CREATE INDEX IF NOT EXISTS idx_novel_projects_created
                 ON novel_projects(created_at);
             CREATE INDEX IF NOT EXISTS idx_novel_chapters_project
@@ -132,6 +141,8 @@ class NovelDBMixin:
                 ON novel_project_briefs(project_id);
             CREATE INDEX IF NOT EXISTS idx_novel_project_outlines_project
                 ON novel_project_outlines(project_id);
+            CREATE INDEX IF NOT EXISTS idx_novel_relationship_states_project
+                ON novel_relationship_states(project_id);
             """
         )
 
@@ -447,6 +458,94 @@ class NovelDBMixin:
             cursor = conn.execute(
                 "DELETE FROM novel_project_outlines WHERE project_id = ?",
                 (project_id,),
+            )
+            return cursor.rowcount > 0
+
+    def create_relationship_state(self, project_id: int, label: str, state_text: str) -> dict[str, Any]:
+        self.migrate()
+        with self.connect() as conn:
+            project = conn.execute(
+                "SELECT id FROM novel_projects WHERE id = ?",
+                (project_id,),
+            ).fetchone()
+            if project is None:
+                raise ValueError("Project not found")
+            now = _utc_now()
+            cursor = conn.execute(
+                """
+                INSERT INTO novel_relationship_states (
+                    project_id, label, state_text, created_at, updated_at
+                )
+                VALUES (?, ?, ?, ?, ?)
+                """,
+                (project_id, label, state_text, now, now),
+            )
+            row_id = cursor.lastrowid
+            row = conn.execute(
+                "SELECT * FROM novel_relationship_states WHERE id = ?",
+                (row_id,),
+            ).fetchone()
+        return _row_to_dict(row)
+
+    def list_relationship_states(self, project_id: int) -> list[dict[str, Any]]:
+        self.migrate()
+        with self.connect() as conn:
+            project = conn.execute(
+                "SELECT id FROM novel_projects WHERE id = ?",
+                (project_id,),
+            ).fetchone()
+            if project is None:
+                raise ValueError("Project not found")
+            rows = conn.execute(
+                """
+                SELECT *
+                FROM novel_relationship_states
+                WHERE project_id = ?
+                ORDER BY id ASC
+                """,
+                (project_id,),
+            ).fetchall()
+        return [_row_to_dict(row) for row in rows]
+
+    def get_relationship_state(self, relationship_id: int) -> dict[str, Any] | None:
+        self.migrate()
+        with self.connect() as conn:
+            row = conn.execute(
+                "SELECT * FROM novel_relationship_states WHERE id = ?",
+                (relationship_id,),
+            ).fetchone()
+        return _row_to_dict(row)
+
+    def update_relationship_state(self, relationship_id: int, state_text: str) -> dict[str, Any]:
+        self.migrate()
+        with self.connect() as conn:
+            row = conn.execute(
+                "SELECT id FROM novel_relationship_states WHERE id = ?",
+                (relationship_id,),
+            ).fetchone()
+            if row is None:
+                raise ValueError("Relationship state not found")
+            now = _utc_now()
+            conn.execute(
+                """
+                UPDATE novel_relationship_states
+                SET state_text = ?, updated_at = ?
+                WHERE id = ?
+                """,
+                (state_text, now, relationship_id),
+            )
+            updated = conn.execute(
+                "SELECT * FROM novel_relationship_states WHERE id = ?",
+                (relationship_id,),
+            ).fetchone()
+        return _row_to_dict(updated)
+
+    def delete_relationship_state(self, relationship_id: int) -> bool:
+        self.migrate()
+        with self.connect() as conn:
+            cursor = conn.execute(
+                "DELETE FROM novel_relationship_states WHERE id = ?",
+                (relationship_id,),
             )
             return cursor.rowcount > 0
 
@@ -1109,6 +1208,7 @@ class NovelDBMixin:
         style_guide = self.get_project_style_guide(project_id)
         brief = self.get_project_brief(project_id)
         outline = self.get_project_outline(project_id)
+        relationships = self.list_relationship_states(project_id)
 
         lines: list[str] = [
             f"# {novel_project['title']}",
@@ -1142,6 +1242,17 @@ class NovelDBMixin:
                     "",
                 ]
             )
+
+        if relationships:
+            lines.extend(
+                [
+                    "## Relationships",
+                    "",
+                ]
+            )
+            for relationship in relationships:
+                lines.append(f"- {relationship['label']}: {relationship['state_text']}")
+            lines.append("")
 
         lines.append("## Chapters")
 

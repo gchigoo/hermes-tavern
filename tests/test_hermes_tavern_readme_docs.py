@@ -263,6 +263,16 @@ def test_readme_core_commands_include_project_outline_literals():
     assert "/rp project outline clear [project-id]" in core_commands
 
 
+def test_readme_core_commands_include_relationship_state_literals():
+    core_commands = _readme_core_commands_text()
+
+    assert "/rp relationship add <project-id> <label> <state...>" in core_commands
+    assert "/rp relationship list [project-id]" in core_commands
+    assert "/rp relationship inspect <relationship-id>" in core_commands
+    assert "/rp relationship update <relationship-id> <state...>" in core_commands
+    assert "/rp relationship delete <relationship-id>" in core_commands
+
+
 def test_readme_card_import_format_docs_are_accurate():
     card_import_lines = [
         line.strip()

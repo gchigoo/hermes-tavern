@@ -138,6 +138,11 @@ Expected behavior:
 /rp scene narration pov <scene-id> <label>
 /rp scene narration tense <scene-id> <past|present>
 /rp canon add/list/group | /rp timeline add/list
+/rp relationship add <project-id> <label> <state...>
+/rp relationship list [project-id]
+/rp relationship inspect <relationship-id>
+/rp relationship update <relationship-id> <state...>
+/rp relationship delete <relationship-id>
 /rp debug prompt [limit] [page] | /rp debug context [limit] [page] | /rp debug swipes
 ```
 

@@ -35,16 +35,23 @@ PROJECT_OUTLINE_USAGE = (
     "Usage: /rp project outline [project-id] | /rp project outline inspect [project-id] | "
     "/rp project outline set [project-id] <text> | /rp project outline clear [project-id]"
 )
+RELATIONSHIP_USAGE = (
+    "Usage: /rp relationship add <project-id> <label> <state...> | "
+    "/rp relationship list [project-id] | /rp relationship inspect <relationship-id> | "
+    "/rp relationship update <relationship-id> <state...> | "
+    "/rp relationship delete <relationship-id>"
+)
 
 
 def test_novel_command_table_has_five_families():
+    assert "relationship" in TAVERN_COMMAND_TABLE
     assert "project" in TAVERN_COMMAND_TABLE
     assert "chapter" in TAVERN_COMMAND_TABLE
     assert "scene" in TAVERN_COMMAND_TABLE
     assert "canon" in TAVERN_COMMAND_TABLE
     assert "timeline" in TAVERN_COMMAND_TABLE
 
-    for name in ("project", "chapter", "scene", "canon", "timeline"):
+    for name in ("relationship", "project", "chapter", "scene", "canon", "timeline"):
         entry = TAVERN_COMMAND_TABLE[name]
         assert entry.handler == f"_{name}_command"
     assert "/rp scene goal <scene-id> [text]" in TAVERN_COMMAND_TABLE["scene"].help_lines
@@ -67,6 +74,11 @@ def test_novel_command_table_has_five_families():
     assert "/rp project outline inspect [project-id]" in TAVERN_COMMAND_TABLE["project"].help_lines
     assert "/rp project outline set [project-id] <text>" in TAVERN_COMMAND_TABLE["project"].help_lines
     assert "/rp project outline clear [project-id]" in TAVERN_COMMAND_TABLE["project"].help_lines
+    assert "/rp relationship add <project-id> <label> <state...>" in TAVERN_COMMAND_TABLE["relationship"].help_lines
+    assert "/rp relationship list [project-id]" in TAVERN_COMMAND_TABLE["relationship"].help_lines
+    assert "/rp relationship inspect <relationship-id>" in TAVERN_COMMAND_TABLE["relationship"].help_lines
+    assert "/rp relationship update <relationship-id> <state...>" in TAVERN_COMMAND_TABLE["relationship"].help_lines
+    assert "/rp relationship delete <relationship-id>" in TAVERN_COMMAND_TABLE["relationship"].help_lines
 
 
 def test_project_routes_create_list_info_set(tmp_path):
@@ -221,6 +233,18 @@ def test_project_command_help_includes_outline_lines(tmp_path):
     assert "/rp project outline inspect [project-id]" in help_output
     assert "/rp project outline set [project-id] <text>" in help_output
     assert "/rp project outline clear [project-id]" in help_output
+
+
+def test_project_command_help_includes_relationship_lines(tmp_path):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+
+    help_output = runtime.handle_command_sync(RPCommand("help", [], "/rp"), Event())
+
+    assert "/rp relationship add <project-id> <label> <state...>" in help_output
+    assert "/rp relationship list [project-id]" in help_output
+    assert "/rp relationship inspect <relationship-id>" in help_output
+    assert "/rp relationship update <relationship-id> <state...>" in help_output
+    assert "/rp relationship delete <relationship-id>" in help_output
 
 
 def test_project_brief_routes_explicit_id_flow(tmp_path):
@@ -510,6 +534,33 @@ def test_chapter_and_scene_summary_tokens_do_not_leak_to_debug_prompt_or_context
     assert "marker: distinctive scene summary token" not in context
 
 
+def test_relationship_markers_do_not_leak_to_debug_prompt_or_context(tmp_path):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    store.save_card(parse_character_card({"name": "Alice", "description": "Scholar", "first_mes": "Hello."}))
+    runtime = TavernRuntime(store)
+    runtime.handle_command_sync(RPCommand("start", ["Alice"], "/rp start Alice"), Event())
+
+    project = store.create_project("Skyline")
+    chapter = store.create_chapter(project["id"], "Prologue")
+    scene = store.create_scene(chapter["id"], "Opening")
+    store.link_scene_session(
+        scene["id"],
+        store.get_active_session("telegram:chat:chat-1:thread:main:user:user-1")["id"],
+    )
+
+    store.create_relationship_state(
+        project["id"],
+        "mara-elya",
+        "marker: distinctive relationship token",
+    )
+
+    prompt = runtime.handle_command_sync(RPCommand("debug", ["prompt"], "/rp debug prompt"), Event())
+    context = runtime.handle_command_sync(RPCommand("debug", ["context"], "/rp debug context"), Event())
+
+    assert "marker: distinctive relationship token" not in prompt
+    assert "marker: distinctive relationship token" not in context
+
+
 def test_project_style_bad_arguments_return_usage(tmp_path):
     runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
     runtime.store.create_project("Atlas")
@@ -685,6 +736,164 @@ def test_project_outline_missing_project_returns_not_found(tmp_path):
     ]
     for command, expected in tests:
         assert runtime.handle_command_sync(command, Event()) == expected
+
+
+def test_relationship_routes_add_list_inspect_update_delete(tmp_path):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    project = runtime.store.create_project("Atlas")
+
+    add = runtime.handle_command_sync(
+        RPCommand(
+            "relationship",
+            [
+                "add",
+                str(project["id"]),
+                "mara-ilya",
+                "Trust has grown through shared victories.",
+            ],
+            "/rp relationship add 1 mara-ilya Trust has grown through shared victories.",
+        ),
+        Event(),
+    )
+    assert add == "Relationship state added: [1] mara-ilya -> Trust has grown through shared victories."
+
+    added_state = runtime.store.get_relationship_state(1)
+    assert added_state is not None
+    assert added_state["label"] == "mara-ilya"
+    assert added_state["state_text"] == "Trust has grown through shared victories."
+
+    list_output = runtime.handle_command_sync(
+        RPCommand(
+            "relationship",
+            ["list", str(project["id"])],
+            "/rp relationship list 1",
+        ),
+        Event(),
+    )
+    assert list_output == (
+        "Hermes Tavern relationships for project [1]:\n"
+        "  - [1] mara-ilya: Trust has grown through shared victories."
+    )
+
+    inspect = runtime.handle_command_sync(
+        RPCommand("relationship", ["inspect", "1"], "/rp relationship inspect 1"),
+        Event(),
+    )
+    assert inspect == "Relationship state for [1] (project [1]): mara-ilya: Trust has grown through shared victories."
+
+    update = runtime.handle_command_sync(
+        RPCommand(
+            "relationship",
+            ["update", "1", "Trust remains fragile.", ""],
+            "/rp relationship update 1 Trust remains fragile.",
+        ),
+        Event(),
+    )
+    assert update == "Relationship state updated for relationship [1]: Trust remains fragile."
+    assert runtime.store.get_relationship_state(1)["state_text"] == "Trust remains fragile."
+
+    delete = runtime.handle_command_sync(
+        RPCommand("relationship", ["delete", "1"], "/rp relationship delete 1"),
+        Event(),
+    )
+    assert delete == "Relationship state deleted for relationship [1]."
+    assert runtime.store.get_relationship_state(1) is None
+
+    list_after_delete = runtime.handle_command_sync(
+        RPCommand("relationship", ["list", str(project["id"])], "/rp relationship list 1"),
+        Event(),
+    )
+    assert list_after_delete == "No relationship states for project [1]."
+
+
+def test_relationship_list_uses_active_project_fallback(tmp_path):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    runtime.store.create_project("Atlas")
+    runtime.store.create_project("Boreal")
+    runtime.handle_command_sync(
+        RPCommand("project", ["set", "2"], "/rp project set 2"),
+        Event(),
+    )
+
+    runtime.handle_command_sync(
+        RPCommand(
+            "relationship",
+            ["add", "2", "mara-elya", "A pact forms."],
+            "/rp relationship add 2 mara-elya A pact forms.",
+        ),
+        Event(),
+    )
+
+    listed = runtime.handle_command_sync(RPCommand("relationship", ["list"], "/rp relationship list"), Event())
+    assert listed == (
+        "Hermes Tavern relationships for project [2]:\n"
+        "  - [1] mara-elya: A pact forms."
+    )
+
+
+def test_relationship_routes_require_explicit_project_for_add_and_non_blank_values(tmp_path):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    runtime.store.create_project("Atlas")
+
+    assert (
+        runtime.handle_command_sync(
+            RPCommand("relationship", ["add", "mara-ilya", "Trust"] , "/rp relationship add mara-ilya Trust"),
+            Event(),
+        )
+        == RELATIONSHIP_USAGE
+    )
+    assert (
+        runtime.handle_command_sync(
+            RPCommand("relationship", ["add", "1", "", "Trust"] , "/rp relationship add 1  Trust"),
+            Event(),
+        )
+        == RELATIONSHIP_USAGE
+    )
+    assert (
+        runtime.handle_command_sync(
+            RPCommand("relationship", ["add", "1", "mara-ilya", "   "] , "/rp relationship add 1 mara-ilya   "),
+            Event(),
+        )
+        == RELATIONSHIP_USAGE
+    )
+
+
+def test_relationship_not_found_and_missing_project_errors(tmp_path):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    runtime.store.create_project("Atlas")
+
+    assert (
+        runtime.handle_command_sync(RPCommand("relationship", ["add", "9999", "mara-ilya", "Trust"], "/rp relationship add 9999 mara-ilya Trust"), Event())
+        == "No novel project found: 9999"
+    )
+    assert (
+        runtime.handle_command_sync(RPCommand("relationship", ["list", "9999"], "/rp relationship list 9999"), Event())
+        == "No novel project found: 9999"
+    )
+    assert runtime.handle_command_sync(
+        RPCommand("relationship", ["inspect", "9999"], "/rp relationship inspect 9999"),
+        Event(),
+    ) == "No relationship state found: 9999"
+    assert runtime.handle_command_sync(
+        RPCommand("relationship", ["update", "9999", "Trust recovers"], "/rp relationship update 9999 Trust recovers"),
+        Event(),
+    ) == "No relationship state found: 9999"
+    assert runtime.handle_command_sync(
+        RPCommand("relationship", ["delete", "9999"], "/rp relationship delete 9999"),
+        Event(),
+    ) == "No relationship state found: 9999"
+
+
+def test_relationship_no_active_project_and_list_falls_back_to_usage(tmp_path):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+
+    assert (
+        runtime.handle_command_sync(
+            RPCommand("relationship", ["list"], "/rp relationship list"),
+            Event(),
+        )
+        == "Usage: /rp relationship list [project-id]"
+    )
 
 
 def test_chapter_routes_require_active_or_explicit_project(tmp_path):

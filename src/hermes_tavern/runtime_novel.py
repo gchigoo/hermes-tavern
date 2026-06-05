@@ -99,11 +99,38 @@ def timeline_command(runtime: Any, command: RPCommand, event: Any) -> str:
     return "Usage: /rp timeline add <project-id> <date> <title> [description...] | /rp timeline list [project-id]"
 
 
+def relationship_command(runtime: Any, command: RPCommand, event: Any) -> str:
+    if not command.args:
+        return _RELATIONSHIP_USAGE
+
+    subcommand = command.args[0].lower()
+    if subcommand == "add":
+        return relationship_add(runtime, command, event)
+    if subcommand == "list":
+        return relationship_list(runtime, command, event)
+    if subcommand == "inspect":
+        return relationship_inspect(runtime, command)
+    if subcommand == "update":
+        return relationship_update(runtime, command)
+    if subcommand == "delete":
+        return relationship_delete(runtime, command)
+
+    return _RELATIONSHIP_USAGE
+
+
 def _safe_int(text: str) -> int | None:
     try:
         return int(text)
     except (TypeError, ValueError):
         return None
+
+
+_RELATIONSHIP_USAGE = (
+    "Usage: /rp relationship add <project-id> <label> <state...> | "
+    "/rp relationship list [project-id] | /rp relationship inspect <relationship-id> | "
+    "/rp relationship update <relationship-id> <state...> | "
+    "/rp relationship delete <relationship-id>"
+)
 
 
 def _scene_card_unavailable_message(runtime: Any) -> str:
@@ -1079,3 +1106,119 @@ def timeline_list(runtime: Any, command: RPCommand, event: Any) -> str:
         suffix = f" — {description}" if description else ""
         lines.append(f"  - [{entry['sort_key'] or entry['event_date']}] {entry['title']}{suffix}")
     return "\n".join(lines)
+
+
+def relationship_add(runtime: Any, command: RPCommand, event: Any) -> str:
+    del event
+    if len(command.args) < 4:
+        return _RELATIONSHIP_USAGE
+
+    project_id = _safe_int(command.args[1])
+    if project_id is None:
+        return _RELATIONSHIP_USAGE
+
+    label = command.args[2].strip()
+    if not label:
+        return _RELATIONSHIP_USAGE
+
+    state_text = " ".join(command.args[3:]).strip()
+    if not state_text:
+        return _RELATIONSHIP_USAGE
+
+    try:
+        relationship = runtime.store.create_relationship_state(
+            project_id,
+            label,
+            state_text,
+        )
+    except ValueError:
+        return f"No novel project found: {project_id}"
+
+    return (
+        f"Relationship state added: [{relationship['id']}] {relationship['label']} -> "
+        f"{_mobile_preview(relationship['state_text'], 180)}"
+    )
+
+
+def relationship_list(runtime: Any, command: RPCommand, event: Any) -> str:
+    project_id, err = _resolve_project_id(
+        runtime,
+        command,
+        event=event,
+        usage="Usage: /rp relationship list [project-id]",
+        default_ok=True,
+        fallback_index=1,
+    )
+    if project_id is None:
+        return err or _RELATIONSHIP_USAGE
+
+    try:
+        relationships = runtime.store.list_relationship_states(project_id)
+    except ValueError:
+        return f"No novel project found: {project_id}"
+
+    if not relationships:
+        return f"No relationship states for project [{project_id}]."
+
+    lines = [f"Hermes Tavern relationships for project [{project_id}]:"]
+    for relationship in relationships:
+        lines.append(
+            f"  - [{relationship['id']}] {relationship['label']}: "
+            f"{_mobile_preview(relationship['state_text'], 120)}"
+        )
+    return "\n".join(lines)
+
+
+def relationship_inspect(runtime: Any, command: RPCommand) -> str:
+    if len(command.args) != 2:
+        return _RELATIONSHIP_USAGE
+
+    relationship_id = _safe_int(command.args[1])
+    if relationship_id is None:
+        return _RELATIONSHIP_USAGE
+
+    relationship = runtime.store.get_relationship_state(relationship_id)
+    if relationship is None:
+        return f"No relationship state found: {relationship_id}"
+
+    return (
+        f"Relationship state for [{relationship_id}] (project [{relationship['project_id']}]): "
+        f"{relationship['label']}: {_mobile_preview(relationship['state_text'], 220)}"
+    )
+
+
+def relationship_update(runtime: Any, command: RPCommand) -> str:
+    if len(command.args) < 3:
+        return _RELATIONSHIP_USAGE
+
+    relationship_id = _safe_int(command.args[1])
+    if relationship_id is None:
+        return _RELATIONSHIP_USAGE
+
+    state_text = " ".join(command.args[2:]).strip()
+    if not state_text:
+        return _RELATIONSHIP_USAGE
+
+    try:
+        relationship = runtime.store.update_relationship_state(relationship_id, state_text)
+    except ValueError:
+        return f"No relationship state found: {relationship_id}"
+
+    return (
+        f"Relationship state updated for relationship [{relationship['id']}]: "
+        f"{_mobile_preview(relationship['state_text'], 180)}"
+    )
+
+
+def relationship_delete(runtime: Any, command: RPCommand) -> str:
+    if len(command.args) != 2:
+        return _RELATIONSHIP_USAGE
+
+    relationship_id = _safe_int(command.args[1])
+    if relationship_id is None:
+        return _RELATIONSHIP_USAGE
+
+    if not runtime.store.delete_relationship_state(relationship_id):
+        return f"No relationship state found: {relationship_id}"
+
+    return f"Relationship state deleted for relationship [{relationship_id}]."

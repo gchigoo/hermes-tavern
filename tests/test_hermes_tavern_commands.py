@@ -150,6 +150,16 @@ def test_help_lists_project_outline_commands():
     assert "/rp project outline clear [project-id]" in help_text
 
 
+def test_help_lists_relationship_state_commands():
+    help_text = _build_help_text()
+
+    assert "/rp relationship add <project-id> <label> <state...>" in help_text
+    assert "/rp relationship list [project-id]" in help_text
+    assert "/rp relationship inspect <relationship-id>" in help_text
+    assert "/rp relationship update <relationship-id> <state...>" in help_text
+    assert "/rp relationship delete <relationship-id>" in help_text
+
+
 class RecordingRuntime:
     def __init__(self):
         self.calls = []

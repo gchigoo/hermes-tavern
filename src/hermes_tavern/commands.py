@@ -270,6 +270,16 @@ TAVERN_COMMAND_TABLE: dict[str, TavernCommandEntry] = {
         ],
     ),
     # ── novel layer ──
+    "relationship": TavernCommandEntry(
+        handler="_relationship_command",
+        help_lines=[
+            "/rp relationship add <project-id> <label> <state...>",
+            "/rp relationship list [project-id]",
+            "/rp relationship inspect <relationship-id>",
+            "/rp relationship update <relationship-id> <state...>",
+            "/rp relationship delete <relationship-id>",
+        ],
+    ),
     "project": TavernCommandEntry(
         handler="_project_command",
         help_lines=[
