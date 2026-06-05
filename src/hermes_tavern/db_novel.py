@@ -146,6 +146,15 @@ class NovelDBMixin:
                 updated_at TEXT NOT NULL DEFAULT (datetime('now'))
             );
 
+            CREATE TABLE IF NOT EXISTS novel_revision_notes (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                project_id INTEGER NOT NULL REFERENCES novel_projects(id) ON DELETE CASCADE,
+                label TEXT NOT NULL,
+                note_text TEXT NOT NULL,
+                created_at TEXT NOT NULL DEFAULT (datetime('now')),
+                updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+            );
+
             CREATE TABLE IF NOT EXISTS novel_character_states (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 project_id INTEGER NOT NULL REFERENCES novel_projects(id) ON DELETE CASCADE,
@@ -183,6 +192,8 @@ class NovelDBMixin:
                 ON novel_locations(project_id);
             CREATE INDEX IF NOT EXISTS idx_novel_style_samples_project
                 ON novel_style_samples(project_id);
+            CREATE INDEX IF NOT EXISTS idx_novel_revision_notes_project
+                ON novel_revision_notes(project_id, id);
             CREATE TABLE IF NOT EXISTS novel_organizations (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 project_id INTEGER NOT NULL REFERENCES novel_projects(id) ON DELETE CASCADE,
@@ -620,6 +631,109 @@ class NovelDBMixin:
             cursor = conn.execute(
                 "DELETE FROM novel_style_samples WHERE id = ?",
                 (style_sample_id,),
+            )
+            return cursor.rowcount > 0
+
+    def create_revision_note(
+        self,
+        project_id: int,
+        label: str,
+        note_text: str,
+    ) -> dict[str, Any]:
+        label = (label or "").strip()
+        note_text = (note_text or "").strip()
+        if not label:
+            raise ValueError("Revision note label cannot be blank")
+        if not note_text:
+            raise ValueError("Revision note text cannot be blank")
+
+        self.migrate()
+        with self.connect() as conn:
+            project = conn.execute(
+                "SELECT id FROM novel_projects WHERE id = ?",
+                (project_id,),
+            ).fetchone()
+            if project is None:
+                raise ValueError("Project not found")
+            now = _utc_now()
+            cursor = conn.execute(
+                """
+                INSERT INTO novel_revision_notes (
+                    project_id, label, note_text, created_at, updated_at
+                )
+                VALUES (?, ?, ?, ?, ?)
+                """,
+                (project_id, label, note_text, now, now),
+            )
+            revision_note_id = cursor.lastrowid
+            row = conn.execute(
+                "SELECT * FROM novel_revision_notes WHERE id = ?",
+                (revision_note_id,),
+            ).fetchone()
+        return _row_to_dict(row)
+
+    def list_revision_notes(self, project_id: int) -> list[dict[str, Any]]:
+        self.migrate()
+        with self.connect() as conn:
+            project = conn.execute(
+                "SELECT id FROM novel_projects WHERE id = ?",
+                (project_id,),
+            ).fetchone()
+            if project is None:
+                raise ValueError("Project not found")
+            rows = conn.execute(
+                """
+                SELECT *
+                FROM novel_revision_notes
+                WHERE project_id = ?
+                ORDER BY id ASC
+                """,
+                (project_id,),
+            ).fetchall()
+        return [_row_to_dict(row) for row in rows]
+
+    def get_revision_note(self, revision_note_id: int) -> dict[str, Any] | None:
+        self.migrate()
+        with self.connect() as conn:
+            row = conn.execute(
+                "SELECT * FROM novel_revision_notes WHERE id = ?",
+                (revision_note_id,),
+            ).fetchone()
+        return _row_to_dict(row)
+
+    def update_revision_note(
+        self,
+        revision_note_id: int,
+        note_text: str,
+    ) -> dict[str, Any] | None:
+        note_text = (note_text or "").strip()
+        if not note_text:
+            raise ValueError("Revision note text cannot be blank")
+
+        self.migrate()
+        with self.connect() as conn:
+            cursor = conn.execute(
+                """
+                UPDATE novel_revision_notes
+                SET note_text = ?, updated_at = ?
+                WHERE id = ?
+                """,
+                (note_text, _utc_now(), revision_note_id),
+            )
+            if cursor.rowcount == 0:
+                return None
+            row = conn.execute(
+                "SELECT * FROM novel_revision_notes WHERE id = ?",
+                (revision_note_id,),
+            ).fetchone()
+        return _row_to_dict(row)
+
+    def delete_revision_note(self, revision_note_id: int) -> bool:
+        self.migrate()
+        with self.connect() as conn:
+            cursor = conn.execute(
+                "DELETE FROM novel_revision_notes WHERE id = ?",
+                (revision_note_id,),
             )
             return cursor.rowcount > 0
 
@@ -2158,6 +2272,20 @@ class NovelDBMixin:
             )
             for relationship in relationships:
                 lines.append(f"- {relationship['label']}: {relationship['state_text']}")
+            lines.append("")
+
+        revision_notes = self.list_revision_notes(novel_project["id"])
+        if revision_notes:
+            lines.extend(
+                [
+                    "## Revision Notes",
+                    "",
+                ]
+            )
+            for revision_note in revision_notes:
+                lines.append(
+                    f"- {revision_note['label']}: {revision_note['note_text']}"
+                )
             lines.append("")
 
         default_bindings = self.list_default_bindings_for_project(novel_project["id"])

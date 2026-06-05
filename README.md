@@ -136,6 +136,11 @@ Expected behavior:
 /rp project brief premise set <project-id> <text> | /rp project brief premise clear <project-id>
 /rp project outline [project-id] | /rp project outline inspect [project-id]
 /rp project outline set [project-id] <text> | /rp project outline clear [project-id]
+/rp project revision add <project-id> <label> <note...>
+/rp project revision list [project-id]
+/rp project revision inspect <note-id>
+/rp project revision update <note-id> <note...>
+/rp project revision delete <note-id>
 /rp chapter create/list
 /rp chapter summary <chapter-id> [text]
 /rp chapter summary clear <chapter-id>

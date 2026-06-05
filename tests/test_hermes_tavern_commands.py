@@ -121,6 +121,16 @@ def test_help_lists_project_style_commands():
     assert "/rp project style clear [project-id]" in help_text
 
 
+def test_help_lists_project_revision_commands():
+    help_text = _build_help_text()
+
+    assert "/rp project revision add <project-id> <label> <note...>" in help_text
+    assert "/rp project revision list [project-id]" in help_text
+    assert "/rp project revision inspect <note-id>" in help_text
+    assert "/rp project revision update <note-id> <note...>" in help_text
+    assert "/rp project revision delete <note-id>" in help_text
+
+
 def test_help_lists_binding_commands():
     help_text = _build_help_text()
 
@@ -354,3 +364,7 @@ def test_dispatch_command_unknown_after_structural_parse_only():
         == "Unknown /rp command: mystery"
     )
     assert runtime.calls == []
+
+
+def test_novel_command_table_does_not_have_top_level_revision_family():
+    assert "revision" not in TAVERN_COMMAND_TABLE

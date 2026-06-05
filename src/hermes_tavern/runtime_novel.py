@@ -26,6 +26,8 @@ def project_command(runtime: Any, command: RPCommand, event: Any) -> str:
         return project_outline(runtime, command, event)
     if subcommand == "export":
         return project_export(runtime, command, event)
+    if subcommand == "revision":
+        return project_revision(runtime, command, event)
     if subcommand == "style":
         return project_style(runtime, command, event)
     if subcommand == "brief":
@@ -38,7 +40,10 @@ def project_command(runtime: Any, command: RPCommand, event: Any) -> str:
         "/rp project brief type set <project-id> <novel|serial|rp|worldbuilding|other> | "
         "/rp project brief type clear <project-id> | /rp project brief premise set <project-id> <text> | "
         "/rp project brief premise clear <project-id> | /rp project outline [project-id] | /rp project outline inspect [project-id] | "
-        "/rp project outline set [project-id] <text> | /rp project outline clear [project-id]"
+        "/rp project outline set [project-id] <text> | /rp project outline clear [project-id] "
+        "| /rp project revision add <project-id> <label> <note...> | /rp project revision list [project-id] | "
+        "/rp project revision inspect <note-id> | /rp project revision update <note-id> <note...> | "
+        "/rp project revision delete <note-id>"
     )
 
 
@@ -808,6 +813,151 @@ def project_outline_clear(runtime: Any, project_id: int) -> str:
     except ValueError:
         return f"No novel project found: {project_id}"
     return f"Project outline cleared for project [{project_id}]."
+
+
+def project_revision(runtime: Any, command: RPCommand, event: Any) -> str:
+    if len(command.args) < 2:
+        return _PROJECT_REVISION_USAGE
+
+    mode = command.args[1].lower()
+    if mode == "add":
+        return project_revision_add(runtime, command, event)
+    if mode == "list":
+        return project_revision_list(runtime, command, event)
+    if mode == "inspect":
+        return project_revision_inspect(runtime, command)
+    if mode == "update":
+        return project_revision_update(runtime, command)
+    if mode == "delete":
+        return project_revision_delete(runtime, command)
+
+    return _PROJECT_REVISION_USAGE
+
+
+_PROJECT_REVISION_USAGE = (
+    "Usage: /rp project revision add <project-id> <label> <note...> | "
+    "/rp project revision list [project-id] | /rp project revision inspect <note-id> | "
+    "/rp project revision update <note-id> <note...> | /rp project revision delete <note-id>"
+)
+
+
+def project_revision_add(runtime: Any, command: RPCommand, event: Any) -> str:
+    if len(command.args) < 5:
+        return _PROJECT_REVISION_USAGE
+
+    project_id = _safe_int(command.args[2])
+    if project_id is None:
+        return _PROJECT_REVISION_USAGE
+    label = command.args[3].strip()
+    note_text = " ".join(command.args[4:]).strip()
+
+    if not label or not note_text:
+        return _PROJECT_REVISION_USAGE
+
+    try:
+        revision_note = runtime.store.create_revision_note(
+            project_id,
+            label,
+            note_text,
+        )
+    except ValueError:
+        return f"No novel project found: {project_id}"
+
+    _project_set_active(runtime, event, project_id)
+    return (
+        f"Revision note added for project [{project_id}]: "
+        f"{revision_note['label']} -> {_mobile_preview(revision_note['note_text'], 180)}"
+    )
+
+
+def project_revision_list(runtime: Any, command: RPCommand, event: Any) -> str:
+    project_id, err = _resolve_project_id(
+        runtime,
+        command,
+        event=event,
+        usage="Usage: /rp project revision list [project-id]",
+        default_ok=True,
+        fallback_index=2,
+    )
+    if project_id is None:
+        return err or _PROJECT_REVISION_USAGE
+
+    try:
+        revision_notes = runtime.store.list_revision_notes(project_id)
+    except ValueError:
+        return f"No novel project found: {project_id}"
+
+    if not revision_notes:
+        return f"No revision notes for project [{project_id}]."
+
+    lines = [f"Hermes Tavern revision notes for project [{project_id}]:"]
+    for revision_note in revision_notes:
+        lines.append(
+            f"  - [{revision_note['id']}] {revision_note['label']}: "
+            f"{_mobile_preview(revision_note['note_text'], 120)}"
+        )
+    return "\n".join(lines)
+
+
+def project_revision_inspect(runtime: Any, command: RPCommand) -> str:
+    if len(command.args) != 3:
+        return _PROJECT_REVISION_USAGE
+
+    revision_note_id = _safe_int(command.args[2])
+    if revision_note_id is None:
+        return _PROJECT_REVISION_USAGE
+
+    revision_note = runtime.store.get_revision_note(revision_note_id)
+    if revision_note is None:
+        return f"No revision note found: {revision_note_id}"
+
+    return (
+        f"Revision note for [{revision_note_id}] (project [{revision_note['project_id']}]): "
+        f"{revision_note['label']}: {_mobile_preview(revision_note['note_text'], 220)}"
+    )
+
+
+def project_revision_update(runtime: Any, command: RPCommand) -> str:
+    if len(command.args) < 4:
+        return _PROJECT_REVISION_USAGE
+
+    revision_note_id = _safe_int(command.args[2])
+    if revision_note_id is None:
+        return _PROJECT_REVISION_USAGE
+
+    note_text = " ".join(command.args[3:]).strip()
+    if not note_text:
+        return _PROJECT_REVISION_USAGE
+
+    try:
+        revision_note = runtime.store.update_revision_note(
+            revision_note_id,
+            note_text,
+        )
+    except ValueError:
+        return _PROJECT_REVISION_USAGE
+
+    if revision_note is None:
+        return f"No revision note found: {revision_note_id}"
+
+    return (
+        f"Revision note updated for revision note [{revision_note_id}]: "
+        f"{_mobile_preview(revision_note['note_text'], 180)}"
+    )
+
+
+def project_revision_delete(runtime: Any, command: RPCommand) -> str:
+    if len(command.args) != 3:
+        return _PROJECT_REVISION_USAGE
+
+    revision_note_id = _safe_int(command.args[2])
+    if revision_note_id is None:
+        return _PROJECT_REVISION_USAGE
+
+    if not runtime.store.delete_revision_note(revision_note_id):
+        return f"No revision note found: {revision_note_id}"
+
+    return f"Revision note deleted for revision note [{revision_note_id}]."
 
 
 _PROJECT_STYLE_USAGE = (

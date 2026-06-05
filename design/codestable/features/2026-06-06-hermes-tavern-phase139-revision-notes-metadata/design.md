@@ -1,7 +1,7 @@
 ---
 doc_type: feature-design
 feature: "2026-06-06-hermes-tavern-phase139-revision-notes-metadata"
-status: draft
+status: approved
 date: "2026-06-06"
 summary: >
   Revision Notes Metadata v1 adds local project-scoped revision-note rows

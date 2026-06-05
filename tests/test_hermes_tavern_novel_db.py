@@ -98,6 +98,7 @@ def test_migrate_creates_novel_tables(tmp_path):
         "novel_character_states",
         "novel_organizations",
         "novel_plot_threads",
+        "novel_revision_notes",
     }.issubset(tables)
     novel_tables = {name for name in tables if name.startswith("novel_")}
     assert novel_tables == {
@@ -119,6 +120,7 @@ def test_migrate_creates_novel_tables(tmp_path):
         "novel_character_states",
         "novel_organizations",
         "novel_plot_threads",
+        "novel_revision_notes",
     }
 
     with sqlite3.connect(db_path) as conn:
@@ -239,6 +241,19 @@ def test_migrate_creates_novel_tables(tmp_path):
             ).fetchall()
         }
     assert "idx_novel_plot_threads_project" in plot_indexes
+    with sqlite3.connect(db_path) as conn:
+        revision_note_indexes = {
+            row[0]
+            for row in conn.execute(
+                """
+                SELECT name
+                FROM sqlite_master
+                WHERE type='index'
+                    AND tbl_name='novel_revision_notes'
+                """
+            ).fetchall()
+        }
+    assert "idx_novel_revision_notes_project" in revision_note_indexes
 
     with sqlite3.connect(db_path) as conn:
         default_binding_indexes = conn.execute(
@@ -785,6 +800,90 @@ def test_style_sample_blank_label_and_text_rejected(tmp_path):
         assert str(exc) == "Style sample text cannot be blank"
     else:
         raise AssertionError("Expected ValueError for blank sample text on update")
+
+
+def test_revision_note_crud_and_missing_owner_errors(tmp_path):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    project = store.create_project("Revision Notes")
+
+    first = store.create_revision_note(
+        project["id"],
+        "draft",
+        "The current chapter pivots at the old bell tower.",
+    )
+    second = store.create_revision_note(
+        project["id"],
+        "continuity",
+        "Keep the fogline consistent through chapter two.",
+    )
+    assert first["project_id"] == project["id"]
+    assert first["label"] == "draft"
+    assert second["id"] > first["id"]
+
+    listed = store.list_revision_notes(project["id"])
+    assert len(listed) == 2
+    assert listed[0]["id"] == first["id"]
+    assert listed[1]["id"] == second["id"]
+
+    fetched = store.get_revision_note(first["id"])
+    assert fetched is not None
+    assert fetched["id"] == first["id"]
+    assert fetched["label"] == "draft"
+    assert fetched["note_text"] == "The current chapter pivots at the old bell tower."
+
+    updated = store.update_revision_note(first["id"], "A new paragraph clarifies the tide change.")
+    assert updated is not None
+    assert updated["id"] == first["id"]
+    assert updated["note_text"] == "A new paragraph clarifies the tide change."
+    assert updated["label"] == first["label"]
+    assert updated["updated_at"] >= first["updated_at"]
+
+    assert store.delete_revision_note(second["id"]) is True
+    assert store.get_revision_note(second["id"]) is None
+    assert store.delete_revision_note(second["id"]) is False
+
+    assert store.update_revision_note(999, "No note yet") is None
+
+    try:
+        store.create_revision_note(999, "draft", "Missing project.")
+    except ValueError as exc:
+        assert str(exc) == "Project not found"
+    else:
+        raise AssertionError("Expected ValueError for missing project")
+
+    try:
+        store.list_revision_notes(999)
+    except ValueError as exc:
+        assert str(exc) == "Project not found"
+    else:
+        raise AssertionError("Expected ValueError for missing project")
+
+
+def test_revision_note_blank_label_and_text_rejected(tmp_path):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    project = store.create_project("Revision Notes")
+
+    try:
+        store.create_revision_note(project["id"], " ", "Draft sentence.")
+    except ValueError as exc:
+        assert str(exc) == "Revision note label cannot be blank"
+    else:
+        raise AssertionError("Expected ValueError for blank label")
+
+    try:
+        store.create_revision_note(project["id"], "draft", "   ")
+    except ValueError as exc:
+        assert str(exc) == "Revision note text cannot be blank"
+    else:
+        raise AssertionError("Expected ValueError for blank note text")
+
+    created = store.create_revision_note(project["id"], "draft", "first note")
+    try:
+        store.update_revision_note(created["id"], "   ")
+    except ValueError as exc:
+        assert str(exc) == "Revision note text cannot be blank"
+    else:
+        raise AssertionError("Expected ValueError for blank note text on update")
 
 
 def test_location_state_crud_and_missing_owner_errors(tmp_path):
@@ -2088,6 +2187,35 @@ def test_export_project_markdown_omits_project_brief_when_empty(tmp_path):
     assert "## Project Brief" not in markdown
 
 
+def test_export_project_markdown_includes_revision_notes_when_present_and_orders_before_chapters(tmp_path):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    project = store.create_project("Revision Export", "compact runtime")
+    store.create_revision_note(project["id"], "continuity", "The bell line remains in chapter two.")
+    store.create_revision_note(project["id"], "tone", "Keep imagery tactile and quiet.")
+    store.create_chapter(project["id"], "Opening")
+
+    markdown = store.export_project_markdown(project["id"])
+
+    assert "## Revision Notes" in markdown
+    assert "continuity: The bell line remains in chapter two." in markdown
+    assert "tone: Keep imagery tactile and quiet." in markdown
+    assert markdown.index("## Revision Notes") < markdown.index("## Chapters")
+    assert (
+        markdown.index("- continuity: The bell line remains in chapter two.")
+        < markdown.index("- tone: Keep imagery tactile and quiet.")
+    )
+
+
+def test_export_project_markdown_omits_revision_notes_when_empty(tmp_path):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    project = store.create_project("Revision Export Empty", "compact runtime")
+    store.create_chapter(project["id"], "Opening")
+
+    markdown = store.export_project_markdown(project["id"])
+
+    assert "## Revision Notes" not in markdown
+
+
 def test_export_project_markdown_project_brief_omits_blank_field_labels(tmp_path):
     store = TavernStore(tmp_path / "tavern.sqlite3")
     type_only = store.create_project("Type Only", "classification")
@@ -2313,6 +2441,7 @@ def test_export_project_markdown_omits_all_optional_project_metadata_sections_wh
         "## Outline",
         "## Style Guide",
         "## Style Samples",
+        "## Revision Notes",
         "## Locations",
         "## Organizations",
         "## Plot Threads",

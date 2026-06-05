@@ -1,18 +1,25 @@
 doc_type: feature-checklist
 feature: "2026-06-06-hermes-tavern-phase139-revision-notes-metadata"
 date: "2026-06-06"
-status: planned
+status: in_progress
 summary: >
-  Planned - Revision Notes Metadata v1 adds local project-scoped revision-note
-  rows managed through nested /rp project revision add/list/inspect/update/delete
-  commands and optional project Markdown export visibility only. It must remain
-  metadata-only/inert and must not edit src/hermes_tavern/runtime.py.
+  In progress - Revision Notes Metadata v1 S1 is implemented and controller
+  verified. It adds local project-scoped revision-note rows managed through
+  nested /rp project revision add/list/inspect/update/delete commands and
+  optional project Markdown export visibility only. It remains metadata-only/
+  inert and does not edit src/hermes_tavern/runtime.py. S2 acceptance/
+  architecture/root-design writeback remains pending.
 
 implementation_readiness: >
-  PLANNED - Codex architect selected revision notes as the next bounded local
-  metadata phase and a follow-up architect refinement corrected routing to the
-  existing /rp project command family. Controller validation must still promote
-  this draft/planned artifact before S1 implementation.
+  S1_IMPLEMENTED - Codex architect validated the draft/planned artifact on
+  2026-06-06, confirmed routing stays under the existing /rp project command
+  family without src/hermes_tavern/runtime.py edits, and instructed the
+  controller to promote S1 for bounded executor implementation. Codex executor
+  implemented S1 in the allowed files; the controller made one small spec
+  alignment fix so add requires the documented explicit <project-id>, then reran
+  py_compile, focused pytest, Tavern-wide pytest, full pytest, YAML validators,
+  protected reverse-scope diff guard, and git diff --check from scratch. Next
+  step is S2 acceptance/writeback only.
 
 planning_verification:
   - command: >-
@@ -31,7 +38,18 @@ planning_verification:
 steps:
   - id: S1
     name: "S1: Implement local project revision-note metadata"
-    status: planned
+    status: completed
+    completed_at: "2026-06-06"
+    result: >
+      IMPLEMENTED - Codex executor added novel_revision_notes persistence,
+      create/list/inspect/update/delete helpers, nested /rp project revision
+      command handling under runtime_novel.project_command, command-table/README
+      literals, optional ## Revision Notes Markdown export visibility, and
+      focused DB/runtime/command/docs tests. Controller review made one small
+      spec-alignment fix so add requires the documented explicit <project-id>,
+      reran verification from scratch, and confirmed src/hermes_tavern/runtime.py
+      and all protected prompt/provider/debug/context/media/importer/core files
+      remained unchanged.
     description: >
       Add novel_revision_notes persistence, create/list/inspect/update/delete
       store helpers, nested /rp project revision add/list/inspect/update/delete
@@ -98,56 +116,102 @@ steps:
         expected: "empty output during S1 implementation"
       - command: "git diff --check"
         expected: "passes"
+  - id: S2
+    name: "S2: Verify/accept/write current docs"
+    status: planned
+    description: >
+      Controller-owned acceptance/writeback after S1. Draft an acceptance report,
+      update checklist final statuses, and write Phase 139 current behavior into
+      architecture/root-design docs only after rerunning controller verification.
+    allowed_files:
+      - design/codestable/features/2026-06-06-hermes-tavern-phase139-revision-notes-metadata/checklist.yaml
+      - design/codestable/features/2026-06-06-hermes-tavern-phase139-revision-notes-metadata/hermes-tavern-phase139-revision-notes-metadata-acceptance.md
+      - design/codestable/architecture/ARCHITECTURE.md
+      - design/HERMES_TAVERN_DESIGN.md
+    prohibited_files:
+      - README.md
+      - "src/**"
+      - "tests/**"
+      - run_agent.py
+      - cli.py
+      - gateway/run.py
+      - "plugins/**"
+      - "build/lib/**"
 
 acceptance:
   - id: AC1
     criteria: "Migration creates novel_revision_notes and idx_novel_revision_notes_project."
-    status: planned
+    status: completed
   - id: AC2
     criteria: "Store helpers create, list, inspect, update, and delete revision notes with deterministic id ASC ordering."
-    status: planned
+    status: completed
   - id: AC3
     criteria: "Missing projects, missing notes, blank labels, and blank note text return bounded behavior."
-    status: planned
+    status: completed
   - id: AC4
     criteria: "/rp project revision add/list/inspect/update/delete works through runtime_novel.project_command."
-    status: planned
+    status: completed
   - id: AC5
     criteria: "No top-level revision entry is added to TAVERN_COMMAND_TABLE and src/hermes_tavern/runtime.py remains unchanged."
-    status: planned
+    status: completed
   - id: AC6
     criteria: "README Core commands, /rp help, command tests, and docs tests include nested project revision literals."
-    status: planned
+    status: completed
   - id: AC7
     criteria: "Project Markdown export includes ## Revision Notes only when rows exist and omits it when empty."
-    status: planned
+    status: completed
   - id: AC8
     criteria: "Distinctive revision note text does not appear in /rp debug prompt or /rp debug context."
-    status: planned
+    status: completed
   - id: AC9
     criteria: "Reverse-scope diff checks show no protected core, runtime.py, prompt/debug/context-budget, provider/model/content/generation, retrieval/vectorization, media, importer, plugin shim, build, archive, graph, automatic extraction, or safety-bypass changes."
-    status: planned
+    status: completed
 
 checks:
   - id: C1
     name: "Metadata schema"
-    status: planned
+    status: completed
+    completed_at: "2026-06-06"
+    result: >
+      PASSED - DB migration and schema/index tests cover novel_revision_notes with
+      project_id, label, note_text, timestamps, and idx_novel_revision_notes_project.
     criteria: "novel_revision_notes exists with project ownership and indexed project lookup."
   - id: C2
     name: "Project command route"
-    status: planned
+    status: completed
+    completed_at: "2026-06-06"
+    result: >
+      PASSED - Revision commands route through runtime_novel.project_command under
+      /rp project revision, no top-level revision command entry was added, and
+      src/hermes_tavern/runtime.py stayed unchanged.
     criteria: "Revision commands are nested under /rp project revision and do not require a runtime.py shim."
   - id: C3
     name: "Command surface"
-    status: planned
+    status: completed
+    completed_at: "2026-06-06"
+    result: >
+      PASSED - /rp project revision add/list/inspect/update/delete are covered in
+      runtime tests, command-table help tests, README Core command tests, and
+      bounded usage/not-found cases.
     criteria: "/rp project revision add/list/inspect/update/delete are visible and bounded."
   - id: C4
     name: "Export visibility"
-    status: planned
+    status: completed
+    completed_at: "2026-06-06"
+    result: >
+      PASSED - Export tests cover optional ## Revision Notes inclusion, omission
+      when empty, deterministic id ordering, and placement before ## Chapters.
     criteria: "Revision notes appear only as optional project-level Markdown export metadata."
   - id: C5
     name: "No prompt/provider side effects"
-    status: planned
+    status: completed
+    completed_at: "2026-06-06"
+    result: >
+      PASSED - No-leak tests prove distinctive revision-note text is absent from
+      debug prompt/context, and the protected reverse-scope diff guard was empty
+      for runtime.py, prompt/debug/context-budget, provider/model/content,
+      generation, retrieval/vectorization, media, importer, plugin, core,
+      architecture, root-design, and build paths.
     criteria: "Revision note text stays out of prompt/debug/context paths and no prohibited files change."
 
 risks:
@@ -162,6 +226,15 @@ risks:
     mitigation: "Add focused inclusion, omission, and ordering tests for ## Revision Notes."
 
 verification_notes: |
-  - Planning artifact only; executor intentionally not run in this tick because this is a brand-new draft/planned feature.
-  - Controller corrected the first architect artifact's unsafe top-level /rp revision route by running a read-only Codex architect refinement and materializing the nested /rp project revision route instead.
-  - Next tick should validate/promote this artifact, smoke-test Codex executor, then implement S1 within the allowed files only.
+  - Codex architect S1 JSONL: /tmp/hermes-tavern-architect-phase139-s1.jsonl; RESULT: READY_TO_IMPLEMENT. Architect noted a harmless read-only git status probe failure from macOS/Xcode cache behavior and did not rely on it.
+  - Controller promoted design/checklist to approved/in_progress before executor and validated both artifacts.
+  - Codex executor smoke JSONL: /tmp/hermes-tavern-executor-smoke-phase139-s1.jsonl; returned EXECUTOR_SMOKE_OK.
+  - Codex executor S1 JSONL: /tmp/hermes-tavern-executor-phase139-s1.jsonl; executor implemented allowed source/docs/tests and recovered from intermediate apply_patch and focused-test failures. Executor's first Tavern-wide pytest run reported image-test failures, but controller reran the same Tavern-wide and full gates from scratch successfully after final reconciliation.
+  - Controller made one bounded consistency fix after executor: /rp project revision add now requires the documented explicit <project-id> instead of an unadvertised active-project fallback, while list retains [project-id] active fallback.
+  - Controller reran py_compile for changed source/test evidence files: passed with no output.
+  - Controller reran focused DB/runtime/command/README docs pytest after final status sync: 318 passed in 11.52s.
+  - Controller reran Tavern-wide pytest after final status sync: 1009 passed in 43.11s.
+  - Controller reran full pytest after final status sync: 1009 passed in 43.69s.
+  - Controller reran protected reverse-scope diff guard: empty output for runtime.py, core, prompt/debug/context-budget, provider/model/content/generation, retrieval/vectorization, memory, media, importer, plugin, build, architecture, and root-design paths.
+  - Controller reran git diff --check: passed with no output.
+  - S2 acceptance/report plus architecture/root-design writeback remains pending for the next tick.

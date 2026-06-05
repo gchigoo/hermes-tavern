@@ -39,6 +39,11 @@ PROJECT_OUTLINE_USAGE = (
     "Usage: /rp project outline [project-id] | /rp project outline inspect [project-id] | "
     "/rp project outline set [project-id] <text> | /rp project outline clear [project-id]"
 )
+PROJECT_REVISION_USAGE = (
+    "Usage: /rp project revision add <project-id> <label> <note...> | "
+    "/rp project revision list [project-id] | /rp project revision inspect <note-id> | "
+    "/rp project revision update <note-id> <note...> | /rp project revision delete <note-id>"
+)
 RELATIONSHIP_USAGE = (
     "Usage: /rp relationship add <project-id> <label> <state...> | "
     "/rp relationship list [project-id] | /rp relationship inspect <relationship-id> | "
@@ -289,6 +294,22 @@ def test_project_list_includes_chapter_count_for_created_project(tmp_path):
     [
         (RPCommand("project", ["info"], "/rp project info"), "Usage: /rp project info"),
         (RPCommand("project", ["set", "not-a-number"], "/rp project set not-a-number"), "Usage: /rp project set <id>"),
+            (
+                RPCommand(
+                    "project",
+                    ["revision", "add", "abc", "draft", "Noisy harbor bell."],
+                    "/rp project revision add abc draft Noisy harbor bell.",
+                ),
+                PROJECT_REVISION_USAGE,
+            ),
+        (
+            RPCommand(
+                "project",
+                ["revision", "list", "abc"],
+                "/rp project revision list abc",
+            ),
+            "Usage: /rp project revision list [project-id]",
+        ),
     ],
 )
 def test_project_routes_boundary_args(tmp_path, command, expected_prefix):
@@ -392,6 +413,18 @@ def test_project_command_help_includes_outline_lines(tmp_path):
     assert "/rp project outline inspect [project-id]" in help_output
     assert "/rp project outline set [project-id] <text>" in help_output
     assert "/rp project outline clear [project-id]" in help_output
+
+
+def test_project_command_help_includes_revision_lines(tmp_path):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+
+    help_output = runtime.handle_command_sync(RPCommand("help", [], "/rp"), Event())
+
+    assert "/rp project revision add <project-id> <label> <note...>" in help_output
+    assert "/rp project revision list [project-id]" in help_output
+    assert "/rp project revision inspect <note-id>" in help_output
+    assert "/rp project revision update <note-id> <note...>" in help_output
+    assert "/rp project revision delete <note-id>" in help_output
 
 
 def test_project_command_help_includes_binding_lines(tmp_path):
@@ -1734,6 +1767,260 @@ def test_project_style_set_stores_full_text_and_returns_mobile_preview(tmp_path)
     assert runtime.store.get_project_style_guide(1)["style_text"] == long_text
 
 
+def test_project_revision_routes_explicit_id_flow(tmp_path):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    project = runtime.store.create_project("Atlas")
+
+    add_first = runtime.handle_command_sync(
+        RPCommand(
+            "project",
+            ["revision", "add", str(project["id"]), "continuity", "Keep dialogue tight."],
+            "/rp project revision add 1 continuity Keep dialogue tight.",
+        ),
+        Event(),
+    )
+    assert (
+        add_first
+        == f"Revision note added for project [{project['id']}]: continuity -> {_mobile_preview('Keep dialogue tight.', 180)}"
+    )
+
+    add_second = runtime.handle_command_sync(
+        RPCommand(
+            "project",
+            [
+                "revision",
+                "add",
+                str(project["id"]),
+                "tone",
+                "Use restrained, sensory language.",
+            ],
+            "/rp project revision add 1 tone Use restrained, sensory language.",
+        ),
+        Event(),
+    )
+    assert (
+        add_second
+        == f"Revision note added for project [{project['id']}]: tone -> {_mobile_preview('Use restrained, sensory language.', 180)}"
+    )
+
+    list_output = runtime.handle_command_sync(
+        RPCommand("project", ["revision", "list", str(project["id"])], "/rp project revision list 1"),
+        Event(),
+    )
+    assert (
+        list_output
+        == (
+            "Hermes Tavern revision notes for project [1]:\n"
+            "  - [1] continuity: Keep dialogue tight.\n"
+            "  - [2] tone: Use restrained, sensory language."
+        )
+    )
+
+    inspect = runtime.handle_command_sync(
+        RPCommand("project", ["revision", "inspect", "1"], "/rp project revision inspect 1"),
+        Event(),
+    )
+    assert (
+        inspect
+        == (
+            "Revision note for [1] (project [1]): "
+            "continuity: "
+            f"{_mobile_preview('Keep dialogue tight.', 220)}"
+        )
+    )
+
+    update = runtime.handle_command_sync(
+        RPCommand(
+            "project",
+            ["revision", "update", "1", "Keep dialogue grounded, then deliberate."],
+            "/rp project revision update 1 Keep dialogue grounded, then deliberate.",
+        ),
+        Event(),
+    )
+    assert (
+        update
+        == (
+            "Revision note updated for revision note [1]: "
+            f"{_mobile_preview('Keep dialogue grounded, then deliberate.', 180)}"
+        )
+    )
+    assert (
+        runtime.store.get_revision_note(1)["note_text"]
+        == "Keep dialogue grounded, then deliberate."
+    )
+
+    delete = runtime.handle_command_sync(
+        RPCommand("project", ["revision", "delete", "2"], "/rp project revision delete 2"),
+        Event(),
+    )
+    assert delete == "Revision note deleted for revision note [2]."
+    assert runtime.store.get_revision_note(2) is None
+
+    list_after_delete = runtime.handle_command_sync(
+        RPCommand("project", ["revision", "list", str(project["id"])], "/rp project revision list 1"),
+        Event(),
+    )
+    assert (
+        list_after_delete
+        == (
+            "Hermes Tavern revision notes for project [1]:\n"
+            "  - [1] continuity: Keep dialogue grounded, then deliberate."
+        )
+    )
+
+
+def test_project_revision_routes_list_active_project_fallback_and_add_requires_project_id(tmp_path):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    project = runtime.store.create_project("Atlas")
+
+    assert (
+        runtime.handle_command_sync(
+            RPCommand("project", ["revision", "list"], "/rp project revision list"),
+            Event(),
+        )
+        == "Usage: /rp project revision list [project-id]"
+    )
+
+    runtime.handle_command_sync(RPCommand("project", ["set", str(project["id"])], "/rp project set 1"), Event())
+
+    assert (
+        runtime.handle_command_sync(
+            RPCommand(
+                "project",
+                ["revision", "add", "continuity", "Keep the harbor scenes measured."],
+                "/rp project revision add continuity Keep the harbor scenes measured.",
+            ),
+            Event(),
+        )
+        == PROJECT_REVISION_USAGE
+    )
+
+    add_explicit = runtime.handle_command_sync(
+        RPCommand(
+            "project",
+            ["revision", "add", str(project["id"]), "continuity", "Keep the harbor scenes measured."],
+            "/rp project revision add 1 continuity Keep the harbor scenes measured.",
+        ),
+        Event(),
+    )
+    assert (
+        add_explicit
+        == f"Revision note added for project [{project['id']}]: continuity -> {_mobile_preview('Keep the harbor scenes measured.', 180)}"
+    )
+
+    list_fallback = runtime.handle_command_sync(
+        RPCommand("project", ["revision", "list"], "/rp project revision list"),
+        Event(),
+    )
+    assert (
+        list_fallback
+        == "Hermes Tavern revision notes for project [1]:\n  - [1] continuity: Keep the harbor scenes measured."
+    )
+
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    assert (
+        runtime.handle_command_sync(
+            RPCommand("project", ["revision", "add", "continuity", "Should fail"], "/rp project revision add continuity Should fail"),
+            Event(),
+        )
+        == PROJECT_REVISION_USAGE
+    )
+
+
+def test_project_revision_missing_project_and_note_errors(tmp_path):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    runtime.store.create_project("Atlas")
+    note = runtime.store.create_revision_note(1, "continuity", "Keep this in the notes.")
+
+    assert (
+        runtime.handle_command_sync(
+            RPCommand(
+                "project",
+                ["revision", "add", str(9999), "continuity", "No"],
+                "/rp project revision add 9999 continuity No",
+            ),
+            Event(),
+        )
+        == "No novel project found: 9999"
+    )
+    assert (
+        runtime.handle_command_sync(
+            RPCommand("project", ["revision", "list", str(9999)], "/rp project revision list 9999"),
+            Event(),
+        )
+        == "No novel project found: 9999"
+    )
+    assert (
+        runtime.handle_command_sync(
+            RPCommand("project", ["revision", "inspect", str(note["id"])], "/rp project revision inspect 1"),
+            Event(),
+        )
+        == "Revision note for [1] (project [1]): continuity: Keep this in the notes."
+    )
+    assert (
+        runtime.handle_command_sync(
+            RPCommand("project", ["revision", "inspect", "9999"], "/rp project revision inspect 9999"),
+            Event(),
+        )
+        == "No revision note found: 9999"
+    )
+    assert (
+        runtime.handle_command_sync(
+            RPCommand("project", ["revision", "update", str(note["id"]), "Rephrased."], "/rp project revision update 1 Rephrased."),
+            Event(),
+        )
+        == "Revision note updated for revision note [1]: Rephrased."
+    )
+    assert (
+        runtime.handle_command_sync(
+            RPCommand(
+                "project",
+                ["revision", "delete", "9999"],
+                "/rp project revision delete 9999",
+            ),
+            Event(),
+        )
+        == "No revision note found: 9999"
+    )
+
+
+def test_project_revision_not_found_message_uses_not_found_text(tmp_path):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    assert (
+        runtime.handle_command_sync(
+            RPCommand("project", ["revision", "inspect", "9999"], "/rp project revision inspect 9999"),
+            Event(),
+        )
+        == "No revision note found: 9999"
+    )
+
+
+def test_project_revision_markers_do_not_leak_to_debug_prompt_or_context(tmp_path):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    store.save_card(parse_character_card({"name": "Alice", "description": "Scholar", "first_mes": "Hello."}))
+    runtime = TavernRuntime(store)
+    runtime.handle_command_sync(RPCommand("start", ["Alice"], "/rp start Alice"), Event())
+
+    project = store.create_project("Skyline")
+    chapter = store.create_chapter(project["id"], "Prologue")
+    scene = store.create_scene(chapter["id"], "Opening")
+    store.link_scene_session(
+        scene["id"],
+        store.get_active_session("telegram:chat:chat-1:thread:main:user:user-1")["id"],
+    )
+    store.create_revision_note(
+        project["id"],
+        "continuity",
+        "marker: distinctive revision note token",
+    )
+
+    prompt = runtime.handle_command_sync(RPCommand("debug", ["prompt"], "/rp debug prompt"), Event())
+    context = runtime.handle_command_sync(RPCommand("debug", ["context"], "/rp debug context"), Event())
+
+    assert "marker: distinctive revision note token" not in prompt
+    assert "marker: distinctive revision note token" not in context
+
+
 def test_project_outline_routes_explicit_id_set_inspect_update_clear(tmp_path):
     runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
     project = runtime.store.create_project("Atlas")
@@ -2410,6 +2697,49 @@ def test_project_export_includes_style_samples_after_outline_without_style_guide
     assert exported.index("## Style Samples") < exported.index("## Characters")
     assert "## Outline" in exported
     assert exported.index("## Outline") < exported.index("## Style Samples")
+
+
+def test_project_export_includes_revision_notes_and_orders_before_chapters(tmp_path, monkeypatch):
+    monkeypatch.setenv("HERMES_HOME", str(tmp_path / "hermes home"))
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+
+    runtime.store.create_project("Atlas", "Quiet harbor")
+    runtime.store.create_revision_note(1, "continuity", "Foreshadow the missing bell once.")
+    runtime.store.create_revision_note(1, "tone", "Keep the sentences tactile and restrained.")
+    runtime.store.create_chapter(1, "Opening")
+
+    response = runtime.handle_command_sync(
+        RPCommand("project", ["export", "1"], "/rp project export 1"),
+        Event(),
+    )
+    assert "Project exported as Markdown." in response
+    file_path = response.split("file: ", 1)[1].splitlines()[0].strip()
+
+    from pathlib import Path
+    exported = Path(file_path).read_text(encoding="utf-8")
+    assert "## Revision Notes" in exported
+    assert "- continuity: Foreshadow the missing bell once." in exported
+    assert "- tone: Keep the sentences tactile and restrained." in exported
+    assert exported.index("## Revision Notes") < exported.index("## Chapters")
+    assert exported.index("tone: Keep the sentences tactile and restrained.") > exported.index("- continuity: Foreshadow the missing bell once.")
+
+
+def test_project_export_omits_revision_notes_when_empty(tmp_path, monkeypatch):
+    monkeypatch.setenv("HERMES_HOME", str(tmp_path / "hermes home"))
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+
+    runtime.store.create_project("Atlas", "Quiet harbor")
+
+    response = runtime.handle_command_sync(
+        RPCommand("project", ["export", "1"], "/rp project export 1"),
+        Event(),
+    )
+    file_path = response.split("file: ", 1)[1].splitlines()[0].strip()
+
+    from pathlib import Path
+    exported = Path(file_path).read_text(encoding="utf-8")
+
+    assert "## Revision Notes" not in exported
 
 
 def test_scene_create_list_and_start_links_session(tmp_path):
