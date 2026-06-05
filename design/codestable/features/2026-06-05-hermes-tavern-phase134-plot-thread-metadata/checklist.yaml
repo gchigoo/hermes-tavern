@@ -1,0 +1,242 @@
+doc_type: feature-checklist
+feature: "2026-06-05-hermes-tavern-phase134-plot-thread-metadata"
+date: "2026-06-05"
+status: planned
+summary: >
+  PLANNED - Plot Thread Metadata v1 should add local project-scoped
+  plot-thread notes backed by `novel_plot_threads`, managed through
+  `/rp plot thread ...` commands, optionally visible in Markdown export as
+  `## Plot Threads`, and verified to remain outside prompt/debug/context-budget/
+  provider/model/content-mode/generation/credential/retrieval/vectorization/
+  automation/media/TTS/image paths.
+
+implementation_readiness: >
+  Executor implementation should be skipped this tick. S1 is scoped for a later
+  executor tick after this planning artifact is materialized and approved.
+
+planning_verification:
+  - command: >-
+      codex --profile architect exec --json --color never --sandbox read-only --cd /Users/steven/Projects/hermes-tavern <Phase 134 planning prompt>
+    result: "passed; JSONL at /tmp/hermes-tavern-architect-phase134.jsonl; RESULT: PLANNING_ARTIFACT; MODE: PLAN_ONLY_NEW_FEATURE"
+  - command: >-
+      python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-05-hermes-tavern-phase134-plot-thread-metadata/design.md --require doc_type --require status --require feature
+    result: "passed"
+  - command: >-
+      python design/codestable/tools/validate-yaml.py --yaml-only --file design/codestable/features/2026-06-05-hermes-tavern-phase134-plot-thread-metadata/checklist.yaml
+    result: "passed after controller materialized artifact"
+  - command: >-
+      PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts=' -p no:cacheprovider
+    result: "934 passed in 46.85s"
+  - command: "git diff --check"
+    result: "passed"
+
+likely_touched_files:
+  - src/hermes_tavern/db_novel.py
+  - src/hermes_tavern/runtime_novel.py
+  - src/hermes_tavern/runtime.py
+  - src/hermes_tavern/commands.py
+  - README.md
+  - tests/test_hermes_tavern_novel_db.py
+  - tests/test_hermes_tavern_novel_runtime.py
+  - tests/test_hermes_tavern_commands.py
+  - tests/test_hermes_tavern_readme_docs.py
+
+steps:
+  - id: S1
+    name: "S1: Plot Thread Metadata implementation"
+    status: planned
+    description: >
+      Add local project-scoped plot-thread persistence, the `/rp plot thread ...`
+      command family, help/README command literals, optional Markdown export
+      visibility, and focused DB/runtime/docs tests. Keep implementation inside
+      the allowed plugin/source/docs/test files and avoid prompt/provider/model/
+      content-mode/generation/retrieval/vectorization/automation/media paths.
+    allowed_files:
+      - src/hermes_tavern/db_novel.py
+      - src/hermes_tavern/runtime_novel.py
+      - src/hermes_tavern/runtime.py
+      - src/hermes_tavern/commands.py
+      - README.md
+      - tests/test_hermes_tavern_novel_db.py
+      - tests/test_hermes_tavern_novel_runtime.py
+      - tests/test_hermes_tavern_commands.py
+      - tests/test_hermes_tavern_readme_docs.py
+    prohibited_files:
+      - run_agent.py
+      - cli.py
+      - gateway/run.py
+      - src/hermes_tavern/runtime_prompt_modules.py
+      - src/hermes_tavern/prompt.py
+      - src/hermes_tavern/runtime_prompt_manager.py
+      - src/hermes_tavern/runtime_debug.py
+      - src/hermes_tavern/model_router.py
+      - src/hermes_tavern/provider_bridge.py
+      - src/hermes_tavern/adapters.py
+      - src/hermes_tavern/runtime_model.py
+      - src/hermes_tavern/runtime_generation.py
+      - src/hermes_tavern/runtime_content.py
+      - src/hermes_tavern/memory.py
+      - src/hermes_tavern/runtime_memory.py
+      - src/hermes_tavern/images.py
+      - src/hermes_tavern/runtime_images.py
+      - src/hermes_tavern/importers/**
+      - build/lib/**
+      - design/codestable/**
+      - design/HERMES_TAVERN_DESIGN.md
+    explicit_non_goals:
+      - No automatic plot-thread extraction, summarization, vectorization, retrieval, provider calls, generation changes, or scheduled update cycle.
+      - No prompt module injection, debug/context-budget inclusion, model routing, content-mode behavior, credential persistence, media/TTS/image behavior, ST asset importer/exporter, cloud/collaboration, backend account, minors/underage, or provider-safety-bypass behavior.
+      - No relationship graph, rename flow, dependency graph, outline generation/rewrite/expand/compress, task workflow, beat tracking, status lifecycle, default binding metadata, canon/content-mode metadata, archive ZIP/import/export, or Markdown import.
+      - No broad runtime/db refactor beyond the minimum local command and metadata surface.
+      - No acceptance report, architecture writeback, or root design writeback in S1.
+    exit_signal: >
+      Plot-thread persistence, commands, help/docs, export visibility, and
+      no-leak tests pass in focused verification; no protected core, prompt,
+      provider, router, credential, content-mode, generation, retrieval/
+      vectorization, automation, memory/summarization, media/TTS/image,
+      cloud/collab, minors/underage, ST asset importer/exporter, default-binding,
+      archive, build-artifact, architecture writeback, root-design writeback, or
+      safety-bypass file changes are present.
+    verification:
+      - command: >-
+          PYTHONDONTWRITEBYTECODE=1 python -m py_compile src/hermes_tavern/db_novel.py src/hermes_tavern/runtime_novel.py src/hermes_tavern/runtime.py src/hermes_tavern/commands.py tests/test_hermes_tavern_novel_db.py tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_commands.py tests/test_hermes_tavern_readme_docs.py
+        expected: "passes with no errors"
+      - command: >-
+          PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel_db.py tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_commands.py tests/test_hermes_tavern_readme_docs.py -q -o 'addopts=' -p no:cacheprovider
+        expected: "focused DB/runtime/help/README tests pass"
+      - command: >-
+          PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_*.py -q -o 'addopts=' -p no:cacheprovider
+        expected: "Tavern plugin test glob passes"
+      - command: >-
+          PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts=' -p no:cacheprovider
+        expected: "full pytest suite passes"
+      - command: >-
+          git diff --name-only -- run_agent.py cli.py gateway/run.py src/hermes_tavern/runtime_prompt_modules.py src/hermes_tavern/prompt.py src/hermes_tavern/runtime_prompt_manager.py src/hermes_tavern/runtime_debug.py src/hermes_tavern/model_router.py src/hermes_tavern/provider_bridge.py src/hermes_tavern/adapters.py src/hermes_tavern/runtime_model.py src/hermes_tavern/runtime_generation.py src/hermes_tavern/runtime_content.py src/hermes_tavern/memory.py src/hermes_tavern/runtime_memory.py src/hermes_tavern/images.py src/hermes_tavern/runtime_images.py src/hermes_tavern/importers build/lib design/HERMES_TAVERN_DESIGN.md design/codestable
+        expected: "empty in S1"
+      - command: "git diff --check"
+        expected: "passes"
+
+  - id: S2
+    name: "S2: Verify/Accept/Write Architecture"
+    status: planned
+    description: >
+      Controller-owned phase after S1. Run focused, plugin, full,
+      YAML/frontmatter, reverse-scope, stale-wording, and whitespace
+      verification. Create the acceptance report and update architecture/root
+      design to mark plot-thread metadata current while preserving deferred
+      automation/retrieval/provider/generation/default-binding/policy/archive/
+      graph boundaries.
+    allowed_files:
+      - design/codestable/features/2026-06-05-hermes-tavern-phase134-plot-thread-metadata/design.md
+      - design/codestable/features/2026-06-05-hermes-tavern-phase134-plot-thread-metadata/checklist.yaml
+      - design/codestable/features/2026-06-05-hermes-tavern-phase134-plot-thread-metadata/hermes-tavern-phase134-plot-thread-metadata-acceptance.md
+      - design/codestable/architecture/ARCHITECTURE.md
+      - design/HERMES_TAVERN_DESIGN.md
+    prohibited_files:
+      - README.md
+      - src/**
+      - tests/**
+      - run_agent.py
+      - cli.py
+      - gateway/run.py
+      - build/lib/**
+    exit_signal: >
+      Acceptance report and architecture/root-design writeback are complete; the
+      feature is accepted with no README/source/test/protected-core/build diff in
+      S2.
+    verification:
+      - command: >-
+          PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel_db.py tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_commands.py tests/test_hermes_tavern_readme_docs.py -q -o 'addopts=' -p no:cacheprovider
+        expected: "focused verification passes"
+      - command: >-
+          PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_*.py -q -o 'addopts=' -p no:cacheprovider
+        expected: "Tavern plugin test glob passes"
+      - command: >-
+          PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts=' -p no:cacheprovider
+        expected: "full pytest suite passes"
+      - command: >-
+          python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-05-hermes-tavern-phase134-plot-thread-metadata/design.md --require doc_type --require status --require feature
+        expected: "passes"
+      - command: >-
+          python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-05-hermes-tavern-phase134-plot-thread-metadata/hermes-tavern-phase134-plot-thread-metadata-acceptance.md --require doc_type --require status --require feature
+        expected: "passes after acceptance exists"
+      - command: >-
+          python design/codestable/tools/validate-yaml.py --yaml-only --file design/codestable/features/2026-06-05-hermes-tavern-phase134-plot-thread-metadata/checklist.yaml
+        expected: "passes"
+      - command: >-
+          git diff --name-only -- README.md src tests run_agent.py cli.py gateway/run.py build/lib
+        expected: "empty in S2"
+      - command: >-
+          rg -n "current through Phase 133|Phase 121-133|Phase 121–133|Future sub-objects from the original vision remain deferred: plot threads|plot threads, relationship graph|Relationship/character-state/location/organization metadata remain" design/codestable/architecture/ARCHITECTURE.md design/HERMES_TAVERN_DESIGN.md
+        expected: "empty after writeback"
+      - command: "git diff --check"
+        expected: "passes"
+
+checks:
+  - id: C1
+    name: "C1: Active checklist precondition"
+    status: planned
+    criteria: >
+      Before implementation, no unrelated feature checklist is planned, pending,
+      in progress, or draft; this Phase 134 checklist is the only active feature.
+
+  - id: C2
+    name: "C2: Persistence contract"
+    status: planned
+    criteria: >
+      `novel_plot_threads` migration/index, project foreign key, CRUD/list
+      helpers, missing project/ID behavior, blank-label rejection, and
+      blank-description rejection are covered by focused DB tests.
+
+  - id: C3
+    name: "C3: Command contract"
+    status: planned
+    criteria: >
+      `/rp plot thread add/list/inspect/update/delete` handlers and command
+      literals return compact normal/error messages, require explicit project ID
+      for add, support active-project fallback for list only, and are visible
+      through help and README guards.
+
+  - id: C4
+    name: "C4: Markdown export"
+    status: planned
+    criteria: >
+      Project Markdown export includes `## Plot Threads` only when plot-thread
+      rows exist, orders it after Organizations and before Characters/
+      Relationships/Chapters, and omits it for projects without plot-thread rows.
+
+  - id: C5
+    name: "C5: Offline no-leak boundary"
+    status: planned
+    criteria: >
+      Plot-thread text does not appear in `/rp debug prompt` or `/rp debug
+      context`; prompt module selection, context-budget composition, provider
+      calls, model routing, content mode, credentials, generation, media/TTS/
+      image behavior, vectorization/retrieval, automation, and summarization
+      behavior remain unchanged.
+
+  - id: C6
+    name: "C6: Reverse-scope verification"
+    status: planned
+    criteria: >
+      No protected core files, build artifacts, prompt/provider/model/generation
+      files, credential paths, content-mode paths, retrieval/vectorization paths,
+      memory/summarization paths, media/TTS/image paths, cloud/collab paths,
+      minors/underage paths, ST importer/exporter paths, default-binding paths,
+      archive import/export paths, relationship graph/rename/extraction paths,
+      architecture writeback, root-design writeback, or provider-safety-bypass
+      file changes are present in S1.
+
+risks:
+  - Plot-thread terminology can be confused with gateway thread identity; use `/rp plot thread ...` and do not touch identity/session scope code.
+  - Plot threads can invite automation or generated planning; keep this to plain user-authored metadata and no provider calls.
+  - Repeated metadata families increase `db_novel.py` and `runtime_novel.py` size; do not mix a refactor into this phase.
+  - Export ordering can create stale docs; require S2 stale-wording scans and architecture/root-design writeback.
+  - Adult-fiction compatibility must remain provider-safe; do not add minors/underage examples, policy bypasses, or content-mode behavior.
+
+reverse_scope_guards:
+  - No edits to `run_agent.py`, `cli.py`, or `gateway/run.py`.
+  - No prompt injection, debug/context-budget inclusion, generation, provider/model routing, credential, content-mode, retrieval/vectorization, automation, memory/summarization, media/TTS/image, cloud/collab, archive, default-binding, relationship graph/rename/extraction, or ST importer/exporter behavior.
+  - No minors/underage fields, examples, tests, commands, or safety-classification surfaces.
+  - No CodeStable status/acceptance/architecture/root-design writeback during S1.
+  - No build artifact changes under `build/lib/**`.
