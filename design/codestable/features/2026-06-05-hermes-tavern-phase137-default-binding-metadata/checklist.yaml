@@ -1,0 +1,145 @@
+doc_type: feature-checklist
+status: planned
+feature: "2026-06-05-hermes-tavern-phase137-default-binding-metadata"
+date: "2026-06-05"
+summary: >
+  PLANNED - Default Binding Metadata v1 adds local, command-managed
+  project/chapter/scene default binding rows for card, preset, lorebook, and
+  persona assets, with command and Markdown export visibility only.
+implementation_readiness: >
+  PLANNED - Created by Codex architect as a planning-only artifact after
+  confirming no active planned/in-progress/draft feature checklists. Controller
+  must validate YAML/frontmatter before any executor implementation.
+likely_touched_files:
+  - src/hermes_tavern/db_novel.py
+  - src/hermes_tavern/runtime_novel.py
+  - src/hermes_tavern/commands.py
+  - tests/test_hermes_tavern_novel_db.py
+  - tests/test_hermes_tavern_novel_runtime.py
+  - tests/test_hermes_tavern_commands.py
+  - tests/test_hermes_tavern_readme_docs.py
+  - README.md
+  - design/codestable/architecture/ARCHITECTURE.md
+  - design/HERMES_TAVERN_DESIGN.md
+steps:
+  - id: S1
+    name: "S1: Implement local default binding metadata"
+    status: planned
+    description: >
+      Add the local default-binding metadata table, store helpers, /rp binding
+      command family, command/docs visibility, Markdown export visibility, and
+      focused offline tests. Keep bindings inert: no automatic prompt binding,
+      session start behavior, provider routing, content-mode behavior, or
+      generation changes.
+    allowed_files:
+      - src/hermes_tavern/db_novel.py
+      - src/hermes_tavern/runtime_novel.py
+      - src/hermes_tavern/commands.py
+      - tests/test_hermes_tavern_novel_db.py
+      - tests/test_hermes_tavern_novel_runtime.py
+      - tests/test_hermes_tavern_commands.py
+      - tests/test_hermes_tavern_readme_docs.py
+      - README.md
+    prohibited_files:
+      - run_agent.py
+      - cli.py
+      - gateway/run.py
+      - "build/lib/**"
+    exact_scope:
+      - "Create novel_default_bindings with scope_type, scope_id, asset_type, asset_id, timestamps, a unique scope/asset constraint, and a scope index."
+      - "Support scope_type values project, chapter, and scene only."
+      - "Support asset_type values card, preset, lorebook, and persona only."
+      - "Add set/list/inspect/clear helpers with bounded missing-scope and missing-asset behavior."
+      - "Add /rp binding set/list/inspect/clear command output that explicitly says metadata-only."
+      - "Add optional ## Default Bindings Markdown export for the exported project, its chapters, and its scenes only."
+      - "Keep /rp start, /rp scene start, prompt compiler, runtime prompt modules, debug prompt, debug context, context-budget reporting, provider/model routing, credentials, content mode, generation, memory, retrieval/vectorization, media/TTS/image, archive, and ST importer/exporter behavior unchanged."
+      - "Use neutral fictional project and asset examples only."
+    verification:
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m py_compile src/hermes_tavern/db_novel.py src/hermes_tavern/runtime_novel.py src/hermes_tavern/commands.py tests/test_hermes_tavern_novel_db.py tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_commands.py tests/test_hermes_tavern_readme_docs.py"
+        expected_result: "Compilation succeeds without bytecode writes."
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel_db.py tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_commands.py tests/test_hermes_tavern_readme_docs.py -q -o 'addopts=' -p no:cacheprovider"
+        expected_result: "Focused DB, runtime, command, and README docs tests pass offline."
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_*.py -q -o 'addopts=' -p no:cacheprovider"
+        expected_result: "Hermes Tavern plugin test glob passes offline."
+      - command: "git diff --name-only -- run_agent.py cli.py gateway/run.py build/lib"
+        expected_result: "No protected core or build artifact paths are listed."
+      - command: "git diff --check"
+        expected_result: "No whitespace errors."
+  - id: S2
+    name: "S2: Verify/accept/write current docs"
+    status: planned
+    description: >
+      Controller-owned acceptance/writeback after S1 passes.
+    allowed_files:
+      - design/codestable/features/2026-06-05-hermes-tavern-phase137-default-binding-metadata/design.md
+      - design/codestable/features/2026-06-05-hermes-tavern-phase137-default-binding-metadata/checklist.yaml
+      - design/codestable/features/2026-06-05-hermes-tavern-phase137-default-binding-metadata/hermes-tavern-phase137-default-binding-metadata-acceptance.md
+      - design/codestable/architecture/ARCHITECTURE.md
+      - design/HERMES_TAVERN_DESIGN.md
+    prohibited_files:
+      - README.md
+      - "src/**"
+      - "tests/**"
+      - run_agent.py
+      - cli.py
+      - gateway/run.py
+      - "build/lib/**"
+checks:
+  - id: C1
+    name: "C1: Active checklist precondition"
+    status: planned
+    criteria: >
+      No unrelated feature checklist is planned, pending, in progress, or draft
+      before S1.
+  - id: C2
+    name: "C2: Metadata table and helpers"
+    status: planned
+    criteria: >
+      The local default-binding table and helpers support valid
+      project/chapter/scene scopes and card/preset/lorebook/persona asset
+      bindings with bounded missing-scope and missing-asset behavior.
+  - id: C3
+    name: "C3: Command visibility"
+    status: planned
+    criteria: >
+      /rp binding set/list/inspect/clear commands are visible in help and docs,
+      return compact metadata-only output, and are covered by command/runtime
+      tests.
+  - id: C4
+    name: "C4: Export visibility"
+    status: planned
+    criteria: >
+      Project Markdown export emits optional ## Default Bindings rows for the
+      exported project, its chapters, and its scenes only, and omits the section
+      when no rows exist.
+  - id: C5
+    name: "C5: No prompt/provider side effects"
+    status: planned
+    criteria: >
+      Binding marker text does not leak into debug prompt/debug context or
+      prompt module selection, and reverse-scope checks show no provider,
+      model-router, content-mode, credential, generation, retrieval,
+      vectorization, media, TTS, image, archive, ST importer/exporter, or core
+      file behavior changes.
+risks:
+  - id: R1
+    risk: >
+      Users may assume default bindings automatically affect prompts or session
+      starts.
+    mitigation: >
+      Command confirmations, README text, architecture notes, and tests must
+      label the rows as metadata-only and prove no prompt/debug/generation path
+      consumes them.
+  - id: R2
+    risk: >
+      Chapter or scene binding export could include rows outside the exported
+      project.
+    mitigation: >
+      Implement a project-owned binding export helper and add a regression with
+      a second project whose rows must be absent.
+  - id: R3
+    risk: >
+      Binding rows may point to deleted assets later.
+    mitigation: >
+      Validate assets on set and render missing assets defensively on
+      inspect/export; cascading asset deletion is out of this phase.
