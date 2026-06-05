@@ -1,0 +1,247 @@
+doc_type: feature-checklist
+status: in_progress
+feature: "2026-06-05-hermes-tavern-phase136-metadata-export-matrix"
+date: "2026-06-05"
+summary: >
+  Planned test-only hardening slice for current novel project metadata Markdown
+  export ordering and runtime file export coverage after Phase 135. No source,
+  product, architecture, provider, prompt, generation, retrieval, credential,
+  importer, archive, graph, or protected core behavior changes are in scope.
+
+implementation_readiness: >
+  IN_PROGRESS - Codex architect produced a read-only planning artifact; the
+  controller materialized and validated the design/checklist, promoted the
+  design to approved, smoke-tested the executor profile, ran the bounded Codex
+  executor S1 test-only slice, inspected the resulting tests, and reran
+  controller verification from scratch. S1 is complete; S2 acceptance/status is
+  still planned.
+
+likely_touched_files:
+  - tests/test_hermes_tavern_novel_db.py
+  - tests/test_hermes_tavern_novel_runtime.py
+  - design/codestable/features/2026-06-05-hermes-tavern-phase136-metadata-export-matrix/design.md
+  - design/codestable/features/2026-06-05-hermes-tavern-phase136-metadata-export-matrix/checklist.yaml
+  - design/codestable/features/2026-06-05-hermes-tavern-phase136-metadata-export-matrix/hermes-tavern-phase136-metadata-export-matrix-acceptance.md
+
+steps:
+  - id: S1
+    name: "S1: Test-only metadata export matrix"
+    status: completed
+    completed_at: "2026-06-05"
+    result: >
+      IMPLEMENTED - Added a DB-level all-current-metadata export order matrix,
+      an empty-project optional-section omission regression, and a runtime
+      `/rp project export [id]` file-export matrix that preserves the quoted
+      `MEDIA:\"<path>\"` contract. The controller reran py_compile, focused
+      DB/runtime tests, Tavern plugin tests, full pytest, YAML/frontmatter
+      validators, reverse-scope guards, and `git diff --check` from scratch.
+    description: >
+      Add focused regression tests for the complete current project metadata
+      Markdown export order and runtime `/rp project export [id]` file export
+      path. This step is tests-only; if the new tests expose a source bug, stop
+      and report a separate bug candidate instead of editing source.
+    allowed_files:
+      - tests/test_hermes_tavern_novel_db.py
+      - tests/test_hermes_tavern_novel_runtime.py
+    prohibited_files:
+      - run_agent.py
+      - cli.py
+      - gateway/run.py
+      - "src/**"
+      - README.md
+      - design/HERMES_TAVERN_DESIGN.md
+      - design/codestable/architecture/ARCHITECTURE.md
+      - "design/codestable/** except controller-owned status/materialization for this feature"
+      - "build/lib/**"
+      - "plugins/**"
+    exact_scope:
+      - Add a DB-level test that creates all current project metadata families and asserts section order plus representative content.
+      - Add an empty-project optional-section omission regression if no existing single matrix covers that condition.
+      - Add or minimally extend runtime file-export coverage so the exported file includes Plot Threads in the same order matrix as Style Samples, Locations, Organizations, Characters, Relationships, and Chapters.
+      - Preserve the existing quoted `MEDIA:"<path>"` export contract.
+      - Do not edit source, docs, architecture, root design, generated artifacts, or protected core files.
+    verification:
+      - command: >-
+          PYTHONDONTWRITEBYTECODE=1 python -m py_compile tests/test_hermes_tavern_novel_db.py tests/test_hermes_tavern_novel_runtime.py
+        result: "passed (controller rerun; no output)"
+      - command: >-
+          PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel_db.py tests/test_hermes_tavern_novel_runtime.py -q -o 'addopts=' -p no:cacheprovider
+        result: "passed (controller rerun; 199 passed in 9.30s)"
+      - command: >-
+          PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_*.py -q -o 'addopts=' -p no:cacheprovider
+        result: "passed (controller rerun; 961 passed in 43.18s)"
+      - command: >-
+          git diff --name-only -- run_agent.py cli.py gateway/run.py src README.md design/HERMES_TAVERN_DESIGN.md design/codestable/architecture/ARCHITECTURE.md build/lib
+        result: "passed (empty output; no protected/source/docs/build diff)"
+      - command: "git diff --check"
+        result: "passed"
+
+  - id: S2
+    name: "S2: Verify and accept test-only phase"
+    status: planned
+    description: >
+      Controller-owned acceptance/status pass after S1. Rerun focused, Tavern,
+      full, YAML/frontmatter, reverse-scope, and whitespace checks; create the
+      acceptance artifact and mark the checklist accepted only after all checks
+      pass. No architecture or root-design writeback is expected because the
+      phase changes tests only.
+    allowed_files:
+      - design/codestable/features/2026-06-05-hermes-tavern-phase136-metadata-export-matrix/design.md
+      - design/codestable/features/2026-06-05-hermes-tavern-phase136-metadata-export-matrix/checklist.yaml
+      - design/codestable/features/2026-06-05-hermes-tavern-phase136-metadata-export-matrix/hermes-tavern-phase136-metadata-export-matrix-acceptance.md
+    prohibited_files:
+      - README.md
+      - "src/**"
+      - "tests/**"
+      - run_agent.py
+      - cli.py
+      - gateway/run.py
+      - design/HERMES_TAVERN_DESIGN.md
+      - design/codestable/architecture/ARCHITECTURE.md
+      - "build/lib/**"
+    verification:
+      - command: >-
+          PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel_db.py tests/test_hermes_tavern_novel_runtime.py -q -o 'addopts=' -p no:cacheprovider
+        expected_result: "passes"
+      - command: >-
+          PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_*.py -q -o 'addopts=' -p no:cacheprovider
+        expected_result: "passes"
+      - command: >-
+          PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts=' -p no:cacheprovider
+        expected_result: "passes"
+      - command: >-
+          python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-05-hermes-tavern-phase136-metadata-export-matrix/design.md --require doc_type --require status --require feature
+        expected_result: "passes"
+      - command: >-
+          python design/codestable/tools/validate-yaml.py --yaml-only --file design/codestable/features/2026-06-05-hermes-tavern-phase136-metadata-export-matrix/checklist.yaml
+        expected_result: "passes"
+      - command: >-
+          git diff --name-only -- README.md src tests run_agent.py cli.py gateway/run.py design/HERMES_TAVERN_DESIGN.md design/codestable/architecture/ARCHITECTURE.md build/lib
+        expected_result: "empty output for S2 docs/status-only pass"
+      - command: "git diff --check"
+        expected_result: "passes"
+
+checks:
+  - id: C1
+    name: "Active checklist precondition"
+    status: completed
+    completed_at: "2026-06-05"
+    result: >
+      PASSED - Controller and architect searches found no existing Phase 136
+      directory and no unrelated planned/pending/in-progress/draft feature before
+      this artifact was materialized.
+    criteria: >
+      Before S1, no unrelated feature checklist is planned, pending, in
+      progress, or draft; this Phase 136 checklist is the only active feature.
+  - id: C2
+    name: "DB export matrix"
+    status: completed
+    completed_at: "2026-06-05"
+    result: >
+      PASSED - `test_export_project_markdown_orders_all_current_metadata_sections`
+      creates current metadata families together and asserts order plus
+      representative content.
+    criteria: >
+      A DB-level test asserts the complete current metadata section order and
+      representative content for Project Brief, Outline, Style Guide, Style
+      Samples, Locations, Organizations, Plot Threads, Characters,
+      Relationships, and Chapters.
+  - id: C3
+    name: "Optional omission matrix"
+    status: completed
+    completed_at: "2026-06-05"
+    result: >
+      PASSED - `test_export_project_markdown_omits_all_optional_project_metadata_sections_when_empty`
+      proves optional metadata sections are absent for an otherwise empty
+      project while required sections remain.
+    criteria: >
+      A focused test proves optional metadata sections are omitted when absent
+      while required export sections remain.
+  - id: C4
+    name: "Runtime file export matrix"
+    status: completed
+    completed_at: "2026-06-05"
+    result: >
+      PASSED - `test_project_export_file_includes_all_current_metadata_sections_in_order`
+      verifies `/rp project export [id]`, profile-safe local file path, quoted
+      `MEDIA:\"<path>\"`, and the current metadata ordering including Plot
+      Threads.
+    criteria: >
+      Runtime `/rp project export [id]` coverage verifies the local file path,
+      quoted MEDIA marker, and current metadata ordering including Plot Threads.
+  - id: C5
+    name: "Test-only reverse scope"
+    status: completed
+    completed_at: "2026-06-05"
+    result: >
+      PASSED - S1 changed only the two allowed tests plus controller-owned
+      feature design/checklist status files; protected source/docs/build diff
+      guard was empty.
+    criteria: >
+      S1 changes only the two allowed test files and leaves source, README,
+      architecture, root design, protected core files, generated build output,
+      provider/prompt/generation/retrieval/credential/importer/archive/graph
+      behavior untouched.
+  - id: C6
+    name: "Verification"
+    status: completed
+    completed_at: "2026-06-05"
+    result: >
+      PASSED - Controller reran py_compile, focused DB/runtime tests (199
+      passed), Tavern plugin tests (961 passed), full pytest (961 passed),
+      YAML/frontmatter validation, reverse-scope guards, and `git diff --check`.
+    criteria: >
+      Focused tests, Tavern plugin test glob, YAML/frontmatter validation, and
+      whitespace checks pass before acceptance.
+
+risks:
+  - id: R1
+    risk: >
+      The matrix may reveal an existing source-order bug.
+    mitigation: >
+      Do not fix source in S1; stop and route a separate bug-fix phase with a
+      fresh report/analysis/fix artifact.
+  - id: R2
+    risk: >
+      The new tests could duplicate too much per-family CRUD coverage.
+    mitigation: >
+      Keep assertions focused on cross-family co-presence, ordering, omission,
+      and runtime file export behavior only.
+  - id: R3
+    risk: >
+      Runtime export tests can accidentally depend on a real user home path.
+    mitigation: >
+      Use monkeypatched `HERMES_HOME`/profile-safe temporary paths and keep the
+      existing `get_hermes_home()` contract.
+  - id: R4
+    risk: >
+      A test-only slice may drift into documentation or architecture updates.
+    mitigation: >
+      S1 prohibits docs/source changes; S2 records acceptance only and expects no
+      architecture/root-design writeback.
+
+reverse_scope_guards:
+  - guard: "No source or protected-core edits"
+    command: >-
+      git diff --name-only -- run_agent.py cli.py gateway/run.py src
+    expected_result: "empty output"
+  - guard: "No product docs or architecture writeback in S1"
+    command: >-
+      git diff --name-only -- README.md design/HERMES_TAVERN_DESIGN.md design/codestable/architecture/ARCHITECTURE.md
+    expected_result: "empty output during S1"
+  - guard: "No generated build artifact edits"
+    command: >-
+      git diff --name-only -- build/lib
+    expected_result: "empty output"
+  - guard: "No broad behavior domains"
+    criteria: >
+      The diff must not add or modify prompt injection, debug/context-budget
+      composition, provider/model routing, content-mode behavior, credentials,
+      generation, memory/summarization, retrieval/vectorization, automation,
+      media/TTS/image behavior, ST asset import/export, archive import/export,
+      relationship graph, relationship rename, or automatic extraction.
+  - guard: "Adult-fiction boundary"
+    criteria: >
+      Test fixtures remain neutral fictional writing metadata and do not include
+      minor/underage, school-grade, age-classification, or provider-safety-bypass
+      examples.

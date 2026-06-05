@@ -3258,3 +3258,87 @@ def test_style_sample_markers_do_not_leak_to_debug_prompt_or_context(tmp_path):
     context = runtime.handle_command_sync(RPCommand("debug", ["context"], "/rp debug context"), Event())
     assert "marker: distinctive style sample token" not in prompt
     assert "marker: distinctive style sample token" not in context
+
+
+def test_project_export_file_includes_all_current_metadata_sections_in_order(tmp_path, monkeypatch):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    monkeypatch.setenv("HERMES_HOME", str(tmp_path / "hermes home"))
+
+    project = runtime.store.create_project("Harbor Signal", "quiet political drama")
+
+    runtime.store.set_project_brief_type(project["id"], "novel")
+    runtime.store.set_project_premise(
+        project["id"],
+        "A courier follows a map to the old bell tower during one final fog shift.",
+    )
+    runtime.store.set_project_outline(project["id"], "Act One sets the harbor map in motion; Act Two reveals debts; Act Three closes the ledger.")
+    runtime.store.set_project_style_guide(
+        project["id"],
+        "Tone: restrained and sensory\nPacing: measured",
+    )
+    runtime.store.create_style_sample(project["id"], "night-watch", "Gulls keep the time where clocks cannot.")
+    runtime.store.create_location(project["id"], "The Quay", "A lamp-lit landing where tides and bells dictate every decision.")
+    runtime.store.create_organization(
+        project["id"],
+        "The Night Watch",
+        "Records cargo manifests and watches every lantern change.",
+    )
+    runtime.store.create_plot_thread(
+        project["id"],
+        "Inherited Ledger",
+        "A missing ledger tied to old harbor debts resurfaces.",
+    )
+    runtime.store.create_character_state(project["id"], "Mara Voss", "Steady negotiator, loyal to inherited promises.")
+    runtime.store.create_relationship_state(
+        project["id"],
+        "mara-calder",
+        "A pragmatic tie built from mutual leverage, not trust.",
+    )
+    runtime.store.create_chapter(project["id"], "Opening")
+
+    response = runtime.handle_command_sync(
+        RPCommand("project", ["export", str(project["id"])], f"/rp project export {project['id']}"),
+        Event(),
+    )
+
+    assert "Project exported as Markdown." in response
+    assert 'MEDIA:"' in response
+    media_payload = response.split("MEDIA:", 1)[1].strip()
+    assert media_payload.startswith('"') and media_payload.endswith('"')
+    file_path = media_payload[1:-1]
+
+    from pathlib import Path
+
+    exported_path = Path(file_path)
+    assert str(exported_path).startswith(str(tmp_path / "hermes home"))
+    assert exported_path.exists()
+
+    exported = exported_path.read_text(encoding="utf-8")
+
+    section_headers = [
+        "## Summary",
+        "## Project Brief",
+        "## Outline",
+        "## Style Guide",
+        "## Style Samples",
+        "## Locations",
+        "## Organizations",
+        "## Plot Threads",
+        "## Characters",
+        "## Relationships",
+        "## Chapters",
+    ]
+    section_indexes = [exported.index(section) for section in section_headers]
+    assert section_indexes == sorted(section_indexes)
+
+    assert "A courier follows a map" in exported
+    assert "Type: novel" in exported
+    assert "Act One sets the harbor map in motion" in exported
+    assert "Tone: restrained and sensory" in exported
+    assert "### night-watch" in exported
+    assert "The Quay" in exported
+    assert "Night Watch" in exported
+    assert "Inherited Ledger" in exported
+    assert "Mara Voss" in exported
+    assert "mara-calder" in exported
+    assert "### Chapter 1: Opening" in exported

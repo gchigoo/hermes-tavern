@@ -1812,3 +1812,99 @@ def test_export_project_markdown_omits_plot_threads_if_empty(tmp_path):
     markdown = store.export_project_markdown(1)
     assert "## Plot Threads" not in markdown
     assert "## Locations" in markdown
+
+
+def test_export_project_markdown_orders_all_current_metadata_sections(tmp_path):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    project = store.create_project("Harbor Signal", "quiet political drama")
+
+    store.set_project_brief_type(project["id"], "novel")
+    store.set_project_premise(
+        project["id"],
+        "A courier follows a map to the old bell tower during one final fog shift.",
+    )
+    store.set_project_outline(project["id"], "Act One sets the harbor map in motion; Act Two reveals debts; Act Three closes the ledger.")
+    store.set_project_style_guide(
+        project["id"],
+        "Tone: restrained and sensory\nPacing: measured",
+    )
+    store.create_style_sample(project["id"], "night-watch", "Gulls keep the time where clocks cannot.")
+    store.create_location(project["id"], "The Quay", "A lamp-lit landing where tides and bells dictate every decision.")
+    store.create_organization(
+        project["id"],
+        "The Night Watch",
+        "Records cargo manifests and watches every lantern change.",
+    )
+    store.create_plot_thread(
+        project["id"],
+        "Inherited Ledger",
+        "A missing ledger tied to old harbor debts resurfaces.",
+    )
+    store.create_character_state(project["id"], "Mara Voss", "Steady negotiator, loyal to inherited promises.")
+    store.create_relationship_state(
+        project["id"],
+        "mara-calder",
+        "A pragmatic tie built from mutual leverage, not trust.",
+    )
+    store.create_chapter(project["id"], "Opening")
+
+    store.create_chapter(project["id"], "Convergence")
+
+    markdown = store.export_project_markdown(project["id"])
+
+    section_headers = [
+        "Summary",
+        "Project Brief",
+        "Outline",
+        "Style Guide",
+        "Style Samples",
+        "Locations",
+        "Organizations",
+        "Plot Threads",
+        "Characters",
+        "Relationships",
+        "Chapters",
+    ]
+    section_indexes = [markdown.index(f"## {header}") for header in section_headers]
+    assert section_indexes == sorted(section_indexes)
+
+    assert "A courier follows a map" in markdown
+    assert "Type: novel" in markdown
+    assert "Act One sets the harbor map in motion" in markdown
+    assert "Tone: restrained and sensory" in markdown
+    assert "night-watch" in markdown
+    assert "Gulls keep the time" in markdown
+    assert "The Quay" in markdown
+    assert "Night Watch" in markdown
+    assert "Inherited Ledger" in markdown
+    assert "Mara Voss" in markdown
+    assert "mara-calder" in markdown
+    assert "### Chapter 1: Opening" in markdown
+
+
+def test_export_project_markdown_omits_all_optional_project_metadata_sections_when_empty(tmp_path):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    project = store.create_project("Plain Harbour", "spare premise")
+
+    store.create_chapter(project["id"], "Arrival")
+    markdown = store.export_project_markdown(project["id"])
+
+    optional_sections = [
+        "## Project Brief",
+        "## Outline",
+        "## Style Guide",
+        "## Style Samples",
+        "## Locations",
+        "## Organizations",
+        "## Plot Threads",
+        "## Characters",
+        "## Relationships",
+    ]
+    for section in optional_sections:
+        assert section not in markdown
+
+    assert "## Summary" in markdown
+    assert "## Chapters" in markdown
+    assert "### Chapter 1: Arrival" in markdown
+    assert "## Canon" in markdown
+    assert "## Timeline" in markdown
