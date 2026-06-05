@@ -488,6 +488,12 @@ mode, or generation behavior.
 Future project metadata from the original vision remains deferred outside the
 current scope: `canon_policy`, `content_mode`, `default_card_id`,
 `default_preset_id`, `default_lorebook_ids`, and default-binding metadata.
+Relationship state is now current local metadata and is managed through
+`novel_relationship_states(id, project_id, label, state_text, created_at, updated_at)`.
+
+Relationship metadata remains informational-only: it does not participate in
+prompt module injection, provider routing, context budget reporting, vectorization,
+retrieval, content-mode behavior, credential persistence, or generation.
 
 Sub-objects:
 
@@ -496,6 +502,7 @@ chapters
 scenes
 canon facts
 timeline events
+relationships
 ```
 
 Scene objects include:
@@ -507,7 +514,8 @@ tense: past|present
 ```
 
 Future sub-objects from the original vision remain deferred: character states,
-relationship states, locations, organizations, plot threads, and style samples.
+locations, organizations, plot threads, relationship graph/rename/automatic
+extraction, and style samples.
 
 Commands:
 
@@ -531,6 +539,11 @@ Commands:
 /rp project outline inspect [project-id]
 /rp project outline set [project-id] <text>
 /rp project outline clear [project-id]
+/rp relationship add <project-id> <label> <state...>
+/rp relationship list [project-id]
+/rp relationship inspect <relationship-id>
+/rp relationship update <relationship-id> <state...>
+/rp relationship delete <relationship-id>
 /rp chapter create [project-id] <title>
 /rp chapter list [project-id]
 /rp chapter summary <chapter-id> [text]
@@ -557,9 +570,11 @@ Project Markdown export emits `## Project Brief` after `## Summary` and, when
 present, emits `## Outline` immediately after Project Brief and before Style
 Guide. Project Brief and Outline content are omitted when empty. Project Brief
 labels are `Type:` and `Premise:`, and blank field labels are omitted.
-Chapter and scene summaries are also metadata-only: they are emitted as `Summary:`
-lines directly under chapter and scene headings in the same export pass.
-Blank or whitespace-only summary values are omitted.
+Relationship-state metadata is exported as optional `## Relationships` after
+Style Guide and before Chapters when rows exist, and omitted when empty. Chapter
+and scene summaries are metadata-only: they are emitted as `Summary:` lines
+directly under chapter and scene headings in the same export pass. Blank or
+whitespace-only summary values are omitted.
 
 ---
 
@@ -915,10 +930,11 @@ chapter
 scene
 timeline
 canon
+relationship states
 ```
 
 Future novel-engine dimensions remain deferred: volume/arc, beats, deferred
-character state, relationship state, and revision notes.
+character state, relationship graph/rename/automatic extraction, and revision notes.
 
 ### 13.2 Writing commands
 
@@ -938,6 +954,11 @@ character state, relationship state, and revision notes.
 /rp project outline inspect [project-id]
 /rp project outline set [project-id] <text>
 /rp project outline clear [project-id]
+/rp relationship add <project-id> <label> <state...>
+/rp relationship list [project-id]
+/rp relationship inspect <relationship-id>
+/rp relationship update <relationship-id> <state...>
+/rp relationship delete <relationship-id>
 /rp chapter create/list
 /rp chapter summary <chapter-id> [text]
 /rp chapter summary clear <chapter-id>
@@ -959,10 +980,15 @@ project metadata for inspection/info/export, not prompt injection, content-mode
 changes, provider selection, or generation control.
 Chapter and scene summaries are metadata-only and local-only: command-driven
 metadata for prose visibility and export, no model/provider/routing side effect.
+Relationship state is metadata-only and local-only: command-driven relationship
+notes for inspection/list/update/delete and optional Markdown export, no prompt,
+context-budget, retrieval/vectorization, provider/model/routing, content-mode,
+credential, or generation side effect.
 
 Future writing commands from the original vision remain deferred: outline
 generation/rewrite/expand/compress workflows, project archive
-ZIP/export/import, and character/relationship state.
+ZIP/export/import, and character state and relationship graph/rename/automatic
+extraction.
 
 ### 13.3 Canon management
 
@@ -979,9 +1005,9 @@ Future canon commands from the original vision remain deferred: `/rp canon check
 `/rp canon conflict`, and `/rp canon pin <fact>`.
 
 Cross-cutting deferred novel constraints remain explicit in this slice: deferred
-project archive ZIP/import workflows, deferred character/relationship state,
-deferred cloud collaboration, no provider credential persistence, no
-minors/underage handling, and no provider safety bypass pathways.
+character state, relationship graph/rename/automatic extraction, deferred
+project archive ZIP/import workflows, deferred cloud collaboration, no provider
+credential persistence, no minors/underage handling, and no provider safety bypass pathways.
 
 ---
 
@@ -1161,7 +1187,7 @@ ST preset JSON
 ST lorebook/world info JSON
 ```
 
-Hermes Tavern native project archives are deferred; the current Phase 121–129
+Hermes Tavern native project archives are deferred; the current Phase 121–130
 implementation provides Markdown export only, not project/novel import.
 
 Later:
@@ -1185,12 +1211,14 @@ chat export JSONL
 novel export Markdown
 ```
 
-Project archive ZIP remains a future exporter/importer; current Phase 121–129 writes
+Project archive ZIP remains a future exporter/importer; current Phase 121–130 writes
 local Markdown via `/rp project export [id]`.
 Project Brief and Project Outline are exported as optional top-level `## Project Brief`
 and `## Outline` sections after `## Summary` when non-empty. Project style guides
 are exported as a top-level `## Style Guide` section after optional Project Brief
-and Outline and before Chapters when non-empty.
+and Outline and before Chapters when non-empty. `## Relationships` is exported after
+Style Guide and before Chapters when at least one relationship-state row exists; it is
+omitted when empty.
 Chapter summaries are exported as `Summary: <text>` immediately under chapter headings
 when non-empty.
 Scene summaries are exported as `Summary: <text>` immediately under scene headings,

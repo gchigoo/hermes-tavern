@@ -1,7 +1,7 @@
 # Hermes Agent — Architecture
 
 > Status: current snapshot
-> Last updated: 2026-06-04
+> Last updated: 2026-06-05
 
 ## 1. Project Summary
 
@@ -70,8 +70,8 @@ renderers.py          ChatRenderer, StoryRenderer — convert compiled prompt to
 preset_safety.py      PresetRiskLevel, classify_preset_text — risk classification for imported modules
 lorebook.py           match_lorebook_entries — keyword/regex match, local regex complexity guard, token-budget enforcement
 memory.py             Memory fact / summary management helpers
-db_novel.py           Novel domain mixins for project/chapter/scene/scene-goal/canon/timeline CRUD and export
-runtime_novel.py      Novel command family handlers for /rp project/chapter/scene/scene-goal/canon/timeline
+db_novel.py           Novel domain mixins for project/chapter/scene/scene-goal/canon/timeline/relationship-state CRUD and export
+runtime_novel.py      Novel command family handlers for /rp project/chapter/scene/scene-goal/canon/timeline/relationship
 runtime_prompt_modules.py  Scene-goal, scene narration, project-style, and canon prompt module resolvers for linked novel sessions
 model_router.py       resolve model descriptor from session row and store
 provider_bridge.py    resolve_runtime_provider + validate_provider_base_url — runtime credential resolution (no DB persistence); URL safety validator rejects non-https and private/loopback hosts
@@ -121,6 +121,7 @@ importers/
 - Phase 127: Project Brief v1 metadata (`/rp project brief` + `/rp project info`, and `## Project Brief` export) backed by `novel_project_briefs`; metadata-only, no prompt/provider/routing/generation behavior changes
 - Phase 128: Project Outline v1 metadata (`/rp project outline` + `## Outline`) backed by `novel_project_outlines`; metadata-only, no prompt/provider/routing/content-mode/generation behavior changes
 - Phase 129: Chapter and Scene Summary metadata (`/rp chapter summary`, `/rp scene summary`) backed by existing `novel_chapters.summary` / `novel_scenes.summary`; metadata-only, no prompt/provider/routing/content-mode/generation changes
+- Phase 130: Relationship State Metadata v1 (`/rp relationship ...`) backed by `novel_relationship_states`; metadata-only, no prompt/provider/routing/content-mode/generation changes.
 
 ### Plugin flow
 
@@ -150,12 +151,12 @@ Macro expansion is one-pass and allowlist-based. Supported Phase 20 macros are
 `{{content_mode}}`, and `{{session_title}}`; names are case/whitespace tolerant,
 unknown macros are preserved, and replacement text is not recursively expanded.
 
-Project Brief and Project Outline are explicitly excluded from prompt assembly and
-session prompt module selection.
-Chapter/scene summary metadata is also excluded from prompt assembly and debug
-payloads; it is visible only through command output and Markdown export metadata.
+Project Brief, Project Outline, and Relationship State metadata are explicitly
+excluded from prompt assembly and session prompt module selection. Chapter/scene
+summary metadata is also excluded from prompt assembly and debug payloads; these
+metadata surfaces are visible only through command output and Markdown export.
 
-### /rp command surface (current through Phase 129)
+### /rp command surface (current through Phase 130)
 
 ```
 /rp help | status | assets
@@ -206,9 +207,14 @@ payloads; it is visible only through command output and Markdown export metadata
 /rp scene narration tense <scene-id> <past|present>
 /rp canon add/list/group
 /rp timeline add/list
+/rp relationship add <project-id> <label> <state...>
+/rp relationship list [project-id]
+/rp relationship inspect <relationship-id>
+/rp relationship update <relationship-id> <state...>
+/rp relationship delete <relationship-id>
 ```
 
-### DB schema (current through Phase 129)
+### DB schema (current through Phase 130)
 
 ```sql
 cards(id, name, data_json, source_path, created_at)
@@ -242,6 +248,9 @@ novel_scene_goals(id, scene_id, goal_text, created_at, updated_at)
 novel_scene_narration_controls(id, scene_id, pov_label, tense, created_at, updated_at)
 novel_canon(id, project_id, title, content, canon_group, importance, created_at, updated_at)
 novel_timeline(id, project_id, event_date, title, description, chapter_id, sort_key, created_at)
+novel_relationship_states(id, project_id, label, state_text, created_at, updated_at)
+-- project_id REFERENCES novel_projects(id) ON DELETE CASCADE
+CREATE INDEX idx_novel_relationship_states_project ON novel_relationship_states(project_id)
 ```
 
 Phase 129 adds explicit semantics on existing summary columns:
@@ -252,6 +261,12 @@ Phase 129 adds explicit semantics on existing summary columns:
   scene summaries.
 - Both columns can store raw DB text; UI/runtime treats blank or whitespace-only
   summary text as not-visible and omits it from getters and Markdown export.
+
+Phase 130 adds `novel_relationship_states` as project-scoped relationship-state
+metadata. Relationship-state rows are managed through `/rp relationship ...` and
+exported as optional `## Relationships` Markdown metadata; they are not selected
+for prompt modules, debug/context-budget payloads, vectorization/retrieval,
+provider/model routing, content mode, credentials, or generation.
 
 Phase 26 adds in-memory quick-action tracking on `TavernStore` only:
 `_last_card_id`, `_last_preset_id`, `_last_lorebook_id`, and
@@ -284,4 +299,5 @@ These phases do not change schema or core prompt/generation assembly.
 - **Phase 121 reverse-scope constraints**: no cloud sync, no collaboration/multi-user workflow, no novel import, no timeline graphics, no DB credential persistence.
 - **Tavern DB never persists `api_key` / `access_token`**: credentials resolved at runtime via `HermesRuntimeProviderResolver`, discarded after use.
 - **Phase 129 summary metadata boundary**: chapter/scene summary text is metadata-only and export-visible but not injected into prompt modules, context budgeting, vectorization, retrieval, provider routing, or generation.
+- **Phase 130 relationship-state boundary**: relationship-state metadata is export-visible only. It is excluded from prompt modules, debug prompt/context output, context-budget payloads, vectorization/retrieval, provider/model selection, content mode decisions, credentials, and generation.
 - **Tavern lore regex complexity guard**: lorebook regex keys are screened locally before matching. Entries with patterns longer than 256 characters or nested quantified groups (for example `(a+)+`, `(.+)*`, `([a-z]+){2,}`) are excluded with bounded reasons (`regex rejected: ...`), preserving raw imported lore data while preventing unbounded local matching behavior.

@@ -1,18 +1,26 @@
 doc_type: feature-checklist
 feature: "2026-06-04-hermes-tavern-phase130-relationship-state-metadata"
-date: "2026-06-04"
-status: in_progress
+date: "2026-06-05"
+status: accepted
 summary: >
-  Add Relationship State Metadata v1 as local project-scoped relationship notes
-  with command CRUD/list, help/README visibility, Markdown export visibility, and
-  explicit no-leak boundaries for prompt/debug/provider/generation paths. This
-  checklist was materialized by an unattended planning-only cron tick; Codex
-  executor is intentionally deferred to S1.
+  ACCEPTED - Relationship State Metadata v1 adds local project-scoped
+  relationship notes backed by `novel_relationship_states`, managed through
+  `/rp relationship ...` CRUD/list commands, visible as optional `## Relationships`
+  Markdown export metadata, and verified to remain outside prompt/debug/provider/
+  generation/context-budget/vectorization/retrieval paths. S1 implementation and
+  S2 acceptance/writeback are complete with controller verification.
 
 steps:
   - id: S1
     name: "S1: Implementation"
-    status: done
+    status: completed
+    completed_at: "2026-06-05"
+    result: >
+      IMPLEMENTED - S1 added local project-scoped relationship-state persistence,
+      `/rp relationship add/list/inspect/update/delete`, help/README command
+      literals, optional Markdown export visibility, and focused DB/runtime/docs
+      tests. Controller verified py_compile, focused tests, full pytest, protected
+      core diff guard, and whitespace checks before S2 acceptance.
     description: >
       Add local project-scoped relationship-state metadata persistence, the
       `/rp relationship ...` command family, help/README command literals,
@@ -47,19 +55,30 @@ steps:
         result: "passed (no errors)"
       - command: >-
           PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel_db.py tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_commands.py tests/test_hermes_tavern_readme_docs.py -q -o 'addopts=' -p no:cacheprovider
-        result: "205 passed in 7.25s"
+        result: "205 passed in 5.70s during S2 controller rerun"
+      - command: >-
+          PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_*.py -q -o 'addopts=' -p no:cacheprovider
+        result: "896 passed in 41.70s during S2 controller rerun"
       - command: >-
           PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts=' -p no:cacheprovider
-        result: "896 passed in 54.07s"
+        result: "896 passed in 42.08s during S2 controller rerun"
       - command: >-
           git diff --name-only -- run_agent.py cli.py gateway/run.py src/hermes_tavern/runtime_prompt_modules.py src/hermes_tavern/prompt.py src/hermes_tavern/runtime_debug.py src/hermes_tavern/model_router.py src/hermes_tavern/provider_bridge.py src/hermes_tavern/adapters.py src/hermes_tavern/runtime_model.py src/hermes_tavern/runtime_generation.py
-        result: "empty (no protected-core changes)"
+        result: "empty (no protected-core/prompt/provider/generation changes)"
       - command: "git diff --check"
         result: "passed (no whitespace issues)"
 
   - id: S2
     name: "S2: Verify/Accept/Write Architecture"
-    status: planned
+    status: completed
+    completed_at: "2026-06-05"
+    result: >
+      ACCEPTED - S2 created the Phase 130 acceptance report, promoted the feature
+      design/checklist status, and wrote current relationship-state metadata
+      behavior into architecture and root design docs. Controller reran py_compile,
+      focused tests, Tavern glob tests, full pytest, frontmatter/YAML validators,
+      protected-core/reverse-scope checks, and whitespace checks before marking
+      the phase accepted.
     description: >
       Run focused, plugin, full, frontmatter/YAML, reverse-scope, and whitespace
       verification. Write the Phase 130 acceptance report, update this checklist
@@ -75,11 +94,32 @@ steps:
       Acceptance report and architecture/root-design writeback are complete, the
       checklist is accepted, and verification confirms the feature remains local
       metadata/export-only.
+    verification:
+      - command: >-
+          codex --profile architect exec --json --color never --sandbox read-only --cd /Users/steven/Projects/hermes-tavern <Phase 130 S2 artifact prompt>
+        result: "passed; JSONL at /tmp/hermes-tavern-architect-phase130-s2.jsonl; RESULT: PLANNING_ARTIFACT → READY"
+      - command: >-
+          codex --profile executor exec --json --color never --disable image_generation --sandbox workspace-write --cd /Users/steven/Projects/hermes-tavern <Phase 130 S2 docs/status prompt>
+        result: "passed; JSONL at /tmp/hermes-tavern-executor-phase130-s2.jsonl; executor drafted docs/status writeback for controller finalization"
+      - command: >-
+          python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-04-hermes-tavern-phase130-relationship-state-metadata/design.md --require doc_type --require status --require feature
+        result: "passed after controller final status edits"
+      - command: >-
+          python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-04-hermes-tavern-phase130-relationship-state-metadata/hermes-tavern-phase130-relationship-state-metadata-acceptance.md --require doc_type --require status --require feature
+        result: "passed after controller final status edits"
+      - command: >-
+          python design/codestable/tools/validate-yaml.py --yaml-only --file design/codestable/features/2026-06-04-hermes-tavern-phase130-relationship-state-metadata/checklist.yaml
+        result: "passed after controller final status edits"
 
 checks:
   - id: C1
     name: "C1: Persistence contract"
-    status: planned
+    status: completed
+    completed_at: "2026-06-05"
+    result: >
+      PASSED - `novel_relationship_states` migration, project foreign key/index,
+      and CRUD/list helpers are implemented and covered by focused DB tests for
+      valid projects/IDs, missing projects/IDs, blank labels, and blank state text.
     criteria: >
       Migration creates the relationship-state table and project index; CRUD/list
       helpers handle valid projects/IDs, missing projects/IDs, blank labels, and
@@ -87,7 +127,12 @@ checks:
 
   - id: C2
     name: "C2: Command contract"
-    status: planned
+    status: completed
+    completed_at: "2026-06-05"
+    result: >
+      PASSED - `/rp relationship add/list/inspect/update/delete` command literals
+      and handlers are present, return bounded normal/error messages, and are
+      visible through help/README guards.
     criteria: >
       `/rp relationship add <project-id> <label> <state...>`,
       `/rp relationship list [project-id]`,
@@ -98,7 +143,12 @@ checks:
 
   - id: C3
     name: "C3: Markdown export"
-    status: planned
+    status: completed
+    completed_at: "2026-06-05"
+    result: >
+      PASSED - Markdown export emits optional `## Relationships` only when rows
+      exist, orders it after Style Guide and before Chapters, and omits it for
+      projects with no relationship-state rows.
     criteria: >
       Project Markdown export includes `## Relationships` only when relationship
       states exist, orders it after Style Guide and before Chapters, and omits it
@@ -106,7 +156,13 @@ checks:
 
   - id: C4
     name: "C4: Offline no-leak boundary"
-    status: planned
+    status: completed
+    completed_at: "2026-06-05"
+    result: >
+      PASSED - Focused no-leak tests confirm distinctive relationship-state text
+      stays out of `/rp debug prompt` and `/rp debug context`; protected prompt,
+      provider, model routing, content mode, generation, vectorization/retrieval,
+      credentials, and summarization paths are unchanged.
     criteria: >
       Relationship-state text does not appear in `/rp debug prompt` or
       `/rp debug context`; prompt module selection, provider calls, model routing,
@@ -115,7 +171,12 @@ checks:
 
   - id: C5
     name: "C5: Reverse-scope verification"
-    status: planned
+    status: completed
+    completed_at: "2026-06-05"
+    result: >
+      PASSED - Controller reverse-scope checks found no protected core,
+      prompt/provider/model/generation, credential, cloud/collab, minors/underage,
+      safety-bypass, source/test/README, or build-artifact changes in S2.
     criteria: >
       No protected core files, build artifacts, provider/model/generation files,
       credential paths, cloud/collab paths, minors/underage paths, or

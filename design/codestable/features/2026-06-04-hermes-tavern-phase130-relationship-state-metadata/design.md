@@ -1,14 +1,14 @@
 ---
 doc_type: feature-design
 feature: "2026-06-04-hermes-tavern-phase130-relationship-state-metadata"
-status: draft
-date: "2026-06-04"
+status: approved
+date: "2026-06-05"
 summary: >
-  Add local project-scoped Relationship State Metadata v1 for long-form RP/novel
-  continuity: command-managed relationship notes, list/inspect/update/delete behavior,
-  and optional Markdown export visibility, while staying out of prompt assembly,
-  debug context, provider routing, generation, credentials, content mode, retrieval,
-  and automation.
+  Relationship State Metadata v1 is implemented and accepted as local
+  project-scoped metadata: command-managed relationship notes,
+  list/inspect/update/delete behavior, and optional Markdown export visibility,
+  while staying out of prompt assembly, debug context, provider routing,
+  generation, credentials, content mode, retrieval, and automation.
 tags: [novel, relationship, metadata, export, offline]
 ---
 
@@ -22,7 +22,7 @@ tags: [novel, relationship, metadata, export, offline]
 | Relationship Label | A compact one-token label supplied by the user, such as `mara/ilya` or `mara-ilya`. | Not parsed participant identity, not character-card binding, and not a taxonomy. |
 | Relationship State Metadata | Project-scoped relationship rows visible through commands and Markdown export. | Not prompt injection, not debug context, not retrieval, and not generation behavior. |
 
-This is an unattended cron design artifact. It remains `status: draft` until an implementation/acceptance pass verifies the scope.
+S1 implementation and S2 acceptance/writeback are complete after controller verification.
 
 ## 1. Decisions And Constraints
 
@@ -193,3 +193,9 @@ After S1 verification, S2 should update:
   - Move relationship state from deferred future sub-objects into current local metadata scope.
   - Document command literals and Markdown export placement.
   - Keep character state, locations, organizations, plot threads, style samples, automation, retrieval, and provider/generation paths deferred.
+
+Current status after S1 commit `9665448` and S2 controller acceptance:
+
+- S1 is implemented and covered by focused fixture and command/docs tests.
+- S2 writeback is complete in `checklist.yaml`, `ARCHITECTURE.md`,
+  `HERMES_TAVERN_DESIGN.md`, and the Phase 130 acceptance report.
