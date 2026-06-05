@@ -965,6 +965,35 @@ class NovelDBMixin:
             ).fetchone()
         return _row_to_dict(row)
 
+    def rename_relationship_state(self, relationship_id: int, label: str) -> dict[str, Any]:
+        label = (label or "").strip()
+        if not label:
+            raise ValueError("Relationship label cannot be blank")
+
+        self.migrate()
+        with self.connect() as conn:
+            row = conn.execute(
+                "SELECT id FROM novel_relationship_states WHERE id = ?",
+                (relationship_id,),
+            ).fetchone()
+            if row is None:
+                raise ValueError("Relationship state not found")
+
+            now = _utc_now()
+            conn.execute(
+                """
+                UPDATE novel_relationship_states
+                SET label = ?, updated_at = ?
+                WHERE id = ?
+                """,
+                (label, now, relationship_id),
+            )
+            updated = conn.execute(
+                "SELECT * FROM novel_relationship_states WHERE id = ?",
+                (relationship_id,),
+            ).fetchone()
+        return _row_to_dict(updated)
+
     def create_location(self, project_id: int, label: str, description_text: str) -> dict[str, Any]:
         if not (label or "").strip():
             raise ValueError("Location label cannot be blank")

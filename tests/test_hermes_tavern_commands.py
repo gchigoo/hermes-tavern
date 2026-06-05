@@ -196,6 +196,7 @@ def test_help_lists_relationship_state_commands():
     assert "/rp relationship add <project-id> <label> <state...>" in help_text
     assert "/rp relationship list [project-id]" in help_text
     assert "/rp relationship inspect <relationship-id>" in help_text
+    assert "/rp relationship rename <relationship-id> <label>" in help_text
     assert "/rp relationship update <relationship-id> <state...>" in help_text
     assert "/rp relationship delete <relationship-id>" in help_text
 
@@ -368,3 +369,4 @@ def test_dispatch_command_unknown_after_structural_parse_only():
 
 def test_novel_command_table_does_not_have_top_level_revision_family():
     assert "revision" not in TAVERN_COMMAND_TABLE
+    assert "relationship-rename" not in TAVERN_COMMAND_TABLE

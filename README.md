@@ -178,6 +178,7 @@ Expected behavior:
 /rp relationship list [project-id]
 /rp relationship inspect <relationship-id>
 /rp relationship update <relationship-id> <state...>
+/rp relationship rename <relationship-id> <label>
 /rp relationship delete <relationship-id>
 /rp debug prompt [limit] [page] | /rp debug context [limit] [page] | /rp debug swipes
 ```

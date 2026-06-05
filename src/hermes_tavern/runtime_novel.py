@@ -141,6 +141,8 @@ def relationship_command(runtime: Any, command: RPCommand, event: Any) -> str:
         return relationship_list(runtime, command, event)
     if subcommand == "inspect":
         return relationship_inspect(runtime, command)
+    if subcommand == "rename":
+        return relationship_rename(runtime, command)
     if subcommand == "update":
         return relationship_update(runtime, command)
     if subcommand == "delete":
@@ -272,6 +274,7 @@ BINDING_USAGE = (
 _RELATIONSHIP_USAGE = (
     "Usage: /rp relationship add <project-id> <label> <state...> | "
     "/rp relationship list [project-id] | /rp relationship inspect <relationship-id> | "
+    "/rp relationship rename <relationship-id> <label> | "
     "/rp relationship update <relationship-id> <state...> | "
     "/rp relationship delete <relationship-id>"
 )
@@ -1761,6 +1764,29 @@ def relationship_update(runtime: Any, command: RPCommand) -> str:
     return (
         f"Relationship state updated for relationship [{relationship['id']}]: "
         f"{_mobile_preview(relationship['state_text'], 180)}"
+    )
+
+
+def relationship_rename(runtime: Any, command: RPCommand) -> str:
+    if len(command.args) < 3:
+        return _RELATIONSHIP_USAGE
+
+    relationship_id = _safe_int(command.args[1])
+    if relationship_id is None:
+        return _RELATIONSHIP_USAGE
+
+    label = " ".join(command.args[2:]).strip()
+    if not label:
+        return _RELATIONSHIP_USAGE
+
+    try:
+        relationship = runtime.store.rename_relationship_state(relationship_id, label)
+    except ValueError:
+        return f"No relationship state found: {relationship_id}"
+
+    return (
+        f"Relationship label updated for relationship [{relationship['id']}]: "
+        f"{relationship['label']}"
     )
 
 

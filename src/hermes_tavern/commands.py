@@ -306,6 +306,7 @@ TAVERN_COMMAND_TABLE: dict[str, TavernCommandEntry] = {
             "/rp relationship add <project-id> <label> <state...>",
             "/rp relationship list [project-id]",
             "/rp relationship inspect <relationship-id>",
+            "/rp relationship rename <relationship-id> <label>",
             "/rp relationship update <relationship-id> <state...>",
             "/rp relationship delete <relationship-id>",
         ],

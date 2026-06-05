@@ -640,6 +640,72 @@ def test_relationship_state_crud_and_missing_owner_errors(tmp_path):
         raise AssertionError("Expected ValueError for missing project")
 
 
+def test_rename_relationship_state_updates_label_only(tmp_path):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    project = store.create_project("Relationship Rename")
+
+    first = store.create_relationship_state(
+        project["id"],
+        "mara-elya",
+        "Trust is built on silence and hard bargains.",
+    )
+    second = store.create_relationship_state(
+        project["id"],
+        "mara-kai",
+        "A rivalry sharpens into routine.",
+    )
+    assert first["label"] == "mara-elya"
+    assert second["label"] == "mara-kai"
+
+    updated = store.rename_relationship_state(first["id"], "mara-calder")
+    assert updated["id"] == first["id"]
+    assert updated["project_id"] == project["id"]
+    assert updated["label"] == "mara-calder"
+    assert updated["state_text"] == first["state_text"]
+    assert updated["created_at"] == first["created_at"]
+    assert updated["updated_at"] >= first["updated_at"]
+
+    list_after = store.list_relationship_states(project["id"])
+    assert [row["id"] for row in list_after] == [first["id"], second["id"]]
+
+
+def test_rename_relationship_state_rejects_blank_label(tmp_path):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    project = store.create_project("Relationship Rename")
+    relationship = store.create_relationship_state(
+        project["id"],
+        "mara-elya",
+        "Trust is built on silence and hard bargains.",
+    )
+    assert relationship["label"] == "mara-elya"
+
+    for blank_label in ["", "   ", "\n", "\t"]:
+        try:
+            store.rename_relationship_state(relationship["id"], blank_label)
+        except ValueError as exc:
+            assert str(exc) == "Relationship label cannot be blank"
+        else:
+            raise AssertionError("Expected ValueError for blank relationship label")
+
+
+def test_rename_relationship_state_rejects_missing_state(tmp_path):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    project = store.create_project("Relationship Rename")
+
+    assert store.create_relationship_state(
+        project["id"],
+        "mara-elya",
+        "Trust is built on silence and hard bargains.",
+    )
+
+    try:
+        store.rename_relationship_state(999, "mara-renamed")
+    except ValueError as exc:
+        assert str(exc) == "Relationship state not found"
+    else:
+        raise AssertionError("Expected ValueError for missing relationship state")
+
+
 def test_character_state_crud_and_missing_owner_errors(tmp_path):
     store = TavernStore(tmp_path / "tavern.sqlite3")
     project = store.create_project("Character State")

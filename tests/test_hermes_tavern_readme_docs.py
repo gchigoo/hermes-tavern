@@ -320,6 +320,7 @@ def test_readme_core_commands_include_relationship_state_literals():
     assert "/rp relationship add <project-id> <label> <state...>" in core_commands
     assert "/rp relationship list [project-id]" in core_commands
     assert "/rp relationship inspect <relationship-id>" in core_commands
+    assert "/rp relationship rename <relationship-id> <label>" in core_commands
     assert "/rp relationship update <relationship-id> <state...>" in core_commands
     assert "/rp relationship delete <relationship-id>" in core_commands
 

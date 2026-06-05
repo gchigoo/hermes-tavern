@@ -1,0 +1,243 @@
+doc_type: feature-checklist
+feature: "2026-06-06-hermes-tavern-phase140-relationship-label-rename"
+date: "2026-06-06"
+status: implemented
+summary: >
+  S1_IMPLEMENTED - Relationship Label Rename adds a local command under the
+  existing /rp relationship family. It updates only novel_relationship_states.label
+  for an existing row, keeps relationship state text unchanged, and exposes the
+  renamed label through existing list/inspect/export surfaces without prompt,
+  provider, retrieval, generation, graph, extraction, archive, safety,
+  plugin-shim, or runtime-core side effects.
+tags: [novel, relationships, metadata, commands, export, offline]
+
+implementation_readiness: >
+  S1_IMPLEMENTED - Codex architect produced the Phase 140 artifact on 2026-06-06,
+  the controller promoted it for unattended S1, Codex executor implemented the
+  bounded workspace-write slice, and the controller reran py_compile, focused
+  tests, Tavern-wide tests, full pytest, validators, protected reverse-scope
+  guards, and git diff --check. S2 acceptance/writeback remains planned; architecture
+  and root-design current-behavior docs are intentionally not finalized in S1.
+
+planning_verification:
+  - command: "sed -n '1,260p' design/codestable/attention.md"
+    result: "read; confirmed plugin-only architecture, protected file constraints, test commands, and safety-bypass boundary."
+  - command: "rg -n \"^status: *(planned|in_progress|in-progress|draft|pending)\\b\" design/codestable/features -g 'checklist.yaml'"
+    result: "empty output; no active planned/in-progress/draft checklist found."
+  - command: "rg -n \"^status: *(planned|in_progress|in-progress|draft|pending)\\b\" design/codestable/features -g 'design.md'"
+    result: "empty output; no active draft/in-progress design found."
+  - command: "sed -n '1,260p' design/codestable/features/2026-06-06-hermes-tavern-phase139-revision-notes-metadata/checklist.yaml"
+    result: "Phase 139 checklist status is accepted."
+  - command: "rg -n \"relationship graph/rename/automatic extraction|Future novel-engine dimensions remain deferred|Future writing commands\" design/HERMES_TAVERN_DESIGN.md"
+    result: "root design still defers relationship graph/rename/automatic extraction and other broad future dimensions."
+  - command: "rg -n \"relationship rename|rename <relationship|update_relationship_label|rename_relationship\" src/hermes_tavern tests README.md design/HERMES_TAVERN_DESIGN.md design/codestable/architecture/ARCHITECTURE.md"
+    result: "no existing relationship rename command/helper found."
+  - command: "sed -n '1660,1785p' src/hermes_tavern/runtime_novel.py"
+    result: "current relationship command family supports add/list/inspect/update/delete only; update changes state text."
+  - command: "sed -n '1218,1312p' src/hermes_tavern/db_novel.py"
+    result: "current store has list/get/update/delete relationship-state helpers; no label-only rename helper."
+  - command: "git status --short --branch"
+    result: "reported main ahead of origin with no dirty worktree entries; git emitted read-only environment warnings only."
+
+steps:
+  - id: S1
+    name: "S1: Implement relationship label rename"
+    status: completed
+    completed_at: "2026-06-06"
+    result: >
+      IMPLEMENTED - Added rename_relationship_state, /rp relationship rename,
+      help/README visibility, DB/runtime/docs tests, export visibility coverage,
+      and distinctive renamed-label no-leak coverage. Controller verification
+      passed focused, Tavern-wide, and full pytest with no protected-path drift.
+    description: >
+      Add a local relationship-label rename helper, nested relationship command
+      route, command/docs visibility, and focused tests. This is implementation
+      only; do not update CodeStable acceptance, architecture, root design, or
+      final checklist status during S1.
+    allowed_files:
+      - src/hermes_tavern/db_novel.py
+      - src/hermes_tavern/runtime_novel.py
+      - src/hermes_tavern/commands.py
+      - README.md
+      - tests/test_hermes_tavern_novel_db.py
+      - tests/test_hermes_tavern_novel_runtime.py
+      - tests/test_hermes_tavern_commands.py
+      - tests/test_hermes_tavern_readme_docs.py
+    prohibited_files:
+      - src/hermes_tavern/runtime.py
+      - run_agent.py
+      - cli.py
+      - gateway/run.py
+      - src/hermes_tavern/runtime_prompt_modules.py
+      - src/hermes_tavern/prompt.py
+      - src/hermes_tavern/runtime_prompt_manager.py
+      - src/hermes_tavern/runtime_debug.py
+      - src/hermes_tavern/model_router.py
+      - src/hermes_tavern/provider_bridge.py
+      - src/hermes_tavern/adapters.py
+      - src/hermes_tavern/runtime_model.py
+      - src/hermes_tavern/runtime_generation.py
+      - src/hermes_tavern/runtime_content.py
+      - src/hermes_tavern/memory.py
+      - src/hermes_tavern/runtime_memory.py
+      - src/hermes_tavern/images.py
+      - src/hermes_tavern/runtime_images.py
+      - "src/hermes_tavern/importers/**"
+      - "plugins/**"
+      - "build/lib/**"
+      - design/codestable/architecture/ARCHITECTURE.md
+      - design/HERMES_TAVERN_DESIGN.md
+      - "executor-side design/codestable/** status/checklist/acceptance writeback during S1"
+    exact_scope:
+      - "Add rename_relationship_state(relationship_id, label) to src/hermes_tavern/db_novel.py."
+      - "The helper must strip the new label and reject blank labels with ValueError(\"Relationship label cannot be blank\")."
+      - "The helper must reject missing rows with ValueError(\"Relationship state not found\")."
+      - "The helper must update only label and updated_at for the existing novel_relationship_states row."
+      - "Do not add or alter database tables, indexes, migrations, row ids, project ownership, state_text, created_at, or ordering semantics."
+      - "Add /rp relationship rename <relationship-id> <label> under the existing relationship_command branch in src/hermes_tavern/runtime_novel.py."
+      - "Keep /rp relationship update <relationship-id> <state...> state-text-only."
+      - "Add bounded command behavior for malformed ids, missing rows, and blank labels."
+      - "Add /rp relationship rename <relationship-id> <label> to the existing relationship help entry in src/hermes_tavern/commands.py."
+      - "Add the same literal to README Core commands."
+      - "Add focused DB/runtime/help/README tests covering rename success, state-text preservation, usage/not-found behavior, export visibility, no prompt/debug/context leak, and no new top-level route."
+      - "Do not add relationship graph, alias, merge/split, extraction, generation, archive/import, provider, content-mode, retrieval/vectorization, media, prompt, debug, context-budget, plugin-shim, build, or safety behavior."
+      - "Do not edit src/hermes_tavern/runtime.py."
+      - "Do not update design/codestable/architecture/ARCHITECTURE.md or design/HERMES_TAVERN_DESIGN.md during S1."
+      - "Executor must not create an acceptance report or mark checklist/design status accepted/completed during S1; controller owns post-verification S1 status writeback."
+    verification:
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m py_compile src/hermes_tavern/db_novel.py src/hermes_tavern/runtime_novel.py src/hermes_tavern/commands.py tests/test_hermes_tavern_novel_db.py tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_commands.py tests/test_hermes_tavern_readme_docs.py"
+        expected: "passes"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel_db.py tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_commands.py tests/test_hermes_tavern_readme_docs.py -q -o 'addopts=' -p no:cacheprovider"
+        expected: "passes"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_*.py -q -o 'addopts=' -p no:cacheprovider"
+        expected: "passes"
+      - command: "git diff --name-only -- src/hermes_tavern/runtime.py run_agent.py cli.py gateway/run.py src/hermes_tavern/runtime_prompt_modules.py src/hermes_tavern/prompt.py src/hermes_tavern/runtime_prompt_manager.py src/hermes_tavern/runtime_debug.py src/hermes_tavern/model_router.py src/hermes_tavern/provider_bridge.py src/hermes_tavern/adapters.py src/hermes_tavern/runtime_model.py src/hermes_tavern/runtime_generation.py src/hermes_tavern/runtime_content.py src/hermes_tavern/memory.py src/hermes_tavern/runtime_memory.py src/hermes_tavern/images.py src/hermes_tavern/runtime_images.py src/hermes_tavern/importers plugins build/lib design/HERMES_TAVERN_DESIGN.md design/codestable/architecture/ARCHITECTURE.md"
+        expected: "empty output during S1 implementation"
+      - command: "git diff --check"
+        expected: "passes"
+  - id: S2
+    name: "S2: Verify/accept/write current docs"
+    status: planned
+    description: >
+      Controller-owned acceptance/writeback after S1. Draft an acceptance report,
+      update final checklist statuses, and write Phase 140 current behavior into
+      architecture/root-design docs only after rerunning controller verification.
+    allowed_files:
+      - design/codestable/features/2026-06-06-hermes-tavern-phase140-relationship-label-rename/checklist.yaml
+      - design/codestable/features/2026-06-06-hermes-tavern-phase140-relationship-label-rename/hermes-tavern-phase140-relationship-label-rename-acceptance.md
+      - design/codestable/architecture/ARCHITECTURE.md
+      - design/HERMES_TAVERN_DESIGN.md
+    prohibited_files:
+      - README.md
+      - "src/**"
+      - "tests/**"
+      - run_agent.py
+      - cli.py
+      - gateway/run.py
+      - "plugins/**"
+      - "build/lib/**"
+
+acceptance:
+  - id: AC1
+    criteria: "Store helper rename_relationship_state updates only label and updated_at for one existing relationship-state row."
+    status: pending
+  - id: AC2
+    criteria: "Store helper preserves id, project_id, state_text, created_at, and row ordering."
+    status: pending
+  - id: AC3
+    criteria: "Blank new labels, malformed ids, and missing relationship rows return bounded behavior."
+    status: pending
+  - id: AC4
+    criteria: "/rp relationship rename <relationship-id> <label> works through existing relationship command routing."
+    status: pending
+  - id: AC5
+    criteria: "/rp relationship update remains state-text-only and does not alter the label."
+    status: pending
+  - id: AC6
+    criteria: "/rp relationship list, /rp relationship inspect, and /rp project export show the renamed label through existing read/export paths."
+    status: pending
+  - id: AC7
+    criteria: "/rp help, TAVERN_COMMAND_TABLE, README Core commands, and docs tests include the relationship rename literal."
+    status: pending
+  - id: AC8
+    criteria: "No new top-level relationship rename route, runtime.py shim, or protected core/plugin/build edit is added."
+    status: pending
+  - id: AC9
+    criteria: "Distinctive renamed label text stays out of debug prompt, debug context, prompt modules, context-budget output, provider/model routing, content mode, retrieval/vectorization, and generation paths."
+    status: pending
+  - id: AC10
+    criteria: "Focused and Tavern-wide offline tests pass with no network/provider calls."
+    status: pending
+  - id: AC11
+    criteria: "S1 leaves acceptance report, architecture, root design, and accepted final status untouched."
+    status: pending
+
+checks:
+  - id: C1
+    name: "No active checklist precondition"
+    status: completed
+    completed_at: "2026-06-06"
+    result: >
+      PASSED - Controller and Codex architect found no active planned/in-progress
+      recent checklist; legacy missing-status checklists were historical noise and
+      Phase 139 was accepted before Phase 140 planning.
+    criteria: "No planned/in-progress/draft feature checklist exists before Phase 140 S1 starts."
+  - id: C2
+    name: "Relationship rename helper"
+    status: completed
+    completed_at: "2026-06-06"
+    result: >
+      PASSED - rename_relationship_state strips labels, rejects blank labels and
+      missing rows, updates label/updated_at only, and preserves id, project_id,
+      state_text, created_at, and ordering.
+    criteria: "DB helper changes only label and updated_at, with blank-label and missing-row validation."
+  - id: C3
+    name: "Existing command family route"
+    status: completed
+    completed_at: "2026-06-06"
+    result: >
+      PASSED - /rp relationship rename routes through runtime_novel.relationship_command,
+      TAVERN_COMMAND_TABLE has only the existing relationship family, and runtime.py
+      stayed untouched.
+    criteria: "Rename command is nested under /rp relationship and no runtime.py route shim is needed."
+  - id: C4
+    name: "Read/export visibility"
+    status: completed
+    completed_at: "2026-06-06"
+    result: >
+      PASSED - Runtime tests cover renamed label visibility in inspect/list and
+      project Markdown export without new export semantics or schema changes.
+    criteria: "List, inspect, and Markdown export show renamed labels without new export semantics."
+  - id: C5
+    name: "No prompt/provider side effects"
+    status: completed
+    completed_at: "2026-06-06"
+    result: >
+      PASSED - Distinctive renamed-label no-leak tests cover debug prompt/context,
+      full pytest passed, and protected diff guards showed no prompt/debug/context,
+      provider/model/content/generation, retrieval/vectorization, media, importer,
+      plugin, build, architecture, or root-design drift.
+    criteria: "No-leak tests and protected diff guard prove no prompt/debug/context/provider/retrieval/generation side effects."
+  - id: C6
+    name: "S1 status boundary"
+    status: completed
+    completed_at: "2026-06-06"
+    result: >
+      PASSED - Executor left acceptance/architecture/root-design finalization to
+      the controller; S1 status writeback only marks implementation complete and
+      adds planned S2 acceptance/writeback.
+    criteria: "Executor does not mark acceptance/final checklist statuses or update architecture/root design during S1."
+
+risks:
+  - id: R1
+    risk: "Relationship rename could expand into graph, alias, merge/split, or extraction semantics."
+    mitigation: "Implement one label-only helper and command; prohibit schema/graph/extraction changes."
+  - id: R2
+    risk: "A top-level rename route would require prohibited runtime.py changes."
+    mitigation: "Use the existing /rp relationship command family and assert no new top-level route."
+  - id: R3
+    risk: "Renamed labels could leak into prompt/debug/context paths if relationship metadata boundaries regress."
+    mitigation: "Add distinctive renamed-label no-leak tests for debug prompt and debug context plus reverse-scope diff guards."
+  - id: R4
+    risk: "S1 could prematurely finalize docs/status artifacts."
+    mitigation: "Prohibit architecture/root-design/acceptance/checklist finalization during S1; leave closure to the controller."

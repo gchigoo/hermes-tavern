@@ -47,6 +47,7 @@ PROJECT_REVISION_USAGE = (
 RELATIONSHIP_USAGE = (
     "Usage: /rp relationship add <project-id> <label> <state...> | "
     "/rp relationship list [project-id] | /rp relationship inspect <relationship-id> | "
+    "/rp relationship rename <relationship-id> <label> | "
     "/rp relationship update <relationship-id> <state...> | "
     "/rp relationship delete <relationship-id>"
 )
@@ -216,6 +217,7 @@ def test_novel_command_table_has_expected_families():
     assert "/rp relationship add <project-id> <label> <state...>" in TAVERN_COMMAND_TABLE["relationship"].help_lines
     assert "/rp relationship list [project-id]" in TAVERN_COMMAND_TABLE["relationship"].help_lines
     assert "/rp relationship inspect <relationship-id>" in TAVERN_COMMAND_TABLE["relationship"].help_lines
+    assert "/rp relationship rename <relationship-id> <label>" in TAVERN_COMMAND_TABLE["relationship"].help_lines
     assert "/rp relationship update <relationship-id> <state...>" in TAVERN_COMMAND_TABLE["relationship"].help_lines
     assert "/rp relationship delete <relationship-id>" in TAVERN_COMMAND_TABLE["relationship"].help_lines
     assert "/rp character state add <project-id> <label> <state...>" in TAVERN_COMMAND_TABLE["character"].help_lines
@@ -447,6 +449,7 @@ def test_project_command_help_includes_relationship_lines(tmp_path):
     assert "/rp relationship add <project-id> <label> <state...>" in help_output
     assert "/rp relationship list [project-id]" in help_output
     assert "/rp relationship inspect <relationship-id>" in help_output
+    assert "/rp relationship rename <relationship-id> <label>" in help_output
     assert "/rp relationship update <relationship-id> <state...>" in help_output
     assert "/rp relationship delete <relationship-id>" in help_output
 
@@ -2187,6 +2190,40 @@ def test_relationship_routes_add_list_inspect_update_delete(tmp_path):
     )
     assert inspect == "Relationship state for [1] (project [1]): mara-ilya: Trust has grown through shared victories."
 
+    rename = runtime.handle_command_sync(
+        RPCommand(
+            "relationship",
+            ["rename", "1", "mara-calder", "companion"],
+            "/rp relationship rename 1 mara-calder companion",
+        ),
+        Event(),
+    )
+    assert rename == "Relationship label updated for relationship [1]: mara-calder companion"
+    renamed_state = runtime.store.get_relationship_state(1)
+    assert renamed_state is not None
+    assert renamed_state["label"] == "mara-calder companion"
+    assert renamed_state["state_text"] == "Trust has grown through shared victories."
+
+    inspect_after_rename = runtime.handle_command_sync(
+        RPCommand("relationship", ["inspect", "1"], "/rp relationship inspect 1"),
+        Event(),
+    )
+    assert (
+        inspect_after_rename
+        == "Relationship state for [1] (project [1]): mara-calder companion: Trust has grown through shared victories."
+    )
+
+    list_output_after_rename = runtime.handle_command_sync(
+        RPCommand(
+            "relationship",
+            ["list", str(project["id"])],
+            "/rp relationship list 1",
+        ),
+        Event(),
+    )
+    assert "mara-calder companion" in list_output_after_rename
+    assert "mara-ilya" not in list_output_after_rename
+
     update = runtime.handle_command_sync(
         RPCommand(
             "relationship",
@@ -2210,6 +2247,51 @@ def test_relationship_routes_add_list_inspect_update_delete(tmp_path):
         Event(),
     )
     assert list_after_delete == "No relationship states for project [1]."
+
+
+def test_relationship_routes_rename_boundary_cases(tmp_path):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    runtime.store.create_project("Atlas")
+
+    assert (
+        runtime.handle_command_sync(
+            RPCommand(
+                "relationship",
+                ["rename", "not-a-number", "mara-calder", "friend"],
+                "/rp relationship rename not-a-number mara-calder friend",
+            ),
+            Event(),
+        )
+        == RELATIONSHIP_USAGE
+    )
+    assert (
+        runtime.handle_command_sync(
+            RPCommand("relationship", ["rename", "1"], "/rp relationship rename 1"),
+            Event(),
+        )
+        == RELATIONSHIP_USAGE
+    )
+    assert (
+        runtime.handle_command_sync(
+            RPCommand("relationship", ["rename", "1", ""], "/rp relationship rename 1"),
+            Event(),
+        )
+        == RELATIONSHIP_USAGE
+    )
+    assert (
+        runtime.handle_command_sync(
+            RPCommand("relationship", ["rename", "1", "", ""], "/rp relationship rename 1"),
+            Event(),
+        )
+        == RELATIONSHIP_USAGE
+    )
+    assert (
+        runtime.handle_command_sync(
+            RPCommand("relationship", ["rename", "9999", "mara"], "/rp relationship rename 9999 mara"),
+            Event(),
+        )
+        == "No relationship state found: 9999"
+    )
 
 
 def test_relationship_list_uses_active_project_fallback(tmp_path):
@@ -2282,6 +2364,10 @@ def test_relationship_not_found_and_missing_project_errors(tmp_path):
     ) == "No relationship state found: 9999"
     assert runtime.handle_command_sync(
         RPCommand("relationship", ["update", "9999", "Trust recovers"], "/rp relationship update 9999 Trust recovers"),
+        Event(),
+    ) == "No relationship state found: 9999"
+    assert runtime.handle_command_sync(
+        RPCommand("relationship", ["rename", "9999", "mara"], "/rp relationship rename 9999 mara"),
         Event(),
     ) == "No relationship state found: 9999"
     assert runtime.handle_command_sync(
@@ -2668,6 +2754,35 @@ def test_project_export_includes_locations_only_when_present_and_in_order(tmp_pa
     exported_no_locations = Path(file_path_no_locations).read_text(encoding="utf-8")
     assert "## Locations" not in exported_no_locations
     assert "## Organizations" not in exported_no_locations
+
+
+def test_project_export_includes_renamed_relationship_label(tmp_path, monkeypatch):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    monkeypatch.setenv("HERMES_HOME", str(tmp_path / "hermes home"))
+
+    runtime.store.create_project("Atlas")
+    runtime.store.create_relationship_state(
+        1,
+        "mara-elya",
+        "Trust remains fragile.",
+    )
+    rename = runtime.handle_command_sync(
+        RPCommand("relationship", ["rename", "1", "mara-calder"], "/rp relationship rename 1 mara-calder"),
+        Event(),
+    )
+    assert rename == "Relationship label updated for relationship [1]: mara-calder"
+
+    response = runtime.handle_command_sync(
+        RPCommand("project", ["export", "1"], "/rp project export 1"),
+        Event(),
+    )
+    assert "Project exported as Markdown." in response
+    file_path = response.split("file: ", 1)[1].splitlines()[0].strip()
+    from pathlib import Path
+    exported = Path(file_path).read_text(encoding="utf-8")
+    assert "## Relationships" in exported
+    assert "mara-calder" in exported
+    assert "mara-elya" not in exported
 
 
 def test_project_export_includes_style_samples_after_outline_without_style_guide(tmp_path, monkeypatch):
@@ -4106,6 +4221,35 @@ def test_style_sample_markers_do_not_leak_to_debug_prompt_or_context(tmp_path):
     context = runtime.handle_command_sync(RPCommand("debug", ["context"], "/rp debug context"), Event())
     assert "marker: distinctive style sample token" not in prompt
     assert "marker: distinctive style sample token" not in context
+
+
+def test_relationship_markers_do_not_leak_to_debug_prompt_or_context(tmp_path):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    store.save_card(parse_character_card({"name": "Alice", "description": "Scholar", "first_mes": "Hello."}))
+    runtime = TavernRuntime(store)
+    runtime.handle_command_sync(RPCommand("start", ["Alice"], "/rp start Alice"), Event())
+
+    project = store.create_project("Atlas")
+    chapter = store.create_chapter(project["id"], "Prologue")
+    scene = store.create_scene(chapter["id"], "Opening")
+    store.link_scene_session(
+        scene["id"],
+        store.get_active_session("telegram:chat:chat-1:thread:main:user:user-1")["id"],
+    )
+    relationship = store.create_relationship_state(
+        project["id"],
+        "ominous bond",
+        "Trust remains intentionally local metadata.",
+    )
+    store.rename_relationship_state(
+        relationship["id"],
+        "marker: distinctive relationship label token",
+    )
+
+    prompt = runtime.handle_command_sync(RPCommand("debug", ["prompt"], "/rp debug prompt"), Event())
+    context = runtime.handle_command_sync(RPCommand("debug", ["context"], "/rp debug context"), Event())
+    assert "marker: distinctive relationship label token" not in prompt
+    assert "marker: distinctive relationship label token" not in context
 
 
 def test_project_export_file_includes_all_current_metadata_sections_in_order(tmp_path, monkeypatch):
