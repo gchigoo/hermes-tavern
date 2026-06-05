@@ -507,6 +507,8 @@ ST card/preset/lorebook/persona importer/exporter compatibility remains unchange
 
 Relationship state is now current local metadata and is managed through
 `novel_relationship_states(id, project_id, label, state_text, created_at, updated_at)`.
+It can be corrected with `/rp relationship rename <relationship-id> <label>`, which
+updates only `label` and `updated_at`, preserves `state_text`, and remains command/export-visible metadata only.
 
 Character state is also now current local metadata and is managed through
 `novel_character_states(id, project_id, label, state_text, created_at, updated_at)`.
@@ -571,7 +573,8 @@ tense: past|present
 ```
 
 Remaining deferred sub-objects from the original vision are relationship
-graph/rename/automatic extraction.
+graph/aliases/merge-split and automatic extraction; relationship label rename is
+current metadata.
 
 Commands:
 
@@ -603,6 +606,7 @@ Commands:
 /rp relationship add <project-id> <label> <state...>
 /rp relationship list [project-id]
 /rp relationship inspect <relationship-id>
+/rp relationship rename <relationship-id> <label>
 /rp relationship update <relationship-id> <state...>
 /rp relationship delete <relationship-id>
 /rp location add <project-id> <label> <description...>
@@ -1056,7 +1060,8 @@ scene beats
 ```
 
 Future novel-engine dimensions remain deferred: volume/arc, location map/
-geocode derivatives, relationship graph/rename/automatic extraction.
+geocode derivatives, relationship graph/aliases/merge-split/automatic extraction;
+relationship label rename is current metadata.
 
 ### 13.2 Writing commands
 
@@ -1104,6 +1109,7 @@ geocode derivatives, relationship graph/rename/automatic extraction.
 /rp relationship add <project-id> <label> <state...>
 /rp relationship list [project-id]
 /rp relationship inspect <relationship-id>
+/rp relationship rename <relationship-id> <label>
 /rp relationship update <relationship-id> <state...>
 /rp relationship delete <relationship-id>
 /rp chapter create/list
@@ -1163,13 +1169,13 @@ excluded from prompt/debug, context-budget reporting, retrieval/vectorization,
 provider/model routing, content-mode decisions, credentials, generation, media,
 archive, graph, automatic extraction, and safety behavior.
 Relationship state is metadata-only and local-only: command-driven relationship
-notes for inspection/list/update/delete and optional Markdown export, no prompt,
-context-budget, retrieval/vectorization, provider/model/routing, content-mode,
-credential, or generation side effect.
+notes for inspection/list/rename/update/delete and optional Markdown export, no
+prompt, context-budget, retrieval/vectorization, provider/model/routing,
+content-mode, credential, or generation side effect.
 
 Future writing commands from the original vision remain deferred: outline
 generation/rewrite/expand/compress workflows, project archive
-ZIP/export/import, and relationship graph/rename/automatic extraction.
+ZIP/export/import, and relationship graph/aliases/merge-split/automatic extraction.
 
 ### 13.3 Canon management
 
@@ -1186,7 +1192,8 @@ Future canon commands from the original vision remain deferred: `/rp canon check
 `/rp canon conflict`, and `/rp canon pin <fact>`.
 
 Cross-cutting deferred novel constraints remain explicit in this slice:
-relationship graph/rename/automatic extraction, project archive ZIP/import
+relationship graph/aliases/merge-split/automatic extraction, project archive
+ZIP/import
 workflows, automatic default-binding application and scalar default fields,
 canon-policy/content-mode metadata, provider routing, generation side effects,
 retrieval/vectorization/automation coupling, archive ZIP/import/export workflows,
@@ -1330,6 +1337,13 @@ Current character-state metadata table:
 with `project_id REFERENCES novel_projects(id) ON DELETE CASCADE` and
 `idx_novel_character_states_project ON novel_character_states(project_id)`.
 
+Current relationship-state metadata table:
+`novel_relationship_states(id, project_id, label, state_text, created_at, updated_at)`,
+with `project_id REFERENCES novel_projects(id) ON DELETE CASCADE` and
+`idx_novel_relationship_states_project ON novel_relationship_states(project_id)`.
+Phase 140 metadata edits mutate only `label` and `updated_at`; there is no schema
+or index change in this phase.
+
 Current location metadata table:
 `novel_locations(id, project_id, label, description_text, created_at, updated_at)`,
 with `project_id REFERENCES novel_projects(id) ON DELETE CASCADE` and
@@ -1400,11 +1414,14 @@ ST preset JSON
 ST lorebook/world info JSON
 ```
 
-Hermes Tavern native project archives are deferred; the current Phase 121–139
+Hermes Tavern native project archives are deferred; the current Phase 121–140
 implementation provides Markdown export only, not project/novel import.
 Relationship-state, character-state, location, organization, plot-thread, and
 style-sample rows, plus revision-note and scene-beat rows, remain local metadata
 and are not bound to ST card objects in this phase.
+Current relationship labels are pulled from `novel_relationship_states.label` and
+rendered in the existing `## Relationships` section with no archive/import/export
+schema changes.
 
 Later:
 
@@ -1427,7 +1444,7 @@ chat export JSONL
 novel export Markdown
 ```
 
-Project archive ZIP remains a future exporter/importer; current Phase 121–139 writes
+Project archive ZIP remains a future exporter/importer; current Phase 121–140 writes
 local Markdown via `/rp project export [id]`.
 Project Brief and Project Outline are exported as optional top-level `## Project Brief`
 and `## Outline` sections after `## Summary` when non-empty. Project style guides

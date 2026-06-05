@@ -1,23 +1,23 @@
 doc_type: feature-checklist
 feature: "2026-06-06-hermes-tavern-phase140-relationship-label-rename"
 date: "2026-06-06"
-status: implemented
+status: accepted
 summary: >
-  S1_IMPLEMENTED - Relationship Label Rename adds a local command under the
+  ACCEPTED - Relationship Label Rename adds a local command under the
   existing /rp relationship family. It updates only novel_relationship_states.label
-  for an existing row, keeps relationship state text unchanged, and exposes the
-  renamed label through existing list/inspect/export surfaces without prompt,
-  provider, retrieval, generation, graph, extraction, archive, safety,
-  plugin-shim, or runtime-core side effects.
+  and updated_at for an existing row, keeps relationship state text unchanged,
+  and exposes the renamed label through existing list/inspect/export surfaces
+  without prompt, provider, retrieval, generation, graph, extraction, archive,
+  safety, plugin-shim, or runtime-core side effects.
 tags: [novel, relationships, metadata, commands, export, offline]
 
 implementation_readiness: >
-  S1_IMPLEMENTED - Codex architect produced the Phase 140 artifact on 2026-06-06,
-  the controller promoted it for unattended S1, Codex executor implemented the
-  bounded workspace-write slice, and the controller reran py_compile, focused
-  tests, Tavern-wide tests, full pytest, validators, protected reverse-scope
-  guards, and git diff --check. S2 acceptance/writeback remains planned; architecture
-  and root-design current-behavior docs are intentionally not finalized in S1.
+  S1_IMPLEMENTED - Relationship label rename implementation is complete with
+  nested `/rp relationship` routing, label-only helper updates, and focused test
+  coverage for bounded behavior.
+  S2_ACCEPTED - Controller finalized acceptance/writeback after rerunning focused
+  py_compile, focused pytest, Tavern-wide pytest, full pytest, CodeStable validators,
+  stale-wording guards, reverse-scope guards, and git diff --check.
 
 planning_verification:
   - command: "sed -n '1,260p' design/codestable/attention.md"
@@ -29,13 +29,13 @@ planning_verification:
   - command: "sed -n '1,260p' design/codestable/features/2026-06-06-hermes-tavern-phase139-revision-notes-metadata/checklist.yaml"
     result: "Phase 139 checklist status is accepted."
   - command: "rg -n \"relationship graph/rename/automatic extraction|Future novel-engine dimensions remain deferred|Future writing commands\" design/HERMES_TAVERN_DESIGN.md"
-    result: "root design still defers relationship graph/rename/automatic extraction and other broad future dimensions."
+    result: "root design now defers relationship graph/aliases/merge-split/automatic extraction and keeps relationship label rename current."
   - command: "rg -n \"relationship rename|rename <relationship|update_relationship_label|rename_relationship\" src/hermes_tavern tests README.md design/HERMES_TAVERN_DESIGN.md design/codestable/architecture/ARCHITECTURE.md"
-    result: "no existing relationship rename command/helper found."
+    result: "existing /rp relationship rename command and db helper are now present in source docs."
   - command: "sed -n '1660,1785p' src/hermes_tavern/runtime_novel.py"
-    result: "current relationship command family supports add/list/inspect/update/delete only; update changes state text."
+    result: "relationship command family now includes nested rename; update remains state-text-only."
   - command: "sed -n '1218,1312p' src/hermes_tavern/db_novel.py"
-    result: "current store has list/get/update/delete relationship-state helpers; no label-only rename helper."
+    result: "store now includes rename_relationship_state plus existing list/get/update/delete helpers."
   - command: "git status --short --branch"
     result: "reported main ahead of origin with no dirty worktree entries; git emitted read-only environment warnings only."
 
@@ -117,7 +117,13 @@ steps:
         expected: "passes"
   - id: S2
     name: "S2: Verify/accept/write current docs"
-    status: planned
+    status: completed
+    completed_at: "2026-06-06"
+    result: >
+      ACCEPTED - Finalized acceptance report, checklist status, architecture snapshot,
+      and root-design current-behavior writeback after controller-run py_compile,
+      focused tests, Tavern-wide tests, full pytest, CodeStable validators,
+      stale-wording guards, reverse-scope guards, and git diff --check.
     description: >
       Controller-owned acceptance/writeback after S1. Draft an acceptance report,
       update final checklist statuses, and write Phase 140 current behavior into
@@ -140,37 +146,37 @@ steps:
 acceptance:
   - id: AC1
     criteria: "Store helper rename_relationship_state updates only label and updated_at for one existing relationship-state row."
-    status: pending
+    status: completed
   - id: AC2
     criteria: "Store helper preserves id, project_id, state_text, created_at, and row ordering."
-    status: pending
+    status: completed
   - id: AC3
     criteria: "Blank new labels, malformed ids, and missing relationship rows return bounded behavior."
-    status: pending
+    status: completed
   - id: AC4
     criteria: "/rp relationship rename <relationship-id> <label> works through existing relationship command routing."
-    status: pending
+    status: completed
   - id: AC5
     criteria: "/rp relationship update remains state-text-only and does not alter the label."
-    status: pending
+    status: completed
   - id: AC6
     criteria: "/rp relationship list, /rp relationship inspect, and /rp project export show the renamed label through existing read/export paths."
-    status: pending
+    status: completed
   - id: AC7
     criteria: "/rp help, TAVERN_COMMAND_TABLE, README Core commands, and docs tests include the relationship rename literal."
-    status: pending
+    status: completed
   - id: AC8
     criteria: "No new top-level relationship rename route, runtime.py shim, or protected core/plugin/build edit is added."
-    status: pending
+    status: completed
   - id: AC9
     criteria: "Distinctive renamed label text stays out of debug prompt, debug context, prompt modules, context-budget output, provider/model routing, content mode, retrieval/vectorization, and generation paths."
-    status: pending
+    status: completed
   - id: AC10
     criteria: "Focused and Tavern-wide offline tests pass with no network/provider calls."
-    status: pending
+    status: completed
   - id: AC11
     criteria: "S1 leaves acceptance report, architecture, root design, and accepted final status untouched."
-    status: pending
+    status: completed
 
 checks:
   - id: C1
@@ -227,6 +233,15 @@ checks:
       the controller; S1 status writeback only marks implementation complete and
       adds planned S2 acceptance/writeback.
     criteria: "Executor does not mark acceptance/final checklist statuses or update architecture/root design during S1."
+
+verification_notes: |
+  - Controller finalized S2 after rerunning focused py_compile, focused pytest
+    (323 passed), Tavern-wide pytest (1014 passed), full pytest (1014 passed),
+    CodeStable validators for design/checklist/acceptance, stale-wording guards,
+    protected reverse-scope guards, and git diff --check.
+  - The S2 diff is docs/status-only: checklist, acceptance report, architecture
+    snapshot, and root-design writeback. README, src, tests, core/gateway, plugin,
+    and build paths are unchanged in this slice.
 
 risks:
   - id: R1

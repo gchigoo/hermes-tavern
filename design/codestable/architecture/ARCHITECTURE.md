@@ -130,6 +130,8 @@ importers/
 - Phase 137: Default Bindings Metadata v1 (`/rp binding set/list/inspect/clear`) backed by `novel_default_bindings`; metadata-only, command/export visible only. Unique scope constraint uses `UNIQUE(scope_type, scope_id, asset_type)` with `idx_novel_default_bindings_scope`. No prompt/debug/context/provider/model/content/generation/media/archival/graph/safety behavior changes.
 - Phase 138: Scene Beat Metadata v1 (`/rp scene beat add/list/inspect/update/delete`) backed by `novel_scene_beats`; metadata-only, command/export visible only for owning scene. No prompt/debug/context/provider/model/content/credential/retrieval/vectorization/generation/media/archive/graph/extraction/safety behavior changes.
 - Phase 139: Revision Notes Metadata v1 (`/rp project revision add/list/inspect/update/delete`) backed by `novel_revision_notes`; metadata-only, command/export-visible only, and no prompt/debug/context/provider/model/content/credential/retrieval/vectorization/generation/media/archive/graph/extraction/safety behavior changes.
+- Phase 140: Relationship Label Rename (`/rp relationship rename <relationship-id> <label>`) backed by
+  `novel_relationship_states` metadata; metadata-only, command/export-visible only, and no prompt/debug/context/provider/model/content/credential/retrieval/vectorization/generation/media/archive/graph/extraction/safety behavior changes.
 
 ### Plugin flow
 
@@ -170,7 +172,7 @@ from vectorization/retrieval, provider/model routing, content mode,
 credentials, automation, summarization, and generation; they are visible only
 through command output and Markdown export.
 
-### /rp command surface (current through Phase 139)
+### /rp command surface (current through Phase 140)
 
 ```
 /rp help | status | assets
@@ -263,11 +265,12 @@ through command output and Markdown export.
 /rp relationship add <project-id> <label> <state...>
 /rp relationship list [project-id]
 /rp relationship inspect <relationship-id>
+/rp relationship rename <relationship-id> <label>
 /rp relationship update <relationship-id> <state...>
 /rp relationship delete <relationship-id>
 ```
 
-### DB schema (current through Phase 139)
+### DB schema (current through Phase 140)
 
 ```sql
 cards(id, name, data_json, source_path, created_at)
@@ -368,6 +371,9 @@ metadata. Relationship-state rows are managed through `/rp relationship ...` and
 exported as optional `## Relationships` Markdown metadata; they are not selected
 for prompt modules, debug/context-budget payloads, vectorization/retrieval,
 provider/model routing, content mode, credentials, or generation.
+Phase 140 adds `/rp relationship rename <relationship-id> <label>`. It updates only
+`novel_relationship_states.label` and `updated_at`, preserves row identity and
+`state_text`, and keeps existing deterministic ordering.
 
 Phase 131 adds `novel_character_states` as project-scoped character metadata.
 Character-state rows are managed through `/rp character state ...` and emitted as
@@ -474,4 +480,5 @@ These phases do not change schema or core prompt/generation assembly.
 - **Phase 137 default binding boundary**: default-binding metadata is command/export-visible only. It is excluded from prompt modules, debug prompt/context output, context-budget reporting, vectorization/retrieval, provider/model routing, content mode decisions, credentials, generation, media/TTS/image flow, archive, ST importer/exporter, graph, and safety-bypass behavior.
 - **Phase 138 scene-beat boundary**: scene-beat metadata is command/export-visible only. It is excluded from prompt modules, debug prompt/context output, context-budget reporting, vectorization/retrieval, provider/model routing, content mode decisions, credentials, generation, media/TTS/image flow, archive, ST importer/exporter, graph, and safety-bypass behavior.
 - **Phase 139 revision-notes boundary**: revision-note metadata is command/export-visible only. It is excluded from prompt modules, debug prompt/context output, context-budget reporting, vectorization/retrieval, provider/model routing, content mode decisions, credentials, generation, media/TTS/image flow, archive, ST importer/exporter, graph, and safety-bypass behavior.
+- **Phase 140 relationship label rename boundary**: relationship-label rename updates only `label` and `updated_at`, preserves `id`, `project_id`, `state_text`, `created_at`, and row order, and is command/export-visible only. It is excluded from prompt modules, debug prompt/context output, context-budget reporting, vectorization/retrieval, provider/model routing, content-mode decisions, credentials, generation, media/TTS/image flow, archive, ST importer/exporter, graph/alias/merge-split/automatic extraction behaviors, and safety-bypass behavior.
 - **Tavern lore regex complexity guard**: lorebook regex keys are screened locally before matching. Entries with patterns longer than 256 characters or nested quantified groups (for example `(a+)+`, `(.+)*`, `([a-z]+){2,}`) are excluded with bounded reasons (`regex rejected: ...`), preserving raw imported lore data while preventing unbounded local matching behavior.
