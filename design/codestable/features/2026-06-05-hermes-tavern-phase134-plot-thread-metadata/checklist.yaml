@@ -1,22 +1,24 @@
 doc_type: feature-checklist
 feature: "2026-06-05-hermes-tavern-phase134-plot-thread-metadata"
 date: "2026-06-05"
-status: in_progress
+status: accepted
 summary: >
-  IN PROGRESS - Plot Thread Metadata v1 adds local project-scoped plot-thread
+  ACCEPTED - Plot Thread Metadata v1 adds local project-scoped plot-thread
   notes backed by `novel_plot_threads`, managed through `/rp plot thread ...`,
   visible in help/README and optional `## Plot Threads` Markdown export, and
   verified to remain outside prompt/debug/context-budget/provider/model/
   content-mode/generation/credential/retrieval/vectorization/automation/media/
-  TTS/image paths. S1 implementation is complete; S2 acceptance and architecture
-  writeback remain planned.
+  TTS/image paths. S1 implementation and S2 acceptance/architecture/root-design
+  writeback are complete.
 
 implementation_readiness: >
-  S1 COMPLETE - Controller revalidated the existing Phase 134 planning artifact,
+  ACCEPTED - Controller revalidated the existing Phase 134 planning artifact,
   promoted the design to approved, smoke-tested the executor profile, ran the
   bounded executor implementation pass, reran controller verification from
-  scratch, and marked only the S1 implementation/checks complete. S2 acceptance
-  and architecture/root-design writeback remain pending.
+  scratch, marked the S1 implementation/checks complete, ran a Codex architect
+  S2 artifact pass, ran a bounded Codex executor docs/writeback pass, then reran
+  focused/Tavern/full pytest, YAML/frontmatter validators, reverse-scope guards,
+  stale-wording guards, and `git diff --check` before accepting S2.
 
 planning_verification:
   - command: >-
@@ -162,7 +164,16 @@ steps:
 
   - id: S2
     name: "S2: Verify/Accept/Write Architecture"
-    status: planned
+    status: completed
+    completed_at: "2026-06-05"
+    result: >
+      ACCEPTED - S2 created the Phase 134 acceptance report, updated
+      `design/codestable/architecture/ARCHITECTURE.md` and
+      `design/HERMES_TAVERN_DESIGN.md` to mark plot-thread metadata current,
+      preserved deferred automation/retrieval/provider/generation/default-
+      binding/policy/archive/graph boundaries, and passed controller-run
+      focused/Tavern/full pytest, YAML/frontmatter validation, reverse-scope,
+      stale-wording, and whitespace checks.
     description: >
       Controller-owned phase after S1. Run focused, plugin, full,
       YAML/frontmatter, reverse-scope, stale-wording, and whitespace
@@ -191,30 +202,30 @@ steps:
     verification:
       - command: >-
           PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel_db.py tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_commands.py tests/test_hermes_tavern_readme_docs.py -q -o 'addopts=' -p no:cacheprovider
-        expected: "focused verification passes"
+        result: "passed; 256 passed in 8.87s"
       - command: >-
           PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_*.py -q -o 'addopts=' -p no:cacheprovider
-        expected: "Tavern plugin test glob passes"
+        result: "passed; 947 passed in 43.96s"
       - command: >-
           PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts=' -p no:cacheprovider
-        expected: "full pytest suite passes"
+        result: "passed; 947 passed in 40.70s"
       - command: >-
           python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-05-hermes-tavern-phase134-plot-thread-metadata/design.md --require doc_type --require status --require feature
-        expected: "passes"
+        result: "passed"
       - command: >-
           python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-05-hermes-tavern-phase134-plot-thread-metadata/hermes-tavern-phase134-plot-thread-metadata-acceptance.md --require doc_type --require status --require feature
-        expected: "passes after acceptance exists"
+        result: "passed after acceptance report was finalized"
       - command: >-
           python design/codestable/tools/validate-yaml.py --yaml-only --file design/codestable/features/2026-06-05-hermes-tavern-phase134-plot-thread-metadata/checklist.yaml
-        expected: "passes"
+        result: "passed after controller status update"
       - command: >-
           git diff --name-only -- README.md src tests run_agent.py cli.py gateway/run.py build/lib
-        expected: "empty in S2"
+        result: "empty in S2"
       - command: >-
-          rg -n "current through Phase 133|Phase 121-133|Phase 121–133|Future sub-objects from the original vision remain deferred: plot threads|plot threads, relationship graph|Relationship/character-state/location/organization metadata remain" design/codestable/architecture/ARCHITECTURE.md design/HERMES_TAVERN_DESIGN.md
-        expected: "empty after writeback"
+          rg -n "current through Phase 133|Phase 121-133|Phase 121–133|Future sub-objects from the original vision remain deferred: plot threads|plot threads, relationship graph|Relationship, character-state, location, and organization metadata remain|Character-state and location metadata are command-managed local state only|Relationship-state, character-state, location, and organization rows remain local" design/codestable/architecture/ARCHITECTURE.md design/HERMES_TAVERN_DESIGN.md
+        result: "empty after writeback"
       - command: "git diff --check"
-        expected: "passes"
+        result: "passed"
 
 checks:
   - id: C1

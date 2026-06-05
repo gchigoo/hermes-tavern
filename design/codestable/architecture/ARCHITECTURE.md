@@ -125,6 +125,7 @@ importers/
 - Phase 131: Character State Metadata v1 (`/rp character state ...`) backed by `novel_character_states`; metadata-only, no prompt/debug/context-budget/vectorization/retrieval/provider/model-routing/content-mode/generation/credential side effects. Export is optional and local-only as `## Characters`.
 - Phase 132: Location Metadata v1 (`/rp location ...`) backed by `novel_locations`; metadata-only, no prompt/provider/model-routing/content-mode/generation side effects. Export is optional and local-only as `## Locations`.
 - Phase 133: Organization Metadata v1 (`/rp organization ...`) backed by `novel_organizations`; metadata-only, no prompt/provider/model-routing/content-mode/generation side effects. Export is optional and local-only as `## Organizations`.
+- Phase 134: Plot Thread Metadata v1 (`/rp plot thread ...`) backed by `novel_plot_threads`; metadata-only, no prompt/provider/model-routing/content-mode/generation side effects. Export is optional and local-only as `## Plot Threads`.
 
 ### Plugin flow
 
@@ -155,14 +156,14 @@ Macro expansion is one-pass and allowlist-based. Supported Phase 20 macros are
 unknown macros are preserved, and replacement text is not recursively expanded.
 
 Project Brief, Project Outline, Relationship State, Character State, Location,
-and Organization metadata are explicitly excluded from prompt assembly, session
+Organization, and Plot Thread metadata are explicitly excluded from prompt assembly, session
 prompt module selection, debug prompt/context payloads, and context-budget
-reporting. Organization, relationship, character-state, and location metadata are
+reporting. Organization, relationship, character-state, location, and plot-thread metadata are
 also excluded from vectorization/retrieval, provider/model routing, content mode,
 credentials, automation, summarization, and generation; they are visible only
 through command output and Markdown export.
 
-### /rp command surface (current through Phase 133)
+### /rp command surface (current through Phase 134)
 
 ```
 /rp help | status | assets
@@ -228,6 +229,11 @@ through command output and Markdown export.
 /rp organization inspect <organization-id>
 /rp organization update <organization-id> <description...>
 /rp organization delete <organization-id>
+/rp plot thread add <project-id> <label> <description...>
+/rp plot thread list [project-id]
+/rp plot thread inspect <plot-thread-id>
+/rp plot thread update <plot-thread-id> <description...>
+/rp plot thread delete <plot-thread-id>
 /rp relationship add <project-id> <label> <state...>
 /rp relationship list [project-id]
 /rp relationship inspect <relationship-id>
@@ -235,7 +241,7 @@ through command output and Markdown export.
 /rp relationship delete <relationship-id>
 ```
 
-### DB schema (current through Phase 133)
+### DB schema (current through Phase 134)
 
 ```sql
 cards(id, name, data_json, source_path, created_at)
@@ -281,6 +287,9 @@ CREATE INDEX idx_novel_locations_project ON novel_locations(project_id)
 novel_organizations(id, project_id, label, description_text, created_at, updated_at)
 -- project_id REFERENCES novel_projects(id) ON DELETE CASCADE
 CREATE INDEX idx_novel_organizations_project ON novel_organizations(project_id)
+novel_plot_threads(id, project_id, label, description_text, created_at, updated_at)
+-- project_id REFERENCES novel_projects(id) ON DELETE CASCADE
+CREATE INDEX idx_novel_plot_threads_project ON novel_plot_threads(project_id)
 ```
 
 Phase 129 adds explicit semantics on existing summary columns:
@@ -318,6 +327,15 @@ for prompt modules, debug/context payloads, context-budget payloads,
 vectorization/retrieval, provider/model routing, content mode, credentials,
 automation, summarization, and generation.
 
+Phase 134 adds `novel_plot_threads` as project-scoped plot-thread metadata.
+Plot threads are managed through `/rp plot thread add/list/inspect/update/delete`
+and emitted as optional `## Plot Threads` Markdown metadata in this order:
+after `## Organizations`, before `## Characters`, `## Relationships`,
+and `## Chapters`. They are not selected for prompt modules, debug/context
+payloads, context-budget payloads, vectorization/retrieval,
+provider/model routing, content mode, credentials, automation,
+summarization, or generation.
+
 Phase 26 adds in-memory quick-action tracking on `TavernStore` only:
 `_last_card_id`, `_last_preset_id`, `_last_lorebook_id`, and
 `_last_persona_id`. These IDs are not persisted and reset when the runtime
@@ -353,4 +371,5 @@ These phases do not change schema or core prompt/generation assembly.
 - **Phase 131 character-state boundary**: character-state metadata is export-visible only. It is excluded from prompt modules, debug prompt/context output, context-budget payloads, vectorization/retrieval, provider/model routing, content mode decisions, credentials, and generation.
 - **Phase 132 location boundary**: location metadata is export-visible only. It is excluded from prompt modules, debug prompt/context output, context-budget payloads, vectorization/retrieval, provider/model routing, content mode decisions, credentials, automation, summarization, and generation.
 - **Phase 133 organization boundary**: organization metadata is export-visible only. It is excluded from prompt modules, debug prompt/context output, context-budget payloads, vectorization/retrieval, provider/model routing, content mode decisions, credentials, automation, summarization, and generation.
+- **Phase 134 plot-thread boundary**: plot-thread metadata is export-visible only. It is excluded from prompt modules, debug prompt/context output, context-budget payloads, vectorization/retrieval, provider/model routing, content mode decisions, credentials, automation, summarization, and generation.
 - **Tavern lore regex complexity guard**: lorebook regex keys are screened locally before matching. Entries with patterns longer than 256 characters or nested quantified groups (for example `(a+)+`, `(.+)*`, `([a-z]+){2,}`) are excluded with bounded reasons (`regex rejected: ...`), preserving raw imported lore data while preventing unbounded local matching behavior.

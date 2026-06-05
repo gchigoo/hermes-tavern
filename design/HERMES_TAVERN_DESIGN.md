@@ -512,7 +512,7 @@ Location metadata is also now current local metadata and is managed through
 Organization metadata is also now current local metadata and is managed through
 `novel_organizations(id, project_id, label, description_text, created_at, updated_at)`.
 
-Relationship, character-state, location, and organization metadata remain
+Relationship, character-state, location, organization, and plot-thread metadata remain
 informational-only: they do not participate in prompt module injection,
 provider routing, context budget reporting, vectorization/retrieval,
 content-mode behavior, credential persistence, or generation.
@@ -528,6 +528,7 @@ character states
 relationships
 locations
 organizations
+plot threads
 ```
 
 Scene objects include:
@@ -538,8 +539,13 @@ POV label
 tense: past|present
 ```
 
-Future sub-objects from the original vision remain deferred: plot threads,
-relationship graph/rename/automatic extraction, and style samples.
+Remaining deferred sub-objects from the original vision are relationship
+graph/rename/automatic extraction and style samples.
+
+Plot threads are now current local metadata and are managed through
+`novel_plot_threads(id, project_id, label, description_text, created_at, updated_at)`.
+Plot-thread rows are controlled with `/rp plot thread add/list/inspect/update/delete`.
+They are metadata-only and local-export-visible only.
 
 Commands:
 
@@ -822,10 +828,10 @@ style samples
 user preferences for this project
 ```
 
-Character-state and location metadata are command-managed local state only. They are
-intentionally outside automatic memory extraction, update-cycle output, vectorization/
-retrieval indexing, scheduled summarization inputs, and generation/similar
-refresh cycles.
+Character-state, location, and plot-thread metadata are command-managed local
+state only. They are intentionally outside automatic memory extraction,
+update-cycle output, vectorization/retrieval indexing, scheduled
+summarization inputs, and generation/similar refresh cycles.
 
 ### 10.2 Update cycle
 
@@ -836,8 +842,9 @@ After each assistant turn:
 3. update volatile state if needed;
 4. schedule summarization if history crosses threshold;
 5. update vector index if enabled;
-6. Character-state and location metadata are excluded from this cycle; they are
-   updated only via `/rp character state ...` and `/rp location ...` commands.
+6. Character-state, location, and plot-thread metadata are excluded from this
+   cycle; they are updated only via `/rp character state ...`,
+   `/rp location ...`, and `/rp plot thread ...` commands.
 
 ### 10.3 Summarization profiles
 
@@ -991,10 +998,12 @@ character states
 relationship states
 location notes
 organization notes
+plot threads
 ```
 
-Future novel-engine dimensions remain deferred: volume/arc, beats, location map/geocode
-derivatives, revision notes, and relationship graph/rename/automatic extraction.
+Future novel-engine dimensions remain deferred: volume/arc, beats, location map/
+geocode derivatives, revision notes, and relationship graph/rename/
+automatic extraction.
 
 ### 13.2 Writing commands
 
@@ -1029,6 +1038,11 @@ derivatives, revision notes, and relationship graph/rename/automatic extraction.
 /rp organization inspect <organization-id>
 /rp organization update <organization-id> <description...>
 /rp organization delete <organization-id>
+/rp plot thread add <project-id> <label> <description...>
+/rp plot thread list [project-id]
+/rp plot thread inspect <plot-thread-id>
+/rp plot thread update <plot-thread-id> <description...>
+/rp plot thread delete <plot-thread-id>
 /rp relationship add <project-id> <label> <state...>
 /rp relationship list [project-id]
 /rp relationship inspect <relationship-id>
@@ -1065,6 +1079,10 @@ prompt/debug, context-budget reporting, retrieval/vectorization, provider/model
 routing, content-mode decisions, credentials, and generation.
 Organization metadata is command-driven local-only: it is surfaced for
 add/inspect/list/update/delete, optional Markdown export, and is excluded from
+prompt/debug, context-budget reporting, retrieval/vectorization, provider/model
+routing, content-mode decisions, credentials, and generation.
+Plot-thread metadata is command-driven local-only: it is surfaced for
+add/list/inspect/update/delete, optional Markdown export, and is excluded from
 prompt/debug, context-budget reporting, retrieval/vectorization, provider/model
 routing, content-mode decisions, credentials, and generation.
 Relationship state is metadata-only and local-only: command-driven relationship
@@ -1294,10 +1312,10 @@ ST preset JSON
 ST lorebook/world info JSON
 ```
 
-Hermes Tavern native project archives are deferred; the current Phase 121–133
+Hermes Tavern native project archives are deferred; the current Phase 121–134
 implementation provides Markdown export only, not project/novel import.
-Relationship-state, character-state, location, and organization rows remain local
-metadata and are not bound to ST card objects in this phase.
+Relationship-state, character-state, location, organization, and plot-thread rows
+remain local metadata and are not bound to ST card objects in this phase.
 
 Later:
 
@@ -1320,7 +1338,7 @@ chat export JSONL
 novel export Markdown
 ```
 
-Project archive ZIP remains a future exporter/importer; current Phase 121–133 writes
+Project archive ZIP remains a future exporter/importer; current Phase 121–134 writes
 local Markdown via `/rp project export [id]`.
 Project Brief and Project Outline are exported as optional top-level `## Project Brief`
 and `## Outline` sections after `## Summary` when non-empty. Project style guides
@@ -1331,6 +1349,9 @@ when at least one location row exists; this section is omitted when empty.
 `## Organizations` appears after Locations when present, or after Project Brief,
 Outline, and Style Guide when no Locations section exists, before Characters,
 Relationships, and Chapters. `## Organizations` is omitted when empty.
+`## Plot Threads` appears after Organizations when present, or after Project
+Brief, Outline, Style Guide, and Locations/Organizations placement otherwise,
+before Characters, Relationships, and Chapters. It is omitted when empty.
 `## Characters` appears after Locations/Organizations when at least one
 character-state row exists, before `## Relationships`; both sections are omitted
 when empty. `## Relationships` is exported after Locations/Organizations/Characters
