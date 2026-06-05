@@ -203,6 +203,23 @@ def plot_command(runtime: Any, command: RPCommand, event: Any) -> str:
     return _PLOT_THREAD_USAGE
 
 
+def binding_command(runtime: Any, command: RPCommand, event: Any) -> str:
+    if not command.args:
+        return BINDING_USAGE
+
+    subcommand = command.args[0].lower()
+    if subcommand == "set":
+        return binding_set(runtime, command, event)
+    if subcommand == "list":
+        return binding_list(runtime, command)
+    if subcommand == "inspect":
+        return binding_inspect(runtime, command)
+    if subcommand == "clear":
+        return binding_clear(runtime, command)
+
+    return BINDING_USAGE
+
+
 def style_command(runtime: Any, command: RPCommand, event: Any) -> str:
     if not command.args:
         return _STYLE_SAMPLE_USAGE
@@ -233,6 +250,14 @@ def _safe_int(text: str) -> int | None:
         return int(text)
     except (TypeError, ValueError):
         return None
+
+
+BINDING_USAGE = (
+    "Usage: /rp binding set <project|chapter|scene> <scope-id> <card|preset|lorebook|persona> <asset-id> | "
+    "/rp binding list <project|chapter|scene> <scope-id> | "
+    "/rp binding inspect <binding-id> | /rp binding clear <binding-id>. "
+    "Default bindings are metadata-only/inert and are not auto-applied."
+)
 
 
 _RELATIONSHIP_USAGE = (
@@ -280,6 +305,128 @@ _CHARACTER_USAGE = (
     "/rp character state update <character-state-id> <state...> | "
     "/rp character state delete <character-state-id>"
 )
+
+
+def _binding_error_text(error: str, context_id: str | int) -> str:
+    if error == "Invalid scope type":
+        return BINDING_USAGE
+    if error == "Invalid asset type":
+        return BINDING_USAGE
+    if error == "Card not found":
+        return f"No card found: {context_id}"
+    if error == "Preset not found":
+        return f"No preset found: {context_id}"
+    if error == "Lorebook not found":
+        return f"No lorebook found: {context_id}"
+    if error == "Persona not found":
+        return f"No persona found: {context_id}"
+    if error == "Project not found":
+        return f"No novel project found: {context_id}"
+    if error == "Chapter not found":
+        return f"No novel chapter found: {context_id}"
+    if error == "Scene not found":
+        return f"No novel scene found: {context_id}"
+    return "Could not set binding."
+
+
+def _parse_binding_set(command: RPCommand) -> tuple[str, int, str, str] | str:
+    if len(command.args) != 5:
+        return BINDING_USAGE
+
+    scope_type = (command.args[1] or "").strip().lower()
+    scope_id = _safe_int(command.args[2])
+    asset_type = (command.args[3] or "").strip().lower()
+    asset_id = (command.args[4] or "").strip()
+
+    if scope_id is None or scope_id <= 0:
+        return BINDING_USAGE
+    if not asset_id:
+        return BINDING_USAGE
+    return scope_type, scope_id, asset_type, asset_id
+
+
+def binding_set(runtime: Any, command: RPCommand, event: Any) -> str:
+    del event
+    parsed = _parse_binding_set(command)
+    if isinstance(parsed, str):
+        return parsed
+    scope_type, scope_id, asset_type, asset_id = parsed
+    try:
+        binding = runtime.store.set_default_binding(
+            scope_type,
+            scope_id,
+            asset_type,
+            asset_id,
+        )
+    except ValueError as exc:
+        error = str(exc)
+        context_id: str | int = (
+            scope_id
+            if error in {"Project not found", "Chapter not found", "Scene not found"}
+            else asset_id
+        )
+        return _binding_error_text(error, context_id)
+
+    return (
+        f"Default binding set: [{binding['id']}] {binding['scope_type']}[{binding['scope_id']}] -> "
+        f"{binding['asset_type']}:{binding['asset_id']} (metadata-only/inert)"
+    )
+
+
+def binding_list(runtime: Any, command: RPCommand) -> str:
+    if len(command.args) != 3:
+        return BINDING_USAGE
+
+    scope_type = (command.args[1] or "").strip().lower()
+    scope_id = _safe_int(command.args[2])
+    if scope_id is None or scope_id <= 0:
+        return BINDING_USAGE
+
+    try:
+        bindings = runtime.store.list_default_bindings(scope_type, scope_id)
+    except ValueError as exc:
+        return _binding_error_text(str(exc), scope_id)
+
+    if not bindings:
+        return f"No default bindings for {scope_type}[{scope_id}] (metadata-only/inert)"
+
+    lines = [f"Default bindings for {scope_type}[{scope_id}] (metadata-only/inert):"]
+    for binding in bindings:
+        lines.append(
+            f"- [{binding['id']}] {binding['asset_type']}:{binding['asset_id']}"
+        )
+    return "\n".join(lines)
+
+
+def binding_inspect(runtime: Any, command: RPCommand) -> str:
+    if len(command.args) != 2:
+        return BINDING_USAGE
+
+    binding_id = _safe_int(command.args[1])
+    if binding_id is None or binding_id <= 0:
+        return BINDING_USAGE
+    binding = runtime.store.get_default_binding(binding_id)
+    if binding is None:
+        return f"No default binding found: {binding_id}"
+    return (
+        f"Default binding [{binding['id']}] {binding['scope_type']}[{binding['scope_id']}] -> "
+        f"{binding['asset_type']}:{binding['asset_id']} (metadata-only/inert)"
+    )
+
+
+def binding_clear(runtime: Any, command: RPCommand) -> str:
+    if len(command.args) != 2:
+        return BINDING_USAGE
+
+    binding_id = _safe_int(command.args[1])
+    if binding_id is None or binding_id <= 0:
+        return BINDING_USAGE
+    binding = runtime.store.get_default_binding(binding_id)
+    if binding is None:
+        return f"No default binding found: {binding_id}"
+    if runtime.store.clear_default_binding(binding_id):
+        return f"Default binding [{binding_id}] cleared. (metadata-only/inert)"
+    return f"No default binding found: {binding_id}"
 
 
 def _scene_card_unavailable_message(runtime: Any) -> str:

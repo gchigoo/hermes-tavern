@@ -1,17 +1,24 @@
 doc_type: feature-checklist
-status: planned
+status: in_progress
 feature: "2026-06-05-hermes-tavern-phase137-default-binding-metadata"
 date: "2026-06-05"
 summary: >
-  PLANNED - Default Binding Metadata v1 adds local, command-managed
-  project/chapter/scene default binding rows for card, preset, lorebook, and
-  persona assets, with command and Markdown export visibility only.
+  IN PROGRESS - S1 has implemented local, command-managed project/chapter/scene
+  default binding rows for card, preset, lorebook, and persona assets, with
+  command and Markdown export visibility only. S2 acceptance/writeback remains.
 implementation_readiness: >
-  PLANNED - Created by Codex architect as a planning-only artifact after
-  confirming no active planned/in-progress/draft feature checklists. Controller
-  must validate YAML/frontmatter before any executor implementation.
+  IN PROGRESS - Codex architect identified the top-level /rp binding routing
+  decision; the controller updated the artifact to allow only the minimal
+  src/hermes_tavern/runtime.py TavernRuntime._binding_command shim, smoke-tested
+  the Codex executor profile, and the bounded executor implemented S1. The
+  controller reviewed the diff, fixed string asset-id handling, missing-scope
+  error reporting, metadata-only help/README wording, binding list ordering, and
+  an unrelated export-spacing regression, then reran focused/Tavern/full pytest,
+  YAML/frontmatter validators, protected-scope guards, and git diff --check from
+  scratch before marking S1 complete.
 likely_touched_files:
   - src/hermes_tavern/db_novel.py
+  - src/hermes_tavern/runtime.py
   - src/hermes_tavern/runtime_novel.py
   - src/hermes_tavern/commands.py
   - tests/test_hermes_tavern_novel_db.py
@@ -24,7 +31,19 @@ likely_touched_files:
 steps:
   - id: S1
     name: "S1: Implement local default binding metadata"
-    status: planned
+    status: completed
+    completed_at: "2026-06-05"
+    result: >
+      IMPLEMENTED - S1 added novel_default_bindings persistence, set/list/
+      inspect/clear helpers, /rp binding set/list/inspect/clear command output,
+      help/README visibility, optional Markdown export visibility, and focused
+      DB/runtime/docs tests. Controller review corrected `asset_id` to TEXT,
+      preserved real string asset IDs, fixed missing-scope error output, added
+      explicit metadata-only help/README wording, aligned list ordering with the
+      design, and restored unrelated relationship export spacing. Bindings
+      remain metadata-only/inert and do not affect prompt modules, debug
+      prompt/context, provider routing, content mode, generation, retrieval/
+      vectorization, media, archive, or ST asset import/export behavior.
     description: >
       Add the local default-binding metadata table, store helpers, /rp binding
       command family, command/docs visibility, Markdown export visibility, and
@@ -33,6 +52,7 @@ steps:
       generation changes.
     allowed_files:
       - src/hermes_tavern/db_novel.py
+      - src/hermes_tavern/runtime.py
       - src/hermes_tavern/runtime_novel.py
       - src/hermes_tavern/commands.py
       - tests/test_hermes_tavern_novel_db.py
@@ -51,20 +71,47 @@ steps:
       - "Support asset_type values card, preset, lorebook, and persona only."
       - "Add set/list/inspect/clear helpers with bounded missing-scope and missing-asset behavior."
       - "Add /rp binding set/list/inspect/clear command output that explicitly says metadata-only."
+      - "Add only a minimal TavernRuntime._binding_command dispatch shim in src/hermes_tavern/runtime.py that delegates to runtime_novel.binding_command."
       - "Add optional ## Default Bindings Markdown export for the exported project, its chapters, and its scenes only."
       - "Keep /rp start, /rp scene start, prompt compiler, runtime prompt modules, debug prompt, debug context, context-budget reporting, provider/model routing, credentials, content mode, generation, memory, retrieval/vectorization, media/TTS/image, archive, and ST importer/exporter behavior unchanged."
       - "Use neutral fictional project and asset examples only."
     verification:
-      - command: "PYTHONDONTWRITEBYTECODE=1 python -m py_compile src/hermes_tavern/db_novel.py src/hermes_tavern/runtime_novel.py src/hermes_tavern/commands.py tests/test_hermes_tavern_novel_db.py tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_commands.py tests/test_hermes_tavern_readme_docs.py"
-        expected_result: "Compilation succeeds without bytecode writes."
+      - command: >-
+          codex --profile architect exec --json --color never --disable image_generation --sandbox read-only --cd /Users/steven/Projects/hermes-tavern <Phase 137 S1 artifact validation prompt>
+        result: >-
+          completed; JSONL at /tmp/hermes-tavern-architect-phase137-s1.jsonl;
+          RESULT: BLOCKED before implementation because the new top-level command
+          needed an explicit runtime.py routing decision. The controller then
+          updated this artifact to allow only the minimal _binding_command shim.
+      - command: >-
+          codex --profile executor exec --json --color never --disable image_generation --sandbox read-only --cd /Users/steven/Projects/hermes-tavern <executor smoke prompt>
+        result: "passed; JSONL at /tmp/hermes-tavern-executor-phase137-s1-smoke.jsonl; EXECUTOR_SMOKE_OK"
+      - command: >-
+          codex --profile executor exec --json --color never --disable image_generation --sandbox workspace-write --cd /Users/steven/Projects/hermes-tavern <Phase 137 S1 implementation prompt>
+        result: >-
+          passed; JSONL at /tmp/hermes-tavern-executor-phase137-s1.jsonl;
+          executor implemented S1 after correcting two intermediate focused-test
+          runs. Controller review then fixed string asset-id handling, error
+          context, ordering, docs wording, and an unrelated export-spacing
+          regression before rerunning all gates from scratch.
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m py_compile src/hermes_tavern/db_novel.py src/hermes_tavern/runtime.py src/hermes_tavern/runtime_novel.py src/hermes_tavern/commands.py tests/test_hermes_tavern_novel_db.py tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_commands.py tests/test_hermes_tavern_readme_docs.py"
+        result: "passed (controller rerun; no output)"
       - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel_db.py tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_commands.py tests/test_hermes_tavern_readme_docs.py -q -o 'addopts=' -p no:cacheprovider"
-        expected_result: "Focused DB, runtime, command, and README docs tests pass offline."
+        result: "passed (controller rerun; 280 passed in 16.92s)"
       - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_*.py -q -o 'addopts=' -p no:cacheprovider"
-        expected_result: "Hermes Tavern plugin test glob passes offline."
-      - command: "git diff --name-only -- run_agent.py cli.py gateway/run.py build/lib"
-        expected_result: "No protected core or build artifact paths are listed."
+        result: "passed (controller rerun; 971 passed in 50.32s)"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts=' -p no:cacheprovider"
+        result: "passed (controller rerun; 971 passed in 62.46s)"
+      - command: "python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-05-hermes-tavern-phase137-default-binding-metadata/design.md --require doc_type --require status --require feature"
+        result: "passed; 1 passed, 0 failed"
+      - command: "python design/codestable/tools/validate-yaml.py --yaml-only --file design/codestable/features/2026-06-05-hermes-tavern-phase137-default-binding-metadata/checklist.yaml"
+        result: "passed after controller S1 status update; 1 passed, 0 failed"
+      - command: "git diff --name-only -- run_agent.py cli.py gateway/run.py build/lib design/HERMES_TAVERN_DESIGN.md design/codestable/architecture/ARCHITECTURE.md src/hermes_tavern/adapters.py src/hermes_tavern/model_router.py src/hermes_tavern/runtime_generation.py src/hermes_tavern/runtime_content.py src/hermes_tavern/importers"
+        result: "passed (empty output; no protected core/build/architecture/root-design or provider/model/content/generation/importer changes in S1)"
+      - command: "git diff -- src/hermes_tavern/runtime.py"
+        result: "passed (only the three-line TavernRuntime._binding_command delegation shim)"
       - command: "git diff --check"
-        expected_result: "No whitespace errors."
+        result: "passed"
   - id: S2
     name: "S2: Verify/accept/write current docs"
     status: planned
@@ -87,34 +134,61 @@ steps:
 checks:
   - id: C1
     name: "C1: Active checklist precondition"
-    status: planned
+    status: completed
+    completed_at: "2026-06-05"
+    result: >
+      PASSED - Phase 137 remained the only planned/in-progress feature; no
+      unrelated active feature checklist was found before S1 continuation.
     criteria: >
       No unrelated feature checklist is planned, pending, in progress, or draft
       before S1.
   - id: C2
     name: "C2: Metadata table and helpers"
-    status: planned
+    status: completed
+    completed_at: "2026-06-05"
+    result: >
+      PASSED - DB tests cover novel_default_bindings migration/index/unique
+      constraint with TEXT asset_id storage, project/chapter/scene scopes,
+      string card/preset/lorebook/persona asset IDs, overwrite/list/sorted-list/
+      inspect/clear behavior, and bounded missing-scope or missing-asset errors.
     criteria: >
       The local default-binding table and helpers support valid
       project/chapter/scene scopes and card/preset/lorebook/persona asset
       bindings with bounded missing-scope and missing-asset behavior.
   - id: C3
     name: "C3: Command visibility"
-    status: planned
+    status: completed
+    completed_at: "2026-06-05"
+    result: >
+      PASSED - /rp binding set/list/inspect/clear appears in the command table,
+      help output, README core commands, and focused command/runtime/docs tests;
+      command responses plus help/README text explicitly label rows metadata-only/
+      inert and not auto-applied.
     criteria: >
       /rp binding set/list/inspect/clear commands are visible in help and docs,
       return compact metadata-only output, and are covered by command/runtime
       tests.
   - id: C4
     name: "C4: Export visibility"
-    status: planned
+    status: completed
+    completed_at: "2026-06-05"
+    result: >
+      PASSED - Export tests cover optional ## Default Bindings omission when no
+      rows exist, inclusion for exported project/chapter/scene rows, and
+      exclusion of rows from a second project.
     criteria: >
       Project Markdown export emits optional ## Default Bindings rows for the
       exported project, its chapters, and its scenes only, and omits the section
       when no rows exist.
   - id: C5
     name: "C5: No prompt/provider side effects"
-    status: planned
+    status: completed
+    completed_at: "2026-06-05"
+    result: >
+      PASSED - No-leak tests prove binding marker text is absent from debug
+      prompt/debug context, and protected-scope diff guards were empty for core,
+      architecture/root-design, build, prompt/provider/model/content/generation,
+      retrieval/vectorization, media, archive, and importer paths.
     criteria: >
       Binding marker text does not leak into debug prompt/debug context or
       prompt module selection, and reverse-scope checks show no provider,

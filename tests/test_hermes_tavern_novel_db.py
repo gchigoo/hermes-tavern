@@ -1,6 +1,68 @@
+from dataclasses import replace
+from types import SimpleNamespace
 import sqlite3
 
 from plugins.hermes_tavern.db import TavernStore
+
+from plugins.hermes_tavern.importers.cards import parse_character_card
+from plugins.hermes_tavern.importers.lorebooks import import_st_lorebook_json
+from plugins.hermes_tavern.importers.personas import import_raw_persona_text
+from plugins.hermes_tavern.importers.presets import import_st_preset_json
+
+
+def _card_with_id(store: TavernStore, card_id: str) -> str:
+    card = replace(
+        parse_character_card({"name": "Mara Lark", "description": "A watchful archivist"}),
+        id=card_id,
+    )
+    return store.save_card(card)
+
+
+def _preset_with_id(store: TavernStore, preset_id: str) -> str:
+    imported = import_st_preset_json(
+        {"name": "Setting", "prompts": [{"name": "style", "content": "Preset body."}]},
+    )
+    preset = SimpleNamespace(
+        id=preset_id,
+        name=imported.name,
+        source=imported.source,
+        raw=imported.raw,
+        modules=imported.modules,
+    )
+    return store.save_preset(preset)
+
+
+def _lorebook_with_id(store: TavernStore, lorebook_id: str) -> str:
+    imported = import_st_lorebook_json(
+        {
+            "name": "Harbor Maps",
+            "entries": [{"content": "A bell at fog edge."}],
+        },
+    )
+    lorebook = SimpleNamespace(
+        id=lorebook_id,
+        name=imported.name,
+        source=imported.source,
+        raw=imported.raw,
+        entries=imported.entries,
+    )
+    return store.save_lorebook(lorebook)
+
+
+def _persona_with_id(store: TavernStore, persona_id: str) -> str:
+    imported = import_raw_persona_text(
+        "I offer quiet counsel and sharp details.",
+        name="Harbor Persona",
+        source_path="mock-persona.txt",
+    )
+    persona = SimpleNamespace(
+        id=persona_id,
+        name=imported.name,
+        content=imported.content,
+        raw_json=imported.raw_json,
+        source_path=imported.source_path,
+    )
+    return store.save_persona(persona)
 
 
 def _table_names(db_path):
@@ -43,6 +105,7 @@ def test_migrate_creates_novel_tables(tmp_path):
         "novel_scenes",
         "novel_canon",
         "novel_timeline",
+        "novel_default_bindings",
         "novel_scene_goals",
         "novel_scene_narration_controls",
         "novel_project_style_guides",
@@ -155,12 +218,161 @@ def test_migrate_creates_novel_tables(tmp_path):
                 """
                 SELECT name
                 FROM sqlite_master
-                WHERE type='index'
+                    WHERE type='index'
                     AND tbl_name='novel_plot_threads'
                 """
             ).fetchall()
         }
     assert "idx_novel_plot_threads_project" in plot_indexes
+
+    with sqlite3.connect(db_path) as conn:
+        default_binding_indexes = conn.execute(
+            "PRAGMA index_list('novel_default_bindings')"
+        ).fetchall()
+    index_names = {row[1] for row in default_binding_indexes}
+    assert "idx_novel_default_bindings_scope" in index_names
+    with sqlite3.connect(db_path) as conn:
+        default_binding_columns = {
+            row[1]: row[2]
+            for row in conn.execute("PRAGMA table_info('novel_default_bindings')").fetchall()
+        }
+    assert default_binding_columns["asset_id"].upper() == "TEXT"
+    assert any(
+        name.startswith("sqlite_autoindex_novel_default_bindings") and unique == 1
+        for _, name, unique, *_ in default_binding_indexes
+    )
+    with sqlite3.connect(db_path) as conn:
+        index_names = {
+            row[0]
+            for row in conn.execute(
+                """
+                SELECT name
+                FROM sqlite_master
+                WHERE type='index'
+                    AND tbl_name='novel_default_bindings'
+                """
+            ).fetchall()
+        }
+    assert "idx_novel_default_bindings_scope" in index_names
+
+
+def test_default_binding_helpers_and_validations(tmp_path):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+
+    project = store.create_project("Atlas", "Harbor watch")
+    chapter = store.create_chapter(project["id"], "Signals")
+    scene = store.create_scene(chapter["id"], "Dawn")
+
+    card_id = _card_with_id(store, "card-alpha")
+    preset_id = _preset_with_id(store, "preset-alpha")
+    lorebook_id = _lorebook_with_id(store, "lore-alpha")
+    persona_id = _persona_with_id(store, "persona-alpha")
+
+    project_binding = store.set_default_binding(
+        "project",
+        project["id"],
+        "card",
+        card_id,
+    )
+    chapter_binding = store.set_default_binding(
+        "chapter",
+        chapter["id"],
+        "preset",
+        preset_id,
+    )
+    scene_binding = store.set_default_binding(
+        "scene",
+        scene["id"],
+        "lorebook",
+        lorebook_id,
+    )
+
+    assert project_binding["scope_type"] == "project"
+    assert chapter_binding["scope_type"] == "chapter"
+    assert scene_binding["scope_type"] == "scene"
+    assert store.get_default_binding(project_binding["id"]) == project_binding
+
+    listed_project = store.list_default_bindings("project", project["id"])
+    listed_chapter = store.list_default_bindings("chapter", chapter["id"])
+    listed_scene = store.list_default_bindings("scene", scene["id"])
+
+    assert listed_project[0]["asset_type"] == "card"
+    assert listed_project[0]["asset_id"] == card_id
+    assert listed_chapter[0]["asset_type"] == "preset"
+    assert listed_chapter[0]["asset_id"] == preset_id
+    assert listed_scene[0]["asset_type"] == "lorebook"
+    assert listed_scene[0]["asset_id"] == lorebook_id
+
+    assert len(store.list_default_bindings_for_project(project["id"])) == 3
+
+    overwritten = store.set_default_binding(
+        "scene",
+        scene["id"],
+        "lorebook",
+        lorebook_id,
+    )
+    assert overwritten["id"] == scene_binding["id"]
+
+    rewritten = store.set_default_binding(
+        "scene",
+        scene["id"],
+        "persona",
+        persona_id,
+    )
+    assert rewritten["asset_type"] == "persona"
+    assert rewritten["asset_id"] == persona_id
+
+    by_project = store.list_default_bindings_for_project(project["id"])
+    assert any(row["scope_type"] == "scene" and row["asset_type"] == "persona" for row in by_project)
+
+    assert len(store.list_default_bindings_for_project(project["id"])) == 4
+
+    try:
+        store.set_default_binding("section", 1, "card", card_id)
+    except ValueError as exc:
+        assert str(exc) == "Invalid scope type"
+    else:
+        raise AssertionError("Expected ValueError for invalid scope type")
+
+    try:
+        store.set_default_binding("project", project["id"], "script", card_id)
+    except ValueError as exc:
+        assert str(exc) == "Invalid asset type"
+    else:
+        raise AssertionError("Expected ValueError for invalid asset type")
+
+    try:
+        store.set_default_binding("project", project["id"], "card", "missing-card")
+    except ValueError as exc:
+        assert str(exc) == "Card not found"
+    else:
+        raise AssertionError("Expected ValueError for missing card")
+
+    assert not store.clear_default_binding(9999)
+    assert store.clear_default_binding(scene_binding["id"]) is True
+    assert store.get_default_binding(scene_binding["id"]) is None
+
+
+def test_default_binding_list_sorts_by_asset_type_and_asset_id(tmp_path):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    project = store.create_project("Sorting Harbor")
+
+    preset_id = _preset_with_id(store, "preset-zeta")
+    lorebook_id = _lorebook_with_id(store, "lore-alpha")
+    card_id = _card_with_id(store, "card-middle")
+
+    store.set_default_binding("project", project["id"], "preset", preset_id)
+    store.set_default_binding("project", project["id"], "lorebook", lorebook_id)
+    store.set_default_binding("project", project["id"], "card", card_id)
+
+    assert [
+        (row["asset_type"], row["asset_id"])
+        for row in store.list_default_bindings("project", project["id"])
+    ] == [
+        ("card", card_id),
+        ("lorebook", lorebook_id),
+        ("preset", preset_id),
+    ]
 
 
 def test_novel_project_crud_and_counts(tmp_path):
@@ -1312,6 +1524,77 @@ def test_export_project_markdown_structure(tmp_path):
     assert "## Canon" in markdown
     assert "Snow is common in the north" in markdown
     assert "## Timeline" in markdown
+
+
+def test_export_project_markdown_includes_default_bindings_and_excludes_other_projects(tmp_path):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+
+    first = store.create_project("Harbor Archive", "fog station")
+    second = store.create_project("Mountain Archive", "ridge station")
+
+    first_chapter = store.create_chapter(first["id"], "Arrival")
+    first_scene = store.create_scene(first_chapter["id"], "Dawn")
+
+    second_chapter = store.create_chapter(second["id"], "Departure")
+    store.create_scene(second_chapter["id"], "Evening")
+
+    card_id = _card_with_id(store, "card-export-alpha")
+    preset_id = _preset_with_id(store, "preset-export-alpha")
+    lorebook_id = _lorebook_with_id(store, "lore-export-alpha")
+
+    project_binding = store.set_default_binding(
+        "project",
+        first["id"],
+        "card",
+        card_id,
+    )
+    chapter_binding = store.set_default_binding(
+        "chapter",
+        first_chapter["id"],
+        "preset",
+        preset_id,
+    )
+    scene_binding = store.set_default_binding(
+        "scene",
+        first_scene["id"],
+        "lorebook",
+        lorebook_id,
+    )
+    store.set_default_binding(
+        "project",
+        second["id"],
+        "card",
+        card_id,
+    )
+
+    first_markdown = store.export_project_markdown(first["id"])
+
+    assert "## Default Bindings" in first_markdown
+    assert f"- [{project_binding['id']}] project:{first['id']} -> card:{card_id}" in first_markdown
+    assert f"- [{chapter_binding['id']}] chapter:{first_chapter['id']} -> preset:{preset_id}" in first_markdown
+    assert f"- [{scene_binding['id']}] scene:{first_scene['id']} -> lorebook:{lorebook_id}" in first_markdown
+
+    second_markdown = store.export_project_markdown(second["id"])
+
+    assert "## Default Bindings" in second_markdown
+    assert f"- [{project_binding['id']}]" not in second_markdown
+    assert f"- [{chapter_binding['id']}]" not in second_markdown
+    assert f"- [{scene_binding['id']}]" not in second_markdown
+
+    first_bindings = store.list_default_bindings_for_project(first["id"])
+    assert len(first_bindings) == 3
+
+
+def test_export_project_markdown_omits_default_bindings_when_empty(tmp_path):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+
+    project = store.create_project("Quiet Ledger", "empty harbor")
+
+    markdown = store.export_project_markdown(project["id"])
+
+    assert "## Default Bindings" not in markdown
+
+    assert "## Chapters" in markdown
 
 
 def test_export_project_markdown_includes_summary_lines_for_chapter_and_scene_in_order(tmp_path):

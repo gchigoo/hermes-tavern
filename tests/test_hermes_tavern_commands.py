@@ -121,6 +121,16 @@ def test_help_lists_project_style_commands():
     assert "/rp project style clear [project-id]" in help_text
 
 
+def test_help_lists_binding_commands():
+    help_text = _build_help_text()
+
+    assert "/rp binding set <project|chapter|scene> <scope-id> <card|preset|lorebook|persona> <asset-id>" in help_text
+    assert "/rp binding list <project|chapter|scene> <scope-id>" in help_text
+    assert "/rp binding inspect <binding-id>" in help_text
+    assert "/rp binding clear <binding-id>" in help_text
+    assert "/rp binding rows are metadata-only/inert; not auto-applied" in help_text
+
+
 def test_help_lists_style_sample_commands():
     help_text = _build_help_text()
 

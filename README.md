@@ -113,6 +113,11 @@ Expected behavior:
 /rp lore import/list/inspect/use/clear/enable/disable/test/debug
 /rp memory add/forget/list/summary/debug
 /rp persona import/new/list/inspect/use/temp/clear/debug
+/rp binding set <project|chapter|scene> <scope-id> <card|preset|lorebook|persona> <asset-id>
+/rp binding list <project|chapter|scene> <scope-id>
+/rp binding inspect <binding-id>
+/rp binding clear <binding-id>
+/rp binding rows are metadata-only/inert; they are not auto-applied to prompts, sessions, providers, or generation
 /rp note set/clear/inspect/position/frequency
 /rp content mode [safe|adult-fiction]
 /rp model status/profiles/seed/use/mode/live/test

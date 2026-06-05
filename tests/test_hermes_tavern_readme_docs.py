@@ -253,6 +253,17 @@ def test_readme_core_commands_include_style_sample_literals():
     assert "/rp style sample delete <style-sample-id>" in core_commands
 
 
+def test_readme_core_commands_include_binding_literals():
+    core_commands = _readme_core_commands_text()
+
+    assert "/rp binding set <project|chapter|scene> <scope-id> <card|preset|lorebook|persona> <asset-id>" in core_commands
+    assert "/rp binding list <project|chapter|scene> <scope-id>" in core_commands
+    assert "/rp binding inspect <binding-id>" in core_commands
+    assert "/rp binding clear <binding-id>" in core_commands
+    assert "metadata-only/inert" in core_commands
+    assert "not auto-applied to prompts, sessions, providers, or generation" in core_commands
+
+
 def test_readme_core_commands_include_project_brief_literals():
     core_commands = _readme_core_commands_text()
 

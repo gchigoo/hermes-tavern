@@ -1,6 +1,6 @@
 ---
 doc_type: feature-design
-status: draft
+status: approved
 feature: "2026-06-05-hermes-tavern-phase137-default-binding-metadata"
 date: "2026-06-05"
 summary: >
@@ -31,6 +31,7 @@ their work as implemented, completed, done, or accepted. Phase 136 is accepted.
 Current state:
 
 - `src/hermes_tavern/db_novel.py` owns project/chapter/scene metadata tables and Markdown export.
+- `src/hermes_tavern/runtime.py` owns `TavernRuntime` top-level command handler methods used by `commands.py` dispatch.
 - `src/hermes_tavern/runtime_novel.py` owns novel command families.
 - `src/hermes_tavern/commands.py`, `README.md`, and command/docs tests keep the mobile command surface visible.
 - `design/HERMES_TAVERN_DESIGN.md` still lists `default_card_id`, `default_preset_id`, `default_lorebook_ids`, and default-binding metadata as deferred.
@@ -42,6 +43,7 @@ Change:
 - Supported scopes are exactly `project`, `chapter`, and `scene`.
 - Supported assets are exactly `card`, `preset`, `lorebook`, and `persona`.
 - Commands expose set/list/inspect/clear behavior through `/rp binding ...`.
+- `/rp binding` is a new top-level command family, so it requires a minimal `TavernRuntime._binding_command(...)` routing method in `src/hermes_tavern/runtime.py` that delegates to `runtime_novel.binding_command(...)`.
 - Markdown project export adds an optional `## Default Bindings` section when rows exist for the exported project, its chapters, or its scenes.
 - Command output and docs must say the rows are metadata-only.
 
@@ -153,7 +155,10 @@ No pre-feature micro-refactor.
 
 `db_novel.py` and `runtime_novel.py` are large, but recent metadata phases already
 use these files for bounded novel metadata additions. A broader split would be a
-separate refactor and is not required for this slice.
+separate refactor and is not required for this slice. `runtime.py` may be touched
+only to add the dispatch shim for the new top-level `/rp binding` family; no
+runtime lifecycle, prompt assembly, provider routing, content mode, generation,
+or gateway behavior may change.
 
 ## Acceptance Criteria
 
@@ -173,7 +178,7 @@ separate refactor and is not required for this slice.
 S1 focused verification:
 
 ```bash
-PYTHONDONTWRITEBYTECODE=1 python -m py_compile src/hermes_tavern/db_novel.py src/hermes_tavern/runtime_novel.py src/hermes_tavern/commands.py tests/test_hermes_tavern_novel_db.py tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_commands.py tests/test_hermes_tavern_readme_docs.py
+PYTHONDONTWRITEBYTECODE=1 python -m py_compile src/hermes_tavern/db_novel.py src/hermes_tavern/runtime.py src/hermes_tavern/runtime_novel.py src/hermes_tavern/commands.py tests/test_hermes_tavern_novel_db.py tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_commands.py tests/test_hermes_tavern_readme_docs.py
 PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel_db.py tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_commands.py tests/test_hermes_tavern_readme_docs.py -q -o 'addopts=' -p no:cacheprovider
 PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_*.py -q -o 'addopts=' -p no:cacheprovider
 git diff --name-only -- run_agent.py cli.py gateway/run.py build/lib
@@ -202,7 +207,8 @@ git diff --check
 
 ## Rollback
 
-Remove the `/rp binding` command entry and runtime handler, remove the
+Remove the `/rp binding` command entry and `TavernRuntime._binding_command`
+routing shim, remove the
 `novel_default_bindings` migration/helpers/export section, and remove the focused
 tests/docs. Existing project, chapter, scene, card, preset, lorebook, persona,
 prompt, provider, and generation behavior returns to the Phase 136 state.

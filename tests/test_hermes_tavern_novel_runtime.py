@@ -1,3 +1,5 @@
+from dataclasses import replace
+from types import SimpleNamespace
 import pytest
 import sqlite3
 
@@ -6,7 +8,9 @@ from plugins.hermes_tavern.db import TavernStore
 from plugins.hermes_tavern.runtime import TavernRuntime
 from plugins.hermes_tavern.commands import RPCommand
 from plugins.hermes_tavern.importers.cards import parse_character_card
+from plugins.hermes_tavern.importers.lorebooks import import_st_lorebook_json
 from plugins.hermes_tavern.importers.presets import import_st_preset_json
+from plugins.hermes_tavern.importers.personas import import_raw_persona_text
 from plugins.hermes_tavern.runtime_utils import mobile_preview as _mobile_preview
 from hermes_tavern.identity import session_key_from_event
 from hermes_tavern.prompt import PromptModule
@@ -72,6 +76,70 @@ STYLE_SAMPLE_USAGE = (
     "/rp style sample delete <style-sample-id>"
 )
 
+BINDING_USAGE = (
+    "Usage: /rp binding set <project|chapter|scene> <scope-id> <card|preset|lorebook|persona> <asset-id> | "
+    "/rp binding list <project|chapter|scene> <scope-id> | "
+    "/rp binding inspect <binding-id> | /rp binding clear <binding-id>. "
+    "Default bindings are metadata-only/inert and are not auto-applied."
+)
+
+
+def _card_with_id(store: TavernStore, card_id: str) -> str:
+    card = replace(
+        parse_character_card(
+            {"name": "Mara Lark", "description": "A watchful archivist", "first_mes": "Let's begin."}
+        ),
+        id=card_id,
+    )
+    return store.save_card(card)
+
+
+def _preset_with_id(store: TavernStore, preset_id: str) -> str:
+    imported = import_st_preset_json(
+        {
+            "name": "Harbor Setting",
+            "prompts": [{"name": "style", "content": "Tone: measured."}],
+        },
+    )
+    preset = SimpleNamespace(
+        id=preset_id,
+        name=imported.name,
+        source=imported.source,
+        raw=imported.raw,
+        modules=imported.modules,
+    )
+    return store.save_preset(preset)
+
+
+def _lorebook_with_id(store: TavernStore, lorebook_id: str) -> str:
+    imported = import_st_lorebook_json(
+        {"name": "Harbor Maps", "entries": [{"content": "A bell at fog edge."}]}
+    )
+    lorebook = SimpleNamespace(
+        id=lorebook_id,
+        name=imported.name,
+        source=imported.source,
+        raw=imported.raw,
+        entries=imported.entries,
+    )
+    return store.save_lorebook(lorebook)
+
+
+def _persona_with_id(store: TavernStore, persona_id: str) -> str:
+    imported = import_raw_persona_text(
+        "I offer quiet counsel and sharp details.",
+        name="Harbor Persona",
+        source_path="mock-persona.txt",
+    )
+    persona = SimpleNamespace(
+        id=persona_id,
+        name=imported.name,
+        content=imported.content,
+        raw_json=imported.raw_json,
+        source_path=imported.source_path,
+    )
+    return store.save_persona(persona)
+
 
 def test_novel_command_table_has_expected_families():
     assert "character" in TAVERN_COMMAND_TABLE
@@ -85,6 +153,7 @@ def test_novel_command_table_has_expected_families():
     assert "organization" in TAVERN_COMMAND_TABLE
     assert "plot" in TAVERN_COMMAND_TABLE
     assert "style" in TAVERN_COMMAND_TABLE
+    assert "binding" in TAVERN_COMMAND_TABLE
 
     for name in (
         "character",
@@ -98,6 +167,7 @@ def test_novel_command_table_has_expected_families():
         "organization",
         "plot",
         "style",
+        "binding",
     ):
         entry = TAVERN_COMMAND_TABLE[name]
         if name == "character":
@@ -107,6 +177,7 @@ def test_novel_command_table_has_expected_families():
             assert entry.handler == "_style_command"
             continue
         assert entry.handler == f"_{name}_command"
+    assert TAVERN_COMMAND_TABLE["binding"].handler == "_binding_command"
     assert "/rp scene goal <scene-id> [text]" in TAVERN_COMMAND_TABLE["scene"].help_lines
     assert "/rp scene goal clear <scene-id>" in TAVERN_COMMAND_TABLE["scene"].help_lines
     assert "/rp scene narration <scene-id>" in TAVERN_COMMAND_TABLE["scene"].help_lines
@@ -127,6 +198,11 @@ def test_novel_command_table_has_expected_families():
     assert "/rp project outline inspect [project-id]" in TAVERN_COMMAND_TABLE["project"].help_lines
     assert "/rp project outline set [project-id] <text>" in TAVERN_COMMAND_TABLE["project"].help_lines
     assert "/rp project outline clear [project-id]" in TAVERN_COMMAND_TABLE["project"].help_lines
+    assert "/rp binding set <project|chapter|scene> <scope-id> <card|preset|lorebook|persona> <asset-id>" in TAVERN_COMMAND_TABLE["binding"].help_lines
+    assert "/rp binding list <project|chapter|scene> <scope-id>" in TAVERN_COMMAND_TABLE["binding"].help_lines
+    assert "/rp binding inspect <binding-id>" in TAVERN_COMMAND_TABLE["binding"].help_lines
+    assert "/rp binding clear <binding-id>" in TAVERN_COMMAND_TABLE["binding"].help_lines
+    assert "/rp binding rows are metadata-only/inert; not auto-applied" in TAVERN_COMMAND_TABLE["binding"].help_lines
     assert "/rp relationship add <project-id> <label> <state...>" in TAVERN_COMMAND_TABLE["relationship"].help_lines
     assert "/rp relationship list [project-id]" in TAVERN_COMMAND_TABLE["relationship"].help_lines
     assert "/rp relationship inspect <relationship-id>" in TAVERN_COMMAND_TABLE["relationship"].help_lines
@@ -313,6 +389,18 @@ def test_project_command_help_includes_outline_lines(tmp_path):
     assert "/rp project outline clear [project-id]" in help_output
 
 
+def test_project_command_help_includes_binding_lines(tmp_path):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+
+    help_output = runtime.handle_command_sync(RPCommand("help", [], "/rp"), Event())
+
+    assert "/rp binding set <project|chapter|scene> <scope-id> <card|preset|lorebook|persona> <asset-id>" in help_output
+    assert "/rp binding list <project|chapter|scene> <scope-id>" in help_output
+    assert "/rp binding inspect <binding-id>" in help_output
+    assert "/rp binding clear <binding-id>" in help_output
+    assert "/rp binding rows are metadata-only/inert; not auto-applied" in help_output
+
+
 def test_project_command_help_includes_relationship_lines(tmp_path):
     runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
 
@@ -371,6 +459,239 @@ def test_project_command_help_includes_plot_thread_lines(tmp_path):
     assert "/rp plot thread inspect <plot-thread-id>" in help_output
     assert "/rp plot thread update <plot-thread-id> <description...>" in help_output
     assert "/rp plot thread delete <plot-thread-id>" in help_output
+
+
+def test_binding_routes_set_list_inspect_and_clear(tmp_path):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    store = runtime.store
+    project = store.create_project("Atlas")
+    chapter = store.create_chapter(project["id"], "Opening")
+    scene = store.create_scene(chapter["id"], "First Light")
+
+    card_id = _card_with_id(store, "card-alpha")
+    card_id_2 = _card_with_id(store, "card-beta")
+    preset_id = _preset_with_id(store, "preset-alpha")
+    lorebook_id = _lorebook_with_id(store, "lore-alpha")
+    _ = _persona_with_id(store, "persona-alpha")
+
+    project_set = runtime.handle_command_sync(
+        RPCommand(
+            "binding",
+            ["set", "project", str(project["id"]), "card", str(card_id)],
+            f"/rp binding set project {project['id']} card {card_id}",
+        ),
+        Event(),
+    )
+    assert "(metadata-only/inert)" in project_set
+    assert f"project[{project['id']}] -> card:{card_id}" in project_set
+    project_binding_id = int(project_set.split("[", 1)[1].split("]", 1)[0])
+
+    project_set_override = runtime.handle_command_sync(
+        RPCommand(
+            "binding",
+            ["set", "project", str(project["id"]), "card", str(card_id_2)],
+            f"/rp binding set project {project['id']} card {card_id_2}",
+        ),
+        Event(),
+    )
+    override_id = int(project_set_override.split("[", 1)[1].split("]", 1)[0])
+    assert override_id == project_binding_id
+    assert f"project[{project['id']}] -> card:{card_id_2}" in project_set_override
+
+    chapter_set_output = runtime.handle_command_sync(
+        RPCommand(
+            "binding",
+            ["set", "chapter", str(chapter["id"]), "preset", str(preset_id)],
+            f"/rp binding set chapter {chapter['id']} preset {preset_id}",
+        ),
+        Event(),
+    )
+    chapter_binding_id = int(chapter_set_output.split("[", 1)[1].split("]", 1)[0])
+
+    scene_set_output = runtime.handle_command_sync(
+        RPCommand(
+            "binding",
+            ["set", "scene", str(scene["id"]), "lorebook", str(lorebook_id)],
+            f"/rp binding set scene {scene['id']} lorebook {lorebook_id}",
+        ),
+        Event(),
+    )
+    scene_binding_id = int(scene_set_output.split("[", 1)[1].split("]", 1)[0])
+
+    list_output = runtime.handle_command_sync(
+        RPCommand(
+            "binding",
+            ["list", "project", str(project["id"])],
+            "/rp binding list project 1",
+        ),
+        Event(),
+    )
+    assert list_output == (
+        f"Default bindings for project[{project['id']}] (metadata-only/inert):\n"
+        f"- [{project_binding_id}] card:{card_id_2}"
+    )
+
+    chapter_list = runtime.handle_command_sync(
+        RPCommand(
+            "binding",
+            ["list", "chapter", str(chapter["id"])],
+            f"/rp binding list chapter {chapter['id']}",
+        ),
+        Event(),
+    )
+    assert (
+        chapter_list
+        == f"Default bindings for chapter[{chapter['id']}] (metadata-only/inert):\n- [{chapter_binding_id}] preset:{preset_id}"
+    )
+
+    scene_list = runtime.handle_command_sync(
+        RPCommand(
+            "binding",
+            ["list", "scene", str(scene["id"])],
+            f"/rp binding list scene {scene['id']}",
+        ),
+        Event(),
+    )
+    assert (
+        scene_list
+        == f"Default bindings for scene[{scene['id']}] (metadata-only/inert):\n- [{scene_binding_id}] lorebook:{lorebook_id}"
+    )
+
+    inspect = runtime.handle_command_sync(
+        RPCommand(
+            "binding",
+            ["inspect", str(project_binding_id)],
+            f"/rp binding inspect {project_binding_id}",
+        ),
+        Event(),
+    )
+    assert (
+        inspect
+        == f"Default binding [{project_binding_id}] project[{project['id']}] -> card:{card_id_2} (metadata-only/inert)"
+    )
+
+    clear = runtime.handle_command_sync(
+        RPCommand("binding", ["clear", str(project_binding_id)], f"/rp binding clear {project_binding_id}"),
+        Event(),
+    )
+    assert clear == f"Default binding [{project_binding_id}] cleared. (metadata-only/inert)"
+
+    assert (
+        runtime.handle_command_sync(
+            RPCommand(
+                "binding",
+                ["inspect", str(project_binding_id)],
+                f"/rp binding inspect {project_binding_id}",
+            ),
+            Event(),
+        )
+        == f"No default binding found: {project_binding_id}"
+    )
+
+
+def test_binding_command_validation_and_lookup_errors(tmp_path):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    store = runtime.store
+    project = store.create_project("Atlas")
+    card_id = _card_with_id(store, "card-validation-alpha")
+
+    assert (
+        runtime.handle_command_sync(
+            RPCommand("binding", ["set", "project", "1", "card"], "/rp binding set project 1 card"),
+            Event(),
+        )
+        == BINDING_USAGE
+    )
+    assert (
+        runtime.handle_command_sync(
+            RPCommand(
+                "binding",
+                ["set", "novel", "1", "card", str(card_id)],
+                f"/rp binding set novel 1 card {card_id}",
+            ),
+            Event(),
+        )
+        == BINDING_USAGE
+    )
+    assert (
+        runtime.handle_command_sync(
+            RPCommand(
+                "binding",
+                ["set", "project", str(project["id"]), "unknown", str(card_id)],
+                f"/rp binding set project {project['id']} unknown {card_id}",
+            ),
+            Event(),
+        )
+        == BINDING_USAGE
+    )
+    assert (
+        runtime.handle_command_sync(
+            RPCommand(
+                "binding",
+                ["set", str(card_id), str(card_id), "card", "missing-card"],
+                f"/rp binding set {card_id} {card_id} card missing-card",
+            ),
+            Event(),
+        )
+        == BINDING_USAGE
+    )
+    assert (
+        runtime.handle_command_sync(
+            RPCommand(
+                "binding",
+                ["set", "project", str(project["id"]), "card", "missing-card"],
+                f"/rp binding set project {project['id']} card missing-card",
+            ),
+            Event(),
+        )
+        == "No card found: missing-card"
+    )
+    assert (
+        runtime.handle_command_sync(
+            RPCommand(
+                "binding",
+                ["set", "project", "9999", "card", str(card_id)],
+                f"/rp binding set project 9999 card {card_id}",
+            ),
+            Event(),
+        )
+        == "No novel project found: 9999"
+    )
+    assert (
+        runtime.handle_command_sync(
+            RPCommand("binding", ["list", "project", "9999"], "/rp binding list project 9999"),
+            Event(),
+        )
+        == "No novel project found: 9999"
+    )
+    assert (
+        runtime.handle_command_sync(
+            RPCommand("binding", ["inspect", "9999"], "/rp binding inspect 9999"),
+            Event(),
+        )
+        == "No default binding found: 9999"
+    )
+    assert (
+        runtime.handle_command_sync(
+            RPCommand("binding", ["clear", "9999"], "/rp binding clear 9999"),
+            Event(),
+        )
+        == "No default binding found: 9999"
+    )
+    assert (
+        runtime.handle_command_sync(
+            RPCommand("binding", ["list", "invalid", "1"], "/rp binding list invalid 1"),
+            Event(),
+        )
+        == BINDING_USAGE
+    )
+    assert (
+        runtime.handle_command_sync(
+            RPCommand("binding", ["inspect"], "/rp binding inspect"),
+            Event(),
+        )
+        == BINDING_USAGE
+    )
 
 
 def test_project_brief_routes_explicit_id_flow(tmp_path):
@@ -712,6 +1033,46 @@ def test_character_state_markers_do_not_leak_to_debug_prompt_or_context(tmp_path
 
     assert "marker: distinctive character token" not in prompt
     assert "marker: distinctive character token" not in context
+
+
+def test_binding_markers_do_not_leak_to_debug_prompt_or_context(tmp_path):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    store.save_card(
+        replace(
+            parse_character_card(
+                {"name": "Alice", "description": "Scholar", "first_mes": "Hello."}
+            ),
+            id="1",
+        )
+    )
+    runtime = TavernRuntime(store)
+    runtime.handle_command_sync(RPCommand("start", ["Alice"], "/rp start Alice"), Event())
+
+    project = store.create_project("Atlas")
+    chapter = store.create_chapter(project["id"], "Prologue")
+    scene = store.create_scene(chapter["id"], "Opening")
+    store.link_scene_session(
+        scene["id"],
+        store.get_active_session("telegram:chat:chat-1:thread:main:user:user-1")["id"],
+    )
+
+    marker_preset_id = _preset_with_id(store, "preset-no-leak-alpha")
+    runtime.handle_command_sync(
+        RPCommand(
+            "binding",
+            ["set", "project", str(project["id"]), "preset", str(marker_preset_id)],
+            f"/rp binding set project {project['id']} preset {marker_preset_id}",
+        ),
+        Event(),
+    )
+
+    prompt = runtime.handle_command_sync(RPCommand("debug", ["prompt"], "/rp debug prompt"), Event())
+    context = runtime.handle_command_sync(RPCommand("debug", ["context"], "/rp debug context"), Event())
+
+    assert "Tone: measured." not in prompt
+    assert "Tone: measured." not in context
+    assert "Default binding" not in prompt
+    assert "Default binding" not in context
 
 
 def test_location_markers_do_not_leak_to_debug_prompt_or_context(tmp_path):

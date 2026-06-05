@@ -270,6 +270,16 @@ TAVERN_COMMAND_TABLE: dict[str, TavernCommandEntry] = {
         ],
     ),
     # ── novel layer ──
+    "binding": TavernCommandEntry(
+        handler="_binding_command",
+        help_lines=[
+            "/rp binding set <project|chapter|scene> <scope-id> <card|preset|lorebook|persona> <asset-id>",
+            "/rp binding list <project|chapter|scene> <scope-id>",
+            "/rp binding inspect <binding-id>",
+            "/rp binding clear <binding-id>",
+            "/rp binding rows are metadata-only/inert; not auto-applied",
+        ],
+    ),
     "style": TavernCommandEntry(
         handler="_style_command",
         help_lines=[

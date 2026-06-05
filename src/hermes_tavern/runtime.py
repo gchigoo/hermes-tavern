@@ -535,6 +535,9 @@ class TavernRuntime:
     def _timeline_command(self, command: RPCommand, event: Any) -> str:
         return runtime_novel.timeline_command(self, command, event)
 
+    def _binding_command(self, command: RPCommand, event: Any) -> str:
+        return runtime_novel.binding_command(self, command, event)
+
     def _location_command(self, command: RPCommand, event: Any) -> str:
         return runtime_novel.location_command(self, command, event)
 

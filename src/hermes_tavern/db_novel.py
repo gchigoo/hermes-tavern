@@ -188,6 +188,16 @@ class NovelDBMixin:
                 created_at TEXT NOT NULL DEFAULT (datetime('now')),
                 updated_at TEXT NOT NULL DEFAULT (datetime('now'))
             );
+            CREATE TABLE IF NOT EXISTS novel_default_bindings (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                scope_type TEXT NOT NULL,
+                scope_id INTEGER NOT NULL,
+                asset_type TEXT NOT NULL,
+                asset_id TEXT NOT NULL,
+                created_at TEXT NOT NULL DEFAULT (datetime('now')),
+                updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+                UNIQUE(scope_type, scope_id, asset_type)
+            );
             CREATE INDEX IF NOT EXISTS idx_novel_organizations_project
                 ON novel_organizations(project_id);
             CREATE INDEX IF NOT EXISTS idx_novel_plot_threads_project
@@ -196,6 +206,8 @@ class NovelDBMixin:
                 ON novel_relationship_states(project_id);
             CREATE INDEX IF NOT EXISTS idx_novel_character_states_project
                 ON novel_character_states(project_id);
+            CREATE INDEX IF NOT EXISTS idx_novel_default_bindings_scope
+                ON novel_default_bindings(scope_type, scope_id);
             """
         )
 
@@ -249,6 +261,185 @@ class NovelDBMixin:
                 (project_id,),
             ).fetchone()
         return _row_to_dict(row)
+
+    def set_default_binding(
+        self,
+        scope_type: str,
+        scope_id: int,
+        asset_type: str,
+        asset_id: str,
+    ) -> dict[str, Any]:
+        scope_type = (scope_type or "").strip().lower()
+        asset_type = (asset_type or "").strip().lower()
+        asset_id = str(asset_id or "").strip()
+        valid_scope_types = {"project", "chapter", "scene"}
+        if scope_type not in valid_scope_types:
+            raise ValueError("Invalid scope type")
+        valid_asset_types = {"card", "preset", "lorebook", "persona"}
+        if asset_type not in valid_asset_types:
+            raise ValueError("Invalid asset type")
+        if not asset_id:
+            raise ValueError("Asset not found")
+
+        self.migrate()
+        with self.connect() as conn:
+            if scope_type == "project":
+                scope = conn.execute(
+                    "SELECT id FROM novel_projects WHERE id = ?",
+                    (scope_id,),
+                ).fetchone()
+                if scope is None:
+                    raise ValueError("Project not found")
+            elif scope_type == "chapter":
+                scope = conn.execute(
+                    "SELECT id FROM novel_chapters WHERE id = ?",
+                    (scope_id,),
+                ).fetchone()
+                if scope is None:
+                    raise ValueError("Chapter not found")
+            else:
+                scope = conn.execute(
+                    "SELECT id FROM novel_scenes WHERE id = ?",
+                    (scope_id,),
+                ).fetchone()
+                if scope is None:
+                    raise ValueError("Scene not found")
+
+            asset_tables = {
+                "card": ("cards", "Card not found"),
+                "preset": ("presets", "Preset not found"),
+                "lorebook": ("lorebooks", "Lorebook not found"),
+                "persona": ("personas", "Persona not found"),
+            }
+            table_name, missing_error = asset_tables[asset_type]
+            asset = conn.execute(
+                f"SELECT id FROM {table_name} WHERE id = ?",
+                (asset_id,),
+            ).fetchone()
+            if asset is None:
+                raise ValueError(missing_error)
+
+            del scope
+            del asset
+
+            now = _utc_now()
+            cursor = conn.execute(
+                """
+                INSERT INTO novel_default_bindings (
+                    scope_type, scope_id, asset_type, asset_id, created_at, updated_at
+                )
+                VALUES (?, ?, ?, ?, ?, ?)
+                ON CONFLICT(scope_type, scope_id, asset_type) DO UPDATE SET
+                    asset_id = excluded.asset_id,
+                    updated_at = excluded.updated_at
+                """,
+                (scope_type, scope_id, asset_type, asset_id, now, now),
+            )
+            binding_id = cursor.lastrowid or conn.execute(
+                """
+                SELECT id
+                FROM novel_default_bindings
+                WHERE scope_type = ? AND scope_id = ? AND asset_type = ?
+                """,
+                (scope_type, scope_id, asset_type),
+            ).fetchone()[0]
+            row = conn.execute(
+                "SELECT * FROM novel_default_bindings WHERE id = ?",
+                (binding_id,),
+            ).fetchone()
+        return _row_to_dict(row)
+
+    def list_default_bindings(
+        self,
+        scope_type: str,
+        scope_id: int,
+    ) -> list[dict[str, Any]]:
+        scope_type = (scope_type or "").strip().lower()
+        if scope_type not in {"project", "chapter", "scene"}:
+            raise ValueError("Invalid scope type")
+
+        self.migrate()
+        with self.connect() as conn:
+            if scope_type == "project":
+                scope = conn.execute(
+                    "SELECT id FROM novel_projects WHERE id = ?",
+                    (scope_id,),
+                ).fetchone()
+                if scope is None:
+                    raise ValueError("Project not found")
+            elif scope_type == "chapter":
+                scope = conn.execute(
+                    "SELECT id FROM novel_chapters WHERE id = ?",
+                    (scope_id,),
+                ).fetchone()
+                if scope is None:
+                    raise ValueError("Chapter not found")
+            else:
+                scope = conn.execute(
+                    "SELECT id FROM novel_scenes WHERE id = ?",
+                    (scope_id,),
+                ).fetchone()
+                if scope is None:
+                    raise ValueError("Scene not found")
+            rows = conn.execute(
+                """
+                SELECT *
+                FROM novel_default_bindings
+                WHERE scope_type = ? AND scope_id = ?
+                ORDER BY asset_type ASC, asset_id ASC
+                """,
+                (scope_type, scope_id),
+            ).fetchall()
+        return [_row_to_dict(row) for row in rows]
+
+    def list_default_bindings_for_project(self, project_id: int) -> list[dict[str, Any]]:
+        self.migrate()
+        with self.connect() as conn:
+            project = conn.execute(
+                "SELECT id FROM novel_projects WHERE id = ?",
+                (project_id,),
+            ).fetchone()
+            if project is None:
+                raise ValueError("Project not found")
+            rows = conn.execute(
+                """
+                SELECT b.*
+                FROM novel_default_bindings AS b
+                WHERE
+                    b.scope_type = 'project' AND b.scope_id = ?
+                    OR b.scope_type = 'chapter' AND b.scope_id IN (
+                        SELECT id FROM novel_chapters WHERE project_id = ?
+                    )
+                    OR b.scope_type = 'scene' AND b.scope_id IN (
+                        SELECT s.id
+                        FROM novel_scenes AS s
+                        INNER JOIN novel_chapters AS c
+                            ON c.id = s.chapter_id
+                        WHERE c.project_id = ?
+                    )
+                ORDER BY b.scope_type ASC, b.scope_id ASC, b.asset_type ASC, b.asset_id ASC
+                """,
+                (project_id, project_id, project_id),
+            ).fetchall()
+        return [_row_to_dict(row) for row in rows]
+
+    def get_default_binding(self, binding_id: int) -> dict[str, Any] | None:
+        self.migrate()
+        with self.connect() as conn:
+            row = conn.execute(
+                "SELECT * FROM novel_default_bindings WHERE id = ?",
+                (binding_id,),
+            ).fetchone()
+        return _row_to_dict(row)
+
+    def clear_default_binding(self, binding_id: int) -> bool:
+        self.migrate()
+        with self.connect() as conn:
+            cursor = conn.execute(
+                "DELETE FROM novel_default_bindings WHERE id = ?",
+                (binding_id,),
+            )
+            return cursor.rowcount > 0
 
     def set_project_style_guide(
         self,
@@ -1856,6 +2047,21 @@ class NovelDBMixin:
             )
             for relationship in relationships:
                 lines.append(f"- {relationship['label']}: {relationship['state_text']}")
+            lines.append("")
+
+        default_bindings = self.list_default_bindings_for_project(novel_project["id"])
+        if default_bindings:
+            lines.extend(
+                [
+                    "## Default Bindings",
+                    "",
+                ]
+            )
+            for binding in default_bindings:
+                lines.append(
+                    f"- [{binding['id']}] {binding['scope_type']}:{binding['scope_id']} "
+                    f"-> {binding['asset_type']}:{binding['asset_id']}"
+                )
             lines.append("")
 
         lines.append("## Chapters")
