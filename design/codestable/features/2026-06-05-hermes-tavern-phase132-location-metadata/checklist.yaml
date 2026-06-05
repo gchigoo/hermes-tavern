@@ -1,0 +1,177 @@
+doc_type: feature-checklist
+feature: "2026-06-05-hermes-tavern-phase132-location-metadata"
+date: "2026-06-05"
+status: planned
+summary: >
+  Location Metadata v1 adds local project-scoped location notes backed by
+  `novel_locations`, managed through `/rp location ...` commands, optionally
+  visible in Markdown export, and verified to remain outside prompt/debug/
+  context-budget/provider/generation/content-mode/vectorization/retrieval paths.
+
+steps:
+  - id: S1
+    name: "S1: Location Metadata implementation"
+    status: pending
+    description: >
+      Add local project-scoped location persistence, the `/rp location ...`
+      command family, help/README command literals, optional Markdown export
+      visibility, and focused DB/runtime/docs tests. Keep implementation inside
+      the allowed plugin/source/docs/test files and avoid prompt/provider/model/
+      content-mode/generation paths.
+    allowed_files:
+      - src/hermes_tavern/db_novel.py
+      - src/hermes_tavern/runtime_novel.py
+      - src/hermes_tavern/runtime.py
+      - src/hermes_tavern/commands.py
+      - README.md
+      - tests/test_hermes_tavern_novel_db.py
+      - tests/test_hermes_tavern_novel_runtime.py
+      - tests/test_hermes_tavern_commands.py
+      - tests/test_hermes_tavern_readme_docs.py
+    prohibited_files:
+      - run_agent.py
+      - cli.py
+      - gateway/run.py
+      - src/hermes_tavern/runtime_prompt_modules.py
+      - src/hermes_tavern/prompt.py
+      - src/hermes_tavern/runtime_debug.py
+      - src/hermes_tavern/model_router.py
+      - src/hermes_tavern/provider_bridge.py
+      - src/hermes_tavern/adapters.py
+      - src/hermes_tavern/runtime_model.py
+      - src/hermes_tavern/runtime_generation.py
+      - src/hermes_tavern/runtime_content.py
+      - src/hermes_tavern/importers/**
+      - build/lib/**
+    explicit_non_goals:
+      - No automatic location extraction, summarization, vectorization, retrieval, map/geocoding, provider calls, generation changes, or scheduled update cycle.
+      - No prompt module injection, debug/context-budget inclusion, model routing, content-mode behavior, credential persistence, ST asset importer/exporter, cloud/collaboration, backend account, minors/underage, or provider-safety-bypass behavior.
+      - No broad runtime/db refactor beyond the minimum local command and metadata surface.
+    exit_signal: >
+      Location persistence, commands, help/docs, export visibility, and no-leak
+      tests pass in focused verification; no protected core, prompt, provider,
+      router, credential, content-mode, generation, retrieval/vectorization,
+      cloud/collab, minors/underage, ST asset importer/exporter, build-artifact,
+      or safety-bypass file changes are present.
+    verification:
+      - command: >-
+          PYTHONDONTWRITEBYTECODE=1 python -m py_compile src/hermes_tavern/db_novel.py src/hermes_tavern/runtime_novel.py src/hermes_tavern/runtime.py src/hermes_tavern/commands.py tests/test_hermes_tavern_novel_db.py tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_commands.py tests/test_hermes_tavern_readme_docs.py
+        expected: "passes"
+      - command: >-
+          PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel_db.py tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_commands.py tests/test_hermes_tavern_readme_docs.py -q -o 'addopts=' -p no:cacheprovider
+        expected: "passes"
+      - command: >-
+          PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_*.py -q -o 'addopts=' -p no:cacheprovider
+        expected: "passes"
+      - command: >-
+          PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts=' -p no:cacheprovider
+        expected: "passes"
+      - command: >-
+          git diff --name-only -- run_agent.py cli.py gateway/run.py src/hermes_tavern/runtime_prompt_modules.py src/hermes_tavern/prompt.py src/hermes_tavern/runtime_debug.py src/hermes_tavern/model_router.py src/hermes_tavern/provider_bridge.py src/hermes_tavern/adapters.py src/hermes_tavern/runtime_model.py src/hermes_tavern/runtime_generation.py src/hermes_tavern/runtime_content.py build/lib
+        expected: "empty"
+      - command: "git diff --check"
+        expected: "passes"
+
+  - id: S2
+    name: "S2: Verify/Accept/Write Architecture"
+    status: pending
+    description: >
+      Run focused, plugin, full, YAML/frontmatter, reverse-scope, and whitespace
+      verification. Create the acceptance report and update architecture/root
+      design to mark location metadata current while preserving deferred
+      automation/retrieval/provider/generation/default-binding/policy boundaries.
+    allowed_files:
+      - design/codestable/features/2026-06-05-hermes-tavern-phase132-location-metadata/design.md
+      - design/codestable/features/2026-06-05-hermes-tavern-phase132-location-metadata/checklist.yaml
+      - design/codestable/features/2026-06-05-hermes-tavern-phase132-location-metadata/hermes-tavern-phase132-location-metadata-acceptance.md
+      - design/codestable/architecture/ARCHITECTURE.md
+      - design/HERMES_TAVERN_DESIGN.md
+    prohibited_files:
+      - README.md
+      - src/**
+      - tests/**
+      - run_agent.py
+      - cli.py
+      - gateway/run.py
+      - build/lib/**
+    exit_signal: >
+      Acceptance report and architecture/root-design writeback are complete; the
+      feature is accepted with no protected source/test/build/core diff in S2.
+    verification:
+      - command: >-
+          PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel_db.py tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_commands.py tests/test_hermes_tavern_readme_docs.py -q -o 'addopts=' -p no:cacheprovider
+        expected: "passes"
+      - command: >-
+          PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_*.py -q -o 'addopts=' -p no:cacheprovider
+        expected: "passes"
+      - command: >-
+          PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts=' -p no:cacheprovider
+        expected: "passes"
+      - command: >-
+          python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-05-hermes-tavern-phase132-location-metadata/design.md --require doc_type --require status --require feature
+        expected: "passes"
+      - command: >-
+          python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-05-hermes-tavern-phase132-location-metadata/hermes-tavern-phase132-location-metadata-acceptance.md --require doc_type --require status --require feature
+        expected: "passes"
+      - command: >-
+          python design/codestable/tools/validate-yaml.py --yaml-only --file design/codestable/features/2026-06-05-hermes-tavern-phase132-location-metadata/checklist.yaml
+        expected: "passes"
+      - command: >-
+          git diff --name-only -- README.md src tests run_agent.py cli.py gateway/run.py build/lib
+        expected: "empty"
+      - command: >-
+          git diff --name-only -- run_agent.py cli.py gateway/run.py src/hermes_tavern/runtime_prompt_modules.py src/hermes_tavern/prompt.py src/hermes_tavern/runtime_debug.py src/hermes_tavern/model_router.py src/hermes_tavern/provider_bridge.py src/hermes_tavern/adapters.py src/hermes_tavern/runtime_model.py src/hermes_tavern/runtime_generation.py src/hermes_tavern/runtime_content.py build/lib
+        expected: "empty"
+      - command: "git diff --check"
+        expected: "passes"
+
+checks:
+  - id: C1
+    name: "C1: Active checklist precondition"
+    status: pending
+    criteria: >
+      Before implementation, no unrelated feature checklist is planned, pending,
+      or in progress; this Phase 132 checklist is the only active feature.
+
+  - id: C2
+    name: "C2: Persistence contract"
+    status: pending
+    criteria: >
+      `novel_locations` migration, project foreign key/index, CRUD/list helpers,
+      missing project/ID behavior, blank-label rejection, and blank-description
+      rejection are covered by focused DB tests.
+
+  - id: C3
+    name: "C3: Command contract"
+    status: pending
+    criteria: >
+      `/rp location add/list/inspect/update/delete` command literals return
+      compact normal and error messages, require explicit project ID for add,
+      support active-project fallback for list only, and are visible through
+      help and README guards.
+
+  - id: C4
+    name: "C4: Markdown export"
+    status: pending
+    criteria: >
+      Project Markdown export includes `## Locations` only when location rows
+      exist, orders it after Style Guide and before Characters/Relationships/
+      Chapters, and omits it for projects without location rows.
+
+  - id: C5
+    name: "C5: Offline no-leak boundary"
+    status: pending
+    criteria: >
+      Location text does not appear in `/rp debug prompt` or `/rp debug context`;
+      prompt module selection, context-budget composition, provider calls, model
+      routing, content mode, credentials, generation, vectorization/retrieval,
+      and summarization behavior remain unchanged.
+
+  - id: C6
+    name: "C6: Reverse-scope verification"
+    status: pending
+    criteria: >
+      No protected core files, build artifacts, prompt/provider/model/generation
+      files, credential paths, cloud/collab paths, minors/underage paths, ST
+      asset importer/exporter paths, default-binding behavior, canon/content-mode
+      policy behavior, or provider-safety-bypass behavior are changed.
