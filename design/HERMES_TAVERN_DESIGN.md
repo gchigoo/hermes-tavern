@@ -497,9 +497,13 @@ organizational notes through `/rp organization ...`, persisted in
 Organization rows are local notes only and do not imply hierarchy, membership,
 affiliations, or bindings.
 
-Future project metadata from the original vision remains deferred outside the
-current scope: `canon_policy`, `content_mode`, `default_card_id`,
-`default_preset_id`, `default_lorebook_ids`, and default-binding metadata.
+Current phase includes command-managed default-binding metadata via
+`novel_default_bindings` (for `project`/`chapter`/`scene` scope + one of
+`card`/`preset`/`lorebook`/`persona` assets) and export visibility only. The
+scalar defaults `default_card_id`, `default_preset_id`, and `default_lorebook_ids`
+remain deferred; automatic default application is explicitly out of scope.
+`canon_policy` and `content_mode` remain deferred.
+ST card/preset/lorebook/persona importer/exporter compatibility remains unchanged.
 
 Relationship state is now current local metadata and is managed through
 `novel_relationship_states(id, project_id, label, state_text, created_at, updated_at)`.
@@ -519,11 +523,11 @@ Plot threads are now current local metadata and are managed through
 Style samples are now current local metadata and are managed through
 `novel_style_samples(id, project_id, label, sample_text, created_at, updated_at)`.
 
-Relationship, character-state, location, organization, plot-thread, and
-style-sample metadata are informational-only: they do not participate in prompt
-module injection, provider routing, context budget reporting,
-vectorization/retrieval, content-mode behavior, credential persistence,
-automation/summarization, or generation.
+Default-binding metadata, relationship state, character state, location,
+organization, plot-thread, and style-sample metadata are informational-only:
+they do not participate in prompt module injection, provider routing, context
+budget reporting, vectorization/retrieval, content-mode behavior, credential
+persistence, automation/summarization, or generation.
 
 Sub-objects:
 
@@ -1137,11 +1141,11 @@ Future canon commands from the original vision remain deferred: `/rp canon check
 
 Cross-cutting deferred novel constraints remain explicit in this slice:
 relationship graph/rename/automatic extraction, project archive ZIP/import
-workflows, default binding metadata, canon-policy/content-mode metadata,
-provider routing, generation side effects, retrieval/vectorization/automation
-coupling, archive ZIP/import/export workflows, cloud collaboration, no provider
-credential persistence, no minors/underage handling, and no provider safety
-bypass pathways.
+workflows, automatic default-binding application and scalar default fields,
+canon-policy/content-mode metadata, provider routing, generation side effects,
+retrieval/vectorization/automation coupling, archive ZIP/import/export workflows,
+cloud collaboration, no provider credential persistence, no minors/underage
+handling, and no provider safety bypass pathways.
 
 ---
 
@@ -1345,7 +1349,7 @@ ST preset JSON
 ST lorebook/world info JSON
 ```
 
-Hermes Tavern native project archives are deferred; the current Phase 121–135
+Hermes Tavern native project archives are deferred; the current Phase 121–137
 implementation provides Markdown export only, not project/novel import.
 Relationship-state, character-state, location, organization, plot-thread, and
 style-sample rows remain local metadata and are not bound to ST card objects in
@@ -1372,7 +1376,7 @@ chat export JSONL
 novel export Markdown
 ```
 
-Project archive ZIP remains a future exporter/importer; current Phase 121–135 writes
+Project archive ZIP remains a future exporter/importer; current Phase 121–137 writes
 local Markdown via `/rp project export [id]`.
 Project Brief and Project Outline are exported as optional top-level `## Project Brief`
 and `## Outline` sections after `## Summary` when non-empty. Project style guides
@@ -1382,6 +1386,8 @@ present, or after Project Brief/Outline when no Style Guide is present, before
 `## Locations`, `## Organizations`, `## Plot Threads`, `## Characters`,
 `## Relationships`, and `## Chapters`. `## Style Samples` is omitted when no
 style-sample rows exist.
+`## Default Bindings` appears after `## Relationships` and before `## Chapters`,
+and is omitted when no default-binding rows exist.
 `## Locations` appears after Style Samples when present; otherwise it follows
 the post-Style Guide / Project Brief / Project Outline placement. When at least
 one location row exists, this section is emitted before Organizations,

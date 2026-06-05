@@ -128,13 +128,12 @@ Export flow:
   -> existing local MEDIA export contract unchanged
 ```
 
-Suggested export placement:
+Implemented export placement:
 
 ```text
 Summary
 Project Brief
 Outline
-Default Bindings
 Style Guide
 Style Samples
 Locations
@@ -142,6 +141,7 @@ Organizations
 Plot Threads
 Characters
 Relationships
+Default Bindings
 Chapters
 Canon
 Timeline

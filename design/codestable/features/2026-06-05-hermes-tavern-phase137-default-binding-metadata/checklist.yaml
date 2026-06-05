@@ -1,21 +1,25 @@
 doc_type: feature-checklist
-status: in_progress
+status: accepted
 feature: "2026-06-05-hermes-tavern-phase137-default-binding-metadata"
 date: "2026-06-05"
 summary: >
-  IN PROGRESS - S1 has implemented local, command-managed project/chapter/scene
-  default binding rows for card, preset, lorebook, and persona assets, with
-  command and Markdown export visibility only. S2 acceptance/writeback remains.
+  ACCEPTED - Phase 137 Default Binding Metadata v1 adds local, command-managed
+  project/chapter/scene default-binding rows for card, preset, lorebook, and
+  persona assets, with command and Markdown export visibility only. S1
+  implementation and S2 acceptance/writeback are complete; controller
+  verification confirms bindings are metadata-only/inert and do not alter
+  prompts, sessions, provider/model routing, content mode, generation,
+  retrieval/vectorization, media, archive, ST importer/exporter, or core behavior.
 implementation_readiness: >
-  IN PROGRESS - Codex architect identified the top-level /rp binding routing
+  ACCEPTED - Codex architect identified the top-level /rp binding routing
   decision; the controller updated the artifact to allow only the minimal
   src/hermes_tavern/runtime.py TavernRuntime._binding_command shim, smoke-tested
-  the Codex executor profile, and the bounded executor implemented S1. The
-  controller reviewed the diff, fixed string asset-id handling, missing-scope
-  error reporting, metadata-only help/README wording, binding list ordering, and
-  an unrelated export-spacing regression, then reran focused/Tavern/full pytest,
-  YAML/frontmatter validators, protected-scope guards, and git diff --check from
-  scratch before marking S1 complete.
+  the Codex executor profile, and the bounded executor implemented S1. For S2,
+  Codex architect produced the docs/status-only acceptance artifact, the executor
+  drafted acceptance/checklist/architecture/root-design updates, and the
+  controller patched stale deferred wording, expanded the acceptance report,
+  reran focused/Tavern/full pytest, YAML/frontmatter validators, protected-scope
+  guards, stale-wording scans, and git diff --check from scratch before accepting.
 likely_touched_files:
   - src/hermes_tavern/db_novel.py
   - src/hermes_tavern/runtime.py
@@ -28,6 +32,7 @@ likely_touched_files:
   - README.md
   - design/codestable/architecture/ARCHITECTURE.md
   - design/HERMES_TAVERN_DESIGN.md
+  - design/codestable/features/2026-06-05-hermes-tavern-phase137-default-binding-metadata/hermes-tavern-phase137-default-binding-metadata-acceptance.md
 steps:
   - id: S1
     name: "S1: Implement local default binding metadata"
@@ -114,7 +119,15 @@ steps:
         result: "passed"
   - id: S2
     name: "S2: Verify/accept/write current docs"
-    status: planned
+    status: completed
+    completed_at: "2026-06-05"
+    result: >
+      ACCEPTED - S2 docs/status writeback created the Phase 137 acceptance
+      report, corrected the design export-order note to match implementation,
+      updated architecture/root-design current behavior for command-managed
+      default-binding metadata, and finalized checklist/acceptance statuses after
+      controller reran focused/Tavern/full pytest, YAML/frontmatter validators,
+      protected reverse-scope guards, stale-wording scans, and git diff --check.
     description: >
       Controller-owned acceptance/writeback after S1 passes.
     allowed_files:
