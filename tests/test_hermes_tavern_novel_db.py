@@ -87,6 +87,7 @@ def test_migrate_creates_novel_tables(tmp_path):
         "novel_canon",
         "novel_timeline",
         "novel_scene_goals",
+        "novel_scene_beats",
         "novel_scene_narration_controls",
         "novel_project_style_guides",
         "novel_style_samples",
@@ -107,6 +108,7 @@ def test_migrate_creates_novel_tables(tmp_path):
         "novel_timeline",
         "novel_default_bindings",
         "novel_scene_goals",
+        "novel_scene_beats",
         "novel_scene_narration_controls",
         "novel_project_style_guides",
         "novel_style_samples",
@@ -146,6 +148,19 @@ def test_migrate_creates_novel_tables(tmp_path):
             ).fetchall()
         }
     assert "idx_novel_style_samples_project" in style_sample_indexes
+    with sqlite3.connect(db_path) as conn:
+        scene_beat_indexes = {
+            row[0]
+            for row in conn.execute(
+                """
+                SELECT name
+                FROM sqlite_master
+                WHERE type='index'
+                    AND tbl_name='novel_scene_beats'
+                """
+            ).fetchall()
+        }
+    assert "idx_novel_scene_beats_scene" in scene_beat_indexes
     with sqlite3.connect(db_path) as conn:
         brief_indexes = {
             row[0]
@@ -373,6 +388,77 @@ def test_default_binding_list_sorts_by_asset_type_and_asset_id(tmp_path):
         ("lorebook", lorebook_id),
         ("preset", preset_id),
     ]
+
+
+def test_scene_beat_crud_and_missing_owner_errors(tmp_path):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    project = store.create_project("Scene Beat Log")
+    chapter = store.create_chapter(project["id"], "Opening")
+    scene = store.create_scene(chapter["id"], "Dawn")
+
+    first = store.create_scene_beat(scene["id"], "first", "The harbor bell sounds.")
+    second = store.create_scene_beat(scene["id"], "second", "The watch changes.")
+    assert first["scene_id"] == scene["id"]
+    assert second["scene_id"] == scene["id"]
+    assert first["id"] != second["id"]
+
+    listed = store.list_scene_beats(scene["id"])
+    assert len(listed) == 2
+    assert listed[0]["id"] == first["id"]
+    assert listed[0]["label"] == "first"
+    assert listed[1]["label"] == "second"
+
+    fetched = store.get_scene_beat(first["id"])
+    assert fetched is not None
+    assert fetched["id"] == first["id"]
+    assert fetched["beat_text"] == "The harbor bell sounds."
+
+    updated = store.update_scene_beat(second["id"], "The watch changes again.")
+    assert updated is not None
+    assert updated["id"] == second["id"]
+    assert updated["beat_text"] == "The watch changes again."
+
+    assert store.delete_scene_beat(first["id"]) is True
+    assert store.get_scene_beat(first["id"]) is None
+    assert store.delete_scene_beat(first["id"]) is False
+
+    try:
+        store.create_scene_beat(9999, "lost", "No scene.")
+    except ValueError as exc:
+        assert str(exc) == "Scene not found"
+    else:
+        raise AssertionError("Expected ValueError for missing scene")
+
+    try:
+        store.list_scene_beats(9999)
+    except ValueError as exc:
+        assert str(exc) == "Scene not found"
+    else:
+        raise AssertionError("Expected ValueError for missing scene")
+
+    assert store.update_scene_beat(9999, "No beat.") is None
+    assert store.delete_scene_beat(9999) is False
+
+    try:
+        store.create_scene_beat(scene["id"], " ", "A beat.")
+    except ValueError as exc:
+        assert str(exc) == "Scene beat label cannot be blank"
+    else:
+        raise AssertionError("Expected ValueError for blank label")
+
+    try:
+        store.create_scene_beat(scene["id"], "beat", " ")
+    except ValueError as exc:
+        assert str(exc) == "Scene beat text cannot be blank"
+    else:
+        raise AssertionError("Expected ValueError for blank beat text")
+
+    try:
+        store.update_scene_beat(first["id"], " ")
+    except ValueError as exc:
+        assert str(exc) == "Scene beat text cannot be blank"
+    else:
+        raise AssertionError("Expected ValueError for blank beat text on update")
 
 
 def test_novel_project_crud_and_counts(tmp_path):
@@ -1635,6 +1721,56 @@ def test_export_project_markdown_includes_summary_lines_for_chapter_and_scene_in
         < markdown.index(goal)
         < markdown.index(narration)
     )
+
+
+def test_export_project_markdown_includes_scene_beats_in_scene_sections(tmp_path):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+
+    novel_project = store.create_project("Beat Atlas")
+    chapter = store.create_chapter(novel_project["id"], "Night Watch")
+    scene = store.create_scene(chapter["id"], "Dock")
+    store.create_scene_beat(scene["id"], "arrival", "A messenger waits by the quay.")
+    store.create_scene_beat(scene["id"], "signal", "Three lanterns glow in sequence.")
+
+    markdown = store.export_project_markdown(novel_project["id"])
+
+    scene_heading = "#### Scene 1: Dock"
+    beat_block = "Scene beats:"
+    first_beat = "- arrival: A messenger waits by the quay."
+    second_beat = "- signal: Three lanterns glow in sequence."
+
+    assert scene_heading in markdown
+    assert beat_block in markdown
+    assert first_beat in markdown
+    assert second_beat in markdown
+    assert (
+        markdown.index(scene_heading)
+        < markdown.index(beat_block)
+        < markdown.index(first_beat)
+        < markdown.index(second_beat)
+    )
+
+
+def test_export_project_markdown_omits_scene_beats_when_empty_and_scopes_by_scene(tmp_path):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+
+    novel_project = store.create_project("Scoped Beats")
+    chapter = store.create_chapter(novel_project["id"], "Signals")
+    quiet_scene = store.create_scene(chapter["id"], "Quiet Dock")
+    beat_scene = store.create_scene(chapter["id"], "Lantern Room")
+    store.create_scene_beat(beat_scene["id"], "signal", "The lantern flashes twice.")
+
+    markdown = store.export_project_markdown(novel_project["id"])
+
+    quiet_heading = "#### Scene 1: Quiet Dock"
+    beat_heading = "#### Scene 2: Lantern Room"
+    quiet_section = markdown[markdown.index(quiet_heading) : markdown.index(beat_heading)]
+    beat_section = markdown[markdown.index(beat_heading) :]
+
+    assert "Scene beats:" not in quiet_section
+    assert "The lantern flashes twice." not in quiet_section
+    assert "Scene beats:" in beat_section
+    assert "- signal: The lantern flashes twice." in beat_section
 
 
 def test_export_project_markdown_omits_empty_summary_lines_in_chapters_section(tmp_path):

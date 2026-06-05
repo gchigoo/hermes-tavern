@@ -150,6 +150,16 @@ def test_help_lists_chapter_and_scene_summary_commands():
     assert "/rp scene summary clear <scene-id>" in help_text
 
 
+def test_help_lists_scene_beat_commands():
+    help_text = _build_help_text()
+
+    assert "/rp scene beat add <scene-id> <label> <beat...>" in help_text
+    assert "/rp scene beat list <scene-id>" in help_text
+    assert "/rp scene beat inspect <beat-id>" in help_text
+    assert "/rp scene beat update <beat-id> <beat...>" in help_text
+    assert "/rp scene beat delete <beat-id>" in help_text
+
+
 def test_help_lists_project_brief_commands():
     help_text = _build_help_text()
 

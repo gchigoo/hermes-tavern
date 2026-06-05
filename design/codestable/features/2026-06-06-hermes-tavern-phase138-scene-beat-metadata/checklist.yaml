@@ -1,0 +1,177 @@
+doc_type: feature-checklist
+feature: "2026-06-06-hermes-tavern-phase138-scene-beat-metadata"
+date: "2026-06-06"
+status: implemented
+summary: >
+  IMPLEMENTED - Scene Beat Metadata v1 adds local scene-scoped beat rows with
+  /rp scene beat add/list/inspect/update/delete command visibility and optional
+  per-scene project Markdown export visibility only. It remains metadata-only/
+  inert: controller verification confirms no prompt/debug/context-budget,
+  active-session, provider/model routing, content-mode, credential,
+  retrieval/vectorization, generation, media, archive, graph, automatic
+  extraction, protected core, runtime.py, architecture, or root-design changes.
+
+implementation_readiness: >
+  IMPLEMENTED - Codex architect selected scene beats as the next bounded
+  metadata-only phase and produced design/checklist artifacts. The controller
+  materialized and validated the artifacts, then Codex executor implemented S1.
+  Controller review added one small export scoping/empty-block regression test,
+  reran py_compile, focused pytest, Tavern-wide pytest, full pytest, YAML
+  validators, reverse-scope diff guards, and git diff --check from scratch.
+
+planning_verification:
+  - command: >-
+      codex --profile architect exec --json --color never --disable image_generation --sandbox read-only --cd /Users/steven/Projects/hermes-tavern <Phase 138 planning prompt>
+    result: >-
+      passed; JSONL at /tmp/hermes-tavern-architect-phase138.jsonl; RESULT:
+      READY; selected hermes-tavern-phase138-scene-beat-metadata.
+  - command: >-
+      python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-06-hermes-tavern-phase138-scene-beat-metadata/design.md --require doc_type --require status --require feature
+    result: "passed; 1 passed, 0 failed"
+  - command: >-
+      python design/codestable/tools/validate-yaml.py --yaml-only --file design/codestable/features/2026-06-06-hermes-tavern-phase138-scene-beat-metadata/checklist.yaml
+    result: "passed; 1 passed, 0 failed"
+
+steps:
+  - id: S1
+    name: "S1: Implement local scene beat metadata"
+    status: completed
+    completed_at: "2026-06-06"
+    result: >
+      IMPLEMENTED - Codex executor added novel_scene_beats persistence,
+      create/list/inspect/update/delete helpers, /rp scene beat command routing,
+      help/README literals, optional per-scene Markdown export visibility, and
+      focused DB/runtime/command/docs tests. Controller review added a small
+      export omission/scoping regression and verified the feature remains
+      metadata-only/inert.
+    description: >
+      Add novel_scene_beats persistence, create/list/inspect/update/delete store
+      helpers, /rp scene beat add/list/inspect/update/delete command handling,
+      help/README command literals, optional per-scene Markdown export
+      visibility, and focused offline tests. Keep beats metadata-only/inert.
+    allowed_files:
+      - src/hermes_tavern/db_novel.py
+      - src/hermes_tavern/runtime_novel.py
+      - src/hermes_tavern/commands.py
+      - README.md
+      - tests/test_hermes_tavern_novel_db.py
+      - tests/test_hermes_tavern_novel_runtime.py
+      - tests/test_hermes_tavern_commands.py
+      - tests/test_hermes_tavern_readme_docs.py
+    prohibited_files:
+      - run_agent.py
+      - cli.py
+      - gateway/run.py
+      - src/hermes_tavern/runtime.py
+      - src/hermes_tavern/runtime_prompt_modules.py
+      - src/hermes_tavern/prompt.py
+      - src/hermes_tavern/runtime_prompt_manager.py
+      - src/hermes_tavern/runtime_debug.py
+      - src/hermes_tavern/model_router.py
+      - src/hermes_tavern/provider_bridge.py
+      - src/hermes_tavern/adapters.py
+      - src/hermes_tavern/runtime_model.py
+      - src/hermes_tavern/runtime_generation.py
+      - src/hermes_tavern/runtime_content.py
+      - src/hermes_tavern/memory.py
+      - src/hermes_tavern/runtime_memory.py
+      - src/hermes_tavern/images.py
+      - src/hermes_tavern/runtime_images.py
+      - "src/hermes_tavern/importers/**"
+      - "plugins/**"
+      - "build/lib/**"
+      - design/codestable/architecture/ARCHITECTURE.md
+      - design/HERMES_TAVERN_DESIGN.md
+      - "design/codestable/** status/checklist/acceptance writeback during S1"
+    exact_scope:
+      - "Create novel_scene_beats with scene_id, label, beat_text, timestamps, and idx_novel_scene_beats_scene."
+      - "Support /rp scene beat add <scene-id> <label> <beat...>."
+      - "Support /rp scene beat list <scene-id>."
+      - "Support /rp scene beat inspect <beat-id>."
+      - "Support /rp scene beat update <beat-id> <beat...>."
+      - "Support /rp scene beat delete <beat-id>."
+      - "Keep labels immutable in v1; update changes beat_text only."
+      - "Order list/export rows by id ASC."
+      - "Emit optional scene beats only under the owning scene in project Markdown export."
+      - "Keep beat text absent from debug prompt, debug context, prompt modules, context-budget output, provider/model routing, content mode, retrieval/vectorization, and generation."
+      - "Do not edit src/hermes_tavern/runtime.py or protected core files."
+      - "Use neutral fictional writing examples only; do not add minor/underage/age fields or examples."
+    verification:
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m py_compile src/hermes_tavern/db_novel.py src/hermes_tavern/runtime_novel.py src/hermes_tavern/commands.py tests/test_hermes_tavern_novel_db.py tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_commands.py tests/test_hermes_tavern_readme_docs.py"
+        expected: "passes"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel_db.py tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_commands.py tests/test_hermes_tavern_readme_docs.py -q -o 'addopts=' -p no:cacheprovider"
+        expected: "passes"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_*.py -q -o 'addopts=' -p no:cacheprovider"
+        expected: "passes"
+      - command: "git diff --name-only -- run_agent.py cli.py gateway/run.py src/hermes_tavern/runtime.py src/hermes_tavern/runtime_prompt_modules.py src/hermes_tavern/prompt.py src/hermes_tavern/runtime_prompt_manager.py src/hermes_tavern/runtime_debug.py src/hermes_tavern/model_router.py src/hermes_tavern/provider_bridge.py src/hermes_tavern/adapters.py src/hermes_tavern/runtime_model.py src/hermes_tavern/runtime_generation.py src/hermes_tavern/runtime_content.py src/hermes_tavern/memory.py src/hermes_tavern/runtime_memory.py src/hermes_tavern/images.py src/hermes_tavern/runtime_images.py src/hermes_tavern/importers plugins build/lib design/HERMES_TAVERN_DESIGN.md design/codestable/architecture/ARCHITECTURE.md"
+        expected: "empty output"
+      - command: "git diff --check"
+        expected: "passes"
+
+acceptance:
+  - id: AC1
+    criteria: "Migration creates novel_scene_beats and idx_novel_scene_beats_scene."
+    status: completed
+  - id: AC2
+    criteria: "Store helpers create, list, inspect, update, and delete scene beats with deterministic id ASC ordering."
+    status: completed
+  - id: AC3
+    criteria: "Missing scenes, missing beats, blank labels, and blank beat text return bounded behavior."
+    status: completed
+  - id: AC4
+    criteria: "/rp scene beat add/list/inspect/update/delete appears in help and works through runtime command handling."
+    status: completed
+  - id: AC5
+    criteria: "README Core commands and docs tests include scene beat literals."
+    status: completed
+  - id: AC6
+    criteria: "Project Markdown export includes beats only under their owning scene and omits beat blocks when empty."
+    status: completed
+  - id: AC7
+    criteria: "Distinctive beat text does not appear in /rp debug prompt or /rp debug context."
+    status: completed
+  - id: AC8
+    criteria: "Reverse-scope diff checks show no protected core, runtime.py, prompt/debug/context-budget, provider/model/content/generation, retrieval/vectorization, media, importer, plugin shim, build, architecture/root-design, archive, graph, automatic extraction, or safety-bypass changes."
+    status: completed
+
+checks:
+  - id: C1
+    name: "Metadata schema"
+    status: completed
+    criteria: "novel_scene_beats exists with scene ownership and indexed scene lookup."
+  - id: C2
+    name: "Command surface"
+    status: completed
+    criteria: "/rp scene beat commands are visible and bounded."
+  - id: C3
+    name: "Export visibility"
+    status: completed
+    criteria: "Scene beats appear only under the owning scene in local Markdown export."
+  - id: C4
+    name: "No prompt/provider side effects"
+    status: completed
+    criteria: "No beat text appears in prompt/debug/context paths and no prohibited files change."
+
+risks:
+  - id: R1
+    risk: "Users may assume beats are generated, ordered workflow steps, or prompt instructions."
+    mitigation: "Keep command/docs wording metadata-only/inert and defer generation/order controls."
+  - id: R2
+    risk: "Export could attach a beat to the wrong scene."
+    mitigation: "List beats by scene_id inside the scene export loop and test cross-scene exclusion."
+  - id: R3
+    risk: "The repeated metadata pattern can tempt a broad abstraction."
+    mitigation: "Do not refactor; keep S1 to the bounded table, commands, export, docs, and tests."
+
+verification_notes: |
+  - Codex executor run completed with implementation changes in the allowed S1 files; JSONL: /tmp/hermes-tavern-executor-phase138.jsonl.
+  - Codex executor py_compile passed and focused pytest passed with 300 passed; its Tavern-wide run hit the known transient image-provider mock failure path in tests/test_hermes_tavern_images.py.
+  - Controller added one small export scoping/empty-block regression test to close AC6 coverage.
+  - Controller reran py_compile for the changed source/test files: passed with no output.
+  - Controller reran focused DB/runtime/command/README docs pytest: 301 passed in 10.96s.
+  - Controller reran full Tavern glob: 992 passed in 42.27s.
+  - Controller reran full pytest from the repo root: 992 passed in 41.75s.
+  - Controller reran design/checklist YAML validators: both passed, 1 file each.
+  - Controller reran the protected reverse-scope diff guard: empty output.
+  - Controller reran git diff --check: passed with no output.
+  - No protected core, runtime.py, prompt/debug/context-budget, provider/model/content/generation, retrieval/vectorization, media, importer, plugin shim, build, architecture, or root-design files changed.

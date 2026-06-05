@@ -85,6 +85,15 @@ class NovelDBMixin:
                 updated_at TEXT NOT NULL DEFAULT (datetime('now'))
             );
 
+            CREATE TABLE IF NOT EXISTS novel_scene_beats (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                scene_id INTEGER NOT NULL REFERENCES novel_scenes(id) ON DELETE CASCADE,
+                label TEXT NOT NULL,
+                beat_text TEXT NOT NULL,
+                created_at TEXT NOT NULL DEFAULT (datetime('now')),
+                updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+            );
+
             CREATE TABLE IF NOT EXISTS novel_project_style_guides (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 project_id INTEGER NOT NULL UNIQUE REFERENCES novel_projects(id) ON DELETE CASCADE,
@@ -162,6 +171,8 @@ class NovelDBMixin:
                 ON novel_scene_goals(scene_id);
             CREATE INDEX IF NOT EXISTS idx_novel_scene_narration_controls_scene
                 ON novel_scene_narration_controls(scene_id);
+            CREATE INDEX IF NOT EXISTS idx_novel_scene_beats_scene
+                ON novel_scene_beats(scene_id, id);
             CREATE INDEX IF NOT EXISTS idx_novel_project_style_guides_project
                 ON novel_project_style_guides(project_id);
             CREATE INDEX IF NOT EXISTS idx_novel_project_briefs_project
@@ -1575,6 +1586,106 @@ class NovelDBMixin:
             ).fetchone()
         return _row_to_dict(row)
 
+    def create_scene_beat(
+        self,
+        scene_id: int,
+        label: str,
+        beat_text: str,
+    ) -> dict[str, Any]:
+        label = (label or "").strip()
+        beat_text = (beat_text or "").strip()
+        if not label:
+            raise ValueError("Scene beat label cannot be blank")
+        if not beat_text:
+            raise ValueError("Scene beat text cannot be blank")
+
+        self.migrate()
+        with self.connect() as conn:
+            scene = conn.execute(
+                "SELECT id FROM novel_scenes WHERE id = ?",
+                (scene_id,),
+            ).fetchone()
+            if scene is None:
+                raise ValueError("Scene not found")
+            now = _utc_now()
+            cursor = conn.execute(
+                """
+                INSERT INTO novel_scene_beats (
+                    scene_id, label, beat_text, created_at, updated_at
+                )
+                VALUES (?, ?, ?, ?, ?)
+                """,
+                (scene_id, label, beat_text, now, now),
+            )
+            row_id = cursor.lastrowid
+            row = conn.execute(
+                "SELECT * FROM novel_scene_beats WHERE id = ?",
+                (row_id,),
+            ).fetchone()
+        return _row_to_dict(row)
+
+    def list_scene_beats(self, scene_id: int) -> list[dict[str, Any]]:
+        self.migrate()
+        with self.connect() as conn:
+            scene = conn.execute(
+                "SELECT id FROM novel_scenes WHERE id = ?",
+                (scene_id,),
+            ).fetchone()
+            if scene is None:
+                raise ValueError("Scene not found")
+            rows = conn.execute(
+                """
+                SELECT *
+                FROM novel_scene_beats
+                WHERE scene_id = ?
+                ORDER BY id ASC
+                """,
+                (scene_id,),
+            ).fetchall()
+        return [_row_to_dict(row) for row in rows]
+
+    def get_scene_beat(self, beat_id: int) -> dict[str, Any] | None:
+        self.migrate()
+        with self.connect() as conn:
+            row = conn.execute(
+                "SELECT * FROM novel_scene_beats WHERE id = ?",
+                (beat_id,),
+            ).fetchone()
+        return _row_to_dict(row)
+
+    def update_scene_beat(self, beat_id: int, beat_text: str) -> dict[str, Any] | None:
+        beat_text = (beat_text or "").strip()
+        if not beat_text:
+            raise ValueError("Scene beat text cannot be blank")
+
+        now = _utc_now()
+        self.migrate()
+        with self.connect() as conn:
+            cursor = conn.execute(
+                """
+                UPDATE novel_scene_beats
+                SET beat_text = ?, updated_at = ?
+                WHERE id = ?
+                """,
+                (beat_text, now, beat_id),
+            )
+            if cursor.rowcount == 0:
+                return None
+            row = conn.execute(
+                "SELECT * FROM novel_scene_beats WHERE id = ?",
+                (beat_id,),
+            ).fetchone()
+        return _row_to_dict(row)
+
+    def delete_scene_beat(self, beat_id: int) -> bool:
+        self.migrate()
+        with self.connect() as conn:
+            cursor = conn.execute(
+                "DELETE FROM novel_scene_beats WHERE id = ?",
+                (beat_id,),
+            )
+            return cursor.rowcount > 0
+
     def clear_scene_goal(self, scene_id: int) -> bool:
         self.migrate()
         with self.connect() as conn:
@@ -2085,6 +2196,11 @@ class NovelDBMixin:
                         scene_goal = self.get_scene_goal(scene["id"])
                         if scene_goal and scene_goal["goal_text"].strip():
                             lines.append(f"Goal: {scene_goal['goal_text']}")
+                        scene_beats = self.list_scene_beats(scene["id"])
+                        if scene_beats:
+                            lines.append("Scene beats:")
+                            for beat in scene_beats:
+                                lines.append(f"- {beat['label']}: {beat['beat_text']}")
                         scene_narration_controls = self.get_scene_narration_controls(scene["id"])
                         if scene_narration_controls is not None:
                             pov_label = scene_narration_controls["pov_label"].strip()

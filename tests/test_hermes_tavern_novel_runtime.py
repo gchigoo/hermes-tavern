@@ -184,6 +184,11 @@ def test_novel_command_table_has_expected_families():
     assert "/rp scene narration clear <scene-id>" in TAVERN_COMMAND_TABLE["scene"].help_lines
     assert "/rp scene narration pov <scene-id> <label>" in TAVERN_COMMAND_TABLE["scene"].help_lines
     assert "/rp scene narration tense <scene-id> <past|present>" in TAVERN_COMMAND_TABLE["scene"].help_lines
+    assert "/rp scene beat add <scene-id> <label> <beat...>" in TAVERN_COMMAND_TABLE["scene"].help_lines
+    assert "/rp scene beat list <scene-id>" in TAVERN_COMMAND_TABLE["scene"].help_lines
+    assert "/rp scene beat inspect <beat-id>" in TAVERN_COMMAND_TABLE["scene"].help_lines
+    assert "/rp scene beat update <beat-id> <beat...>" in TAVERN_COMMAND_TABLE["scene"].help_lines
+    assert "/rp scene beat delete <beat-id>" in TAVERN_COMMAND_TABLE["scene"].help_lines
     assert "/rp project style" in TAVERN_COMMAND_TABLE["project"].help_lines
     assert "/rp project style inspect [project-id]" in TAVERN_COMMAND_TABLE["project"].help_lines
     assert "/rp project style set [project-id] <text>" in TAVERN_COMMAND_TABLE["project"].help_lines
@@ -979,6 +984,32 @@ def test_chapter_and_scene_summary_tokens_do_not_leak_to_debug_prompt_or_context
     assert "marker: distinctive scene summary token" not in prompt
     assert "marker: distinctive chapter summary token" not in context
     assert "marker: distinctive scene summary token" not in context
+
+
+def test_scene_beats_markers_do_not_leak_to_debug_prompt_or_context(tmp_path):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    store.save_card(parse_character_card({"name": "Alice", "description": "Scholar", "first_mes": "Hello."}))
+    runtime = TavernRuntime(store)
+    runtime.handle_command_sync(RPCommand("start", ["Alice"], "/rp start Alice"), Event())
+
+    project = store.create_project("Skyline")
+    chapter = store.create_chapter(project["id"], "Prologue")
+    scene = store.create_scene(chapter["id"], "Opening")
+    store.link_scene_session(
+        scene["id"],
+        store.get_active_session("telegram:chat:chat-1:thread:main:user:user-1")["id"],
+    )
+    store.create_scene_beat(
+        scene["id"],
+        "arrival",
+        "marker: distinctive scene beat token",
+    )
+
+    prompt = runtime.handle_command_sync(RPCommand("debug", ["prompt"], "/rp debug prompt"), Event())
+    context = runtime.handle_command_sync(RPCommand("debug", ["context"], "/rp debug context"), Event())
+
+    assert "marker: distinctive scene beat token" not in prompt
+    assert "marker: distinctive scene beat token" not in context
 
 
 def test_relationship_markers_do_not_leak_to_debug_prompt_or_context(tmp_path):
@@ -2453,6 +2484,17 @@ def test_scene_goal_command_is_listed_in_help_output(tmp_path):
     assert "/rp scene narration tense <scene-id> <past|present>" in response
 
 
+def test_scene_beat_command_is_listed_in_help_output(tmp_path):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    response = runtime.handle_command_sync(RPCommand("help", [], "/rp"), Event())
+
+    assert "/rp scene beat add <scene-id> <label> <beat...>" in response
+    assert "/rp scene beat list <scene-id>" in response
+    assert "/rp scene beat inspect <beat-id>" in response
+    assert "/rp scene beat update <beat-id> <beat...>" in response
+    assert "/rp scene beat delete <beat-id>" in response
+
+
 def test_summary_command_is_listed_in_help_output(tmp_path):
     runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
     response = runtime.handle_command_sync(RPCommand("help", [], "/rp"), Event())
@@ -2461,6 +2503,121 @@ def test_summary_command_is_listed_in_help_output(tmp_path):
     assert "/rp chapter summary clear <chapter-id>" in response
     assert "/rp scene summary <scene-id> [text]" in response
     assert "/rp scene summary clear <scene-id>" in response
+
+
+def test_scene_beat_set_list_inspect_update_and_delete(tmp_path):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    project = runtime.store.create_project("Atlas")
+    chapter = runtime.store.create_chapter(project["id"], "Arrival")
+    scene = runtime.store.create_scene(chapter["id"], "Opening")
+
+    add_first = runtime.handle_command_sync(
+        RPCommand(
+            "scene",
+            ["beat", "add", str(scene["id"]), "arrival", "A bell sounds at dawn."],
+            "/rp scene beat add 1 arrival A bell sounds at dawn.",
+        ),
+        Event(),
+    )
+    assert add_first == "Scene beat added: [1] arrival -> A bell sounds at dawn."
+
+    add_second = runtime.handle_command_sync(
+        RPCommand(
+            "scene",
+            ["beat", "add", str(scene["id"]), "shift", "The watch changes."],
+            "/rp scene beat add 1 shift The watch changes.",
+        ),
+        Event(),
+    )
+    assert add_second == "Scene beat added: [2] shift -> The watch changes."
+
+    list_output = runtime.handle_command_sync(
+        RPCommand("scene", ["beat", "list", str(scene["id"])], "/rp scene beat list 1"),
+        Event(),
+    )
+    assert list_output == (
+        "Hermes Tavern scene beats for scene [1]:\n"
+        "  - [1] arrival: A bell sounds at dawn.\n"
+        "  - [2] shift: The watch changes."
+    )
+
+    inspect = runtime.handle_command_sync(
+        RPCommand("scene", ["beat", "inspect", "2"], "/rp scene beat inspect 2"),
+        Event(),
+    )
+    assert inspect == "Scene beat for [2] (scene [1]): shift: The watch changes."
+
+    update = runtime.handle_command_sync(
+        RPCommand(
+            "scene",
+            ["beat", "update", "1", "The bell sounds once more."],
+            "/rp scene beat update 1 The bell sounds once more.",
+        ),
+        Event(),
+    )
+    assert update == "Scene beat updated for scene beat [1]: The bell sounds once more."
+
+    delete = runtime.handle_command_sync(
+        RPCommand("scene", ["beat", "delete", "2"], "/rp scene beat delete 2"),
+        Event(),
+    )
+    assert delete == "Scene beat deleted for scene beat [2]."
+
+    final_list = runtime.handle_command_sync(
+        RPCommand("scene", ["beat", "list", str(scene["id"])], "/rp scene beat list 1"),
+        Event(),
+    )
+    assert final_list == (
+        "Hermes Tavern scene beats for scene [1]:\n"
+        "  - [1] arrival: The bell sounds once more."
+    )
+
+
+def test_scene_beat_set_and_list_omit_empty_result(tmp_path):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    project = runtime.store.create_project("Atlas")
+    chapter = runtime.store.create_chapter(project["id"], "Arrival")
+    scene = runtime.store.create_scene(chapter["id"], "Opening")
+
+    empty_list = runtime.handle_command_sync(
+        RPCommand("scene", ["beat", "list", str(scene["id"])], "/rp scene beat list 1"),
+        Event(),
+    )
+    assert empty_list == "No scene beats for scene [1]."
+
+
+@pytest.mark.parametrize(
+    "command, expected_prefix",
+    [
+        (RPCommand("scene", ["beat"], "/rp scene beat"), "Usage: /rp scene beat add <scene-id> <label> <beat...> | /rp scene beat list <scene-id> | /rp scene beat inspect <beat-id> | /rp scene beat update <beat-id> <beat...> | /rp scene beat delete <beat-id>"),
+        (RPCommand("scene", ["beat", "add"], "/rp scene beat add"), "Usage: /rp scene beat add <scene-id> <label> <beat...> | /rp scene beat list <scene-id> | /rp scene beat inspect <beat-id> | /rp scene beat update <beat-id> <beat...> | /rp scene beat delete <beat-id>"),
+        (RPCommand("scene", ["beat", "add", "1", "label"], "/rp scene beat add 1 label"), "Usage: /rp scene beat add <scene-id> <label> <beat...> | /rp scene beat list <scene-id> | /rp scene beat inspect <beat-id> | /rp scene beat update <beat-id> <beat...> | /rp scene beat delete <beat-id>"),
+        (RPCommand("scene", ["beat", "list"], "/rp scene beat list"), "Usage: /rp scene beat add <scene-id> <label> <beat...> | /rp scene beat list <scene-id> | /rp scene beat inspect <beat-id> | /rp scene beat update <beat-id> <beat...> | /rp scene beat delete <beat-id>"),
+        (RPCommand("scene", ["beat", "inspect"], "/rp scene beat inspect"), "Usage: /rp scene beat add <scene-id> <label> <beat...> | /rp scene beat list <scene-id> | /rp scene beat inspect <beat-id> | /rp scene beat update <beat-id> <beat...> | /rp scene beat delete <beat-id>"),
+        (RPCommand("scene", ["beat", "update", "1"], "/rp scene beat update 1"), "Usage: /rp scene beat add <scene-id> <label> <beat...> | /rp scene beat list <scene-id> | /rp scene beat inspect <beat-id> | /rp scene beat update <beat-id> <beat...> | /rp scene beat delete <beat-id>"),
+        (RPCommand("scene", ["beat", "delete"], "/rp scene beat delete"), "Usage: /rp scene beat add <scene-id> <label> <beat...> | /rp scene beat list <scene-id> | /rp scene beat inspect <beat-id> | /rp scene beat update <beat-id> <beat...> | /rp scene beat delete <beat-id>"),
+    ],
+)
+def test_scene_beat_bad_arguments_return_usage(tmp_path, command, expected_prefix):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    response = runtime.handle_command_sync(command, Event())
+    assert response.startswith(expected_prefix)
+
+
+@pytest.mark.parametrize(
+    "command, expected_message",
+    [
+        (RPCommand("scene", ["beat", "add", "9999", "arrival", "No scene"], "/rp scene beat add 9999 arrival No scene"), "No novel scene found: 9999"),
+        (RPCommand("scene", ["beat", "list", "9999"], "/rp scene beat list 9999"), "No novel scene found: 9999"),
+        (RPCommand("scene", ["beat", "inspect", "9999"], "/rp scene beat inspect 9999"), "No scene beat found: 9999"),
+        (RPCommand("scene", ["beat", "update", "9999", "no"], "/rp scene beat update 9999 no"), "No scene beat found: 9999"),
+        (RPCommand("scene", ["beat", "delete", "9999"], "/rp scene beat delete 9999"), "No scene beat found: 9999"),
+    ],
+)
+def test_scene_beat_missing_entity_returns_not_found(tmp_path, command, expected_message):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    response = runtime.handle_command_sync(command, Event())
+    assert response == expected_message
 
 
 def test_scene_narration_set_inspect_update_clear_preserves_other_fields(tmp_path):

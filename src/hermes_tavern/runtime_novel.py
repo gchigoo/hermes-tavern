@@ -64,6 +64,8 @@ def scene_command(runtime: Any, command: RPCommand, event: Any) -> str:
         return scene_list(runtime, command)
     if subcommand == "start":
         return scene_start(runtime, command, event)
+    if subcommand == "beat":
+        return scene_beat(runtime, command, event)
     if subcommand == "goal":
         return scene_goal(runtime, command)
     if subcommand == "narration":
@@ -73,6 +75,8 @@ def scene_command(runtime: Any, command: RPCommand, event: Any) -> str:
     return (
         "Usage: /rp scene create <chapter-id> <title> | /rp scene list <chapter-id> | "
         "/rp scene start <scene-id> | /rp scene goal <scene-id> [text] | /rp scene goal clear <scene-id> | "
+        "/rp scene beat add <scene-id> <label> <beat...> | /rp scene beat list <scene-id> | "
+        "/rp scene beat inspect <beat-id> | /rp scene beat update <beat-id> <beat...> | /rp scene beat delete <beat-id> | "
         "/rp scene summary <scene-id> [text] | /rp scene summary clear <scene-id> | "
         "/rp scene narration <scene-id> | /rp scene narration clear <scene-id> | "
         "/rp scene narration pov <scene-id> <label> | /rp scene narration tense <scene-id> <past|present>"
@@ -1184,6 +1188,110 @@ def scene_goal(runtime: Any, command: RPCommand) -> str:
     except ValueError:
         return f"No novel scene found: {scene_id}"
     return f"Scene goal set for scene [{scene_id}]: {_mobile_preview(text, 180)}"
+
+
+def scene_beat(runtime: Any, command: RPCommand, event: Any) -> str:
+    del event
+    usage = (
+        "Usage: /rp scene beat add <scene-id> <label> <beat...> | /rp scene beat list <scene-id> | "
+        "/rp scene beat inspect <beat-id> | /rp scene beat update <beat-id> <beat...> | "
+        "/rp scene beat delete <beat-id>"
+    )
+    if len(command.args) < 2:
+        return usage
+
+    subcommand = command.args[1].lower()
+    if subcommand == "add":
+        if len(command.args) < 5:
+            return usage
+        scene_id = _safe_int(command.args[2])
+        if scene_id is None:
+            return usage
+        label = command.args[3].strip()
+        beat_text = " ".join(command.args[4:]).strip()
+        try:
+            beat = runtime.store.create_scene_beat(
+                scene_id,
+                label,
+                beat_text,
+            )
+        except ValueError as exc:
+            message = str(exc)
+            if message == "Scene not found":
+                return f"No novel scene found: {scene_id}"
+            if message == "Scene beat label cannot be blank":
+                return "Scene beat label cannot be blank"
+            if message == "Scene beat text cannot be blank":
+                return "Scene beat text cannot be blank"
+            raise
+        return (
+            f"Scene beat added: [{beat['id']}] {beat['label']} -> "
+            f"{_mobile_preview(beat['beat_text'], 180)}"
+        )
+
+    if subcommand == "list":
+        if len(command.args) != 3:
+            return usage
+        scene_id = _safe_int(command.args[2])
+        if scene_id is None:
+            return usage
+        try:
+            beats = runtime.store.list_scene_beats(scene_id)
+        except ValueError as exc:
+            if str(exc) == "Scene not found":
+                return f"No novel scene found: {scene_id}"
+            raise
+        if not beats:
+            return f"No scene beats for scene [{scene_id}]."
+        lines = [f"Hermes Tavern scene beats for scene [{scene_id}]:"]
+        for beat in beats:
+            lines.append(
+                f"  - [{beat['id']}] {beat['label']}: {_mobile_preview(beat['beat_text'], 140)}"
+            )
+        return "\n".join(lines)
+
+    if subcommand == "inspect":
+        if len(command.args) != 3:
+            return usage
+        beat_id = _safe_int(command.args[2])
+        if beat_id is None:
+            return usage
+        beat = runtime.store.get_scene_beat(beat_id)
+        if beat is None:
+            return f"No scene beat found: {beat_id}"
+        return (
+            f"Scene beat for [{beat['id']}] (scene [{beat['scene_id']}]): "
+            f"{beat['label']}: {_mobile_preview(beat['beat_text'], 220)}"
+        )
+
+    if subcommand == "update":
+        if len(command.args) < 4:
+            return usage
+        beat_id = _safe_int(command.args[2])
+        if beat_id is None:
+            return usage
+        beat_text = " ".join(command.args[3:]).strip()
+        if not beat_text:
+            return usage
+        beat = runtime.store.update_scene_beat(beat_id, beat_text)
+        if beat is None:
+            return f"No scene beat found: {beat_id}"
+        return (
+            f"Scene beat updated for scene beat [{beat_id}]: "
+            f"{_mobile_preview(beat['beat_text'], 180)}"
+        )
+
+    if subcommand == "delete":
+        if len(command.args) != 3:
+            return usage
+        beat_id = _safe_int(command.args[2])
+        if beat_id is None:
+            return usage
+        if not runtime.store.delete_scene_beat(beat_id):
+            return f"No scene beat found: {beat_id}"
+        return f"Scene beat deleted for scene beat [{beat_id}]."
+
+    return usage
 
 
 def scene_narration(runtime: Any, command: RPCommand) -> str:

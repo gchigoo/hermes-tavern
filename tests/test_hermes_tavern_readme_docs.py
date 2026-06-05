@@ -216,6 +216,16 @@ def test_readme_core_commands_includes_scene_goal_literals():
     assert "/rp scene goal clear <scene-id>" in core_commands
 
 
+def test_readme_core_commands_include_scene_beat_literals():
+    core_commands = _readme_core_commands_text()
+
+    assert "/rp scene beat add <scene-id> <label> <beat...>" in core_commands
+    assert "/rp scene beat list <scene-id>" in core_commands
+    assert "/rp scene beat inspect <beat-id>" in core_commands
+    assert "/rp scene beat update <beat-id> <beat...>" in core_commands
+    assert "/rp scene beat delete <beat-id>" in core_commands
+
+
 def test_readme_core_commands_includes_scene_narration_literals():
     core_commands = _readme_core_commands_text()
 

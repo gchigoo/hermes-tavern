@@ -141,6 +141,7 @@ Expected behavior:
 /rp chapter summary clear <chapter-id>
 /rp scene create/list/start
 /rp scene goal <scene-id> [text] | /rp scene goal clear <scene-id>
+/rp scene beat add <scene-id> <label> <beat...> | /rp scene beat list <scene-id> | /rp scene beat inspect <beat-id> | /rp scene beat update <beat-id> <beat...> | /rp scene beat delete <beat-id>
 /rp scene summary <scene-id> [text]
 /rp scene summary clear <scene-id>
 /rp scene narration <scene-id>
