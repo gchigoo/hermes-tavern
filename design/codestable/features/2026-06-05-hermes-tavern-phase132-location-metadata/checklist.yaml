@@ -1,17 +1,28 @@
 doc_type: feature-checklist
 feature: "2026-06-05-hermes-tavern-phase132-location-metadata"
 date: "2026-06-05"
-status: planned
+status: in_progress
 summary: >
-  Location Metadata v1 adds local project-scoped location notes backed by
+  IN PROGRESS - S1 implemented. Location Metadata v1 adds local project-scoped location notes backed by
   `novel_locations`, managed through `/rp location ...` commands, optionally
   visible in Markdown export, and verified to remain outside prompt/debug/
   context-budget/provider/generation/content-mode/vectorization/retrieval paths.
+  S1 controller verification passed py_compile, focused tests, Tavern glob tests,
+  full pytest, YAML/frontmatter validation, protected-file reverse-scope checks,
+  and whitespace checks. S2 acceptance/writeback remains pending.
 
 steps:
   - id: S1
     name: "S1: Location Metadata implementation"
-    status: pending
+    status: completed
+    completed_at: "2026-06-05"
+    result: >
+      IMPLEMENTED - S1 added local project-scoped location persistence,
+      `/rp location add/list/inspect/update/delete`, help/README command
+      literals, optional Markdown export visibility, and focused DB/runtime/docs
+      tests. Controller verified py_compile, focused tests, Tavern glob tests,
+      full pytest, YAML/frontmatter validation, protected-file reverse-scope
+      guards, and whitespace checks.
     description: >
       Add local project-scoped location persistence, the `/rp location ...`
       command family, help/README command literals, optional Markdown export
@@ -55,22 +66,37 @@ steps:
       or safety-bypass file changes are present.
     verification:
       - command: >-
+          codex --profile architect exec --json --color never --sandbox read-only --cd /Users/steven/Projects/hermes-tavern <Phase 132 S1 artifact prompt>
+        result: "passed; JSONL at /tmp/hermes-tavern-architect-phase132-s1.jsonl; RESULT: READY_TO_IMPLEMENT"
+      - command: >-
+          codex --profile executor exec --json --color never --disable image_generation --sandbox read-only --cd /Users/steven/Projects/hermes-tavern <executor smoke prompt>
+        result: "passed; JSONL at /tmp/hermes-tavern-executor-phase132-smoke.jsonl; EXECUTOR_SMOKE_OK"
+      - command: >-
+          codex --profile executor exec --json --color never --disable image_generation --sandbox workspace-write --cd /Users/steven/Projects/hermes-tavern <Phase 132 S1 implementation prompt>
+        result: "passed; JSONL at /tmp/hermes-tavern-executor-phase132-s1.jsonl; executor reported 232 focused tests passed after recovered patch/test retries"
+      - command: >-
           PYTHONDONTWRITEBYTECODE=1 python -m py_compile src/hermes_tavern/db_novel.py src/hermes_tavern/runtime_novel.py src/hermes_tavern/runtime.py src/hermes_tavern/commands.py tests/test_hermes_tavern_novel_db.py tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_commands.py tests/test_hermes_tavern_readme_docs.py
-        expected: "passes"
+        result: "passed (no errors)"
       - command: >-
           PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel_db.py tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_commands.py tests/test_hermes_tavern_readme_docs.py -q -o 'addopts=' -p no:cacheprovider
-        expected: "passes"
+        result: "232 passed in 7.58s"
       - command: >-
           PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_*.py -q -o 'addopts=' -p no:cacheprovider
-        expected: "passes"
+        result: "923 passed in 37.80s"
       - command: >-
           PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts=' -p no:cacheprovider
-        expected: "passes"
+        result: "923 passed in 42.04s"
+      - command: >-
+          python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-05-hermes-tavern-phase132-location-metadata/design.md --require doc_type --require status --require feature
+        result: "passed"
+      - command: >-
+          python design/codestable/tools/validate-yaml.py --yaml-only --file design/codestable/features/2026-06-05-hermes-tavern-phase132-location-metadata/checklist.yaml
+        result: "passed"
       - command: >-
           git diff --name-only -- run_agent.py cli.py gateway/run.py src/hermes_tavern/runtime_prompt_modules.py src/hermes_tavern/prompt.py src/hermes_tavern/runtime_debug.py src/hermes_tavern/model_router.py src/hermes_tavern/provider_bridge.py src/hermes_tavern/adapters.py src/hermes_tavern/runtime_model.py src/hermes_tavern/runtime_generation.py src/hermes_tavern/runtime_content.py build/lib
-        expected: "empty"
+        result: "empty (no protected core/prompt/provider/generation/build changes)"
       - command: "git diff --check"
-        expected: "passes"
+        result: "passed"
 
   - id: S2
     name: "S2: Verify/Accept/Write Architecture"
@@ -128,14 +154,24 @@ steps:
 checks:
   - id: C1
     name: "C1: Active checklist precondition"
-    status: pending
+    status: completed
+    completed_at: "2026-06-05"
+    result: >
+      PASSED - Phase 132 was the only planned/in-progress feature checklist at
+      S1 start; Phase 131 was accepted and no unrelated active checklist was
+      selected.
     criteria: >
       Before implementation, no unrelated feature checklist is planned, pending,
       or in progress; this Phase 132 checklist is the only active feature.
 
   - id: C2
     name: "C2: Persistence contract"
-    status: pending
+    status: completed
+    completed_at: "2026-06-05"
+    result: >
+      PASSED - `novel_locations` migration, project foreign key/index,
+      CRUD/list helpers, missing project/ID behavior, blank-label rejection, and
+      blank-description rejection are covered by focused DB tests.
     criteria: >
       `novel_locations` migration, project foreign key/index, CRUD/list helpers,
       missing project/ID behavior, blank-label rejection, and blank-description
@@ -143,7 +179,13 @@ checks:
 
   - id: C3
     name: "C3: Command contract"
-    status: pending
+    status: completed
+    completed_at: "2026-06-05"
+    result: >
+      PASSED - `/rp location add/list/inspect/update/delete` handlers and
+      command literals return bounded normal/error messages, require explicit
+      project ID for add, support active-project fallback for list only, and are
+      visible through help and README guards.
     criteria: >
       `/rp location add/list/inspect/update/delete` command literals return
       compact normal and error messages, require explicit project ID for add,
@@ -152,7 +194,13 @@ checks:
 
   - id: C4
     name: "C4: Markdown export"
-    status: pending
+    status: completed
+    completed_at: "2026-06-05"
+    result: >
+      PASSED - Project Markdown export emits optional `## Locations` only when
+      rows exist, orders it after Style Guide and before Characters,
+      Relationships, and Chapters, and omits it for projects without location
+      rows.
     criteria: >
       Project Markdown export includes `## Locations` only when location rows
       exist, orders it after Style Guide and before Characters/Relationships/
@@ -160,7 +208,14 @@ checks:
 
   - id: C5
     name: "C5: Offline no-leak boundary"
-    status: pending
+    status: completed
+    completed_at: "2026-06-05"
+    result: >
+      PASSED - Focused no-leak tests confirm distinctive location text stays out
+      of `/rp debug prompt` and `/rp debug context`; protected prompt,
+      context-budget, provider, model routing, content mode, generation,
+      vectorization/retrieval, credentials, and summarization paths are
+      unchanged.
     criteria: >
       Location text does not appear in `/rp debug prompt` or `/rp debug context`;
       prompt module selection, context-budget composition, provider calls, model
@@ -169,7 +224,13 @@ checks:
 
   - id: C6
     name: "C6: Reverse-scope verification"
-    status: pending
+    status: completed
+    completed_at: "2026-06-05"
+    result: >
+      PASSED - Controller reverse-scope checks found no protected core,
+      build-artifact, prompt/provider/model/generation, credential, cloud/collab,
+      minors/underage, ST importer/exporter, default-binding, canon/content-mode
+      policy, or provider-safety-bypass file changes in S1.
     criteria: >
       No protected core files, build artifacts, prompt/provider/model/generation
       files, credential paths, cloud/collab paths, minors/underage paths, ST

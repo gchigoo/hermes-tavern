@@ -160,6 +160,16 @@ def test_help_lists_relationship_state_commands():
     assert "/rp relationship delete <relationship-id>" in help_text
 
 
+def test_help_lists_location_commands():
+    help_text = _build_help_text()
+
+    assert "/rp location add <project-id> <label> <description...>" in help_text
+    assert "/rp location list [project-id]" in help_text
+    assert "/rp location inspect <location-id>" in help_text
+    assert "/rp location update <location-id> <description...>" in help_text
+    assert "/rp location delete <location-id>" in help_text
+
+
 def test_help_lists_character_state_commands():
     help_text = _build_help_text()
 

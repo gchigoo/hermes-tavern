@@ -140,6 +140,25 @@ def relationship_command(runtime: Any, command: RPCommand, event: Any) -> str:
     return _RELATIONSHIP_USAGE
 
 
+def location_command(runtime: Any, command: RPCommand, event: Any) -> str:
+    if not command.args:
+        return _LOCATION_USAGE
+
+    subcommand = command.args[0].lower()
+    if subcommand == "add":
+        return location_add(runtime, command, event)
+    if subcommand == "list":
+        return location_list(runtime, command, event)
+    if subcommand == "inspect":
+        return location_inspect(runtime, command)
+    if subcommand == "update":
+        return location_update(runtime, command)
+    if subcommand == "delete":
+        return location_delete(runtime, command)
+
+    return _LOCATION_USAGE
+
+
 def _safe_int(text: str) -> int | None:
     try:
         return int(text)
@@ -152,6 +171,14 @@ _RELATIONSHIP_USAGE = (
     "/rp relationship list [project-id] | /rp relationship inspect <relationship-id> | "
     "/rp relationship update <relationship-id> <state...> | "
     "/rp relationship delete <relationship-id>"
+)
+
+
+_LOCATION_USAGE = (
+    "Usage: /rp location add <project-id> <label> <description...> | "
+    "/rp location list [project-id] | /rp location inspect <location-id> | "
+    "/rp location update <location-id> <description...> | "
+    "/rp location delete <location-id>"
 )
 
 
@@ -1252,6 +1279,122 @@ def relationship_delete(runtime: Any, command: RPCommand) -> str:
         return f"No relationship state found: {relationship_id}"
 
     return f"Relationship state deleted for relationship [{relationship_id}]."
+
+
+def location_add(runtime: Any, command: RPCommand, event: Any) -> str:
+    del event
+    if len(command.args) < 4:
+        return _LOCATION_USAGE
+
+    project_id = _safe_int(command.args[1])
+    if project_id is None:
+        return _LOCATION_USAGE
+
+    label = command.args[2].strip()
+    if not label:
+        return _LOCATION_USAGE
+
+    description_text = " ".join(command.args[3:]).strip()
+    if not description_text:
+        return _LOCATION_USAGE
+
+    try:
+        location = runtime.store.create_location(
+            project_id,
+            label,
+            description_text,
+        )
+    except ValueError:
+        return f"No novel project found: {project_id}"
+
+    return (
+        f"Location added: [{location['id']}] {location['label']} -> "
+        f"{_mobile_preview(location['description_text'], 180)}"
+    )
+
+
+def location_list(runtime: Any, command: RPCommand, event: Any) -> str:
+    project_id, err = _resolve_project_id(
+        runtime,
+        command,
+        event=event,
+        usage="Usage: /rp location list [project-id]",
+        default_ok=True,
+        fallback_index=1,
+    )
+    if project_id is None:
+        return err or _LOCATION_USAGE
+
+    try:
+        locations = runtime.store.list_locations(project_id)
+    except ValueError:
+        return f"No novel project found: {project_id}"
+
+    if not locations:
+        return f"No locations for project {project_id}."
+
+    lines = [f"Hermes Tavern locations for project [{project_id}]:"]
+    for location in locations:
+        lines.append(
+            f"  - [{location['id']}] {location['label']}: "
+            f"{_mobile_preview(location['description_text'], 120)}"
+        )
+    return "\n".join(lines)
+
+
+def location_inspect(runtime: Any, command: RPCommand) -> str:
+    if len(command.args) != 2:
+        return _LOCATION_USAGE
+
+    location_id = _safe_int(command.args[1])
+    if location_id is None:
+        return _LOCATION_USAGE
+
+    location = runtime.store.get_location(location_id)
+    if location is None:
+        return f"No location found: {location_id}"
+
+    return (
+        f"Location for [{location_id}] (project [{location['project_id']}]): "
+        f"{location['label']}: {_mobile_preview(location['description_text'], 220)}"
+    )
+
+
+def location_update(runtime: Any, command: RPCommand) -> str:
+    if len(command.args) < 3:
+        return _LOCATION_USAGE
+
+    location_id = _safe_int(command.args[1])
+    if location_id is None:
+        return _LOCATION_USAGE
+
+    description_text = " ".join(command.args[2:]).strip()
+    if not description_text:
+        return _LOCATION_USAGE
+
+    try:
+        location = runtime.store.update_location(location_id, description_text)
+    except ValueError:
+        return f"No location found: {location_id}"
+
+    return (
+        f"Location updated for location [{location['id']}]: "
+        f"{_mobile_preview(location['description_text'], 180)}"
+    )
+
+
+def location_delete(runtime: Any, command: RPCommand) -> str:
+    if len(command.args) != 2:
+        return _LOCATION_USAGE
+
+    location_id = _safe_int(command.args[1])
+    if location_id is None:
+        return _LOCATION_USAGE
+
+    if not runtime.store.delete_location(location_id):
+        return f"No location found: {location_id}"
+
+    return f"Location deleted for location [{location_id}]."
 
 
 def character_state_add(runtime: Any, command: RPCommand, event: Any) -> str:

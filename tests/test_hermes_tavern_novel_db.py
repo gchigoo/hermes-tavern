@@ -30,6 +30,7 @@ def test_migrate_creates_novel_tables(tmp_path):
         "novel_project_briefs",
         "novel_project_outlines",
         "novel_relationship_states",
+        "novel_locations",
         "novel_character_states",
     }.issubset(tables)
     novel_tables = {name for name in tables if name.startswith("novel_")}
@@ -45,6 +46,7 @@ def test_migrate_creates_novel_tables(tmp_path):
         "novel_project_briefs",
         "novel_project_outlines",
         "novel_relationship_states",
+        "novel_locations",
         "novel_character_states",
     }
 
@@ -95,11 +97,24 @@ def test_migrate_creates_novel_tables(tmp_path):
                 SELECT name
                 FROM sqlite_master
                 WHERE type='index'
-                    AND tbl_name='novel_character_states'
+                AND tbl_name='novel_character_states'
                 """
             ).fetchall()
         }
     assert "idx_novel_character_states_project" in character_indexes
+    with sqlite3.connect(db_path) as conn:
+        location_indexes = {
+            row[0]
+            for row in conn.execute(
+                """
+                SELECT name
+                FROM sqlite_master
+                WHERE type='index'
+                    AND tbl_name='novel_locations'
+                """
+            ).fetchall()
+        }
+    assert "idx_novel_locations_project" in location_indexes
 
 
 def test_novel_project_crud_and_counts(tmp_path):
@@ -345,6 +360,87 @@ def test_character_state_blank_label_and_state_rejected(tmp_path):
         assert str(exc) == "Character state text cannot be blank"
     else:
         raise AssertionError("Expected ValueError for blank state text on update")
+
+
+def test_location_state_crud_and_missing_owner_errors(tmp_path):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    project = store.create_project("Location Metadata")
+
+    created = store.create_location(
+        project["id"],
+        "harbor",
+        "The foghorn sounds every hour.",
+    )
+    assert created["project_id"] == project["id"]
+    assert created["label"] == "harbor"
+    assert created["description_text"] == "The foghorn sounds every hour."
+
+    listed = store.list_locations(project["id"])
+    assert len(listed) == 1
+    assert listed[0]["id"] == created["id"]
+    assert listed[0]["label"] == created["label"]
+    assert listed[0]["description_text"] == created["description_text"]
+
+    fetched = store.get_location(created["id"])
+    assert fetched is not None
+    assert fetched["description_text"] == created["description_text"]
+
+    updated = store.update_location(created["id"], "The bell pier remains under fog.")
+    assert updated["id"] == created["id"]
+    assert updated["description_text"] == "The bell pier remains under fog."
+    assert updated["updated_at"] >= created["updated_at"]
+
+    assert store.delete_location(created["id"]) is True
+    assert store.get_location(created["id"]) is None
+    assert store.delete_location(created["id"]) is False
+
+    try:
+        store.create_location(999, "harbor", "missing")
+    except ValueError as exc:
+        assert str(exc) == "Project not found"
+    else:
+        raise AssertionError("Expected ValueError for missing project")
+
+    try:
+        store.list_locations(999)
+    except ValueError as exc:
+        assert str(exc) == "Project not found"
+    else:
+        raise AssertionError("Expected ValueError for missing project")
+
+    try:
+        store.update_location(999, "stale")
+    except ValueError as exc:
+        assert str(exc) == "Location not found"
+    else:
+        raise AssertionError("Expected ValueError for missing location")
+
+
+def test_location_blank_label_and_description_rejected(tmp_path):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    project = store.create_project("Location Metadata")
+
+    try:
+        store.create_location(project["id"], " ", "Description text")
+    except ValueError as exc:
+        assert str(exc) == "Location label cannot be blank"
+    else:
+        raise AssertionError("Expected ValueError for blank label")
+
+    try:
+        store.create_location(project["id"], "harbor", "   ")
+    except ValueError as exc:
+        assert str(exc) == "Location description cannot be blank"
+    else:
+        raise AssertionError("Expected ValueError for blank description")
+
+    created = store.create_location(project["id"], "harbor", "first")
+    try:
+        store.update_location(created["id"], "   ")
+    except ValueError as exc:
+        assert str(exc) == "Location description cannot be blank"
+    else:
+        raise AssertionError("Expected ValueError for blank description on update")
 
 
 def test_project_style_guide_clear_returns_bool(tmp_path):
@@ -1170,6 +1266,59 @@ def test_export_project_markdown_includes_relationships_after_style_guide_before
     assert "Confidence with a scar." in markdown
     assert "Trust deepens through shared danger." in markdown
     assert "Arguments hide an old wound." in markdown
+
+
+def test_export_project_markdown_includes_locations_after_style_guide_before_characters_relationships_chapters(tmp_path):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+
+    project = store.create_project("Locations Export", "journey arc")
+    store.set_project_style_guide(project["id"], "Tone: spare")
+    store.create_location(
+        project["id"],
+        "harbor",
+        "A watch beacon glows over black water.",
+    )
+    store.create_location(
+        project["id"],
+        "spire",
+        "An old tower with broken clocks.",
+    )
+    store.create_character_state(project["id"], "mara", "Confident and impatient.")
+    store.create_relationship_state(
+        project["id"],
+        "mara-elya",
+        "Trust is a habit, then a promise.",
+    )
+    store.create_chapter(project["id"], "Opening")
+
+    markdown = store.export_project_markdown(project["id"])
+
+    assert "## Style Guide" in markdown
+    assert "## Locations" in markdown
+    assert "## Characters" in markdown
+    assert "## Relationships" in markdown
+    assert "## Chapters" in markdown
+    assert (
+        markdown.index("## Style Guide")
+        < markdown.index("## Locations")
+        < markdown.index("## Characters")
+        < markdown.index("## Relationships")
+        < markdown.index("## Chapters")
+    )
+    locations_section = markdown[
+        markdown.index("## Locations") : markdown.index("## Characters")
+    ]
+    assert "- harbor: A watch beacon glows over black water." in locations_section
+    assert "- spire: An old tower with broken clocks." in locations_section
+
+
+def test_export_project_markdown_omits_locations_when_empty(tmp_path):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    project = store.create_project("No Locations Yet", "no known rows")
+
+    markdown = store.export_project_markdown(project["id"])
+
+    assert "## Locations" not in markdown
 
 
 def test_export_project_markdown_omits_characters_when_empty(tmp_path):

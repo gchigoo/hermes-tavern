@@ -119,6 +119,15 @@ class NovelDBMixin:
                 updated_at TEXT NOT NULL DEFAULT (datetime('now'))
             );
 
+            CREATE TABLE IF NOT EXISTS novel_locations (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                project_id INTEGER NOT NULL REFERENCES novel_projects(id) ON DELETE CASCADE,
+                label TEXT NOT NULL,
+                description_text TEXT NOT NULL,
+                created_at TEXT NOT NULL DEFAULT (datetime('now')),
+                updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+            );
+
             CREATE TABLE IF NOT EXISTS novel_character_states (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 project_id INTEGER NOT NULL REFERENCES novel_projects(id) ON DELETE CASCADE,
@@ -150,6 +159,8 @@ class NovelDBMixin:
                 ON novel_project_briefs(project_id);
             CREATE INDEX IF NOT EXISTS idx_novel_project_outlines_project
                 ON novel_project_outlines(project_id);
+            CREATE INDEX IF NOT EXISTS idx_novel_locations_project
+                ON novel_locations(project_id);
             CREATE INDEX IF NOT EXISTS idx_novel_relationship_states_project
                 ON novel_relationship_states(project_id);
             CREATE INDEX IF NOT EXISTS idx_novel_character_states_project
@@ -497,6 +508,100 @@ class NovelDBMixin:
                 (row_id,),
             ).fetchone()
         return _row_to_dict(row)
+
+    def create_location(self, project_id: int, label: str, description_text: str) -> dict[str, Any]:
+        if not (label or "").strip():
+            raise ValueError("Location label cannot be blank")
+        if not (description_text or "").strip():
+            raise ValueError("Location description cannot be blank")
+        self.migrate()
+        with self.connect() as conn:
+            project = conn.execute(
+                "SELECT id FROM novel_projects WHERE id = ?",
+                (project_id,),
+            ).fetchone()
+            if project is None:
+                raise ValueError("Project not found")
+            now = _utc_now()
+            cursor = conn.execute(
+                """
+                INSERT INTO novel_locations (
+                    project_id, label, description_text, created_at, updated_at
+                )
+                VALUES (?, ?, ?, ?, ?)
+                """,
+                (project_id, label, description_text, now, now),
+            )
+            row_id = cursor.lastrowid
+            row = conn.execute(
+                "SELECT * FROM novel_locations WHERE id = ?",
+                (row_id,),
+            ).fetchone()
+        return _row_to_dict(row)
+
+    def list_locations(self, project_id: int) -> list[dict[str, Any]]:
+        self.migrate()
+        with self.connect() as conn:
+            project = conn.execute(
+                "SELECT id FROM novel_projects WHERE id = ?",
+                (project_id,),
+            ).fetchone()
+            if project is None:
+                raise ValueError("Project not found")
+            rows = conn.execute(
+                """
+                SELECT *
+                FROM novel_locations
+                WHERE project_id = ?
+                ORDER BY id ASC
+                """,
+                (project_id,),
+            ).fetchall()
+        return [_row_to_dict(row) for row in rows]
+
+    def get_location(self, location_id: int) -> dict[str, Any] | None:
+        self.migrate()
+        with self.connect() as conn:
+            row = conn.execute(
+                "SELECT * FROM novel_locations WHERE id = ?",
+                (location_id,),
+            ).fetchone()
+        return _row_to_dict(row)
+
+    def update_location(self, location_id: int, description_text: str) -> dict[str, Any]:
+        if not (description_text or "").strip():
+            raise ValueError("Location description cannot be blank")
+        self.migrate()
+        with self.connect() as conn:
+            row = conn.execute(
+                "SELECT id FROM novel_locations WHERE id = ?",
+                (location_id,),
+            ).fetchone()
+            if row is None:
+                raise ValueError("Location not found")
+            now = _utc_now()
+            conn.execute(
+                """
+                UPDATE novel_locations
+                SET description_text = ?, updated_at = ?
+                WHERE id = ?
+                """,
+                (description_text, now, location_id),
+            )
+            updated = conn.execute(
+                "SELECT * FROM novel_locations WHERE id = ?",
+                (location_id,),
+            ).fetchone()
+        return _row_to_dict(updated)
+
+    def delete_location(self, location_id: int) -> bool:
+        self.migrate()
+        with self.connect() as conn:
+            cursor = conn.execute(
+                "DELETE FROM novel_locations WHERE id = ?",
+                (location_id,),
+            )
+            return cursor.rowcount > 0
 
     def list_relationship_states(self, project_id: int) -> list[dict[str, Any]]:
         self.migrate()
@@ -1313,6 +1418,7 @@ class NovelDBMixin:
         style_guide = self.get_project_style_guide(project_id)
         brief = self.get_project_brief(project_id)
         outline = self.get_project_outline(project_id)
+        locations = self.list_locations(project_id)
         relationships = self.list_relationship_states(project_id)
 
         lines: list[str] = [
@@ -1347,6 +1453,17 @@ class NovelDBMixin:
                     "",
                 ]
             )
+
+        if locations:
+            lines.extend(
+                [
+                    "## Locations",
+                    "",
+                ]
+            )
+            for location in locations:
+                lines.append(f"- {location['label']}: {location['description_text']}")
+            lines.append("")
 
         characters = self.list_character_states(project_id)
         if characters:

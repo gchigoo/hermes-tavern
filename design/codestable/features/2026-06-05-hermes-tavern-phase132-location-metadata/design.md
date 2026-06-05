@@ -1,7 +1,7 @@
 ---
 doc_type: feature-design
 feature: "2026-06-05-hermes-tavern-phase132-location-metadata"
-status: draft
+status: approved
 date: "2026-06-05"
 summary: >
   Location Metadata v1 adds local project-scoped location notes with

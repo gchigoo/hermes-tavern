@@ -283,6 +283,16 @@ def test_readme_core_commands_include_relationship_state_literals():
     assert "/rp relationship delete <relationship-id>" in core_commands
 
 
+def test_readme_core_commands_include_location_state_literals():
+    core_commands = _readme_core_commands_text()
+
+    assert "/rp location add <project-id> <label> <description...>" in core_commands
+    assert "/rp location list [project-id]" in core_commands
+    assert "/rp location inspect <location-id>" in core_commands
+    assert "/rp location update <location-id> <description...>" in core_commands
+    assert "/rp location delete <location-id>" in core_commands
+
+
 def test_readme_card_import_format_docs_are_accurate():
     card_import_lines = [
         line.strip()
