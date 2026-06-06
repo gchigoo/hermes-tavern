@@ -141,6 +141,11 @@ importers/
   `novel_timeline` row by id for command-visible inspection only; no schema, ordering,
   export, prompt/module, provider/model, generation, retrieval/vectorization,
   archive/import, credential, safety behavior, or deferred timeline tooling changes.
+- Phase 145: Chapter Inspect Surface (`/rp chapter inspect <chapter-id>`) reads one
+  existing `novel_chapters` row by id for command-visible inspection only; no
+  schema, ordering, summary mutation, export, prompt/module, provider/model,
+  generation, retrieval/vectorization, archive/import, credential, safety behavior,
+  or deferred chapter-editing tooling changes.
 
 ### Plugin flow
 
@@ -181,7 +186,7 @@ from vectorization/retrieval, provider/model routing, content mode,
 credentials, automation, summarization, and generation; they are visible only
 through command output and Markdown export.
 
-### /rp command surface (current through Phase 144)
+### /rp command surface (current through Phase 145)
 
 ```
 /rp help | status | assets
@@ -219,6 +224,7 @@ through command output and Markdown export.
 /rp project outline set [project-id] <text>
 /rp project outline clear [project-id]
 /rp chapter create/list
+/rp chapter inspect <chapter-id>
 /rp chapter summary <chapter-id> [text]
 /rp chapter summary clear <chapter-id>
 /rp scene create/list/start
@@ -279,7 +285,7 @@ through command output and Markdown export.
 /rp relationship delete <relationship-id>
 ```
 
-### DB schema (current through Phase 144)
+### DB schema (current through Phase 145)
 
 ```sql
 cards(id, name, data_json, source_path, created_at)
@@ -396,6 +402,12 @@ only by `/rp timeline inspect <timeline-id>`. It returns one existing
 ordering, export, prompt/module selection, provider/model, generation,
 retrieval/vectorization, archive/import, credential, or safety side effects.
 
+Phase 145 uses existing `get_chapter(chapter_id)` as a read-only helper for
+`/rp chapter inspect <chapter-id>`. It returns one existing `novel_chapters` row
+or `None`, is command-visible only, and has no schema, ordering, summary
+mutation, export, prompt/module selection, provider/model, generation,
+retrieval/vectorization, archive/import, credential, or safety side effects.
+
 Phase 131 adds `novel_character_states` as project-scoped character metadata.
 Character-state rows are managed through `/rp character state ...` and emitted as
 optional `## Characters` Markdown metadata; they are not selected for prompt
@@ -503,4 +515,5 @@ These phases do not change schema or core prompt/generation assembly.
 - **Phase 139 revision-notes boundary**: revision-note metadata is command/export-visible only. It is excluded from prompt modules, debug prompt/context output, context-budget reporting, vectorization/retrieval, provider/model routing, content mode decisions, credentials, generation, media/TTS/image flow, archive, ST importer/exporter, graph, and safety-bypass behavior.
 - **Phase 140 relationship label rename boundary**: relationship-label rename updates only `label` and `updated_at`, preserves `id`, `project_id`, `state_text`, `created_at`, and row order, and is command/export-visible only. It is excluded from prompt modules, debug prompt/context output, context-budget reporting, vectorization/retrieval, provider/model routing, content-mode decisions, credentials, generation, media/TTS/image flow, archive, ST importer/exporter, graph/alias/merge-split/automatic extraction behaviors, and safety-bypass behavior.
 - **Phase 144 timeline inspect boundary**: `/rp timeline inspect <timeline-id>` is command-visible metadata inspection only for existing `novel_timeline` rows. It keeps timeline schema, ordering, ordering-based export, prompt/module coupling, provider/model routing, generation, retrieval/vectorization, archive/import, credential persistence, automatic extraction, and safety bypass unchanged and deferred.
+- **Phase 145 chapter inspect boundary**: `/rp chapter inspect <chapter-id>` is command-visible metadata inspection only for existing `novel_chapters` rows. It keeps chapter schema, ordering, summary storage/mutation, markdown export, prompt/provider/generation/retrieval/vectorization coupling, archive/import, credential persistence, automatic extraction, and safety bypass unchanged and deferred.
 - **Tavern lore regex complexity guard**: lorebook regex keys are screened locally before matching. Entries with patterns longer than 256 characters or nested quantified groups (for example `(a+)+`, `(.+)*`, `([a-z]+){2,}`) are excluded with bounded reasons (`regex rejected: ...`), preserving raw imported lore data while preventing unbounded local matching behavior.

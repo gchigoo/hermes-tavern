@@ -1,23 +1,22 @@
 doc_type: feature-checklist
 feature: "2026-06-06-hermes-tavern-phase145-chapter-inspect-surface"
 date: "2026-06-06"
-status: implemented
+status: accepted
 summary: >
-  IMPLEMENTED - Phase 145 S1 adds a read-only /rp chapter inspect <chapter-id>
-  command for existing novel_chapters rows, using the existing store getter,
-  generated help and README visibility, focused offline tests, and controller-run
-  verification. It keeps chapter list/summary/export behavior unchanged and does
-  not alter schema, prompt, provider, generation, retrieval/vectorization,
-  credentials, safety, runtime.py, protected core, plugin, or build behavior.
+  ACCEPTED - Phase 145 closes the read-only /rp chapter inspect <chapter-id>
+  surface for existing novel_chapters rows. S1 added the nested command, generated
+  help and README visibility, and focused tests; S2 adds the feature-acceptance
+  report plus architecture/root-design writeback. Controller verification passed
+  for py_compile, focused/Tavern-wide/full pytest, CodeStable validators,
+  allowed/protected scope guards, stale/current guards, and git diff --check.
 tags: [hermes-tavern, chapter, command-surface, read-only, offline]
 implementation_readiness: >
-  S1_IMPLEMENTED - Codex architect validated the existing Phase 145 S1 artifact
-  as implementation-ready and Codex executor implemented only the approved S1
-  files. The controller inspected the S1 diff, removed one out-of-scope helper
-  assertion added by the executor, and reran py_compile, focused pytest,
-  Tavern-wide pytest, full pytest, CodeStable validators, protected-path diff
-  guards, and git diff --check successfully. S2 acceptance/writeback remains
-  planned.
+  ACCEPTED - Codex architect validated the Phase 145 S2 docs/status acceptance
+  artifact and Codex executor drafted only allowed S2 docs/status/writeback files.
+  The controller inspected and patched the S2 docs, verified the diff stayed
+  within allowed files, reran py_compile, focused pytest, Tavern-wide pytest,
+  full pytest, CodeStable validators, stale/current guards, allowed/protected
+  guards, and git diff --check successfully, then finalized S2 status as accepted.
 steps:
   - id: S1
     name: "S1: Add read-only chapter inspect command"
@@ -92,7 +91,12 @@ steps:
         result: "passed"
   - id: S2
     name: "S2: Verify and accept"
-    status: planned
+    status: completed
+    completed_at: "2026-06-06"
+    result: >
+      ACCEPTED - Created the Phase 145 feature-acceptance report, currentized
+      architecture/root-design command-surface and helper/boundary prose, and
+      finalized checklist status after controller-run verification.
     description: >
       Controller-owned acceptance/writeback after S1.
     allowed_files:
@@ -164,13 +168,15 @@ checks:
     name: "Offline verification"
     status: completed
     completed_at: "2026-06-06"
-    result: "passed; controller reran py_compile, focused tests (271 passed), Tavern-wide tests (1041 passed), and full pytest (1041 passed)"
-    criteria: "Focused and Tavern-wide offline tests run with -o 'addopts=' and no cacheprovider."
+    result: "passed; controller reran py_compile, focused tests (271 passed), Tavern-wide tests (1041 passed), full pytest (1041 passed), YAML validators, allowed/protected scope guard, stale/current guard, and git diff --check after S2 docs/status edits."
+    criteria: "Focused and Tavern-wide offline tests run with -o 'addopts=' and no cacheprovider after final docs/status writes."
 verification_notes: |
   - Codex architect artifact: /tmp/hermes-tavern-architect-phase145-gap-selection.jsonl
   - Codex architect S1 validation: /tmp/hermes-tavern-architect-phase145-s1.jsonl (IMPLEMENTATION_READY=true; BLOCKERS=none).
   - Codex executor smoke: /tmp/hermes-tavern-executor-phase145-smoke.jsonl (EXECUTOR_SMOKE_OK).
   - Codex executor artifact: /tmp/hermes-tavern-executor-phase145-s1.jsonl
-  - Executor terminal output showed recoverable apply_patch context misses while editing runtime/tests; Codex recovered and produced the final bounded diff. Executor did not run tests, so controller verification is authoritative.
-  - Controller removed one out-of-scope helper assertion from tests/test_hermes_tavern_commands.py before verification; the final diff remains within approved S1 files.
-  - Controller verification after S1 implementation and status edits: py_compile passed; focused pytest 271 passed in 9.60s; Tavern-wide pytest 1041 passed in 48.32s; full pytest 1041 passed in 45.49s; design/checklist validators passed; allowed-file/protected-path scope guard passed; git diff --check passed.
+  - Codex architect S2 artifact: /tmp/hermes-tavern-architect-phase145-s2.jsonl (RESULT: S2_ACCEPTANCE_ARTIFACT; PROCEED=true; BLOCKERS=none).
+  - Codex executor S2 artifact: /tmp/hermes-tavern-executor-phase145-s2.jsonl; executor had one expected pre-create acceptance-file read failure plus recovered patch-context misses, then produced allowed docs/status/writeback changes.
+  - Controller removed one out-of-scope helper assertion from tests/test_hermes_tavern_commands.py before S1 verification; the final S1 diff remained within approved S1 files.
+  - S1 controller verification after implementation: py_compile passed; focused pytest 271 passed in 9.60s; Tavern-wide pytest 1041 passed in 48.32s; full pytest 1041 passed in 45.49s; design/checklist validators passed; allowed-file/protected-path scope guard passed; git diff --check passed.
+  - S2 controller verification after docs/status/writeback: py_compile passed; design, checklist, and acceptance validators passed; focused pytest 271 passed in 9.35s; Tavern-wide pytest 1041 passed in 48.39s; full pytest 1041 passed in 44.76s; changed files were restricted to Phase 145 acceptance/checklist plus architecture/root-design docs; stale/current guards passed; git diff --check passed.

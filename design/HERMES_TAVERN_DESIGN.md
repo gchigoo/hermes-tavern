@@ -631,6 +631,7 @@ Commands:
 /rp style sample delete <style-sample-id>
 /rp chapter create [project-id] <title>
 /rp chapter list [project-id]
+/rp chapter inspect <chapter-id>
 /rp chapter summary <chapter-id> [text]
 /rp chapter summary clear <chapter-id>
 /rp scene create <chapter-id> <title>
@@ -661,6 +662,11 @@ Commands:
 /rp timeline list [project-id]
 /rp timeline inspect <timeline-id>
 ```
+
+Phase 145 adds `/rp chapter inspect <chapter-id>` as the read-only chapter
+inspection surface for one existing `novel_chapters` row by id. It uses the
+existing `runtime.store.get_chapter(chapter_id)` helper, which returns either one
+existing row or `None`.
 
 Phase 144 current behavior adds `/rp timeline inspect <timeline-id>` as the read-only
 timeline inspection surface for one existing `novel_timeline` row by id. This phase
@@ -1120,6 +1126,7 @@ relationship label rename is current metadata.
 /rp relationship update <relationship-id> <state...>
 /rp relationship delete <relationship-id>
 /rp chapter create/list
+/rp chapter inspect <chapter-id>
 /rp chapter summary <chapter-id> [text]
 /rp chapter summary clear <chapter-id>
 /rp scene create/list/start
@@ -1346,6 +1353,12 @@ Current chapter/scene summary metadata:
 `novel_chapters.summary` and `novel_scenes.summary` are reused by Phase 129 for
 local chapter/scene summary commands and Markdown export visibility.
 
+Phase 145 adds read-only chapter inspection over existing `novel_chapters` rows
+via the existing `runtime.store.get_chapter(chapter_id)` helper.
+It returns one existing row or `None` and does not add schema, index, table,
+ordering, export, prompt, provider/model, generation, retrieval/vectorization,
+credential, summary mutation, or safety behavior.
+
 Current character-state metadata table:
 `novel_character_states(id, project_id, label, state_text, created_at, updated_at)`,
 with `project_id REFERENCES novel_projects(id) ON DELETE CASCADE` and
@@ -1428,7 +1441,7 @@ ST preset JSON
 ST lorebook/world info JSON
 ```
 
-Hermes Tavern native project archives are deferred; the current Phase 121–140
+Hermes Tavern native project archives are deferred; the current Phase 121–145
 implementation provides Markdown export only, not project/novel import.
 Relationship-state, character-state, location, organization, plot-thread, and
 style-sample rows, plus revision-note and scene-beat rows, remain local metadata
@@ -1458,7 +1471,7 @@ chat export JSONL
 novel export Markdown
 ```
 
-Project archive ZIP remains a future exporter/importer; current Phase 121–140 writes
+Project archive ZIP remains a future exporter/importer; current Phase 121–145 writes
 local Markdown via `/rp project export [id]`.
 Project Brief and Project Outline are exported as optional top-level `## Project Brief`
 and `## Outline` sections after `## Summary` when non-empty. Project style guides
