@@ -1,0 +1,120 @@
+doc_type: feature-checklist
+status: planned
+feature: "2026-06-06-hermes-tavern-phase148-card-greeting-inspect"
+date: "2026-06-06"
+implementation_ready: false
+summary: >
+  PLAN ONLY - Phase 148 will add a read-only /rp card greeting <card> command
+  that lists first_mes and alternate greetings for one stored card without
+  session mutation, provider calls, prompt changes, or schema changes.
+tags:
+  - hermes-tavern
+  - card
+  - greeting
+  - command-surface
+  - read-only
+  - offline
+steps:
+  - id: S1
+    name: "S1: Implement read-only card greeting inspect"
+    status: planned
+    description: >
+      Add /rp card greeting <card> under the existing card command family,
+      render bounded indexed greeting previews for one stored card, update
+      help/README visibility, and add focused offline tests.
+    allowed_files:
+      - src/hermes_tavern/runtime_assets.py
+      - src/hermes_tavern/commands.py
+      - README.md
+      - tests/test_hermes_tavern_mobile_browsers.py
+      - tests/test_hermes_tavern_commands.py
+      - tests/test_hermes_tavern_readme_docs.py
+    prohibited_files:
+      - run_agent.py
+      - cli.py
+      - gateway/run.py
+      - src/hermes_tavern/runtime.py
+      - src/hermes_tavern/db.py
+      - src/hermes_tavern/db_novel.py
+      - src/hermes_tavern/prompt.py
+      - src/hermes_tavern/runtime_prompt_modules.py
+      - src/hermes_tavern/model_router.py
+      - src/hermes_tavern/provider_bridge.py
+      - src/hermes_tavern/adapters.py
+      - src/hermes_tavern/runtime_generation.py
+      - "src/hermes_tavern/importers/**"
+      - "plugins/**"
+      - "build/lib/**"
+      - "design/** except controller-owned Phase 148 materialization"
+    exact_scope:
+      - "Add /rp card greeting <card> as a nested card subcommand."
+      - "Resolve cards with the existing TavernStore.get_card behavior, including last."
+      - "List first_mes as index 0 and nonblank alternate_greetings as indexes 1..N."
+      - "Use bounded mobile previews and avoid raw JSON dumps."
+      - "Do not append messages, select greetings, start sessions, bind cards, or alter /rp greeting list/use behavior."
+      - "Update generated help and README Core commands for the new literal."
+    verification:
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m py_compile src/hermes_tavern/commands.py src/hermes_tavern/runtime_assets.py tests/test_hermes_tavern_mobile_browsers.py tests/test_hermes_tavern_commands.py tests/test_hermes_tavern_readme_docs.py"
+        expected: "passes"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_mobile_browsers.py tests/test_hermes_tavern_commands.py tests/test_hermes_tavern_readme_docs.py -q -o 'addopts=' -p no:cacheprovider"
+        expected: "passes"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_*.py -q -o 'addopts=' -p no:cacheprovider"
+        expected: "passes"
+  - id: S2
+    name: "S2: Accept and write back current docs"
+    status: planned
+    description: >
+      After S1 passes, create the acceptance report, finalize checklist status,
+      and update only current-state architecture/root-design docs for the new
+      read-only card greeting inspect surface.
+    allowed_files:
+      - design/codestable/features/2026-06-06-hermes-tavern-phase148-card-greeting-inspect/design.md
+      - design/codestable/features/2026-06-06-hermes-tavern-phase148-card-greeting-inspect/checklist.yaml
+      - design/codestable/features/2026-06-06-hermes-tavern-phase148-card-greeting-inspect/hermes-tavern-phase148-card-greeting-inspect-acceptance.md
+      - design/codestable/architecture/ARCHITECTURE.md
+      - design/HERMES_TAVERN_DESIGN.md
+    prohibited_files:
+      - README.md
+      - "src/**"
+      - "tests/**"
+      - run_agent.py
+      - cli.py
+      - gateway/run.py
+      - "plugins/**"
+      - "build/lib/**"
+acceptance:
+  - id: AC1
+    criteria: "/rp card greeting <card> returns bounded indexed greetings for one stored card."
+    status: planned
+  - id: AC2
+    criteria: "The command works without an active session and does not create, start, bind, or mutate a session."
+    status: planned
+  - id: AC3
+    criteria: "The last card reference works consistently with existing card inspect/use behavior."
+    status: planned
+  - id: AC4
+    criteria: "Missing cards and cards with no greetings return bounded user-facing messages."
+    status: planned
+  - id: AC5
+    criteria: "Generated help and README Core commands include /rp card greeting <card>."
+    status: planned
+  - id: AC6
+    criteria: "No schema, prompt/debug/context-budget, provider/model, generation, credential, retrieval/vectorization, content-mode, media/TTS/image, import/export, archive, automatic extraction, minors/underage, safety-bypass, plugin registration, or protected core behavior changes occur."
+    status: planned
+checks:
+  - id: C1
+    name: "Focused command tests"
+    status: planned
+    criteria: "Focused card greeting, help, and README docs tests pass offline."
+  - id: C2
+    name: "Tavern-wide pytest"
+    status: planned
+    criteria: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_*.py -q -o 'addopts=' -p no:cacheprovider passes."
+  - id: C3
+    name: "Full pytest"
+    status: planned
+    criteria: "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts=' -p no:cacheprovider passes."
+  - id: C4
+    name: "Reverse scope guard"
+    status: planned
+    criteria: "No prohibited source, core, provider, prompt, importer, plugin, build, or S1 design/doc paths change outside the allowed scope."
