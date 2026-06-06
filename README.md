@@ -111,6 +111,7 @@ Expected behavior:
 /rp preset import/list/inspect/use/clear <preset>
 /rp prompt list/inspect/enable/disable/debug
 /rp lore import/list/inspect/use/clear/enable/disable/test/debug
+/rp lore export <lorebook>
 /rp memory add/forget/list/summary/debug
 /rp persona import/new/list/inspect/use/temp/clear/debug
 /rp binding set <project|chapter|scene> <scope-id> <card|preset|lorebook|persona> <asset-id>

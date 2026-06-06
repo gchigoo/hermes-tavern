@@ -1,10 +1,10 @@
 ---
 doc_type: feature-design
-status: draft
+status: implemented
 feature: "2026-06-07-hermes-tavern-phase150-lorebook-json-export"
 date: "2026-06-07"
 summary: >
-  DRAFT - Add one offline `/rp lore export <lorebook>` JSON export surface for
+  IMPLEMENTED - Adds one offline `/rp lore export <lorebook>` JSON export surface for
   stored lorebooks, with help/README visibility and focused tests.
 tags: [hermes-tavern, lorebook, offline]
 created: "2026-06-07"
@@ -16,11 +16,11 @@ owner: codestable-cron
 
 ## Background
 
-Phase 149 accepted single-card JSON export. Current architecture is recorded
-through Phase 149, and recent Phase 143-149 checklists are accepted. The root
-design still lists `lorebook export JSON` as a required exporter, while current
-source and README expose lorebook import/list/inspect/use/clear/enable/disable/
-test/debug only.
+Phase 149 accepted single-card JSON export. Before S1 implementation, current
+architecture was recorded through Phase 149, and recent Phase 143-149 checklists
+were accepted. The root design still listed `lorebook export JSON` as a required
+exporter, while source and README exposed lorebook import/list/inspect/use/clear/
+enable/disable/test/debug only.
 
 The safe next slice is one stored-lorebook JSON export command. It is local,
 offline, command-visible, and follows the Phase 149 export pattern without
@@ -149,3 +149,20 @@ entry-row state after `/rp lore enable/disable`. This phase resolves that by
 matching Phase 149 card export: prefer preserved raw JSON when valid, otherwise
 emit a normalized fallback. If the behavior is wrong, rollback is limited to
 removing the `export` branch, helper, help/README literal, and focused tests.
+
+## S1 Implementation Result
+
+Codex architect returned `RESULT: READY_TO_IMPLEMENT` for S1 in
+`/tmp/hermes-tavern-architect-phase150-s1.jsonl`. Codex executor implemented the
+bounded slice in `/tmp/hermes-tavern-executor-phase150-s1.jsonl`, limited to the
+S1 allowed runtime/help/README/test files. Controller verification passed:
+
+- `PYTHONDONTWRITEBYTECODE=1 python -m py_compile src/hermes_tavern/runtime_lore.py src/hermes_tavern/commands.py tests/test_hermes_tavern_lore_runtime.py tests/test_hermes_tavern_commands.py tests/test_hermes_tavern_readme_docs.py`
+- `PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_lore_runtime.py tests/test_hermes_tavern_commands.py tests/test_hermes_tavern_readme_docs.py -q -o 'addopts=' -p no:cacheprovider` (`105 passed`)
+- `PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_*.py -q -o 'addopts=' -p no:cacheprovider` (`1080 passed`)
+- `PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts=' -p no:cacheprovider` (`1080 passed`)
+- protected-file reverse-scope guard: empty output
+- `git diff --check`
+
+Acceptance report plus architecture/root-design currentization remain a separate
+S2 closeout slice.

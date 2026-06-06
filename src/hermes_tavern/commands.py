@@ -209,6 +209,7 @@ TAVERN_COMMAND_TABLE: dict[str, TavernCommandEntry] = {
             "/rp lore inspect <lorebook>",
             "/rp lore use <lorebook>",
             "/rp lore clear",
+            "/rp lore export <lorebook>",
             "/rp lore enable <entry>",
             "/rp lore disable <entry>",
             "/rp lore test <message>",

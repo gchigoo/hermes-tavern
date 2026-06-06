@@ -7,6 +7,7 @@ import math
 from typing import Any
 
 from hermes_tavern.commands import RPCommand
+from hermes_tavern.hermes_home import get_hermes_home
 from hermes_tavern.identity import session_key_from_event
 from hermes_tavern.import_policy import resolve_import_path
 from hermes_tavern.importers.lorebooks import import_lorebook_file
@@ -43,6 +44,8 @@ def lore_command(runtime: Any, command: RPCommand, event: Any) -> str:
         return runtime._lore_inspect(command)
     if subcommand == "use":
         return runtime._lore_use(command, event)
+    if subcommand == "export":
+        return lore_export(runtime, command)
     if subcommand == "clear":
         return lore_clear(runtime, event)
     if subcommand == "enable":
@@ -53,7 +56,110 @@ def lore_command(runtime: Any, command: RPCommand, event: Any) -> str:
         return runtime._lore_test(command, event)
     if subcommand == "debug":
         return runtime._lore_debug(event)
-    return "Usage: /rp lore import <file> | /rp lore list | /rp lore inspect <lorebook> | /rp lore use <lorebook> | /rp lore clear | /rp lore enable <entry> | /rp lore disable <entry> | /rp lore test <message> | /rp lore debug"
+    return (
+        "Usage: /rp lore import <file> | /rp lore list | /rp lore inspect <lorebook> | "
+        "/rp lore use <lorebook> | /rp lore export <lorebook> | /rp lore clear | "
+        "/rp lore enable <entry> | /rp lore disable <entry> | /rp lore test <message> | /rp lore debug"
+    )
+
+
+def _safe_lore_keys(value: Any) -> list[str]:
+    if isinstance(value, str):
+        try:
+            value = json.loads(value)
+        except (TypeError, ValueError, json.JSONDecodeError):
+            return []
+    if not isinstance(value, list):
+        return []
+    return [str(item) for item in value]
+
+
+def _as_bool(value: Any) -> bool:
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, (int, float)):
+        return bool(value)
+    if isinstance(value, str):
+        return value.lower() in {"1", "true", "yes", "on"}
+    return False
+
+
+def _as_number(value: Any, default: int | float) -> int | float:
+    try:
+        return int(value) if isinstance(default, int) else float(value)
+    except (TypeError, ValueError):
+        return default
+
+
+def _lorebook_export_filename(lorebook_id: Any) -> str:
+    safe = "".join(
+        char if char.isalnum() or char in {"-", "_", "."} else "_"
+        for char in str(lorebook_id)
+    ).strip("._-")
+    return f"lorebook_{safe or 'unknown'}.json"
+
+
+def _coerce_lorebook_raw_payload(lorebook: dict[str, Any]) -> dict[str, Any] | None:
+    raw_json = lorebook.get("raw_json")
+    if isinstance(raw_json, dict):
+        return raw_json
+    if isinstance(raw_json, str):
+        try:
+            parsed = json.loads(raw_json)
+        except (TypeError, ValueError, json.JSONDecodeError):
+            return None
+        return parsed if isinstance(parsed, dict) else None
+    return None
+
+
+def _normalize_lorebook_payload(lorebook: dict[str, Any], entries: list[dict[str, Any]]) -> dict[str, Any]:
+    normalized_entries = []
+    for row in entries:
+        normalized_entries.append(
+            {
+                "title": row.get("title", ""),
+                "content": row.get("content", ""),
+                "keys": _safe_lore_keys(row.get("keys_json")),
+                "secondary_keys": _safe_lore_keys(row.get("secondary_keys_json")),
+                "enabled": _as_bool(row.get("enabled")),
+                "constant": _as_bool(row.get("constant")),
+                "regex": _as_bool(row.get("regex")),
+                "position": row.get("position", ""),
+                "insertion_order": _as_number(row.get("insertion_order"), 0),
+                "priority": _as_number(row.get("priority"), 0),
+                "probability": _as_number(row.get("probability"), 1.0),
+            }
+        )
+    return {
+        "name": lorebook.get("name", ""),
+        "source": lorebook.get("source", ""),
+        "entries": normalized_entries,
+    }
+
+
+def lore_export(runtime: Any, command: RPCommand) -> str:
+    if len(command.args) < 2:
+        return "Usage: /rp lore export <lorebook>"
+    lore_ref = " ".join(command.args[1:]).strip()
+    if not lore_ref:
+        return "Usage: /rp lore export <lorebook>"
+
+    lorebook = runtime.store.get_lorebook(lore_ref)
+    if lorebook is None:
+        return _lorebook_not_found(lore_ref)
+
+    payload = _coerce_lorebook_raw_payload(lorebook)
+    if payload is None:
+        entries = runtime.store.list_lorebook_entries(lorebook["id"])
+        payload = _normalize_lorebook_payload(lorebook, entries)
+
+    payload_text = json.dumps(payload, ensure_ascii=False, indent=2)
+    export_dir = get_hermes_home() / "plugins" / "hermes-tavern" / "exports" / "lorebooks"
+    export_dir.mkdir(parents=True, exist_ok=True)
+    export_path = export_dir / _lorebook_export_filename(lorebook["id"])
+    export_path.write_text(payload_text, encoding="utf-8")
+
+    return f"Lorebook exported as JSON.\nfile: {export_path}\nMEDIA:\"{export_path}\""
 
 
 def lore_import(runtime: Any, command: RPCommand, event: Any) -> str:

@@ -171,6 +171,12 @@ def test_help_lists_asset_and_prompt_control_commands():
     assert "/rp persona temp <text>" in help_text
 
 
+def test_help_lists_lore_export_command():
+    help_text = _build_help_text()
+
+    assert "/rp lore export <lorebook>" in help_text
+
+
 def test_help_lists_project_style_commands():
     help_text = _build_help_text()
 
