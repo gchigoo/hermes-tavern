@@ -1,0 +1,151 @@
+doc_type: feature-checklist
+status: planned
+feature: "2026-06-07-hermes-tavern-phase149-card-export-json"
+date: "2026-06-07"
+implementation_ready: false
+summary: >
+  Plan-only Phase 149 for a bounded /rp card export <card> JSON export surface.
+  The feature is not approved or implementation-ready until a controller promotes
+  this draft.
+tags:
+  - hermes-tavern
+  - card
+  - export
+  - sillytavern
+  - command-surface
+  - offline
+implementation_readiness: >
+  false - This cron tick produced only a draft design/checklist artifact. S1 must
+  not run until the controller explicitly approves/promotes the feature.
+steps:
+  - id: S1
+    name: "S1: Implement card JSON export"
+    status: planned
+    description: >
+      Add /rp card export <card> under the existing card command family, write one
+      stored card as a profile-safe JSON export with a quoted MEDIA marker, update
+      help/README visibility, and add focused offline tests.
+    allowed_files:
+      - src/hermes_tavern/runtime_assets.py
+      - src/hermes_tavern/commands.py
+      - README.md
+      - tests/test_hermes_tavern_card_export.py
+      - tests/test_hermes_tavern_commands.py
+      - tests/test_hermes_tavern_readme_docs.py
+    prohibited_files:
+      - run_agent.py
+      - cli.py
+      - gateway/run.py
+      - src/hermes_tavern/runtime.py
+      - src/hermes_tavern/db.py
+      - src/hermes_tavern/db_novel.py
+      - src/hermes_tavern/prompt.py
+      - src/hermes_tavern/runtime_prompt_modules.py
+      - src/hermes_tavern/model_router.py
+      - src/hermes_tavern/provider_bridge.py
+      - src/hermes_tavern/adapters.py
+      - src/hermes_tavern/runtime_generation.py
+      - "src/hermes_tavern/importers/**"
+      - "plugins/**"
+      - "build/lib/**"
+      - "design/** except controller-owned Phase 149 materialization/status sync"
+    exact_scope:
+      - "Add /rp card export <card> as a nested card subcommand."
+      - "Resolve cards with existing TavernStore.get_card behavior, including last."
+      - "Write one UTF-8 JSON card export under get_hermes_home()/plugins/hermes-tavern/exports/cards."
+      - "Prefer preserved data_json.raw when it is a JSON object."
+      - "Use normalized stored fields as fallback when raw is absent."
+      - "Return file path and quoted MEDIA marker."
+      - "Update generated help and README Core commands for the new literal."
+      - "Do not mutate cards, sessions, messages, prompts, providers, generation, credentials, content mode, imports, archives, or safety behavior."
+    verification:
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m py_compile src/hermes_tavern/commands.py src/hermes_tavern/runtime_assets.py tests/test_hermes_tavern_card_export.py tests/test_hermes_tavern_commands.py tests/test_hermes_tavern_readme_docs.py"
+        expected: "passes"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_card_export.py tests/test_hermes_tavern_commands.py tests/test_hermes_tavern_readme_docs.py -q -o 'addopts=' -p no:cacheprovider"
+        expected: "passes"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_*.py -q -o 'addopts=' -p no:cacheprovider"
+        expected: "passes"
+      - command: "git diff --check"
+        expected: "passes"
+  - id: S2
+    name: "S2: Accept and write back docs"
+    status: planned
+    description: >
+      Controller-owned acceptance/writeback after S1 verification. Create the
+      acceptance report, finalize checklist/design status only after verification,
+      and update architecture/root design to currentize /rp card export <card>.
+    allowed_files:
+      - design/codestable/features/2026-06-07-hermes-tavern-phase149-card-export-json/design.md
+      - design/codestable/features/2026-06-07-hermes-tavern-phase149-card-export-json/checklist.yaml
+      - design/codestable/features/2026-06-07-hermes-tavern-phase149-card-export-json/hermes-tavern-phase149-card-export-json-acceptance.md
+      - design/codestable/architecture/ARCHITECTURE.md
+      - design/HERMES_TAVERN_DESIGN.md
+    prohibited_files:
+      - README.md
+      - "src/**"
+      - "tests/**"
+      - run_agent.py
+      - cli.py
+      - gateway/run.py
+      - "plugins/**"
+      - "build/lib/**"
+    exact_scope:
+      - "Rerun S1 verification after implementation."
+      - "Create Phase 149 acceptance only after verification passes."
+      - "Update architecture/root design only for current /rp card export <card> behavior."
+      - "Preserve deferred PNG export, bulk export, archive ZIP/import, card editing, provider/generation, retrieval/vectorization, content-mode, minors/underage, and safety-bypass boundaries."
+      - "Do not edit source, tests, README, plugin files, or build artifacts during S2."
+    verification:
+      - command: "python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-07-hermes-tavern-phase149-card-export-json/design.md --require doc_type --require status --require feature"
+        expected: "passes"
+      - command: "python design/codestable/tools/validate-yaml.py --yaml-only --file design/codestable/features/2026-06-07-hermes-tavern-phase149-card-export-json/checklist.yaml"
+        expected: "passes"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_*.py -q -o 'addopts=' -p no:cacheprovider"
+        expected: "passes"
+      - command: "git diff --check"
+        expected: "passes"
+acceptance:
+  - id: AC1
+    criteria: "/rp card export <card> writes one JSON file for an existing stored card."
+    status: planned
+  - id: AC2
+    criteria: "The command works without an active RP session and does not create or mutate sessions/messages."
+    status: planned
+  - id: AC3
+    criteria: "The last card reference works consistently with existing card inspect/greeting behavior."
+    status: planned
+  - id: AC4
+    criteria: "Missing cards and missing command arguments return bounded user-facing messages."
+    status: planned
+  - id: AC5
+    criteria: "Export response includes a path under get_hermes_home() and a quoted MEDIA marker."
+    status: planned
+  - id: AC6
+    criteria: "Preserved raw JSON and normalized fallback JSON paths are both covered by tests."
+    status: planned
+  - id: AC7
+    criteria: "Generated help and README Core commands include /rp card export <card>."
+    status: planned
+  - id: AC8
+    criteria: "No schema, prompt/provider/generation, credential, retrieval/vectorization, content-mode, importer, archive, plugin, build, protected core, minors/underage, or safety-bypass behavior changes occur."
+    status: planned
+checks:
+  - id: C1
+    name: "Focused card export tests"
+    status: planned
+    criteria: "Focused card export, help, and README docs tests pass offline."
+  - id: C2
+    name: "Tavern-wide pytest"
+    status: planned
+    criteria: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_*.py -q -o 'addopts=' -p no:cacheprovider passes."
+  - id: C3
+    name: "Reverse scope guard"
+    status: planned
+    criteria: "No prohibited core, DB, importer, prompt, provider, generation, plugin, build, or S1 design paths change."
+  - id: C4
+    name: "CodeStable validators"
+    status: planned
+    criteria: "Design/checklist/acceptance YAML frontmatter validates after controller-owned materialization and S2 writeback."
+notes:
+  - "Draft only on 2026-06-07; do not treat as approved, implemented, or accepted."
+  - "Codex architect artifact: /tmp/hermes-tavern-architect-phase149-planning.jsonl (RESULT: PLAN_ONLY_NEW_FEATURE; IMPLEMENTATION_READY=false)."
