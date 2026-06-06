@@ -7,6 +7,46 @@ from hermes_tavern.commands import TAVERN_COMMAND_TABLE
 REPO_ROOT = Path(__file__).resolve().parents[1]
 README = REPO_ROOT / "README.md"
 
+DEFERRED_NOVEL_COMMAND_LITERALS = (
+    "/rp project archive",
+    "/rp project import",
+    "/rp project zip",
+    "/rp novel import",
+    "/rp novel archive",
+    "/rp project outline generate",
+    "/rp project outline rewrite",
+    "/rp project outline expand",
+    "/rp project outline compress",
+    "/rp outline generate",
+    "/rp outline rewrite",
+    "/rp outline expand",
+    "/rp outline compress",
+    "/rp canon check",
+    "/rp canon conflict",
+    "/rp canon pin",
+    "/rp relationship graph",
+    "/rp relationship alias",
+    "/rp relationship merge",
+    "/rp relationship split",
+    "/rp relationship extract",
+    "/rp location map",
+    "/rp location geocode",
+    "/rp location coordinates",
+    "/rp project volume",
+    "/rp project arc",
+    "/rp volume",
+    "/rp arc",
+)
+
+
+def _command_segment_has_literal(surface_text: str, literal: str) -> bool:
+    for line in surface_text.splitlines():
+        for segment in re.split(r"\s\|\s", line):
+            candidate = segment.strip()
+            if candidate == literal or candidate.startswith(literal + " "):
+                return True
+    return False
+
 
 def _readme_text() -> str:
     return README.read_text(encoding="utf-8")
@@ -302,6 +342,20 @@ def test_readme_core_commands_include_project_outline_literals():
     assert "/rp project outline inspect [project-id]" in core_commands
     assert "/rp project outline set [project-id] <text>" in core_commands
     assert "/rp project outline clear [project-id]" in core_commands
+
+
+def test_readme_core_commands_omit_deferred_novel_command_literals():
+    core_commands = _readme_core_commands_text()
+
+    for literal in DEFERRED_NOVEL_COMMAND_LITERALS:
+        assert not _command_segment_has_literal(core_commands, literal)
+
+
+def test_readme_core_commands_keeps_current_allowed_command_literals():
+    core_commands = _readme_core_commands_text()
+
+    assert _command_segment_has_literal(core_commands, "/rp export [markdown|st-json]")
+    assert _command_segment_has_literal(core_commands, "/rp archive")
 
 
 def test_readme_core_commands_include_character_state_literals():

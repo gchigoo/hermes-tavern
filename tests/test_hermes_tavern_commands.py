@@ -1,4 +1,5 @@
 import pytest
+import re
 
 from plugins.hermes_tavern.commands import (
     RPCommand,
@@ -8,6 +9,64 @@ from plugins.hermes_tavern.commands import (
     dispatch_command,
     parse_rp_command,
 )
+
+
+DEFERRED_NOVEL_COMMAND_LITERALS = (
+    "/rp project archive",
+    "/rp project import",
+    "/rp project zip",
+    "/rp novel import",
+    "/rp novel archive",
+    "/rp project outline generate",
+    "/rp project outline rewrite",
+    "/rp project outline expand",
+    "/rp project outline compress",
+    "/rp outline generate",
+    "/rp outline rewrite",
+    "/rp outline expand",
+    "/rp outline compress",
+    "/rp canon check",
+    "/rp canon conflict",
+    "/rp canon pin",
+    "/rp relationship graph",
+    "/rp relationship alias",
+    "/rp relationship merge",
+    "/rp relationship split",
+    "/rp relationship extract",
+    "/rp location map",
+    "/rp location geocode",
+    "/rp location coordinates",
+    "/rp project volume",
+    "/rp project arc",
+    "/rp volume",
+    "/rp arc",
+)
+
+DEFERRED_TOP_LEVEL_AND_PSEUDO_FAMILIES = (
+    "novel",
+    "volume",
+    "arc",
+    "outline",
+    "project-import",
+    "project-archive",
+    "canon-check",
+    "canon-conflict",
+    "canon-pin",
+    "relationship-graph",
+    "relationship-alias",
+    "relationship-merge",
+    "relationship-split",
+    "geocode",
+)
+
+
+def _command_segment_has_literal(surface_text: str, literal: str) -> bool:
+    for line in surface_text.splitlines():
+        for segment in re.split(r"\s\|\s", line):
+            candidate = segment.strip()
+            if candidate == literal or candidate.startswith(literal + " "):
+                return True
+    return False
 
 
 @pytest.mark.parametrize(
@@ -190,6 +249,21 @@ def test_help_lists_project_outline_commands():
     assert "/rp project outline clear [project-id]" in help_text
 
 
+def test_help_omits_deferred_novel_command_literals():
+    help_text = _build_help_text()
+
+    for literal in DEFERRED_NOVEL_COMMAND_LITERALS:
+        assert not _command_segment_has_literal(help_text, literal)
+
+
+def test_help_keeps_current_allowed_command_literals():
+    help_text = _build_help_text()
+
+    assert _command_segment_has_literal(help_text, "/rp project export")
+    assert _command_segment_has_literal(help_text, "/rp export [markdown|st-json]")
+    assert _command_segment_has_literal(help_text, "/rp archive")
+
+
 def test_help_lists_relationship_state_commands():
     help_text = _build_help_text()
 
@@ -370,3 +444,14 @@ def test_dispatch_command_unknown_after_structural_parse_only():
 def test_novel_command_table_does_not_have_top_level_revision_family():
     assert "revision" not in TAVERN_COMMAND_TABLE
     assert "relationship-rename" not in TAVERN_COMMAND_TABLE
+
+
+def test_tavern_command_table_omits_deferred_top_level_and_pseudo_families():
+    for family in DEFERRED_TOP_LEVEL_AND_PSEUDO_FAMILIES:
+        assert family not in TAVERN_COMMAND_TABLE
+
+
+def test_tavern_command_table_keeps_current_allowed_top_level_families():
+    assert "project" in TAVERN_COMMAND_TABLE
+    assert "export" in TAVERN_COMMAND_TABLE
+    assert "archive" in TAVERN_COMMAND_TABLE

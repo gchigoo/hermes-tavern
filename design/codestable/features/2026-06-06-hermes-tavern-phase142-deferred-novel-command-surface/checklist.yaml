@@ -1,0 +1,150 @@
+doc_type: feature-checklist
+feature: "2026-06-06-hermes-tavern-phase142-deferred-novel-command-surface"
+date: "2026-06-06"
+status: implemented
+summary: >
+  S1_IMPLEMENTED - Test-only deferred novel command-surface regressions now
+  assert that archive/import, canon-check/conflict/pin, outline-generation,
+  relationship graph/alias/merge/split/extraction, location map/geocode,
+  volume/arc, and novel archive/import command literals remain absent from
+  generated help and README Core commands while current /rp project export,
+  /rp export, and /rp archive commands remain visible. S2 acceptance/writeback
+  remains planned.
+tags: [novel, commands, deferred-boundary, regression, test-only, offline]
+implementation_readiness: >
+  S1_IMPLEMENTED - Codex architect selected the bounded test-only command-surface
+  absence matrix, and Codex executor implemented it only in the two allowed test
+  files. Controller reran py_compile, focused command/README tests, Tavern-wide
+  plugin tests, full pytest, CodeStable validators, reverse-scope guards, and
+  git diff --check successfully. S2 docs/status-only acceptance remains planned.
+steps:
+  - id: S1
+    name: "S1: Add deferred command surface absence tests"
+    status: completed
+    completed_at: "2026-06-06"
+    result: >
+      IMPLEMENTED - Added local deferred-command literal lists and regressions in
+      tests/test_hermes_tavern_commands.py and tests/test_hermes_tavern_readme_docs.py.
+      Generated help and README Core commands now assert the deferred command
+      literals are absent; TAVERN_COMMAND_TABLE asserts deferred top-level and
+      pseudo-families are absent; and current /rp project export, /rp export, and
+      /rp archive visibility is preserved. No source, README, runtime, provider,
+      generation, credential, importer/exporter, architecture, root-design, or
+      product behavior files changed.
+    description: >
+      Add generated-help, command-table, and README Core commands regressions
+      proving deferred novel command literals are absent while current allowed
+      archive/export commands remain visible.
+    allowed_files:
+      - tests/test_hermes_tavern_commands.py
+      - tests/test_hermes_tavern_readme_docs.py
+    prohibited_files:
+      - "src/**"
+      - README.md
+      - "docs/**"
+      - design/HERMES_TAVERN_DESIGN.md
+      - "design/codestable/** except controller-owned Phase 142 materialization/status updates"
+      - run_agent.py
+      - cli.py
+      - "gateway/**"
+      - "plugins/**"
+      - "build/lib/**"
+      - tests/test_hermes_tavern_novel_db.py
+      - tests/test_hermes_tavern_novel_runtime.py
+    exact_scope:
+      - "Define or locally enumerate deferred novel command literals in tests only."
+      - "Assert generated help from _build_help_text() omits every deferred literal."
+      - "Assert README Core commands omit every deferred literal."
+      - "Assert TAVERN_COMMAND_TABLE omits deferred top-level families and pseudo-families."
+      - "Assert current allowed commands remain visible: /rp project export [id], /rp export [markdown|st-json], and /rp archive."
+      - "Do not edit command tables, runtime handlers, README, source, architecture, root design, or CodeStable acceptance/status files during S1."
+    verification:
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m py_compile tests/test_hermes_tavern_commands.py tests/test_hermes_tavern_readme_docs.py"
+        result: "passed (controller rerun; no output)"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_commands.py tests/test_hermes_tavern_readme_docs.py -q -o 'addopts=' -p no:cacheprovider"
+        result: "passed (controller rerun; 84 passed in 0.12s)"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_*.py -q -o 'addopts=' -p no:cacheprovider"
+        result: "passed (controller rerun; 1021 passed in 44.53s; executor-side image-test failures did not reproduce)"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts=' -p no:cacheprovider"
+        result: "passed (controller rerun; 1021 passed in 44.48s)"
+      - command: "python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-06-hermes-tavern-phase142-deferred-novel-command-surface/design.md --require doc_type --require status --require feature"
+        result: "passed"
+      - command: "python design/codestable/tools/validate-yaml.py --yaml-only --file design/codestable/features/2026-06-06-hermes-tavern-phase142-deferred-novel-command-surface/checklist.yaml"
+        result: "passed after controller S1 status writeback"
+      - command: "git diff --name-only -- src README.md docs design/HERMES_TAVERN_DESIGN.md run_agent.py cli.py gateway plugins build/lib tests/test_hermes_tavern_novel_db.py tests/test_hermes_tavern_novel_runtime.py"
+        result: "passed (empty output; no protected source/docs/root-design/build/novel DB/runtime diff)"
+      - command: "git diff --check"
+        result: "passed"
+  - id: S2
+    name: "S2: Verify and accept test-only boundary"
+    status: planned
+    description: >
+      Controller-owned acceptance after S1. Rerun focused and Tavern-wide tests,
+      CodeStable validators, reverse-scope checks, and git diff --check; then
+      create the acceptance report and mark this feature accepted. No architecture
+      or root-design writeback is expected.
+    allowed_files:
+      - design/codestable/features/2026-06-06-hermes-tavern-phase142-deferred-novel-command-surface/design.md
+      - design/codestable/features/2026-06-06-hermes-tavern-phase142-deferred-novel-command-surface/checklist.yaml
+      - design/codestable/features/2026-06-06-hermes-tavern-phase142-deferred-novel-command-surface/hermes-tavern-phase142-deferred-novel-command-surface-acceptance.md
+    prohibited_files:
+      - README.md
+      - "src/**"
+      - "tests/**"
+      - run_agent.py
+      - cli.py
+      - gateway/run.py
+      - "plugins/**"
+      - "build/lib/**"
+      - design/HERMES_TAVERN_DESIGN.md
+      - design/codestable/architecture/ARCHITECTURE.md
+acceptance:
+  - id: AC1
+    criteria: "Generated help omits all deferred novel command literals."
+    status: completed
+  - id: AC2
+    criteria: "README Core commands omit all deferred novel command literals."
+    status: completed
+  - id: AC3
+    criteria: "TAVERN_COMMAND_TABLE omits deferred top-level families and pseudo-families."
+    status: completed
+  - id: AC4
+    criteria: "Current allowed /rp project export, /rp export, and /rp archive commands remain visible."
+    status: completed
+  - id: AC5
+    criteria: "S1 changes tests only and no prohibited path changes."
+    status: completed
+checks:
+  - id: C1
+    name: "Test-only scope"
+    status: completed
+    completed_at: "2026-06-06"
+    result: >
+      PASSED - S1 changed only tests/test_hermes_tavern_commands.py,
+      tests/test_hermes_tavern_readme_docs.py, and controller-owned Phase 142
+      design/checklist artifacts. Protected source/docs/root-design/build and
+      novel DB/runtime test reverse-scope guard was empty.
+    criteria: "Only the two allowed test files change during S1."
+  - id: C2
+    name: "No deferred behavior implementation"
+    status: completed
+    completed_at: "2026-06-06"
+    result: >
+      PASSED - The diff adds tests and CodeStable artifacts only. It implements
+      no source, docs, command table, runtime, provider, generation, credential,
+      archive/import/export, graph, alias, merge/split, extraction, geocode/map,
+      volume/arc, or safety behavior.
+    criteria: "No source, docs, command table, runtime, provider, generation, credential, archive/import/export, graph, alias, merge/split, extraction, geocode/map, volume/arc, or safety behavior changes."
+  - id: C3
+    name: "Offline verification"
+    status: completed
+    completed_at: "2026-06-06"
+    result: >
+      PASSED - Controller reran py_compile, focused command/README tests (84
+      passed), Tavern-wide plugin tests (1021 passed), full pytest (1021 passed),
+      CodeStable validators, reverse-scope guards, and git diff --check.
+    criteria: "Focused tests, Tavern-wide tests, CodeStable validators, reverse-scope checks, and git diff --check pass offline."
+verification_notes: |
+  - S1 implementation is complete and controller-verified.
+  - Executor's optional Tavern-wide runs reported image-test failures, but the controller reran Tavern-wide tests successfully (1021 passed) and full pytest successfully (1021 passed).
+  - S2 acceptance/report writeback remains planned for a later docs/status-only slice.
