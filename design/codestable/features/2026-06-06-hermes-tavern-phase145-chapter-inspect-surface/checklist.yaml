@@ -1,19 +1,36 @@
 doc_type: feature-checklist
 feature: "2026-06-06-hermes-tavern-phase145-chapter-inspect-surface"
 date: "2026-06-06"
-status: planned
+status: implemented
 summary: >
-  Plan Phase 145 as a read-only /rp chapter inspect <chapter-id> command-surface
-  extension for existing novel_chapters rows, using the existing store getter and
-  preserving schema, ordering, prompt/provider/generation/retrieval/credential/safety
-  behavior, protected core files, plugins, and build artifacts.
+  IMPLEMENTED - Phase 145 S1 adds a read-only /rp chapter inspect <chapter-id>
+  command for existing novel_chapters rows, using the existing store getter,
+  generated help and README visibility, focused offline tests, and controller-run
+  verification. It keeps chapter list/summary/export behavior unchanged and does
+  not alter schema, prompt, provider, generation, retrieval/vectorization,
+  credentials, safety, runtime.py, protected core, plugin, or build behavior.
 tags: [hermes-tavern, chapter, command-surface, read-only, offline]
 implementation_readiness: >
-  PLANNED - Awaiting controller materialization and the next Codex executor tick.
+  S1_IMPLEMENTED - Codex architect validated the existing Phase 145 S1 artifact
+  as implementation-ready and Codex executor implemented only the approved S1
+  files. The controller inspected the S1 diff, removed one out-of-scope helper
+  assertion added by the executor, and reran py_compile, focused pytest,
+  Tavern-wide pytest, full pytest, CodeStable validators, protected-path diff
+  guards, and git diff --check successfully. S2 acceptance/writeback remains
+  planned.
 steps:
   - id: S1
     name: "S1: Add read-only chapter inspect command"
-    status: planned
+    status: completed
+    completed_at: "2026-06-06"
+    result: >
+      IMPLEMENTED - Added nested /rp chapter inspect <chapter-id> handling under
+      the existing chapter command family, using existing runtime.store.get_chapter
+      only; added generated help and README Core command literals; added focused
+      runtime/help/README tests. Missing, malformed, non-positive, and extra
+      inspect arguments return usage; missing rows return a bounded not-found
+      message; blank summaries render (not set); chapter list ordering and
+      summary behavior remain covered and unchanged.
     description: >
       Add /rp chapter inspect <chapter-id> under the existing chapter command
       family, generated help and README visibility, and focused offline tests.
@@ -58,15 +75,21 @@ steps:
       - "Do not edit src/hermes_tavern/runtime.py."
     verification:
       - command: "PYTHONDONTWRITEBYTECODE=1 python -m py_compile src/hermes_tavern/runtime_novel.py src/hermes_tavern/commands.py tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_commands.py tests/test_hermes_tavern_readme_docs.py"
-        result: "pending controller run"
+        result: "passed (controller rerun; no output)"
       - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_commands.py tests/test_hermes_tavern_readme_docs.py -q -o 'addopts=' -p no:cacheprovider"
-        result: "pending controller run"
+        result: "271 passed in 9.60s (controller rerun)"
       - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_*.py -q -o 'addopts=' -p no:cacheprovider"
-        result: "pending controller run"
+        result: "1041 passed in 48.32s (controller rerun)"
       - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts=' -p no:cacheprovider"
-        result: "pending controller run"
+        result: "1041 passed in 45.49s (controller rerun)"
+      - command: "python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-06-hermes-tavern-phase145-chapter-inspect-surface/design.md --require doc_type --require status --require feature"
+        result: "passed"
+      - command: "python design/codestable/tools/validate-yaml.py --yaml-only --file design/codestable/features/2026-06-06-hermes-tavern-phase145-chapter-inspect-surface/checklist.yaml"
+        result: "passed after final status patch"
+      - command: "git diff --name-only allowed-file scope guard"
+        result: "passed; changed files were exactly README.md, Phase 145 design/checklist, runtime_novel.py, commands.py, and focused tests"
       - command: "git diff --check"
-        result: "pending controller run"
+        result: "passed"
   - id: S2
     name: "S2: Verify and accept"
     status: planned
@@ -90,40 +113,64 @@ steps:
 acceptance:
   - id: AC1
     criteria: "/rp chapter inspect <chapter-id> returns bounded details for one existing chapter row."
-    status: planned
+    status: completed
+    completed_at: "2026-06-06"
+    result: "passed; focused runtime tests and controller rerun cover valid-id output with summary preview"
   - id: AC2
     criteria: "Malformed, missing, non-positive, and extra inspect arguments return bounded usage output."
-    status: planned
+    status: completed
+    completed_at: "2026-06-06"
+    result: "passed; focused runtime tests and controller rerun cover usage responses"
   - id: AC3
     criteria: "Missing chapter rows return a bounded not-found message."
-    status: planned
+    status: completed
+    completed_at: "2026-06-06"
+    result: "passed; focused runtime tests and controller rerun cover not-found response"
   - id: AC4
     criteria: "Generated help and README Core commands include the chapter inspect literal."
-    status: planned
+    status: completed
+    completed_at: "2026-06-06"
+    result: "passed; focused command/help/README tests and controller rerun cover visibility"
   - id: AC5
     criteria: "Chapter list ordering and chapter summary behavior remain unchanged."
-    status: planned
+    status: completed
+    completed_at: "2026-06-06"
+    result: "passed; focused runtime regression tests and full suite remain green"
   - id: AC6
     criteria: "No schema, protected core/runtime.py, prompt/provider/generation, retrieval/vectorization, archive/import, credential, plugin, build, or safety behavior changes occur."
-    status: planned
+    status: completed
+    completed_at: "2026-06-06"
+    result: "passed; allowed-file scope guard was clean and S1 changed only approved files plus feature artifacts"
 checks:
   - id: C1
     name: "Nested command route"
-    status: planned
+    status: completed
+    completed_at: "2026-06-06"
+    result: "passed; /rp chapter inspect routes through the existing chapter family and no runtime.py shim was added"
     criteria: "The inspect command routes through the existing chapter family and does not add a new top-level command or runtime.py shim."
   - id: C2
     name: "Read-only store use"
-    status: planned
+    status: completed
+    completed_at: "2026-06-06"
+    result: "passed; implementation uses existing runtime.store.get_chapter and db/db_novel/schema files are unchanged"
     criteria: "The implementation uses existing get_chapter and does not modify schema, migrations, db.py, or db_novel.py."
   - id: C3
     name: "Help and README visibility"
-    status: planned
+    status: completed
+    completed_at: "2026-06-06"
+    result: "passed; generated help and README Core commands expose /rp chapter inspect <chapter-id>"
     criteria: "Generated help and README expose /rp chapter inspect <chapter-id> without stale or conflicting chapter command text."
   - id: C4
     name: "Offline verification"
-    status: planned
+    status: completed
+    completed_at: "2026-06-06"
+    result: "passed; controller reran py_compile, focused tests (271 passed), Tavern-wide tests (1041 passed), and full pytest (1041 passed)"
     criteria: "Focused and Tavern-wide offline tests run with -o 'addopts=' and no cacheprovider."
 verification_notes: |
   - Codex architect artifact: /tmp/hermes-tavern-architect-phase145-gap-selection.jsonl
-  - Executor intentionally not run during plan-only materialization because IMPLEMENTATION_READY=false.
-  - Controller materialization validation on 2026-06-06 passed: design frontmatter validator, checklist YAML validator, git diff --check, and full pytest (1036 passed in 49.66s).
+  - Codex architect S1 validation: /tmp/hermes-tavern-architect-phase145-s1.jsonl (IMPLEMENTATION_READY=true; BLOCKERS=none).
+  - Codex executor smoke: /tmp/hermes-tavern-executor-phase145-smoke.jsonl (EXECUTOR_SMOKE_OK).
+  - Codex executor artifact: /tmp/hermes-tavern-executor-phase145-s1.jsonl
+  - Executor terminal output showed recoverable apply_patch context misses while editing runtime/tests; Codex recovered and produced the final bounded diff. Executor did not run tests, so controller verification is authoritative.
+  - Controller removed one out-of-scope helper assertion from tests/test_hermes_tavern_commands.py before verification; the final diff remains within approved S1 files.
+  - Controller verification after S1 implementation and status edits: py_compile passed; focused pytest 271 passed in 9.60s; Tavern-wide pytest 1041 passed in 48.32s; full pytest 1041 passed in 45.49s; design/checklist validators passed; allowed-file/protected-path scope guard passed; git diff --check passed.

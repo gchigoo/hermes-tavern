@@ -221,6 +221,7 @@ def test_help_lists_style_sample_commands():
 def test_help_lists_chapter_and_scene_summary_commands():
     help_text = _build_help_text()
 
+    assert "/rp chapter inspect <chapter-id>" in help_text
     assert "/rp chapter summary <chapter-id> [text]" in help_text
     assert "/rp chapter summary clear <chapter-id>" in help_text
     assert "/rp scene summary <scene-id> [text]" in help_text

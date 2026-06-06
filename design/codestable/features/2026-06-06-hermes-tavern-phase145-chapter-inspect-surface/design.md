@@ -1,7 +1,7 @@
 ---
 doc_type: feature-design
 feature: "2026-06-06-hermes-tavern-phase145-chapter-inspect-surface"
-status: draft
+status: approved
 date: "2026-06-06"
 summary: >
   Phase 145 plans a read-only /rp chapter inspect <chapter-id> surface for

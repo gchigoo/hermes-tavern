@@ -2546,6 +2546,118 @@ def test_chapter_routes_create_requires_existing_project(tmp_path):
     assert response == "No novel project found: 9999"
 
 
+def test_chapter_list_order_and_summary_behavior_remains_stable(tmp_path):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    runtime.store.create_project("Atlas")
+    runtime.handle_command_sync(
+        RPCommand("project", ["set", "1"], "/rp project set 1"),
+        Event(),
+    )
+
+    runtime.handle_command_sync(
+        RPCommand("chapter", ["create", "Arrival"], "/rp chapter create Arrival"),
+        Event(),
+    )
+    runtime.handle_command_sync(
+        RPCommand("chapter", ["create", "Departure"], "/rp chapter create Departure"),
+        Event(),
+    )
+
+    listed = runtime.handle_command_sync(
+        RPCommand("chapter", ["list"], "/rp chapter list"),
+        Event(),
+    )
+    lines = listed.splitlines()
+    assert lines[0] == "Hermes Tavern chapters for project [1]:"
+    assert lines[1].startswith("  - [1] Chapter 1: Arrival")
+    assert lines[2].startswith("  - [2] Chapter 2: Departure")
+
+    assert runtime.handle_command_sync(
+        RPCommand("chapter", ["summary", "1", "Fog", "hides", "the", "market."], "/rp chapter summary 1 Fog hides the market."),
+        Event(),
+    ) == (
+        "Chapter summary set for chapter [1]: "
+        f"{_mobile_preview('Fog hides the market.', 180)}"
+    )
+    assert runtime.handle_command_sync(
+        RPCommand("chapter", ["summary", "1"], "/rp chapter summary 1"),
+        Event(),
+    ) == (
+        f"Chapter [1] summary: {_mobile_preview('Fog hides the market.', 220)}"
+    )
+
+
+def test_chapter_inspect_returns_compact_metadata_and_summary_preview(tmp_path):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    project = runtime.store.create_project("Atlas")
+    chapter = runtime.store.create_chapter(project["id"], "Arrival")
+    runtime.store.set_chapter_summary(chapter["id"], "Fog hides the market.")
+
+    inspect = runtime.handle_command_sync(
+        RPCommand(
+            "chapter",
+            ["inspect", str(chapter["id"])],
+            f"/rp chapter inspect {chapter['id']}",
+        ),
+        Event(),
+    )
+    assert inspect == (
+        f"Chapter [{chapter['id']}] for project [{chapter['project_id']}]: "
+        f"Chapter {chapter['chapter_number']} {chapter['title']} ({chapter['status']}) | "
+        f"summary: {_mobile_preview('Fog hides the market.', 180)}"
+    )
+
+
+def test_chapter_inspect_with_blank_summary_returns_not_set(tmp_path):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    project = runtime.store.create_project("Atlas")
+    chapter = runtime.store.create_chapter(project["id"], "Arrival")
+    runtime.store.set_chapter_summary(chapter["id"], "   ")
+
+    inspect = runtime.handle_command_sync(
+        RPCommand(
+            "chapter",
+            ["inspect", str(chapter["id"])],
+            f"/rp chapter inspect {chapter['id']}",
+        ),
+        Event(),
+    )
+    assert inspect == (
+        f"Chapter [{chapter['id']}] for project [{chapter['project_id']}]: "
+        f"Chapter {chapter['chapter_number']} {chapter['title']} ({chapter['status']}) | "
+        f"summary: (not set)"
+    )
+
+
+def test_chapter_inspect_bad_arguments_return_usage(tmp_path):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    usage = (
+        "Usage: /rp chapter create [project-id] <title> | /rp chapter list [project-id] | "
+        "/rp chapter inspect <chapter-id> | /rp chapter summary <chapter-id> [text] | "
+        "/rp chapter summary clear <chapter-id>"
+    )
+    cases = [
+        (RPCommand("chapter", ["inspect"], "/rp chapter inspect"), usage),
+        (RPCommand("chapter", ["inspect", "-1"], "/rp chapter inspect -1"), usage),
+        (RPCommand("chapter", ["inspect", "not-a-number"], "/rp chapter inspect not-a-number"), usage),
+        (RPCommand("chapter", ["inspect", "0"], "/rp chapter inspect 0"), usage),
+        (RPCommand("chapter", ["inspect", "1", "extra"], "/rp chapter inspect 1 extra"), usage),
+    ]
+    for command, expected in cases:
+        assert runtime.handle_command_sync(command, Event()) == expected
+
+
+def test_chapter_inspect_missing_chapter_returns_not_found(tmp_path):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    assert (
+        runtime.handle_command_sync(
+            RPCommand("chapter", ["inspect", "9999"], "/rp chapter inspect 9999"),
+            Event(),
+        )
+        == "No novel chapter found: 9999"
+    )
+
+
 def test_project_export_returns_media_marker_and_path_under_profile_safe_home(tmp_path, monkeypatch):
     monkeypatch.setenv("HERMES_HOME", str(tmp_path / "hermes home"))
     runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
@@ -3065,6 +3177,7 @@ def test_summary_command_is_listed_in_help_output(tmp_path):
     response = runtime.handle_command_sync(RPCommand("help", [], "/rp"), Event())
 
     assert "/rp chapter summary <chapter-id> [text]" in response
+    assert "/rp chapter inspect <chapter-id>" in response
     assert "/rp chapter summary clear <chapter-id>" in response
     assert "/rp scene summary <scene-id> [text]" in response
     assert "/rp scene summary clear <scene-id>" in response

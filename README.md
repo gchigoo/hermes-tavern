@@ -142,6 +142,7 @@ Expected behavior:
 /rp project revision update <note-id> <note...>
 /rp project revision delete <note-id>
 /rp chapter create/list
+/rp chapter inspect <chapter-id>
 /rp chapter summary <chapter-id> [text]
 /rp chapter summary clear <chapter-id>
 /rp scene create/list/start

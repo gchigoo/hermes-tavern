@@ -53,12 +53,11 @@ def chapter_command(runtime: Any, command: RPCommand, event: Any) -> str:
         return chapter_create(runtime, command, event)
     if subcommand == "list":
         return chapter_list(runtime, command, event)
+    if subcommand == "inspect":
+        return chapter_inspect(runtime, command, event)
     if subcommand == "summary":
         return chapter_summary(runtime, command, event)
-    return (
-        "Usage: /rp chapter create [project-id] <title> | /rp chapter list [project-id] | "
-        "/rp chapter summary <chapter-id> [text] | /rp chapter summary clear <chapter-id>"
-    )
+    return _CHAPTER_USAGE
 
 
 def scene_command(runtime: Any, command: RPCommand, event: Any) -> str:
@@ -122,6 +121,11 @@ def timeline_command(runtime: Any, command: RPCommand, event: Any) -> str:
 _TIMELINE_USAGE = (
     "Usage: /rp timeline add <project-id> <date> <title> [description...] | "
     "/rp timeline list [project-id] | /rp timeline inspect <timeline-id>"
+)
+
+_CHAPTER_USAGE = (
+    "Usage: /rp chapter create [project-id] <title> | /rp chapter list [project-id] | "
+    "/rp chapter inspect <chapter-id> | /rp chapter summary <chapter-id> [text] | /rp chapter summary clear <chapter-id>"
 )
 
 
@@ -1152,6 +1156,28 @@ def chapter_list(runtime: Any, command: RPCommand, event: Any) -> str:
             f"  - [{chapter['id']}] Chapter {chapter['chapter_number']}: {chapter['title']} ({chapter['status']})"
         )
     return "\n".join(lines)
+
+
+def chapter_inspect(runtime: Any, command: RPCommand, event: Any) -> str:
+    del event
+    if len(command.args) != 2:
+        return _CHAPTER_USAGE
+
+    chapter_id = _safe_int(command.args[1])
+    if chapter_id is None or chapter_id <= 0:
+        return _CHAPTER_USAGE
+
+    chapter = runtime.store.get_chapter(chapter_id)
+    if chapter is None:
+        return f"No novel chapter found: {chapter_id}"
+
+    summary = (chapter.get("summary") or "").strip()
+    preview = _mobile_preview(summary, 180) if summary else "(not set)"
+    return (
+        f"Chapter [{chapter['id']}] for project [{chapter['project_id']}]: "
+        f"Chapter {chapter['chapter_number']} {chapter['title']} ({chapter['status']}) | "
+        f"summary: {preview}"
+    )
 
 
 def chapter_summary(runtime: Any, command: RPCommand, event: Any) -> str:

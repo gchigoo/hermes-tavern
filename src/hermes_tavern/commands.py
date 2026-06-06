@@ -375,6 +375,7 @@ TAVERN_COMMAND_TABLE: dict[str, TavernCommandEntry] = {
         help_lines=[
             "/rp chapter create [project-id] <title>",
             "/rp chapter list [project-id]",
+            "/rp chapter inspect <chapter-id>",
             "/rp chapter summary <chapter-id> [text]",
             "/rp chapter summary clear <chapter-id>",
         ],
