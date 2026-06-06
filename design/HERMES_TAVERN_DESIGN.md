@@ -659,7 +659,14 @@ Commands:
 /rp canon group [project-id] <group>
 /rp timeline add <project-id> <date> <title> [description]
 /rp timeline list [project-id]
+/rp timeline inspect <timeline-id>
 ```
+
+Phase 144 current behavior adds `/rp timeline inspect <timeline-id>` as the read-only
+timeline inspection surface for one existing `novel_timeline` row by id. This phase
+does not add timeline update/delete/archive/import, timeline graph/map/geocode/
+visualization, automatic extraction, prompt/provider/generation/retrieval/vectorization
+coupling, credential persistence, or safety-bypass paths.
 
 Project Markdown export emits `## Project Brief` after `## Summary` and, when
 present, emits `## Outline` immediately after Project Brief and before Style
@@ -1135,7 +1142,7 @@ relationship label rename is current metadata.
 /rp project revision update <note-id> <note...>
 /rp project revision delete <note-id>
 /rp canon add/list/group | /rp canon inspect <canon-id>
-/rp timeline add/list
+/rp timeline add/list | /rp timeline inspect <timeline-id>
 ```
 
 Project Brief and Project Outline commands are metadata-only. They expose local
@@ -1168,6 +1175,10 @@ add/list/inspect/update/delete, optional owning-scene Markdown export, and is
 excluded from prompt/debug, context-budget reporting, retrieval/vectorization,
 provider/model routing, content-mode decisions, credentials, generation, media,
 archive, graph, automatic extraction, and safety behavior.
+Timeline inspection remains command-visible only through `/rp timeline inspect <timeline-id>`.
+No timeline update/delete, timeline graph/map/geocode/visualization, archive/import,
+generation, provider/model routing, retrieval/vectorization, credential persistence,
+or safety-bypass behavior is added in this phase.
 Relationship state is metadata-only and local-only: command-driven relationship
 notes for inspection/list/rename/update/delete and optional Markdown export, no
 prompt, context-budget, retrieval/vectorization, provider/model/routing,

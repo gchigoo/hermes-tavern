@@ -1,23 +1,24 @@
 doc_type: feature-checklist
 feature: "2026-06-06-hermes-tavern-phase144-timeline-inspect-surface"
 date: "2026-06-06"
-status: implemented
+status: accepted
 summary: >
-  IMPLEMENTED - Phase 144 S1 adds a read-only /rp timeline inspect <timeline-id>
+  ACCEPTED - Phase 144 adds a read-only /rp timeline inspect <timeline-id>
   command for existing novel_timeline rows, backed by a read-only store getter,
-  generated help and README visibility, and focused offline tests. It keeps
-  timeline list/export behavior unchanged and does not alter schema, prompt,
-  provider, generation, retrieval, archive/import, credentials, safety,
-  runtime.py, protected core, plugin, or build behavior. S2 acceptance/writeback
-  remains planned.
+  generated help and README visibility, focused offline tests, and completed
+  S2 acceptance/writeback. It keeps timeline list/export behavior unchanged and
+  does not alter schema, prompt, provider, generation, retrieval,
+  archive/import, credentials, safety, runtime.py, protected core, plugin, or
+  build behavior.
 tags: [hermes-tavern, timeline, command-surface, read-only, offline]
 implementation_readiness: >
   S1_IMPLEMENTED - Codex architect selected this as a small bounded nested
   command-family extension and Codex executor implemented only the approved S1
-  files. The controller inspected the diff and reran py_compile, focused pytest,
-  Tavern-wide pytest, full pytest, CodeStable validators, protected-path diff
-  guards, and git diff --check successfully. S2 acceptance/writeback remains
-  planned.
+  files. The controller inspected the S1 diff and reran py_compile, focused
+  pytest, Tavern-wide pytest, full pytest, CodeStable validators, protected-path
+  diff guards, and git diff --check successfully. S2 acceptance/writeback is now
+  accepted after controller reran focused/full tests, validators, protected-path
+  guards, stale/current command guards, and git diff --check.
 steps:
   - id: S1
     name: "S1: Add read-only timeline inspect command"
@@ -91,9 +92,16 @@ steps:
         result: "passed"
   - id: S2
     name: "S2: Verify and accept"
-    status: planned
+    status: completed
+    completed_at: "2026-06-06"
     description: >
       Controller-owned acceptance/writeback after S1.
+    result: >
+      ACCEPTED - Wrote the Phase 144 acceptance report, updated architecture and
+      root design to currentize /rp timeline inspect <timeline-id>, and controller
+      reran py_compile, focused pytest (345 passed), Tavern-wide pytest (1036
+      passed), final full pytest (1036 passed), CodeStable validators, protected-path
+      and stale/current command guards, and git diff --check successfully.
     allowed_files:
       - design/codestable/features/2026-06-06-hermes-tavern-phase144-timeline-inspect-surface/design.md
       - design/codestable/features/2026-06-06-hermes-tavern-phase144-timeline-inspect-surface/checklist.yaml
@@ -161,10 +169,18 @@ checks:
     criteria: "Focused and Tavern-wide offline tests run with -o 'addopts=' and no cacheprovider."
   - id: C4
     name: "Docs writeback"
-    status: planned
+    status: completed
+    completed_at: "2026-06-06"
+    result: >
+      passed; architecture and root design now reflect Phase 144 current behavior,
+      including /rp timeline inspect <timeline-id>, get_timeline_event helper
+      prose outside SQL schema, and preserved deferred timeline boundaries.
     criteria: "Architecture and root design are updated only after S1 acceptance to show the current read-only timeline inspect surface and preserved deferred boundaries."
 verification_notes: |
   - Codex architect artifact: /tmp/hermes-tavern-architect-phase144-gap-selection.jsonl
   - Codex executor artifact: /tmp/hermes-tavern-executor-phase144-s1.jsonl
   - Executor JSONL had one failed initial focused pytest run due to a README-doc assertion expecting expanded timeline syntax while README intentionally uses the compact add/list form; Codex patched the test and reran the focused command successfully before final summary.
-  - S2 acceptance/writeback remains planned; no architecture/root-design writeback was performed in S1.
+  - S2 architect artifact: /tmp/hermes-tavern-architect-phase144-s2.jsonl
+  - S2 executor artifact: /tmp/hermes-tavern-executor-phase144-s2.jsonl
+  - S2 executor JSONL had harmless failed probes: initial missing acceptance-file read, ripgrep lookaround/newline guard syntax attempts, and misuse of --yaml-only on a Markdown acceptance report. The controller reran the correct guards/validators successfully.
+  - Controller verification after final status/doc edits: py_compile passed; focused pytest 345 passed in 13.74s; Tavern-wide pytest 1036 passed in 45.76s; final full pytest 1036 passed in 47.15s; design/checklist/acceptance validators passed; allowed-file/protected-path/stale/current guards passed; git diff --check passed.
