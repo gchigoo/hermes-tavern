@@ -362,6 +362,12 @@ def test_help_lists_card_greeting_command():
     assert "/rp card export <card>" in help_text
 
 
+def test_help_lists_preset_export_command():
+    help_text = _build_help_text()
+
+    assert _command_segment_has_literal(help_text, "/rp preset export <preset>")
+
+
 
 class RecordingRuntime:
     def __init__(self):

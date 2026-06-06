@@ -187,6 +187,7 @@ TAVERN_COMMAND_TABLE: dict[str, TavernCommandEntry] = {
             "/rp preset list",
             "/rp preset inspect <preset>",
             "/rp preset use <preset>",
+            "/rp preset export <preset>",
             "/rp preset clear",
         ],
     ),

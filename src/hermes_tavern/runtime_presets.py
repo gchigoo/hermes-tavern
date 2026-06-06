@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 import json
+from pathlib import Path
 from typing import Any
 
 from hermes_tavern.commands import RPCommand
+from hermes_tavern.hermes_home import get_hermes_home
 from hermes_tavern.identity import session_key_from_event
 from hermes_tavern.import_policy import resolve_import_path
 from hermes_tavern.importers.presets import import_preset_file
@@ -25,6 +27,59 @@ def _preset_not_found(ref: str) -> str:
     return f"Preset not found: {ref}"
 
 
+def _coerce_raw_json_object(value: Any) -> dict[str, Any] | None:
+    if isinstance(value, dict):
+        return value
+    if isinstance(value, str):
+        try:
+            parsed = json.loads(value)
+        except (TypeError, ValueError, json.JSONDecodeError):
+            return None
+        return parsed if isinstance(parsed, dict) else None
+    return None
+
+
+def _preset_export_filename(preset_id: Any) -> str:
+    safe = "".join(
+        char if char.isalnum() or char in {"-", "_", "."} else "_"
+        for char in str(preset_id)
+    ).strip("._-")
+    return f"preset_{safe or 'unknown'}.json"
+
+
+def _coerce_prompt_module_payload(module: dict[str, Any]) -> dict[str, Any]:
+    prompt = {
+        "name": module.get("name", ""),
+        "role": module.get("role", ""),
+        "content": module.get("content", ""),
+        "enabled": bool(module.get("enabled", 0)),
+        "position": module.get("position", ""),
+        "insertion_order": module.get("insertion_order", 0),
+    }
+    raw = _coerce_raw_json_object(module.get("raw_json"))
+    if raw is not None:
+        prompt["raw"] = raw
+    return prompt
+
+
+def _normalize_preset_payload(preset: dict[str, Any], modules: list[dict[str, Any]]) -> dict[str, Any]:
+    return {
+        "name": preset.get("name", ""),
+        "source": preset.get("source", ""),
+        "prompts": [_coerce_prompt_module_payload(module) for module in modules],
+    }
+
+
+def _build_preset_export_path(preset_id: Any) -> Path:
+    export_dir = get_hermes_home() / "plugins" / "hermes-tavern" / "exports" / "presets"
+    export_dir.mkdir(parents=True, exist_ok=True)
+    export_path = export_dir / _preset_export_filename(preset_id)
+    export_dir_resolved = export_dir.resolve()
+    if not export_path.resolve().is_relative_to(export_dir_resolved):
+        export_path = export_dir / _preset_export_filename("unknown")
+    return export_path
+
+
 def preset_command(runtime: Any, command: RPCommand, event: Any) -> str:
     subcommand = command.args[0].lower() if command.args else "list"
     if subcommand == "import":
@@ -35,9 +90,11 @@ def preset_command(runtime: Any, command: RPCommand, event: Any) -> str:
         return runtime._preset_inspect(command)
     if subcommand == "use":
         return runtime._preset_use(command, event)
+    if subcommand == "export":
+        return preset_export(runtime, command)
     if subcommand == "clear":
         return preset_clear(runtime, event)
-    return "Usage: /rp preset import <file> | /rp preset list | /rp preset inspect <preset> | /rp preset use <preset> | /rp preset clear"
+    return "Usage: /rp preset import <file> | /rp preset list | /rp preset inspect <preset> | /rp preset use <preset> | /rp preset export <preset> | /rp preset clear"
 
 
 def preset_import(runtime: Any, command: RPCommand, event: Any) -> str:
@@ -146,3 +203,25 @@ def preset_clear(runtime: Any, event: Any) -> str:
         return "No active Hermes Tavern session."
     runtime.store.set_session_preset(session_key, None)
     return "Hermes Tavern preset cleared for this session."
+
+
+def preset_export(runtime: Any, command: RPCommand) -> str:
+    if len(command.args) < 2:
+        return "Usage: /rp preset export <preset>"
+
+    preset_ref = " ".join(command.args[1:]).strip()
+    if not preset_ref:
+        return "Usage: /rp preset export <preset>"
+
+    preset = runtime.store.get_preset(preset_ref)
+    if preset is None:
+        return _preset_not_found(preset_ref)
+
+    payload = _coerce_raw_json_object(preset.get("raw_json"))
+    if payload is None:
+        modules = runtime.store.list_prompt_modules(preset["id"])
+        payload = _normalize_preset_payload(preset, modules)
+
+    export_path = _build_preset_export_path(preset["id"])
+    export_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+    return f'Preset exported as JSON.\nfile: {export_path}\nMEDIA:"{export_path}"'

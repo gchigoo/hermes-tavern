@@ -108,7 +108,7 @@ Expected behavior:
 /rp assets | /rp cards
 /rp card import <file>     # JSON/PNG; WebP/JPEG not supported yet (friendly unsupported-format error)
 /rp card search <query> | /rp card inspect <card> | /rp card export <card> | /rp card use <card> | /rp card greeting <card>
-/rp preset import/list/inspect/use/clear <preset>
+/rp preset import <file> | /rp preset list | /rp preset inspect <preset> | /rp preset use <preset> | /rp preset export <preset> | /rp preset clear
 /rp prompt list/inspect/enable/disable/debug
 /rp lore import/list/inspect/use/clear/enable/disable/test/debug
 /rp lore export <lorebook>

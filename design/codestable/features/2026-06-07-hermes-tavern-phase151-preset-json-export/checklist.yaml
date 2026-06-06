@@ -1,0 +1,205 @@
+doc_type: feature-checklist
+status: implemented
+feature: "2026-06-07-hermes-tavern-phase151-preset-json-export"
+date: "2026-06-07"
+implementation_ready: true
+summary: >
+  IMPLEMENTED - Adds one bounded offline /rp preset export <preset> JSON export
+  surface for existing stored presets, using existing lookup semantics including
+  last, profile-safe export paths, raw JSON preference, normalized fallback rows,
+  generated help/README visibility, and focused tests. S2 acceptance/writeback
+  remains planned.
+tags:
+  - hermes-tavern
+  - preset
+  - offline
+  - export
+  - sillytavern
+implementation_readiness: >
+  IMPLEMENTED - Codex architect created the approved artifact, Codex executor
+  implemented the bounded S1 runtime/help/README/test slice, and the controller
+  reran py_compile, focused, Tavern-wide, full, validator, protected-file, and
+  whitespace gates. S2 acceptance/writeback remains planned.
+steps:
+  - id: S1
+    name: "S1: Implement preset JSON export command"
+    status: implemented
+    description: >
+      Add /rp preset export <preset> under the existing preset command family.
+      Resolve one stored preset with existing store semantics, write one
+      profile-safe UTF-8 JSON file, return file and quoted MEDIA output, update
+      help/README visibility, and add focused offline tests.
+    allowed_files:
+      - src/hermes_tavern/runtime_presets.py
+      - src/hermes_tavern/commands.py
+      - README.md
+      - tests/test_hermes_tavern_runtime_presets.py
+      - tests/test_hermes_tavern_commands.py
+      - tests/test_hermes_tavern_readme_docs.py
+    prohibited_files:
+      - run_agent.py
+      - cli.py
+      - gateway/run.py
+      - src/hermes_tavern/runtime.py
+      - src/hermes_tavern/db.py
+      - src/hermes_tavern/db_novel.py
+      - src/hermes_tavern/prompt.py
+      - src/hermes_tavern/runtime_prompt_modules.py
+      - src/hermes_tavern/model_router.py
+      - src/hermes_tavern/provider_bridge.py
+      - src/hermes_tavern/adapters.py
+      - src/hermes_tavern/runtime_generation.py
+      - "src/hermes_tavern/importers/**"
+      - "plugins/**"
+      - "build/lib/**"
+    exact_scope:
+      - "Add /rp preset export <preset> as a nested preset subcommand."
+      - "Resolve presets with existing TavernStore.get_preset behavior, including last."
+      - "Write one UTF-8 JSON file under get_hermes_home()/plugins/hermes-tavern/exports/presets."
+      - "Prefer stored presets.raw_json when it parses as a JSON object."
+      - "Use a normalized fallback from the existing preset row and prompt_modules rows when raw JSON is unavailable as an object."
+      - 'Return bounded file: and quoted MEDIA:"<path>" output.'
+      - "Update generated help and README Core commands for /rp preset export <preset>."
+      - "Add focused offline tests for raw export, fallback export, last, usage/not-found, quoted paths with spaces, export-directory containment, and no session/message/preset/module mutation."
+      - "Do not change preset import parsing, prompt module semantics, prompt/debug/context-budget, provider/model routing, generation settings application, credentials, content mode, safety, project archive, schema/index/migration code, gateway/core files, plugin files, or build artifacts."
+    verification:
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m py_compile src/hermes_tavern/runtime_presets.py src/hermes_tavern/commands.py tests/test_hermes_tavern_runtime_presets.py tests/test_hermes_tavern_commands.py tests/test_hermes_tavern_readme_docs.py"
+        expected: "passes"
+        actual: "passed in controller on 2026-06-07"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_runtime_presets.py tests/test_hermes_tavern_commands.py tests/test_hermes_tavern_readme_docs.py -q -o 'addopts=' -p no:cacheprovider"
+        expected: "passes"
+        actual: "106 passed in controller on 2026-06-07"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_*.py -q -o 'addopts=' -p no:cacheprovider"
+        expected: "passes"
+        actual: "1089 passed in controller on 2026-06-07"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts=' -p no:cacheprovider"
+        expected: "passes when feasible"
+        actual: "1089 passed in controller on 2026-06-07"
+      - command: "git diff --name-only -- run_agent.py cli.py gateway/run.py src/hermes_tavern/runtime.py src/hermes_tavern/db.py src/hermes_tavern/db_novel.py src/hermes_tavern/prompt.py src/hermes_tavern/runtime_prompt_modules.py src/hermes_tavern/model_router.py src/hermes_tavern/provider_bridge.py src/hermes_tavern/adapters.py src/hermes_tavern/runtime_generation.py src/hermes_tavern/importers plugins build/lib"
+        expected: "empty output"
+        actual: "empty output in controller on 2026-06-07"
+      - command: "git diff --check"
+        expected: "passes"
+        actual: "passed in controller on 2026-06-07"
+      - command: "python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-07-hermes-tavern-phase151-preset-json-export/design.md --require doc_type --require status --require feature"
+        expected: "passes after controller materializes design.md"
+        actual: "passed in controller on 2026-06-07"
+      - command: "python design/codestable/tools/validate-yaml.py --yaml-only --file design/codestable/features/2026-06-07-hermes-tavern-phase151-preset-json-export/checklist.yaml"
+        expected: "passes after controller materializes checklist.yaml"
+        actual: "passed in controller on 2026-06-07"
+    notes:
+      - "Executor JSONL includes one harmless failed patch-file py_compile probe and one initial focused pytest failure before executor self-repair; final executor and controller reruns passed."
+  - id: S2
+    name: "S2: Acceptance and architecture/root-design writeback"
+    status: planned
+    description: >
+      Later tick only. After S1 is implemented and verified, create the acceptance
+      report, finalize design/checklist status, and update current architecture
+      and root design documentation for /rp preset export <preset>.
+    allowed_files:
+      - design/codestable/features/2026-06-07-hermes-tavern-phase151-preset-json-export/design.md
+      - design/codestable/features/2026-06-07-hermes-tavern-phase151-preset-json-export/checklist.yaml
+      - design/codestable/features/2026-06-07-hermes-tavern-phase151-preset-json-export/hermes-tavern-phase151-preset-json-export-acceptance.md
+      - design/codestable/architecture/ARCHITECTURE.md
+      - design/HERMES_TAVERN_DESIGN.md
+    prohibited_files:
+      - README.md
+      - "src/**"
+      - "tests/**"
+      - run_agent.py
+      - cli.py
+      - gateway/run.py
+      - "plugins/**"
+      - "build/lib/**"
+    exact_scope:
+      - "Rerun S1 verification before acceptance."
+      - "Create Phase 151 acceptance only after verification passes."
+      - "Update architecture/root design only for current /rp preset export <preset> behavior."
+      - "Preserve deferred bulk export, preset editing, preset validation, prompt-order semantics, generation settings, provider/model routing, retrieval/vectorization, content-mode, minors/underage, archive import/export, and safety-bypass boundaries."
+      - "Do not edit source, tests, README, plugin files, build artifacts, or protected core files during S2."
+    verification:
+      - command: "python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-07-hermes-tavern-phase151-preset-json-export/design.md --require doc_type --require status --require feature"
+        expected: "passes"
+      - command: "python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-07-hermes-tavern-phase151-preset-json-export/hermes-tavern-phase151-preset-json-export-acceptance.md --require doc_type --require status --require feature"
+        expected: "passes after acceptance report exists"
+      - command: "python design/codestable/tools/validate-yaml.py --yaml-only --file design/codestable/features/2026-06-07-hermes-tavern-phase151-preset-json-export/checklist.yaml"
+        expected: "passes"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_runtime_presets.py tests/test_hermes_tavern_commands.py tests/test_hermes_tavern_readme_docs.py -q -o 'addopts=' -p no:cacheprovider"
+        expected: "passes"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_*.py -q -o 'addopts=' -p no:cacheprovider"
+        expected: "passes"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts=' -p no:cacheprovider"
+        expected: "passes when feasible"
+      - command: "git diff --name-only -- README.md src tests run_agent.py cli.py gateway/run.py plugins build/lib"
+        expected: "empty output during S2"
+      - command: "git diff --check"
+        expected: "passes"
+acceptance:
+  - id: AC1
+    criteria: "/rp preset export <preset> writes one JSON file under the profile-safe presets export directory."
+    status: pending
+  - id: AC2
+    criteria: "The command works without an active RP session and does not create or mutate sessions/messages."
+    status: pending
+  - id: AC3
+    criteria: "The last preset reference resolves through existing preset lookup behavior."
+    status: pending
+  - id: AC4
+    criteria: "Valid stored raw JSON objects are exported unchanged except pretty formatting."
+    status: pending
+  - id: AC5
+    criteria: "Invalid, missing, or non-object raw JSON uses a normalized fallback from preset and prompt-module rows."
+    status: pending
+  - id: AC6
+    criteria: "Returned output includes file: and quoted MEDIA paths, including paths with spaces."
+    status: pending
+  - id: AC7
+    criteria: "Sanitized filenames cannot escape get_hermes_home()/plugins/hermes-tavern/exports/presets."
+    status: pending
+  - id: AC8
+    criteria: "Generated help and README Core commands include /rp preset export <preset>."
+    status: pending
+  - id: AC9
+    criteria: "Preset rows, prompt module rows, sessions, messages, prompt/debug/context-budget behavior, provider/model routing, generation, credentials, content-mode, project archive, schema, importers, minors/underage, and safety-bypass behavior remain unchanged."
+    status: pending
+checks:
+  - id: C1
+    name: "Focused preset export tests"
+    status: completed
+    criteria: "Runtime preset export tests plus command/help and README docs tests pass offline."
+    actual: "py_compile passed and focused tests reported 106 passed in controller on 2026-06-07."
+  - id: C2
+    name: "Tavern-wide pytest"
+    status: completed
+    criteria: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_*.py -q -o 'addopts=' -p no:cacheprovider passes."
+    actual: "1089 passed in controller on 2026-06-07."
+  - id: C3
+    name: "Full pytest"
+    status: completed
+    criteria: "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts=' -p no:cacheprovider passes when feasible."
+    actual: "1089 passed in controller on 2026-06-07."
+  - id: C4
+    name: "Protected-file reverse-scope guard"
+    status: completed
+    criteria: "No protected core, schema, importer, prompt, provider, generation, plugin, build, archive, content-mode, or safety files change."
+    actual: "Protected-file reverse-scope guard returned empty output in controller on 2026-06-07."
+  - id: C5
+    name: "Whitespace and YAML/frontmatter validators"
+    status: completed
+    criteria: "git diff --check and CodeStable validators pass for design/checklist, and later acceptance during S2."
+    actual: "git diff --check plus design/checklist validators passed in controller on 2026-06-07."
+risks:
+  - id: R1
+    risk: "Preset raw JSON shape can differ from normalized module fallback shape."
+    mitigation: "Match Phase 149/150 behavior: prefer preserved raw object; fallback only when raw is unavailable as an object."
+  - id: R2
+    risk: "Exported disabled risky module text could be confused with active prompt behavior."
+    mitigation: "Keep export file-only, never call prompt assembly, never change enabled flags, and verify no prompt/provider/generation behavior changes."
+rollback: >
+  Remove the preset export branch/helpers, help and README literal, and focused
+  tests. No DB migration or stored-data rollback is required.
+notes:
+  - "Architect pass was read-only. No files were edited and no tests were run in this pass."
+  - "S1 is the only implementation slice for this tick. S2 is planned for a later docs/status acceptance writeback tick."
+  - "Codex architect artifact: /tmp/hermes-tavern-architect-phase151-preset-json-export.jsonl"
+  - "Codex executor artifact: /tmp/hermes-tavern-executor-phase151-preset-json-export.jsonl"
