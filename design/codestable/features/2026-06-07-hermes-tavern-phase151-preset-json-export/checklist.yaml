@@ -1,14 +1,14 @@
 doc_type: feature-checklist
-status: implemented
+status: accepted
 feature: "2026-06-07-hermes-tavern-phase151-preset-json-export"
 date: "2026-06-07"
 implementation_ready: true
 summary: >
-  IMPLEMENTED - Adds one bounded offline /rp preset export <preset> JSON export
+  ACCEPTED - Adds one bounded offline /rp preset export <preset> JSON export
   surface for existing stored presets, using existing lookup semantics including
   last, profile-safe export paths, raw JSON preference, normalized fallback rows,
-  generated help/README visibility, and focused tests. S2 acceptance/writeback
-  remains planned.
+  generated help/README visibility, and focused tests. S2 acceptance and
+  architecture/root-design writeback completed.
 tags:
   - hermes-tavern
   - preset
@@ -91,7 +91,7 @@ steps:
       - "Executor JSONL includes one harmless failed patch-file py_compile probe and one initial focused pytest failure before executor self-repair; final executor and controller reruns passed."
   - id: S2
     name: "S2: Acceptance and architecture/root-design writeback"
-    status: planned
+    status: completed
     description: >
       Later tick only. After S1 is implemented and verified, create the acceptance
       report, finalize design/checklist status, and update current architecture
@@ -137,31 +137,31 @@ steps:
 acceptance:
   - id: AC1
     criteria: "/rp preset export <preset> writes one JSON file under the profile-safe presets export directory."
-    status: pending
+    status: completed
   - id: AC2
     criteria: "The command works without an active RP session and does not create or mutate sessions/messages."
-    status: pending
+    status: completed
   - id: AC3
     criteria: "The last preset reference resolves through existing preset lookup behavior."
-    status: pending
+    status: completed
   - id: AC4
     criteria: "Valid stored raw JSON objects are exported unchanged except pretty formatting."
-    status: pending
+    status: completed
   - id: AC5
     criteria: "Invalid, missing, or non-object raw JSON uses a normalized fallback from preset and prompt-module rows."
-    status: pending
+    status: completed
   - id: AC6
     criteria: "Returned output includes file: and quoted MEDIA paths, including paths with spaces."
-    status: pending
+    status: completed
   - id: AC7
     criteria: "Sanitized filenames cannot escape get_hermes_home()/plugins/hermes-tavern/exports/presets."
-    status: pending
+    status: completed
   - id: AC8
     criteria: "Generated help and README Core commands include /rp preset export <preset>."
-    status: pending
+    status: completed
   - id: AC9
     criteria: "Preset rows, prompt module rows, sessions, messages, prompt/debug/context-budget behavior, provider/model routing, generation, credentials, content-mode, project archive, schema, importers, minors/underage, and safety-bypass behavior remain unchanged."
-    status: pending
+    status: completed
 checks:
   - id: C1
     name: "Focused preset export tests"

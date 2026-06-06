@@ -410,6 +410,8 @@ Commands:
 ```text
 /rp preset import <attachment|url|path>
 /rp preset list
+/rp preset inspect <preset>
+/rp preset export <preset>
 /rp preset use <name>
 /rp prompt list
 /rp prompt inspect <module>
@@ -487,6 +489,19 @@ Phase 150 adds `/rp lore export <lorebook>`:
   normalized ST-compatible fallback payload from stored lorebook + lorebook-entry rows;
 - does not mutate lorebook rows, lorebook entries, sessions, or messages;
 - does not change schema, importers, lore matching, regex guards, prompt/debug,
+  context-budget, provider/model routing, generation, retrieval/vectorization,
+  credentials, content-mode, minors/underage handling, or safety-bypass behavior.
+
+Phase 151 adds `/rp preset export <preset>`:
+
+- resolves through existing `TavernStore.get_preset(...)` including `last`;
+- writes one UTF-8 JSON file under
+  `get_hermes_home()/plugins/hermes-tavern/exports/presets` with quoted
+  `MEDIA:"<path>"` marker output;
+- prefers `presets.raw_json` when valid JSON object and otherwise uses
+  normalized fallback payload from stored preset + prompt-module rows;
+- does not mutate preset rows, prompt modules, sessions, or messages;
+- does not change schema, importers, preset classification, prompt/debug,
   context-budget, provider/model routing, generation, retrieval/vectorization,
   credentials, content-mode, minors/underage handling, or safety-bypass behavior.
 
@@ -1510,7 +1525,7 @@ ST preset JSON
 ST lorebook/world info JSON
 ```
 
-Hermes Tavern native project archives are deferred; the current Phase 121–150
+Hermes Tavern native project archives are deferred; the current Phase 121–151
 implementation provides Markdown project export, single-card JSON export, and single-lorebook JSON export, not
 project/novel import.
 Relationship-state, character-state, location, organization, plot-thread, and
@@ -1536,15 +1551,16 @@ Required exporters:
 ```text
 /rp card export <card> card export JSON
 /rp lore export <lorebook> lorebook export JSON
-preset export JSON/native
+/rp preset export <preset> preset export JSON
 chat export JSONL
 novel export Markdown
 ```
 
-Project archive ZIP remains a future exporter/importer; current Phase 121–150 writes
+Project archive ZIP remains a future exporter/importer; current Phase 121–151 writes
 local Markdown via `/rp project export [id]`, single-card JSON via
-`/rp card export <card>`, and single-lorebook JSON via
-`/rp lore export <lorebook>`. PNG card exports, bulk card export, project archive
+`/rp card export <card>`, single-lorebook JSON via
+`/rp lore export <lorebook>`, and single-preset JSON via
+`/rp preset export <preset>`. PNG card exports, bulk card export, project archive
 ZIP/import, card editing/deletion/merge tooling, provider/generation side effects,
 retrieval/vectorization coupling, content-mode/minors handling, and safety-bypass
 behavior remain deferred to later phases.

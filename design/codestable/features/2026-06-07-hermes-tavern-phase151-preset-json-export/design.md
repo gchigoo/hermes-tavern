@@ -1,6 +1,6 @@
 ---
 doc_type: feature-design
-status: implemented
+status: accepted
 feature: "2026-06-07-hermes-tavern-phase151-preset-json-export"
 date: "2026-06-07"
 summary: >
