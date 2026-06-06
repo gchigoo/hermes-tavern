@@ -1,10 +1,10 @@
 ---
 doc_type: feature-design
 feature: "2026-06-06-hermes-tavern-phase147-project-inspect-alias"
-status: implemented
+status: accepted
 date: "2026-06-06"
 summary: >
-  Phase 147 plans a read-only /rp project inspect <project-id> alias for existing
+  Phase 147 closes a read-only /rp project inspect <project-id> alias for existing
   novel project metadata, preserving /rp project info behavior, schema, export,
   prompt/provider/generation, retrieval/vectorization, credentials, protected
   core files, minors/underage boundaries, and safety behavior.
@@ -28,8 +28,7 @@ scene rows. Project metadata already has `/rp project info <id>` backed by
 `inspect` spelling. This leaves project commands less consistent than adjacent
 novel entities while requiring no new persistence or provider behavior.
 
-The S1 implementation is now complete and controller-verified. S2 acceptance /
-architecture writeback remains planned as the next bounded docs/status-only turn.
+The S1 implementation and S2 acceptance/writeback are complete and controller-verified.
 
 ## Scope
 
@@ -131,10 +130,18 @@ extension and must not touch `src/hermes_tavern/runtime.py`.
 
 ## S2 Acceptance / Writeback
 
-S2 is controller-owned after S1 verification. It may update only the Phase 147
-CodeStable artifacts plus architecture/root design docs to describe the current
-read-only project inspect alias. S2 must not edit source, tests, README, plugin
-shims, build artifacts, or protected core files.
+S2 is accepted and controller-verified.
+
+Controller verification for this pass reran py_compile, focused pytest, Tavern-wide
+pytest, full pytest, CodeStable validators, protected-path guards, stale/current
+guards, and git diff --check. S2 updated only the Phase 147 CodeStable artifacts
+plus architecture/root design docs to describe the current read-only project inspect
+alias; it did not edit source, tests, README, plugin shims, build artifacts, or
+protected core files.
+
+Project inspect is documented as a read-only command alias over existing project
+info/getter behavior and is bounded to project metadata and rendering paths already
+used by `/rp project info <id>`.
 
 ## S1 Controller Verification
 
@@ -148,7 +155,22 @@ Completed on 2026-06-06 by Codex executor with Hermes controller verification.
 - Protected-file diff guard for core/DB/prompt/provider/importer/plugin/build paths returned empty.
 - `git diff --check` passed.
 
-Architecture/root design writeback should add only:
+## S2 Controller Verification
+
+Completed on 2026-06-06 by Codex architect/executor with Hermes controller verification.
+
+- Codex architect artifact: `/tmp/hermes-tavern-architect-phase147-s2.jsonl` — `RESULT: S2_ACCEPTANCE_ARTIFACT`, `PROCEED=true`, `BLOCKERS=none`.
+- Codex executor artifact: `/tmp/hermes-tavern-executor-phase147-s2.jsonl` — `RESULT: EXECUTOR_DRAFTED_S2`, `BLOCKERS=none`.
+- `PYTHONDONTWRITEBYTECODE=1 python -m py_compile src/hermes_tavern/runtime_novel.py src/hermes_tavern/commands.py tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_commands.py tests/test_hermes_tavern_readme_docs.py` — passed.
+- `PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_commands.py tests/test_hermes_tavern_readme_docs.py -q -o 'addopts=' -p no:cacheprovider` — 288 passed in 10.65s.
+- `PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_*.py -q -o 'addopts=' -p no:cacheprovider` — 1058 passed in 50.21s.
+- `PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts=' -p no:cacheprovider` — 1058 passed in 53.28s.
+- Phase 147 design/checklist/acceptance validators passed after final status patch.
+- Protected S2 scope guard for README/source/tests/core/plugin/build paths returned empty.
+- Stale/current guard passed after currentizing architecture/root design through Phase 147.
+- `git diff --check` passed.
+
+Architecture/root design writeback added only:
 
 - `/rp project inspect <project-id>` in current command-surface lists.
 - A note that project inspection reads existing project metadata through the current

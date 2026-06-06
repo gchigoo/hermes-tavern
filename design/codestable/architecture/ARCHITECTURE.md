@@ -152,6 +152,11 @@ importers/
   prompt/module, provider/model, generation, retrieval/vectorization, archive/import,
   credential, content-mode, minors/underage, safety behavior, or deferred scene-editing
   tooling changes.
+- Phase 147: Project Inspect Alias (`/rp project inspect <project-id>`) reads one
+  existing `novel_projects` row by id via the existing `/rp project info <id>`
+  rendering/getter path; no schema, project mutation, export, prompt/module,
+  provider/model, generation, retrieval/vectorization, credential, content-mode,
+  minors/underage, safety behavior, or deferred project lifecycle/tooling changes.
 
 ### Plugin flow
 
@@ -192,7 +197,7 @@ from vectorization/retrieval, provider/model routing, content mode,
 credentials, automation, summarization, and generation; they are visible only
 through command output and Markdown export.
 
-### /rp command surface (current through Phase 146)
+### /rp command surface (current through Phase 147)
 
 ```
 /rp help | status | assets
@@ -215,6 +220,7 @@ through command output and Markdown export.
 /rp content mode [safe|adult-fiction]
 /rp model status | profiles | seed apiyi | use <profile> | mode [fake|hermes] | live [status|confirm|off] | test
 /rp project create/list/info/set/export
+/rp project inspect <project-id>
 /rp project style [project-id]
 /rp project style inspect [project-id]
 /rp project style set [project-id] <text>
@@ -292,7 +298,7 @@ through command output and Markdown export.
 /rp relationship delete <relationship-id>
 ```
 
-### DB schema (current through Phase 146)
+### DB schema (current through Phase 147; unchanged by Phase 147)
 
 ```sql
 cards(id, name, data_json, source_path, created_at)
@@ -420,6 +426,12 @@ Phase 146 uses existing `get_scene(scene_id)` as a read-only helper for
 scene mutation, scene start/linking, export, prompt/module selection, provider/model,
 generation, retrieval/vectorization, archive/import, credential, content-mode,
 minors/underage, or safety side effects.
+Phase 147 uses the existing `/rp project info <id>` rendering/getter path for
+`/rp project inspect <project-id>`. It reads one existing `novel_projects` row via
+`get_project(project_id)`, includes current brief/outline preview helpers when
+present, is command-visible only, and has no schema, project mutation, export,
+prompt/module selection, provider/model, generation, retrieval/vectorization,
+credential, content-mode, minors/underage, or safety side effects.
 
 Phase 131 adds `novel_character_states` as project-scoped character metadata.
 Character-state rows are managed through `/rp character state ...` and emitted as
@@ -530,4 +542,5 @@ These phases do not change schema or core prompt/generation assembly.
 - **Phase 144 timeline inspect boundary**: `/rp timeline inspect <timeline-id>` is command-visible metadata inspection only for existing `novel_timeline` rows. It keeps timeline schema, ordering, ordering-based export, prompt/module coupling, provider/model routing, generation, retrieval/vectorization, archive/import, credential persistence, automatic extraction, and safety bypass unchanged and deferred.
 - **Phase 145 chapter inspect boundary**: `/rp chapter inspect <chapter-id>` is command-visible metadata inspection only for existing `novel_chapters` rows. It keeps chapter schema, ordering, summary storage/mutation, markdown export, prompt/provider/generation/retrieval/vectorization coupling, archive/import, credential persistence, automatic extraction, and safety bypass unchanged and deferred.
 - **Phase 146 scene inspect boundary**: `/rp scene inspect <scene-id>` is command-visible metadata inspection only for existing `novel_scenes` rows. It keeps scene schema, ordering, summary mutation, scene mutation, scene start/linking, markdown export, prompt/provider/generation/retrieval/vectorization coupling, archive/import, credential persistence, content-mode behavior, minors/underage handling, automatic extraction, and safety bypass unchanged and deferred.
+- **Phase 147 project inspect boundary**: `/rp project inspect <project-id>` is command-visible metadata inspection only for existing `novel_projects` rows. It reuses existing `/rp project info <id>` rendering/getter behavior (`get_project(project_id)` and existing brief/outline getters for the preview blocks) and keeps project schema/mutations/export, prompt/provider/generation coupling, retrieval/vectorization, credentials, content-mode, minors/underage handling, and safety-bypass behavior unchanged and deferred.
 - **Tavern lore regex complexity guard**: lorebook regex keys are screened locally before matching. Entries with patterns longer than 256 characters or nested quantified groups (for example `(a+)+`, `(.+)*`, `([a-z]+){2,}`) are excluded with bounded reasons (`regex rejected: ...`), preserving raw imported lore data while preventing unbounded local matching behavior.

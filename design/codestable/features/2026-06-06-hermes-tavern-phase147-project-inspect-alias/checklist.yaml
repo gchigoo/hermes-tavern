@@ -1,21 +1,38 @@
 doc_type: feature-checklist
 feature: "2026-06-06-hermes-tavern-phase147-project-inspect-alias"
 date: "2026-06-06"
-status: implemented
+status: accepted
 summary: >
-  IMPLEMENTED - Phase 147 S1 adds a read-only /rp project inspect <project-id>
-  alias under the existing project command family, preserving /rp project info,
-  schema, export, prompt/provider/generation, retrieval/vectorization,
-  credentials, protected core files, minors/underage boundaries, and safety behavior.
-  S2 acceptance/writeback remains planned.
+  ACCEPTED - Phase 147 closes the read-only /rp project inspect <project-id>
+  alias under the existing project command family. S1 added the nested alias,
+  generated help and README visibility, and focused tests while preserving
+  /rp project info behavior. S2 adds the feature-acceptance report plus
+  architecture/root-design writeback. Controller verification passed for
+  py_compile, focused/Tavern-wide/full pytest, CodeStable validators,
+  protected scope guards, stale/current guards, and git diff --check.
 tags: [hermes-tavern, project, command-surface, read-only, offline]
 implementation_readiness: >
-  IMPLEMENTED - S1 implementation and controller verification completed on
-  2026-06-06. S2 acceptance/writeback remains planned.
+  ACCEPTED - Codex architect produced the Phase 147 S2 docs/status acceptance
+  artifact and Codex executor drafted only allowed S2 docs/status/writeback files.
+  The controller inspected and patched the S2 docs, verified the diff stayed
+  within allowed files, reran py_compile, focused pytest, Tavern-wide pytest,
+  full pytest, CodeStable validators, stale/current guards, protected scope
+  guards, and git diff --check successfully, then finalized S2 status as accepted.
 steps:
   - id: S1
     name: "S1: Add read-only project inspect alias"
-    status: implemented
+    status: completed
+    completed_at: "2026-06-06"
+    result: >
+      IMPLEMENTED - Added /rp project inspect <project-id> under the existing
+      project command family in runtime_novel.py, delegating to the existing
+      /rp project info <id> rendering/getter path. The command preserves project
+      info behavior, returns usage for missing/malformed/non-positive/extra
+      arguments, returns bounded missing-row output, updates generated help and
+      README visibility, and includes focused runtime/help/README tests. No
+      DB/schema, runtime.py, prompt/provider/generation, retrieval/vectorization,
+      export, credential, content-mode, minors/underage, plugin/build, or safety
+      behavior changes were made.
     description: >
       Add /rp project inspect <project-id> under the existing project command family,
       generated help and README visibility, and focused offline tests. Reuse the
@@ -61,16 +78,31 @@ steps:
       - "Do not mark acceptance/final statuses as accepted or passed during S1."
     verification:
       - command: "PYTHONDONTWRITEBYTECODE=1 python -m py_compile src/hermes_tavern/runtime_novel.py src/hermes_tavern/commands.py tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_commands.py tests/test_hermes_tavern_readme_docs.py"
-        result: "passed: controller py_compile completed"
+        result: "passed (controller rerun after S2 docs/writeback; no output)"
       - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_commands.py tests/test_hermes_tavern_readme_docs.py -q -o 'addopts=' -p no:cacheprovider"
-        result: "passed: 288 passed"
+        result: "288 passed in 10.65s (controller rerun after S2 docs/writeback)"
       - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_*.py -q -o 'addopts=' -p no:cacheprovider"
-        result: "passed: 1058 passed"
+        result: "1058 passed in 50.21s (controller rerun after S2 docs/writeback)"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts=' -p no:cacheprovider"
+        result: "1058 passed in 53.28s (controller rerun after S2 docs/writeback)"
+      - command: "python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-06-hermes-tavern-phase147-project-inspect-alias/design.md --require doc_type --require status --require feature"
+        result: "passed after final controller status patch"
+      - command: "python design/codestable/tools/validate-yaml.py --yaml-only --file design/codestable/features/2026-06-06-hermes-tavern-phase147-project-inspect-alias/checklist.yaml"
+        result: "passed after final controller status patch"
       - command: "git diff --name-only -- run_agent.py cli.py gateway/run.py src/hermes_tavern/runtime.py src/hermes_tavern/db.py src/hermes_tavern/db_novel.py src/hermes_tavern/prompt.py src/hermes_tavern/runtime_prompt_modules.py src/hermes_tavern/model_router.py src/hermes_tavern/provider_bridge.py src/hermes_tavern/adapters.py src/hermes_tavern/runtime_generation.py src/hermes_tavern/importers plugins build/lib"
-        result: "passed: empty protected-file diff"
+        result: "passed; empty output for protected/prohibited tracked paths"
+      - command: "git diff --check"
+        result: "passed"
   - id: S2
     name: "S2: Verify and accept project inspect alias"
-    status: planned
+    status: completed
+    completed_at: "2026-06-06"
+    result: >
+      ACCEPTED - Created the Phase 147 acceptance report, currentized architecture
+      and root design docs for /rp project inspect <project-id>, preserved source/tests/
+      README/protected paths, and finalized checklist/design status after controller
+      reran py_compile, focused pytest, Tavern-wide pytest, full pytest, CodeStable
+      validators, stale/current guards, protected scope guards, and git diff --check.
     description: >
       Controller-owned acceptance/writeback after S1. Rerun focused, Tavern-wide,
       and full verification; create the acceptance report; update checklist/design
@@ -100,62 +132,89 @@ steps:
       - "Do not edit source, tests, README, plugin shims, or build artifacts during S2."
     verification:
       - command: "PYTHONDONTWRITEBYTECODE=1 python -m py_compile src/hermes_tavern/runtime_novel.py src/hermes_tavern/commands.py tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_commands.py tests/test_hermes_tavern_readme_docs.py"
-        result: "planned"
+        result: "passed (controller rerun; no output)"
       - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_commands.py tests/test_hermes_tavern_readme_docs.py -q -o 'addopts=' -p no:cacheprovider"
-        result: "planned"
+        result: "288 passed in 10.65s (controller rerun)"
       - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_*.py -q -o 'addopts=' -p no:cacheprovider"
-        result: "planned"
+        result: "1058 passed in 50.21s (controller rerun)"
       - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts=' -p no:cacheprovider"
-        result: "planned"
+        result: "1058 passed in 53.28s (controller rerun)"
       - command: "python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-06-hermes-tavern-phase147-project-inspect-alias/design.md --require doc_type --require status --require feature"
-        result: "planned"
+        result: "passed after final status patch"
       - command: "python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-06-hermes-tavern-phase147-project-inspect-alias/hermes-tavern-phase147-project-inspect-alias-acceptance.md --require doc_type --require status --require feature"
-        result: "planned"
+        result: "passed after final status patch"
       - command: "python design/codestable/tools/validate-yaml.py --yaml-only --file design/codestable/features/2026-06-06-hermes-tavern-phase147-project-inspect-alias/checklist.yaml"
-        result: "planned"
+        result: "passed after final status patch"
       - command: "git diff --name-only -- README.md src tests run_agent.py cli.py gateway/run.py plugins build/lib"
-        result: "planned"
+        result: "passed; empty output during S2"
       - command: "git diff --check"
-        result: "planned"
+        result: "passed"
 acceptance:
   - id: AC1
     criteria: "/rp project inspect <project-id> returns existing project metadata."
-    status: implemented
+    status: completed
+    completed_at: "2026-06-06"
+    result: "passed; focused runtime parity test proves inspect output equals project info output for the same project row"
   - id: AC2
     criteria: "/rp project info <id> remains supported and behavior-compatible."
-    status: implemented
+    status: completed
+    completed_at: "2026-06-06"
+    result: "passed; inspect delegates to project_info and focused/Tavern-wide/full tests remain green"
   - id: AC3
     criteria: "Malformed, missing, non-positive, and extra inspect arguments return bounded project usage output."
-    status: implemented
+    status: completed
+    completed_at: "2026-06-06"
+    result: "passed; focused runtime parametrized tests cover usage output"
   - id: AC4
     criteria: "Missing project rows return No novel project found: <id> without exceptions."
-    status: implemented
+    status: completed
+    completed_at: "2026-06-06"
+    result: "passed; focused runtime test covers missing project response"
   - id: AC5
     criteria: "Generated help and README Core commands include /rp project inspect <project-id>."
-    status: implemented
+    status: completed
+    completed_at: "2026-06-06"
+    result: "passed; command-table/help and README docs tests cover /rp project inspect <project-id>"
   - id: AC6
     criteria: "No DB/schema, protected core/runtime.py, prompt/provider/generation, retrieval/vectorization, archive/import/export ZIP, credential, content-mode, plugin, build, minors/underage, or safety behavior changes occur."
-    status: implemented
+    status: completed
+    completed_at: "2026-06-06"
+    result: "passed; S2 diff stayed within docs/status files and protected-path guard was empty"
 checks:
   - id: C1
     name: "Nested command route"
-    status: implemented
+    status: completed
+    completed_at: "2026-06-06"
+    result: "passed; /rp project inspect routes through existing project_command and no runtime.py shim was added"
     criteria: "The inspect alias routes through the existing project family and does not add a new top-level command or runtime.py shim."
   - id: C2
     name: "Read-only store use"
-    status: implemented
+    status: completed
+    completed_at: "2026-06-06"
+    result: "passed; implementation reuses project_info/get_project plus brief/outline preview getters and db/db_novel/schema files are unchanged"
     criteria: "The implementation uses existing project info/getter behavior and does not modify schema, migrations, db.py, or db_novel.py."
   - id: C3
     name: "Help and README visibility"
-    status: implemented
+    status: completed
+    completed_at: "2026-06-06"
+    result: "passed; generated help and README expose /rp project inspect <project-id>"
     criteria: "Generated help and README expose /rp project inspect <project-id> without stale or conflicting project command text."
   - id: C4
     name: "Adjacent behavior preservation"
-    status: implemented
+    status: completed
+    completed_at: "2026-06-06"
+    result: "passed; focused/Tavern-wide/full tests remain green, including existing project command families"
     criteria: "Existing project create/list/info/set/export/style/brief/outline/revision behavior remains covered and unchanged."
   - id: C5
     name: "Offline verification"
-    status: implemented
-    criteria: "Focused, Tavern-wide, and full offline tests ran with -o 'addopts=' and no cacheprovider after S1 implementation; S2 will rerun the relevant gates before final acceptance."
+    status: completed
+    completed_at: "2026-06-06"
+    result: "passed; controller reran py_compile, focused tests (288 passed), Tavern-wide tests (1058 passed), full pytest (1058 passed), validators, protected-path guard, stale/current guard, and git diff --check"
+    criteria: "Focused, Tavern-wide, and full offline tests ran with -o 'addopts=' and no cacheprovider after S1 implementation and after S2 docs/writeback."
+verification_notes: |
+  - Codex architect S2 artifact: /tmp/hermes-tavern-architect-phase147-s2.jsonl (RESULT: S2_ACCEPTANCE_ARTIFACT; PROCEED=true; BLOCKERS=none).
+  - Codex executor S2 artifact: /tmp/hermes-tavern-executor-phase147-s2.jsonl (RESULT: EXECUTOR_DRAFTED_S2; BLOCKERS=none). Executor had one expected failed read of the not-yet-created acceptance report and recovered checklist apply_patch context misses before producing the final docs/status draft.
+  - Controller reran py_compile, focused pytest, Tavern-wide pytest, full pytest, validators, protected scope guard, stale/current guard, and git diff --check before finalizing S2.
 notes:
-  - "2026-06-06 S1: Codex executor implemented the nested project inspect alias in allowed files only; controller reran focused, Tavern-wide, and full pytest gates plus validators, protected-file diff guard, and git diff --check. S2 acceptance/writeback remains planned."
+  - "2026-06-06 S1: Codex executor implemented the nested project inspect alias in allowed files only; controller reran focused, Tavern-wide, and full pytest gates plus validators, protected-file diff guard, and git diff --check."
+  - "2026-06-06 S2: Codex architect selected the docs/status acceptance/writeback closeout; Codex executor drafted only allowed S2 files; controller verified and finalized acceptance."

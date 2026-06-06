@@ -584,6 +584,7 @@ Commands:
 /rp project info <id>
 /rp project set <id>
 /rp project export [id]
+/rp project inspect <project-id>
 /rp project style [project-id]
 /rp project style inspect [project-id]
 /rp project style set [project-id] <text>
@@ -672,6 +673,13 @@ Phase 146 adds `/rp scene inspect <scene-id>` as the read-only scene inspection
 surface for one existing `novel_scenes` row by id. It uses the existing
 `runtime.store.get_scene(scene_id)` helper, which returns either one existing row
 or `None`.
+Phase 147 adds `/rp project inspect <project-id>` as the read-only project
+inspection surface for one existing `novel_projects` row by id. It reuses the
+existing `/rp project info <id>` path (`get_project(project_id)` plus
+existing brief/outline getters used for preview blocks), and does not change
+schema, project mutation, export, prompt/module coupling, provider/model routing,
+generation, retrieval/vectorization, credential persistence, content mode,
+minors/underage behavior, or safety-bypass behavior.
 
 Phase 144 current behavior adds `/rp timeline inspect <timeline-id>` as the read-only
 timeline inspection surface for one existing `novel_timeline` row by id. This phase
@@ -1085,6 +1093,7 @@ relationship label rename is current metadata.
 
 ```text
 /rp project create/list/info/set/export
+/rp project inspect <project-id>
 /rp project style [project-id]
 /rp project style inspect [project-id]
 /rp project style set [project-id] <text>
@@ -1370,6 +1379,11 @@ It returns one existing row or `None` and does not add schema, index, table,
 ordering, summary mutation, scene mutation, scene start/linking, export, prompt,
 provider/model, generation, retrieval/vectorization, credential, content-mode,
 minors/underage, or safety behavior.
+Phase 147 adds read-only project inspection over existing `novel_projects` rows via
+existing `/rp project info <id>` rendering/getter reuse (`get_project(project_id)` plus brief/outline preview helpers). It does not change schema,
+project mutation, project export behavior, prompt/module coupling, provider/model
+routing, generation, retrieval/vectorization, credentials, content-mode,
+minors/underage handling, or safety-bypass behavior.
 
 Current character-state metadata table:
 `novel_character_states(id, project_id, label, state_text, created_at, updated_at)`,
@@ -1453,7 +1467,7 @@ ST preset JSON
 ST lorebook/world info JSON
 ```
 
-Hermes Tavern native project archives are deferred; the current Phase 121–146
+Hermes Tavern native project archives are deferred; the current Phase 121–147
 implementation provides Markdown export only, not project/novel import.
 Relationship-state, character-state, location, organization, plot-thread, and
 style-sample rows, plus revision-note and scene-beat rows, remain local metadata
@@ -1483,7 +1497,7 @@ chat export JSONL
 novel export Markdown
 ```
 
-Project archive ZIP remains a future exporter/importer; current Phase 121–146 writes
+Project archive ZIP remains a future exporter/importer; current Phase 121–147 writes
 local Markdown via `/rp project export [id]`.
 Project Brief and Project Outline are exported as optional top-level `## Project Brief`
 and `## Outline` sections after `## Summary` when non-empty. Project style guides
