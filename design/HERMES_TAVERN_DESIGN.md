@@ -1134,7 +1134,7 @@ relationship label rename is current metadata.
 /rp project revision inspect <note-id>
 /rp project revision update <note-id> <note...>
 /rp project revision delete <note-id>
-/rp canon add/list/group
+/rp canon add/list/group | /rp canon inspect <canon-id>
 /rp timeline add/list
 ```
 
@@ -1185,11 +1185,14 @@ Commands:
 /rp canon add <project-id> <title> <content>
 /rp canon list [project-id] [group]
 /rp canon group [project-id] <group>
+/rp canon inspect <canon-id>
 ```
 
-Canon check/correlation tools are deferred; only add/list/group are included in Phase 9.
-Future canon commands from the original vision remain deferred: `/rp canon check`,
-`/rp canon conflict`, and `/rp canon pin <fact>`.
+Canon check/correlation tools are deferred. Add/list/group are Phase 9, and
+`/rp canon inspect <canon-id>` is now the current Phase 143 read-only inspection
+surface over existing `novel_canon` rows. Future canon commands from the original
+vision remain deferred: `/rp canon check`, `/rp canon conflict`, and
+`/rp canon pin <fact>`.
 
 Cross-cutting deferred novel constraints remain explicit in this slice:
 relationship graph/aliases/merge-split/automatic extraction, project archive
