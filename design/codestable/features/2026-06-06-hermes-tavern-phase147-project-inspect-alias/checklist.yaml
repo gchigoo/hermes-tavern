@@ -1,0 +1,159 @@
+doc_type: feature-checklist
+feature: "2026-06-06-hermes-tavern-phase147-project-inspect-alias"
+date: "2026-06-06"
+status: planned
+summary: >
+  PLANNED - Phase 147 adds a read-only /rp project inspect <project-id>
+  alias under the existing project command family, preserving /rp project info,
+  schema, export, prompt/provider/generation, retrieval/vectorization,
+  credentials, protected core files, minors/underage boundaries, and safety behavior.
+tags: [hermes-tavern, project, command-surface, read-only, offline]
+implementation_readiness: >
+  PLANNED - This cron tick writes design/checklist artifacts only. Implementation
+  requires a later S1 executor turn followed by controller-owned S2 acceptance/writeback.
+steps:
+  - id: S1
+    name: "S1: Add read-only project inspect alias"
+    status: planned
+    description: >
+      Add /rp project inspect <project-id> under the existing project command family,
+      generated help and README visibility, and focused offline tests. Reuse the
+      existing project info/getter behavior and avoid schema or DB code changes.
+    allowed_files:
+      - src/hermes_tavern/runtime_novel.py
+      - src/hermes_tavern/commands.py
+      - README.md
+      - tests/test_hermes_tavern_novel_runtime.py
+      - tests/test_hermes_tavern_commands.py
+      - tests/test_hermes_tavern_readme_docs.py
+    prohibited_files:
+      - run_agent.py
+      - cli.py
+      - gateway/run.py
+      - src/hermes_tavern/runtime.py
+      - src/hermes_tavern/db.py
+      - src/hermes_tavern/db_novel.py
+      - src/hermes_tavern/prompt.py
+      - src/hermes_tavern/runtime_prompt_modules.py
+      - src/hermes_tavern/model_router.py
+      - src/hermes_tavern/provider_bridge.py
+      - src/hermes_tavern/adapters.py
+      - src/hermes_tavern/runtime_generation.py
+      - "src/hermes_tavern/importers/**"
+      - "plugins/**"
+      - "build/lib/**"
+      - design/HERMES_TAVERN_DESIGN.md
+      - design/codestable/architecture/ARCHITECTURE.md
+    exact_scope:
+      - "Add /rp project inspect <project-id> under runtime_novel.project_command."
+      - "Reuse the existing project info/getter rendering path where practical."
+      - "Keep /rp project info <id> supported and behavior-compatible."
+      - "Update project usage text to include /rp project inspect <project-id>."
+      - "Return usage for missing, malformed, non-positive, or extra inspect arguments."
+      - "Return No novel project found: <id> for missing project rows."
+      - "Add the inspect literal to src/hermes_tavern/commands.py generated help."
+      - "Add the inspect literal to README Core commands."
+      - "Add focused runtime/help/README tests."
+      - "Do not alter novel_projects schema, migrations, indexes, get_project behavior, list_projects behavior, create_project behavior, project export behavior, project style/brief/outline behavior, or Markdown export behavior."
+      - "Do not add project update/delete, archive ZIP/import/export expansion, cloud/collaboration, graph, automatic extraction, vectorization, provider/model routing, generation, image/TTS calls, credential persistence, prompt/debug/context-budget injection, content-mode behavior, minors/underage behavior, or safety-bypass behavior."
+      - "Do not edit src/hermes_tavern/runtime.py."
+      - "Do not mark acceptance/final statuses as accepted or passed during S1."
+    verification:
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m py_compile src/hermes_tavern/runtime_novel.py src/hermes_tavern/commands.py tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_commands.py tests/test_hermes_tavern_readme_docs.py"
+        result: "planned"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_commands.py tests/test_hermes_tavern_readme_docs.py -q -o 'addopts=' -p no:cacheprovider"
+        result: "planned"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_*.py -q -o 'addopts=' -p no:cacheprovider"
+        result: "planned"
+      - command: "git diff --name-only -- run_agent.py cli.py gateway/run.py src/hermes_tavern/runtime.py src/hermes_tavern/db.py src/hermes_tavern/db_novel.py src/hermes_tavern/prompt.py src/hermes_tavern/runtime_prompt_modules.py src/hermes_tavern/model_router.py src/hermes_tavern/provider_bridge.py src/hermes_tavern/adapters.py src/hermes_tavern/runtime_generation.py src/hermes_tavern/importers plugins build/lib"
+        result: "planned"
+  - id: S2
+    name: "S2: Verify and accept project inspect alias"
+    status: planned
+    description: >
+      Controller-owned acceptance/writeback after S1. Rerun focused, Tavern-wide,
+      and full verification; create the acceptance report; update checklist/design
+      status only after verification; and currentize architecture/root-design docs
+      for the read-only project inspect alias.
+    allowed_files:
+      - design/codestable/features/2026-06-06-hermes-tavern-phase147-project-inspect-alias/design.md
+      - design/codestable/features/2026-06-06-hermes-tavern-phase147-project-inspect-alias/checklist.yaml
+      - design/codestable/features/2026-06-06-hermes-tavern-phase147-project-inspect-alias/hermes-tavern-phase147-project-inspect-alias-acceptance.md
+      - design/codestable/architecture/ARCHITECTURE.md
+      - design/HERMES_TAVERN_DESIGN.md
+    prohibited_files:
+      - README.md
+      - "src/**"
+      - "tests/**"
+      - run_agent.py
+      - cli.py
+      - gateway/run.py
+      - "plugins/**"
+      - "build/lib/**"
+    exact_scope:
+      - "Rerun S1 verification after implementation."
+      - "Create a Phase 147 acceptance report only after verification."
+      - "Update design/checklist status only after controller-owned acceptance."
+      - "Update architecture/root design only to describe current /rp project inspect <project-id> and existing project info/getter read behavior."
+      - "Preserve deferred boundaries for project update/delete, archive ZIP/import/export expansion, cloud/collaboration, graph, automatic extraction, vectorization, provider/model routing, generation, image/TTS calls, credentials, prompt/debug/context-budget injection, content-mode behavior, minors/underage behavior, and safety-bypass behavior."
+      - "Do not edit source, tests, README, plugin shims, or build artifacts during S2."
+    verification:
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m py_compile src/hermes_tavern/runtime_novel.py src/hermes_tavern/commands.py tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_commands.py tests/test_hermes_tavern_readme_docs.py"
+        result: "planned"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_commands.py tests/test_hermes_tavern_readme_docs.py -q -o 'addopts=' -p no:cacheprovider"
+        result: "planned"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_*.py -q -o 'addopts=' -p no:cacheprovider"
+        result: "planned"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts=' -p no:cacheprovider"
+        result: "planned"
+      - command: "python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-06-hermes-tavern-phase147-project-inspect-alias/design.md --require doc_type --require status --require feature"
+        result: "planned"
+      - command: "python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-06-hermes-tavern-phase147-project-inspect-alias/hermes-tavern-phase147-project-inspect-alias-acceptance.md --require doc_type --require status --require feature"
+        result: "planned"
+      - command: "python design/codestable/tools/validate-yaml.py --yaml-only --file design/codestable/features/2026-06-06-hermes-tavern-phase147-project-inspect-alias/checklist.yaml"
+        result: "planned"
+      - command: "git diff --name-only -- README.md src tests run_agent.py cli.py gateway/run.py plugins build/lib"
+        result: "planned"
+      - command: "git diff --check"
+        result: "planned"
+acceptance:
+  - id: AC1
+    criteria: "/rp project inspect <project-id> returns existing project metadata."
+    status: planned
+  - id: AC2
+    criteria: "/rp project info <id> remains supported and behavior-compatible."
+    status: planned
+  - id: AC3
+    criteria: "Malformed, missing, non-positive, and extra inspect arguments return bounded project usage output."
+    status: planned
+  - id: AC4
+    criteria: "Missing project rows return No novel project found: <id> without exceptions."
+    status: planned
+  - id: AC5
+    criteria: "Generated help and README Core commands include /rp project inspect <project-id>."
+    status: planned
+  - id: AC6
+    criteria: "No DB/schema, protected core/runtime.py, prompt/provider/generation, retrieval/vectorization, archive/import/export ZIP, credential, content-mode, plugin, build, minors/underage, or safety behavior changes occur."
+    status: planned
+checks:
+  - id: C1
+    name: "Nested command route"
+    status: planned
+    criteria: "The inspect alias routes through the existing project family and does not add a new top-level command or runtime.py shim."
+  - id: C2
+    name: "Read-only store use"
+    status: planned
+    criteria: "The implementation uses existing project info/getter behavior and does not modify schema, migrations, db.py, or db_novel.py."
+  - id: C3
+    name: "Help and README visibility"
+    status: planned
+    criteria: "Generated help and README expose /rp project inspect <project-id> without stale or conflicting project command text."
+  - id: C4
+    name: "Adjacent behavior preservation"
+    status: planned
+    criteria: "Existing project create/list/info/set/export/style/brief/outline/revision behavior remains covered and unchanged."
+  - id: C5
+    name: "Offline verification"
+    status: planned
+    criteria: "Focused, Tavern-wide, and full offline tests run with -o 'addopts=' and no cacheprovider after implementation and S2 docs/writeback."
+notes: []
