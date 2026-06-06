@@ -1,0 +1,215 @@
+doc_type: feature-checklist
+feature: "2026-06-06-hermes-tavern-phase146-scene-inspect-surface"
+date: "2026-06-06"
+status: implemented
+summary: >
+  IMPLEMENTED - Phase 146 S1 adds a read-only /rp scene inspect <scene-id>
+  command for existing novel_scenes rows, using the existing get_scene(scene_id)
+  helper and preserving schema, scene ordering, scene mutation commands, scene
+  start/linking, prompt/provider/generation/retrieval/vectorization/credential/
+  content-mode, minors/underage, safety behavior, and protected core files. S2
+  acceptance/writeback remains planned.
+tags: [hermes-tavern, scene, command-surface, read-only, offline]
+implementation_readiness: >
+  IMPLEMENTED - Codex architect selected Phase 146 as an implementation-ready
+  bounded read-only scene inspect surface, the controller materialized and
+  validated design/checklist artifacts, and Codex executor implemented only S1
+  source/docs/tests. The controller added one linked-session marker assertion,
+  reran py_compile, focused pytest, Tavern-wide pytest, full pytest, CodeStable
+  validators, protected-path guards, and git diff --check successfully. S2 must
+  still create acceptance/writeback docs and must not edit source/tests/README.
+steps:
+  - id: S1
+    name: "S1: Add read-only scene inspect command"
+    status: completed
+    completed_at: "2026-06-06"
+    result: >
+      IMPLEMENTED - Added /rp scene inspect <scene-id> under the existing
+      scene command family in runtime_novel.py, using existing
+      runtime.store.get_scene(scene_id). The command returns bounded scene id,
+      chapter id, scene number, title, status, linked-session marker, and summary
+      preview/not-set output; malformed/missing/non-positive/extra arguments
+      return usage; missing rows return a bounded not-found message. Generated
+      help, README Core commands, and focused runtime/help/README tests were
+      updated. No DB/schema, runtime.py, prompt/provider/generation,
+      retrieval/vectorization, credential/content-mode, plugin/build, minors/
+      underage, or safety behavior changes were made.
+    description: >
+      Add /rp scene inspect <scene-id> under the existing scene command family,
+      generated help and README visibility, and focused offline tests. Use the
+      existing TavernStore.get_scene helper and avoid schema or DB code changes.
+    allowed_files:
+      - src/hermes_tavern/runtime_novel.py
+      - src/hermes_tavern/commands.py
+      - README.md
+      - tests/test_hermes_tavern_novel_runtime.py
+      - tests/test_hermes_tavern_commands.py
+      - tests/test_hermes_tavern_readme_docs.py
+    prohibited_files:
+      - run_agent.py
+      - cli.py
+      - gateway/run.py
+      - src/hermes_tavern/runtime.py
+      - src/hermes_tavern/db.py
+      - src/hermes_tavern/db_novel.py
+      - src/hermes_tavern/prompt.py
+      - src/hermes_tavern/runtime_prompt_modules.py
+      - src/hermes_tavern/model_router.py
+      - src/hermes_tavern/provider_bridge.py
+      - src/hermes_tavern/adapters.py
+      - src/hermes_tavern/runtime_generation.py
+      - "src/hermes_tavern/importers/**"
+      - "plugins/**"
+      - "build/lib/**"
+      - design/HERMES_TAVERN_DESIGN.md
+      - design/codestable/architecture/ARCHITECTURE.md
+    exact_scope:
+      - "Add /rp scene inspect <scene-id> under runtime_novel.scene_command."
+      - "Use existing runtime.store.get_scene(scene_id); do not add or modify DB helpers."
+      - "Update the scene usage string to include /rp scene inspect <scene-id>."
+      - "The implementation may factor the existing scene usage text into a private _SCENE_USAGE constant only to avoid duplicate text."
+      - "Return bounded output with scene id, chapter id, scene number, title, status, linked session id or not-linked marker, and a mobile-bounded summary preview or not-set marker."
+      - "Return usage for missing, malformed, non-positive, or extra inspect arguments."
+      - "Return a bounded not-found message for missing scene rows."
+      - "Add the inspect literal to src/hermes_tavern/commands.py generated help."
+      - "Add the inspect literal to README Core commands."
+      - "Add focused runtime/help/README tests."
+      - "Do not alter novel_scenes schema, migrations, indexes, row ordering, get_scene behavior, list_scenes behavior, create_scene behavior, scene start/linking behavior, set/clear/get scene summary behavior, scene goal/narration/beat behavior, or Markdown export behavior."
+      - "Do not add scene update, delete, renumbering, reparenting, archive/import/export ZIP, automatic extraction, generation, provider/model routing, content-mode behavior, retrieval/vectorization, credentials, prompt/debug/context-budget behavior, plugin shim, minors/underage behavior, or safety-bypass behavior."
+      - "Do not edit src/hermes_tavern/runtime.py."
+      - "Do not mark acceptance/final statuses as accepted or passed during S1."
+    verification:
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m py_compile src/hermes_tavern/runtime_novel.py src/hermes_tavern/commands.py tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_commands.py tests/test_hermes_tavern_readme_docs.py"
+        result: "passed (controller rerun; no output)"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_commands.py tests/test_hermes_tavern_readme_docs.py -q -o 'addopts=' -p no:cacheprovider"
+        result: "278 passed in 8.93s (controller rerun after linked-session assertion fix)"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_*.py -q -o 'addopts=' -p no:cacheprovider"
+        result: "1048 passed in 49.45s (controller rerun)"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts=' -p no:cacheprovider"
+        result: "1048 passed in 45.54s (controller rerun)"
+      - command: "python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-06-hermes-tavern-phase146-scene-inspect-surface/design.md --require doc_type --require status --require feature"
+        result: "passed after controller materialization"
+      - command: "python design/codestable/tools/validate-yaml.py --yaml-only --file design/codestable/features/2026-06-06-hermes-tavern-phase146-scene-inspect-surface/checklist.yaml"
+        result: "passed after controller S1 status patch"
+      - command: "git diff --name-only -- run_agent.py cli.py gateway/run.py src/hermes_tavern/runtime.py src/hermes_tavern/db.py src/hermes_tavern/db_novel.py src/hermes_tavern/prompt.py src/hermes_tavern/runtime_prompt_modules.py src/hermes_tavern/model_router.py src/hermes_tavern/provider_bridge.py src/hermes_tavern/adapters.py src/hermes_tavern/runtime_generation.py src/hermes_tavern/importers plugins build/lib"
+        result: "passed; empty output for protected/prohibited tracked paths"
+      - command: "git diff --check"
+        result: "passed"
+  - id: S2
+    name: "S2: Verify and accept scene inspect"
+    status: planned
+    description: >
+      Controller-owned acceptance/writeback after S1. Rerun focused, Tavern-wide,
+      and full verification; create the acceptance report; update checklist/design
+      status only after verification; and currentize architecture/root-design docs
+      for the read-only scene inspect surface.
+    allowed_files:
+      - design/codestable/features/2026-06-06-hermes-tavern-phase146-scene-inspect-surface/design.md
+      - design/codestable/features/2026-06-06-hermes-tavern-phase146-scene-inspect-surface/checklist.yaml
+      - design/codestable/features/2026-06-06-hermes-tavern-phase146-scene-inspect-surface/hermes-tavern-phase146-scene-inspect-surface-acceptance.md
+      - design/codestable/architecture/ARCHITECTURE.md
+      - design/HERMES_TAVERN_DESIGN.md
+    prohibited_files:
+      - README.md
+      - "src/**"
+      - "tests/**"
+      - run_agent.py
+      - cli.py
+      - gateway/run.py
+      - "plugins/**"
+      - "build/lib/**"
+    exact_scope:
+      - "Rerun S1 verification after implementation."
+      - "Create a Phase 146 acceptance report only after verification."
+      - "Update design/checklist status only after controller-owned acceptance."
+      - "Update architecture/root design only to describe current /rp scene inspect <scene-id> and existing get_scene(scene_id) read behavior."
+      - "Preserve deferred boundaries for scene update/delete/renumber/reparent, archive/import/export ZIP, automatic extraction, prompt/debug/context-budget injection, provider/model routing, generation, retrieval/vectorization, credentials, content-mode behavior, minors/underage behavior, and safety-bypass behavior."
+      - "Do not edit source, tests, README, plugin shims, or build artifacts during S2."
+    verification:
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m py_compile src/hermes_tavern/runtime_novel.py src/hermes_tavern/commands.py tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_commands.py tests/test_hermes_tavern_readme_docs.py"
+        expected_result: "no syntax errors after S2 docs/writeback"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_commands.py tests/test_hermes_tavern_readme_docs.py -q -o 'addopts=' -p no:cacheprovider"
+        expected_result: "focused tests still pass after S2 docs/writeback"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_*.py -q -o 'addopts=' -p no:cacheprovider"
+        expected_result: "Tavern-wide plugin tests still pass after S2 docs/writeback"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts=' -p no:cacheprovider"
+        expected_result: "full test suite still passes after S2 docs/writeback"
+      - command: "python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-06-hermes-tavern-phase146-scene-inspect-surface/design.md --require doc_type --require status --require feature"
+        expected_result: "design frontmatter validates"
+      - command: "python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-06-hermes-tavern-phase146-scene-inspect-surface/hermes-tavern-phase146-scene-inspect-surface-acceptance.md --require doc_type --require status --require feature"
+        expected_result: "acceptance frontmatter validates"
+      - command: "python design/codestable/tools/validate-yaml.py --yaml-only --file design/codestable/features/2026-06-06-hermes-tavern-phase146-scene-inspect-surface/checklist.yaml"
+        expected_result: "checklist YAML validates"
+      - command: "git diff --name-only -- README.md src tests run_agent.py cli.py gateway/run.py plugins build/lib"
+        expected_result: "empty output during S2"
+      - command: "git diff --check"
+        expected_result: "no whitespace errors"
+acceptance:
+  - id: AC1
+    criteria: "/rp scene inspect <scene-id> returns bounded details for one existing scene row."
+    status: completed
+    completed_at: "2026-06-06"
+    result: "passed; focused runtime tests cover bounded output with summary preview and both not-linked and linked-session markers"
+  - id: AC2
+    criteria: "Malformed, missing, non-positive, and extra inspect arguments return bounded scene usage output."
+    status: completed
+    completed_at: "2026-06-06"
+    result: "passed; focused runtime parametrized tests cover usage output"
+  - id: AC3
+    criteria: "Missing scene rows return a bounded not-found message without exceptions."
+    status: completed
+    completed_at: "2026-06-06"
+    result: "passed; focused runtime test covers missing scene response"
+  - id: AC4
+    criteria: "Generated help and README Core commands include the scene inspect literal."
+    status: completed
+    completed_at: "2026-06-06"
+    result: "passed; command-table/help and README docs tests cover /rp scene inspect <scene-id>"
+  - id: AC5
+    criteria: "Scene list ordering, scene start/linking, scene summary, scene goal, scene narration, and scene beat behavior remain unchanged."
+    status: completed
+    completed_at: "2026-06-06"
+    result: "passed; targeted and full suites remain green after S1"
+  - id: AC6
+    criteria: "No DB/schema, protected core/runtime.py, prompt/provider/generation, retrieval/vectorization, archive/import, credential, content-mode, plugin, build, minors/underage, or safety behavior changes occur."
+    status: completed
+    completed_at: "2026-06-06"
+    result: "passed; diff stayed within approved S1 files plus Phase 146 artifacts and protected-path guard was empty"
+checks:
+  - id: C1
+    name: "Nested command route"
+    status: completed
+    completed_at: "2026-06-06"
+    result: "passed; /rp scene inspect routes through existing scene_command and no runtime.py shim was added"
+    criteria: "The inspect command routes through the existing scene family and does not add a new top-level command or runtime.py shim."
+  - id: C2
+    name: "Read-only store use"
+    status: completed
+    completed_at: "2026-06-06"
+    result: "passed; implementation uses existing get_scene(scene_id) and db/db_novel/schema files are unchanged"
+    criteria: "The implementation uses existing get_scene(scene_id) and does not modify schema, migrations, db.py, or db_novel.py."
+  - id: C3
+    name: "Help and README visibility"
+    status: completed
+    completed_at: "2026-06-06"
+    result: "passed; generated help and README expose /rp scene inspect <scene-id>"
+    criteria: "Generated help and README expose /rp scene inspect <scene-id> without stale or conflicting scene command text."
+  - id: C4
+    name: "Adjacent behavior preservation"
+    status: completed
+    completed_at: "2026-06-06"
+    result: "passed; focused/Tavern-wide/full tests remain green, including existing scene command families"
+    criteria: "Existing scene create/list/start/summary/goal/narration/beat behavior remains covered and unchanged."
+  - id: C5
+    name: "Offline verification"
+    status: completed
+    completed_at: "2026-06-06"
+    result: "passed; controller reran py_compile, focused tests (278 passed), Tavern-wide tests (1048 passed), full pytest (1048 passed), validators, protected-path guard, and git diff --check"
+    criteria: "Focused and Tavern-wide offline tests run with -o 'addopts=' and no cacheprovider after implementation and after S2 docs/writeback."
+verification_notes: |
+  - Codex architect artifact: /tmp/hermes-tavern-architect-phase146-scene-inspect.jsonl (RESULT: ARCHITECT_ARTIFACT; IMPLEMENTATION_READY=true; BLOCKERS=none).
+  - Codex executor smoke: /tmp/hermes-tavern-executor-phase146-smoke.jsonl (EXECUTOR_SMOKE_OK).
+  - Codex executor artifact: /tmp/hermes-tavern-executor-phase146-s1.jsonl. Executor had one harmless missing local cs-feat-impl skill-file read and a recovered apply_patch context miss before producing the final S1 diff.
+  - Controller added one linked-session marker assertion to the executor-created scene inspect runtime test, then reran focused verification successfully.
+  - Controller verification after S1: py_compile passed; focused pytest 278 passed in 8.93s; Tavern-wide pytest 1048 passed in 49.45s; full pytest 1048 passed in 45.54s; design/checklist validators passed; protected-path guard was empty; git diff --check passed.
+  - S2 acceptance/writeback remains planned and should be limited to the acceptance report, checklist/design status finalization, architecture, and root design docs.

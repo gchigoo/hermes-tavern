@@ -195,6 +195,7 @@ def test_novel_command_table_has_expected_families():
     assert "/rp scene beat inspect <beat-id>" in TAVERN_COMMAND_TABLE["scene"].help_lines
     assert "/rp scene beat update <beat-id> <beat...>" in TAVERN_COMMAND_TABLE["scene"].help_lines
     assert "/rp scene beat delete <beat-id>" in TAVERN_COMMAND_TABLE["scene"].help_lines
+    assert "/rp scene inspect <scene-id>" in TAVERN_COMMAND_TABLE["scene"].help_lines
     assert "/rp project style" in TAVERN_COMMAND_TABLE["project"].help_lines
     assert "/rp project style inspect [project-id]" in TAVERN_COMMAND_TABLE["project"].help_lines
     assert "/rp project style set [project-id] <text>" in TAVERN_COMMAND_TABLE["project"].help_lines
@@ -3155,6 +3156,7 @@ def test_scene_goal_command_is_listed_in_help_output(tmp_path):
 
     assert "/rp scene goal <scene-id> [text]" in response
     assert "/rp scene goal clear <scene-id>" in response
+    assert "/rp scene inspect <scene-id>" in response
     assert "/rp scene narration <scene-id>" in response
     assert "/rp scene narration clear <scene-id>" in response
     assert "/rp scene narration pov <scene-id> <label>" in response
@@ -3462,6 +3464,88 @@ def test_scene_goal_missing_scene_returns_not_found(tmp_path, command, expected_
     runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
     response = runtime.handle_command_sync(command, Event())
     assert response == expected_message
+
+
+def test_scene_inspect_route_returns_compact_bound_preview_and_not_linked_marker(tmp_path):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    project = runtime.store.create_project("Atlas")
+    chapter = runtime.store.create_chapter(project["id"], "Arrival")
+    scene = runtime.store.create_scene(chapter["id"], "Opening")
+    runtime.store.set_scene_summary(
+        scene["id"],
+        "Fog wraps the harbor and never seems to lift until noon. " * 7,
+    )
+
+    response = runtime.handle_command_sync(
+        RPCommand("scene", ["inspect", str(scene["id"])], f"/rp scene inspect {scene['id']}"),
+        Event(),
+    )
+    summary_preview = _mobile_preview(
+        "Fog wraps the harbor and never seems to lift until noon. " * 7,
+        180,
+    )
+    assert response == (
+        f"Scene [{scene['id']}] for chapter [{chapter['id']}]: "
+        f"Scene {scene['scene_number']} {scene['title']} ({scene['status']}) | "
+        f"session: (not linked) | summary: {summary_preview}"
+    )
+
+    runtime.store.save_card(
+        parse_character_card(
+            {"name": "Alice", "description": "Scholar", "first_mes": "Hello."}
+        )
+    )
+    runtime.handle_command_sync(RPCommand("start", ["Alice"], "/rp start Alice"), Event())
+    session_id = runtime.store.get_active_session(session_key_from_event(Event()))["id"]
+    runtime.store.link_scene_session(scene["id"], session_id)
+
+    linked_response = runtime.handle_command_sync(
+        RPCommand("scene", ["inspect", str(scene["id"])], f"/rp scene inspect {scene['id']}"),
+        Event(),
+    )
+    assert f"session: [{session_id}]" in linked_response
+    assert f"summary: {summary_preview}" in linked_response
+
+
+@pytest.mark.parametrize(
+    "command, expected_prefix",
+    [
+        (RPCommand("scene", ["inspect"], "/rp scene inspect"), "Usage: /rp scene create <chapter-id> <title> | /rp scene list <chapter-id> | /rp scene inspect <scene-id> | /rp scene start <scene-id> | /rp scene goal <scene-id> [text] | /rp scene goal clear <scene-id> | /rp scene beat add <scene-id> <label> <beat...> | /rp scene beat list <scene-id> | /rp scene beat inspect <beat-id> | /rp scene beat update <beat-id> <beat...> | /rp scene beat delete <beat-id> | /rp scene summary <scene-id> [text] | /rp scene summary clear <scene-id> | /rp scene narration <scene-id> | /rp scene narration clear <scene-id> | /rp scene narration pov <scene-id> <label> | /rp scene narration tense <scene-id> <past|present>"),
+        (RPCommand("scene", ["inspect", "not-a-number"], "/rp scene inspect not-a-number"), "Usage: /rp scene create <chapter-id> <title> | /rp scene list <chapter-id> | /rp scene inspect <scene-id> | /rp scene start <scene-id> | /rp scene goal <scene-id> [text] | /rp scene goal clear <scene-id> | /rp scene beat add <scene-id> <label> <beat...> | /rp scene beat list <scene-id> | /rp scene beat inspect <beat-id> | /rp scene beat update <beat-id> <beat...> | /rp scene beat delete <beat-id> | /rp scene summary <scene-id> [text] | /rp scene summary clear <scene-id> | /rp scene narration <scene-id> | /rp scene narration clear <scene-id> | /rp scene narration pov <scene-id> <label> | /rp scene narration tense <scene-id> <past|present>"),
+        (RPCommand("scene", ["inspect", "0"], "/rp scene inspect 0"), "Usage: /rp scene create <chapter-id> <title> | /rp scene list <chapter-id> | /rp scene inspect <scene-id> | /rp scene start <scene-id> | /rp scene goal <scene-id> [text] | /rp scene goal clear <scene-id> | /rp scene beat add <scene-id> <label> <beat...> | /rp scene beat list <scene-id> | /rp scene beat inspect <beat-id> | /rp scene beat update <beat-id> <beat...> | /rp scene beat delete <beat-id> | /rp scene summary <scene-id> [text] | /rp scene summary clear <scene-id> | /rp scene narration <scene-id> | /rp scene narration clear <scene-id> | /rp scene narration pov <scene-id> <label> | /rp scene narration tense <scene-id> <past|present>"),
+        (RPCommand("scene", ["inspect", "1", "extra"], "/rp scene inspect 1 extra"), "Usage: /rp scene create <chapter-id> <title> | /rp scene list <chapter-id> | /rp scene inspect <scene-id> | /rp scene start <scene-id> | /rp scene goal <scene-id> [text] | /rp scene goal clear <scene-id> | /rp scene beat add <scene-id> <label> <beat...> | /rp scene beat list <scene-id> | /rp scene beat inspect <beat-id> | /rp scene beat update <beat-id> <beat...> | /rp scene beat delete <beat-id> | /rp scene summary <scene-id> [text] | /rp scene summary clear <scene-id> | /rp scene narration <scene-id> | /rp scene narration clear <scene-id> | /rp scene narration pov <scene-id> <label> | /rp scene narration tense <scene-id> <past|present>"),
+    ],
+)
+def test_scene_inspect_bad_arguments_return_usage(tmp_path, command, expected_prefix):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    response = runtime.handle_command_sync(command, Event())
+    assert response.startswith(expected_prefix)
+
+
+def test_scene_inspect_missing_scene_returns_not_found(tmp_path):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    response = runtime.handle_command_sync(
+        RPCommand("scene", ["inspect", "9999"], "/rp scene inspect 9999"),
+        Event(),
+    )
+    assert response == "No novel scene found: 9999"
+
+
+def test_scene_inspect_returns_not_set_summary_marker(tmp_path):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    project = runtime.store.create_project("Atlas")
+    chapter = runtime.store.create_chapter(project["id"], "Arrival")
+    scene = runtime.store.create_scene(chapter["id"], "Arrival Notes")
+
+    response = runtime.handle_command_sync(
+        RPCommand("scene", ["inspect", str(scene["id"])], f"/rp scene inspect {scene['id']}"),
+        Event(),
+    )
+    assert response == (
+        f"Scene [{scene['id']}] for chapter [{chapter['id']}]: "
+        f"Scene {scene['scene_number']} {scene['title']} ({scene['status']}) | "
+        f"session: (not linked) | summary: (not set)"
+    )
 
 
 @pytest.mark.parametrize(

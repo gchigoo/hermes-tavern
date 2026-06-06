@@ -66,6 +66,8 @@ def scene_command(runtime: Any, command: RPCommand, event: Any) -> str:
         return scene_create(runtime, command, event)
     if subcommand == "list":
         return scene_list(runtime, command)
+    if subcommand == "inspect":
+        return scene_inspect(runtime, command, event)
     if subcommand == "start":
         return scene_start(runtime, command, event)
     if subcommand == "beat":
@@ -76,15 +78,7 @@ def scene_command(runtime: Any, command: RPCommand, event: Any) -> str:
         return scene_narration(runtime, command)
     if subcommand == "summary":
         return scene_summary(runtime, command, event)
-    return (
-        "Usage: /rp scene create <chapter-id> <title> | /rp scene list <chapter-id> | "
-        "/rp scene start <scene-id> | /rp scene goal <scene-id> [text] | /rp scene goal clear <scene-id> | "
-        "/rp scene beat add <scene-id> <label> <beat...> | /rp scene beat list <scene-id> | "
-        "/rp scene beat inspect <beat-id> | /rp scene beat update <beat-id> <beat...> | /rp scene beat delete <beat-id> | "
-        "/rp scene summary <scene-id> [text] | /rp scene summary clear <scene-id> | "
-        "/rp scene narration <scene-id> | /rp scene narration clear <scene-id> | "
-        "/rp scene narration pov <scene-id> <label> | /rp scene narration tense <scene-id> <past|present>"
-    )
+    return _SCENE_USAGE
 
 
 def canon_command(runtime: Any, command: RPCommand, event: Any) -> str:
@@ -126,6 +120,16 @@ _TIMELINE_USAGE = (
 _CHAPTER_USAGE = (
     "Usage: /rp chapter create [project-id] <title> | /rp chapter list [project-id] | "
     "/rp chapter inspect <chapter-id> | /rp chapter summary <chapter-id> [text] | /rp chapter summary clear <chapter-id>"
+)
+_SCENE_USAGE = (
+    "Usage: /rp scene create <chapter-id> <title> | /rp scene list <chapter-id> | "
+    "/rp scene inspect <scene-id> | /rp scene start <scene-id> | /rp scene goal <scene-id> [text] | "
+    "/rp scene goal clear <scene-id> | /rp scene beat add <scene-id> <label> <beat...> | "
+    "/rp scene beat list <scene-id> | /rp scene beat inspect <beat-id> | "
+    "/rp scene beat update <beat-id> <beat...> | /rp scene beat delete <beat-id> | "
+    "/rp scene summary <scene-id> [text] | /rp scene summary clear <scene-id> | "
+    "/rp scene narration <scene-id> | /rp scene narration clear <scene-id> | "
+    "/rp scene narration pov <scene-id> <label> | /rp scene narration tense <scene-id> <past|present>"
 )
 
 
@@ -1265,6 +1269,30 @@ def scene_list(runtime: Any, command: RPCommand) -> str:
             f"  - [{scene['id']}] Scene {scene['scene_number']}: {scene['title']} ({scene['status']}){session_hint}"
         )
     return "\n".join(lines)
+
+
+def scene_inspect(runtime: Any, command: RPCommand, event: Any) -> str:
+    del event
+    if len(command.args) != 2:
+        return _SCENE_USAGE
+    scene_id = _safe_int(command.args[1])
+    if scene_id is None or scene_id <= 0:
+        return _SCENE_USAGE
+
+    scene = runtime.store.get_scene(scene_id)
+    if scene is None:
+        return f"No novel scene found: {scene_id}"
+
+    summary = (scene.get("summary") or "").strip()
+    preview = _mobile_preview(summary, 180) if summary else "(not set)"
+    session = (
+        f"[{scene['session_id']}]" if scene.get("session_id") else "(not linked)"
+    )
+    return (
+        f"Scene [{scene['id']}] for chapter [{scene['chapter_id']}]: "
+        f"Scene {scene['scene_number']} {scene['title']} ({scene['status']}) | "
+        f"session: {session} | summary: {preview}"
+    )
 
 
 def scene_summary(runtime: Any, command: RPCommand, event: Any) -> str:

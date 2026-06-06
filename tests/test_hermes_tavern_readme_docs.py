@@ -281,6 +281,7 @@ def test_readme_core_commands_includes_scene_and_chapter_summary_literals():
     assert "/rp chapter inspect <chapter-id>" in core_commands
     assert "/rp chapter summary <chapter-id> [text]" in core_commands
     assert "/rp chapter summary clear <chapter-id>" in core_commands
+    assert "/rp scene inspect <scene-id>" in core_commands
     assert "/rp scene summary <scene-id> [text]" in core_commands
     assert "/rp scene summary clear <scene-id>" in core_commands
 
