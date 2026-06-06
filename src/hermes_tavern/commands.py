@@ -153,6 +153,7 @@ TAVERN_COMMAND_TABLE: dict[str, TavernCommandEntry] = {
             "/rp card search <query>",
             "/rp card inspect <card>",
             "/rp card use <card>",
+            "/rp card greeting <card>",
         ],
     ),
     # ── debug ──

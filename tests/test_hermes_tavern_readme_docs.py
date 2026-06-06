@@ -293,6 +293,12 @@ def test_readme_core_commands_include_timeline_literals():
     assert "/rp timeline inspect <timeline-id>" in core_commands
 
 
+def test_readme_core_commands_include_card_greeting_literal():
+    core_commands = _readme_core_commands_text()
+
+    assert _command_segment_has_literal(core_commands, "/rp card greeting <card>")
+
+
 def test_readme_core_commands_include_project_style_literals():
     core_commands = _readme_core_commands_text()
 

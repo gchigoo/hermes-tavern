@@ -1,13 +1,17 @@
 ---
 doc_type: feature-design
-status: draft
+status: approved
 feature: "2026-06-06-hermes-tavern-phase148-card-greeting-inspect"
 date: "2026-06-06"
 summary: >
-  Add a read-only /rp card greeting <card> surface that lists first_mes and
-  alternate greetings for one stored character card without requiring an active
-  session or mutating chat history.
+  Phase 148 S1 adds a read-only /rp card greeting <card> surface that lists
+  first_mes and alternate greetings for one stored character card without
+  requiring an active session or mutating chat history. S2 acceptance/writeback
+  remains planned.
 tags: [hermes-tavern, card, greeting, command-surface, read-only, offline]
+created: "2026-06-06"
+updated: "2026-06-06"
+owner: codestable-cron
 ---
 
 # Phase 148: Card Greeting Inspect
@@ -117,6 +121,27 @@ and `runtime_turns.py` already owns greeting normalization.
 3. Render greeting rows with bounded previews and no session/message mutation.
 4. Add focused tests for normal, missing-card, no-greetings, `last`, help, and README visibility.
 5. Run focused tests and Tavern-wide pytest offline.
+
+## S1 Controller Verification
+
+S1 was implemented on 2026-06-06 by Codex executor with Hermes controller
+verification. S2 acceptance/writeback remains a separate planned slice.
+
+- Architect artifact: `/tmp/hermes-tavern-architect-phase148-s1.jsonl` —
+  `RESULT: READY_TO_IMPLEMENT`, `IMPLEMENTATION_READY=true`.
+- Executor smoke artifact: `/tmp/hermes-tavern-executor-smoke-phase148-s1.jsonl` —
+  `EXECUTOR_SMOKE_OK`; no files edited.
+- Executor artifact: `/tmp/hermes-tavern-executor-phase148-s1.jsonl` — implemented
+  the nested card greeting inspect surface in allowed files. Executor JSONL had
+  harmless failed discovery/sed probes and an executor-sandbox Tavern-wide
+  image-provider failure; the controller reran verification successfully.
+- `PYTHONDONTWRITEBYTECODE=1 python -m py_compile src/hermes_tavern/commands.py src/hermes_tavern/runtime_assets.py tests/test_hermes_tavern_mobile_browsers.py tests/test_hermes_tavern_commands.py tests/test_hermes_tavern_readme_docs.py` — passed.
+- `PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_mobile_browsers.py tests/test_hermes_tavern_commands.py tests/test_hermes_tavern_readme_docs.py -q -o 'addopts=' -p no:cacheprovider` — 145 passed.
+- `PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_*.py -q -o 'addopts=' -p no:cacheprovider` — 1065 passed.
+- `PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts=' -p no:cacheprovider` — 1065 passed.
+- Protected-path diff guard for core/DB/prompt/provider/importer/plugin/build/design
+  paths was empty before controller-owned status synchronization; final diff remains scoped.
+- `git diff --check` passed.
 
 ## S2 Acceptance / Writeback
 

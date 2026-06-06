@@ -348,6 +348,14 @@ def test_help_lists_character_state_commands():
     assert "/rp character state delete <character-state-id>" in help_text
 
 
+def test_help_lists_card_greeting_command():
+    help_text = _build_help_text()
+
+    assert "/rp card search <query>" in help_text
+    assert "/rp card greeting <card>" in help_text
+
+
+
 class RecordingRuntime:
     def __init__(self):
         self.calls = []

@@ -150,6 +150,88 @@ def test_card_use_rebinds_active_session_without_losing_messages(tmp_path):
     assert any(msg["content"] == "Forge is hot." for msg in messages)
 
 
+def test_card_greeting_lists_indexed_greetings_from_stored_card_without_session(tmp_path):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    store.save_card(
+        parse_character_card(
+            {
+                "name": "Alice",
+                "first_mes": "Welcome back to the city.",
+                "alternate_greetings": ["Good evening.", "Tea?"],
+            }
+        )
+    )
+    runtime = TavernRuntime(store)
+
+    response = runtime.handle_command_sync(
+        RPCommand("card", ["greeting", "Alice"], "/rp card greeting Alice"),
+        Event(),
+    )
+
+    assert "Greetings for Alice" in response
+    assert "[0] first_mes" in response
+    assert "[1] alternate_1" in response
+    assert "[2] alternate_2" in response
+    assert "Welcome back to the city." in response
+
+
+def test_card_greeting_missing_card_returns_not_found(tmp_path):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    runtime = TavernRuntime(store)
+
+    response = runtime.handle_command_sync(
+        RPCommand("card", ["greeting", "Missing"], "/rp card greeting Missing"),
+        Event(),
+    )
+
+    assert "Character card not found: Missing" in response
+
+
+def test_card_greeting_empty_card_returns_no_greetings(tmp_path):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    store.save_card(parse_character_card({"name": "Plain"}))
+    runtime = TavernRuntime(store)
+
+    response = runtime.handle_command_sync(
+        RPCommand("card", ["greeting", "Plain"], "/rp card greeting Plain"),
+        Event(),
+    )
+
+    assert "No greetings found for Plain." in response
+
+
+def test_card_greeting_resolves_last_reference(tmp_path):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    store.save_card(parse_character_card({"name": "Old", "first_mes": "Old hello."}))
+    store.save_card(parse_character_card({"name": "New", "first_mes": "Newest hello."}))
+    runtime = TavernRuntime(store)
+
+    response = runtime.handle_command_sync(
+        RPCommand("card", ["greeting", "last"], "/rp card greeting last"),
+        Event(),
+    )
+
+    assert "Greetings for New" in response
+    assert "Newest hello." in response
+
+
+def test_card_greeting_does_not_mutate_sessions(tmp_path):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    store.save_card(parse_character_card({"name": "Alice", "first_mes": "Hello."}))
+    runtime = TavernRuntime(store)
+
+    scope = "telegram:chat:chat-1:thread:main:user:user-1"
+    assert store.get_active_session(scope) is None
+
+    response = runtime.handle_command_sync(
+        RPCommand("card", ["greeting", "Alice"], "/rp card greeting Alice"),
+        Event(),
+    )
+
+    assert "Greetings for Alice" in response
+    assert store.get_active_session(scope) is None
+
+
 def test_assets_command_summarizes_cards_presets_lorebooks_and_active_bindings(tmp_path):
     store = TavernStore(tmp_path / "tavern.sqlite3")
     store.save_card(parse_character_card({"name": "Alice", "tags": ["scholar"]}))

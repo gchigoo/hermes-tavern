@@ -1,12 +1,13 @@
 doc_type: feature-checklist
-status: planned
+status: implemented
 feature: "2026-06-06-hermes-tavern-phase148-card-greeting-inspect"
 date: "2026-06-06"
-implementation_ready: false
+implementation_ready: true
 summary: >
-  PLAN ONLY - Phase 148 will add a read-only /rp card greeting <card> command
+  IMPLEMENTED - Phase 148 S1 adds a read-only /rp card greeting <card> command
   that lists first_mes and alternate greetings for one stored card without
-  session mutation, provider calls, prompt changes, or schema changes.
+  session mutation, provider calls, prompt changes, schema changes, or active
+  /rp greeting list/use behavior changes. S2 acceptance/writeback remains planned.
 tags:
   - hermes-tavern
   - card
@@ -14,10 +15,28 @@ tags:
   - command-surface
   - read-only
   - offline
+implementation_readiness: >
+  READY/IMPLEMENTED - Codex architect validated the existing Phase 148 artifact
+  as READY_TO_IMPLEMENT, Codex executor implemented only the bounded S1 surface,
+  and the controller reran py_compile, focused pytest, Tavern-wide pytest, full
+  pytest, protected-path guards, and git diff --check successfully before marking
+  S1 implemented.
 steps:
   - id: S1
     name: "S1: Implement read-only card greeting inspect"
-    status: planned
+    status: completed
+    completed_at: "2026-06-06"
+    result: >
+      IMPLEMENTED - Added /rp card greeting <card> under the existing card command
+      family in runtime_assets.py. The command resolves cards with existing
+      get_card behavior including last, renders first_mes as [0] and nonblank
+      alternate_greetings as [1..N] through existing greeting option normalization,
+      uses bounded mobile previews, returns bounded missing/no-greetings messages,
+      updates generated help and README visibility, and includes focused offline
+      tests. No session/history mutation, schema, importer/export, prompt/debug/
+      context-budget, provider/model, generation, retrieval/vectorization,
+      content-mode, media/TTS/image, plugin, build, protected core, minors/
+      underage, or safety-bypass behavior changes were made.
     description: >
       Add /rp card greeting <card> under the existing card command family,
       render bounded indexed greeting previews for one stored card, update
@@ -45,7 +64,7 @@ steps:
       - "src/hermes_tavern/importers/**"
       - "plugins/**"
       - "build/lib/**"
-      - "design/** except controller-owned Phase 148 materialization"
+      - "design/** except controller-owned Phase 148 status synchronization"
     exact_scope:
       - "Add /rp card greeting <card> as a nested card subcommand."
       - "Resolve cards with the existing TavernStore.get_card behavior, including last."
@@ -55,11 +74,17 @@ steps:
       - "Update generated help and README Core commands for the new literal."
     verification:
       - command: "PYTHONDONTWRITEBYTECODE=1 python -m py_compile src/hermes_tavern/commands.py src/hermes_tavern/runtime_assets.py tests/test_hermes_tavern_mobile_browsers.py tests/test_hermes_tavern_commands.py tests/test_hermes_tavern_readme_docs.py"
-        expected: "passes"
+        result: "passed (controller rerun; no output)"
       - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_mobile_browsers.py tests/test_hermes_tavern_commands.py tests/test_hermes_tavern_readme_docs.py -q -o 'addopts=' -p no:cacheprovider"
-        expected: "passes"
+        result: "145 passed in 2.72s (controller rerun)"
       - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_*.py -q -o 'addopts=' -p no:cacheprovider"
-        expected: "passes"
+        result: "1065 passed in 47.05s (controller rerun)"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts=' -p no:cacheprovider"
+        result: "1065 passed in 48.29s (controller rerun)"
+      - command: "git diff --name-only -- run_agent.py cli.py gateway/run.py src/hermes_tavern/runtime.py src/hermes_tavern/db.py src/hermes_tavern/db_novel.py src/hermes_tavern/prompt.py src/hermes_tavern/runtime_prompt_modules.py src/hermes_tavern/model_router.py src/hermes_tavern/provider_bridge.py src/hermes_tavern/adapters.py src/hermes_tavern/runtime_generation.py src/hermes_tavern/importers plugins build/lib design"
+        result: "passed; empty output before controller-owned status synchronization"
+      - command: "git diff --check"
+        result: "passed before controller-owned status synchronization"
   - id: S2
     name: "S2: Accept and write back current docs"
     status: planned
@@ -85,36 +110,62 @@ steps:
 acceptance:
   - id: AC1
     criteria: "/rp card greeting <card> returns bounded indexed greetings for one stored card."
-    status: planned
+    status: completed
+    completed_at: "2026-06-06"
+    result: "passed; focused tests cover indexed first_mes and alternate greetings output"
   - id: AC2
     criteria: "The command works without an active session and does not create, start, bind, or mutate a session."
-    status: planned
+    status: completed
+    completed_at: "2026-06-06"
+    result: "passed; implementation performs only get_card/data_json reads, and focused tests assert no active session is created"
   - id: AC3
     criteria: "The last card reference works consistently with existing card inspect/use behavior."
-    status: planned
+    status: completed
+    completed_at: "2026-06-06"
+    result: "passed; focused test saves two cards and verifies /rp card greeting last resolves the newest saved card"
   - id: AC4
     criteria: "Missing cards and cards with no greetings return bounded user-facing messages."
-    status: planned
+    status: completed
+    completed_at: "2026-06-06"
+    result: "passed; focused tests cover Character card not found and No greetings found outputs"
   - id: AC5
     criteria: "Generated help and README Core commands include /rp card greeting <card>."
-    status: planned
+    status: completed
+    completed_at: "2026-06-06"
+    result: "passed; command-table/help and README docs tests cover /rp card greeting <card>"
   - id: AC6
     criteria: "No schema, prompt/debug/context-budget, provider/model, generation, credential, retrieval/vectorization, content-mode, media/TTS/image, import/export, archive, automatic extraction, minors/underage, safety-bypass, plugin registration, or protected core behavior changes occur."
-    status: planned
+    status: completed
+    completed_at: "2026-06-06"
+    result: "passed; changed tracked files are limited to runtime_assets.py, commands.py, README, focused tests, and controller-owned Phase 148 status docs"
 checks:
   - id: C1
     name: "Focused command tests"
-    status: planned
+    status: completed
+    completed_at: "2026-06-06"
     criteria: "Focused card greeting, help, and README docs tests pass offline."
+    result: "passed; 145 passed in 2.72s"
   - id: C2
     name: "Tavern-wide pytest"
-    status: planned
+    status: completed
+    completed_at: "2026-06-06"
     criteria: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_*.py -q -o 'addopts=' -p no:cacheprovider passes."
+    result: "passed; 1065 passed in 47.05s"
   - id: C3
     name: "Full pytest"
-    status: planned
+    status: completed
+    completed_at: "2026-06-06"
     criteria: "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts=' -p no:cacheprovider passes."
+    result: "passed; 1065 passed in 48.29s"
   - id: C4
     name: "Reverse scope guard"
-    status: planned
+    status: completed
+    completed_at: "2026-06-06"
     criteria: "No prohibited source, core, provider, prompt, importer, plugin, build, or S1 design/doc paths change outside the allowed scope."
+    result: "passed; protected-path diff guard was empty before controller-owned status synchronization and final diff remains scoped"
+verification_notes: |
+  - Codex architect artifact: /tmp/hermes-tavern-architect-phase148-s1.jsonl (RESULT: READY_TO_IMPLEMENT; IMPLEMENTATION_READY=true).
+  - Codex executor smoke artifact: /tmp/hermes-tavern-executor-smoke-phase148-s1.jsonl (EXECUTOR_SMOKE_OK; no files edited).
+  - Codex executor artifact: /tmp/hermes-tavern-executor-phase148-s1.jsonl (implemented S1). Executor JSONL included harmless failed discovery/sed probes and an executor-sandbox Tavern-wide image-provider failure; controller reran py_compile, focused pytest, Tavern-wide pytest, full pytest, protected-path guard, and git diff --check successfully.
+notes:
+  - "2026-06-06 S1: Codex executor implemented the nested card greeting inspect surface in allowed files only; controller reran focused, Tavern-wide, and full pytest gates plus protected-file diff guard and git diff --check. S2 acceptance/writeback remains planned."

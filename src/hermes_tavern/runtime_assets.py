@@ -13,6 +13,7 @@ from hermes_tavern.identity import session_key_from_event
 from hermes_tavern.import_policy import is_gateway_event, resolve_import_path
 from hermes_tavern.importers.cards import UnsupportedCardFormat, load_card_file
 from hermes_tavern.importers.lorebooks import import_embedded_lorebook_from_card
+from hermes_tavern.runtime_turns import greeting_options
 from hermes_tavern.runtime_utils import mobile_preview, parse_pagination
 
 
@@ -93,9 +94,14 @@ def card_command(runtime: Any, command: RPCommand, event: Any) -> str:
         return card_search(runtime, command)
     if subcommand == "inspect":
         return runtime._card_inspect(command)
+    if subcommand == "greeting":
+        return card_greeting(runtime, command)
     if subcommand in {"use", "bind"}:
         return runtime._card_use(command, event)
-    return "Usage: /rp card import <file> | /rp card search <query> | /rp card inspect <card> | /rp card use <card>"
+    return (
+        "Usage: /rp card import <file> | /rp card search <query> | /rp card inspect <card> | "
+        "/rp card use <card> | /rp card greeting <card>"
+    )
 
 
 def card_import(runtime: Any, command: RPCommand, event: Any) -> str:
@@ -252,4 +258,21 @@ def card_use(runtime: Any, command: RPCommand, event: Any) -> str:
     if greeting:
         lines.append(greeting)
     lines.append("history preserved; use /rp history to inspect the branch.")
+    return "\n".join(lines)
+
+
+def card_greeting(runtime: Any, command: RPCommand) -> str:
+    if len(command.args) < 2:
+        return "Usage: /rp card greeting <card>"
+    card_ref = " ".join(command.args[1:]).strip()
+    card = runtime.store.get_card(card_ref)
+    if card is None:
+        return _card_not_found(card_ref)
+    data = json.loads(card.get("data_json") or "{}")
+    options = greeting_options(data)
+    if not options:
+        return f"No greetings found for {card['name']}."
+    lines = [f"Greetings for {card['name']} ({card['id'][:8]}):"]
+    for idx, label, text in options:
+        lines.append(f"  [{idx}] {label}: {mobile_preview(str(text), 120)}")
     return "\n".join(lines)
