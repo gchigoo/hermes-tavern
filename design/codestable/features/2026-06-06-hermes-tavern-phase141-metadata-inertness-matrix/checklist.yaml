@@ -1,27 +1,27 @@
 doc_type: feature-checklist
 feature: "2026-06-06-hermes-tavern-phase141-metadata-inertness-matrix"
 date: "2026-06-06"
-status: implemented
+status: accepted
 summary: >
-  S1_IMPLEMENTED - Test-only Phase 141 adds a single co-presence no-leak
+  ACCEPTED - Test-only Phase 141 adds and accepts a single co-presence no-leak
   regression for current inert novel metadata families in a linked runtime
   session. It changes only tests/test_hermes_tavern_novel_runtime.py plus
-  controller-owned CodeStable design/checklist artifacts, with no source, docs,
-  commands, export behavior, architecture, provider/generation paths, or
-  acceptance/writeback changes.
+  controller-owned CodeStable design/checklist/acceptance artifacts, with no
+  source, docs, commands, export behavior, architecture, provider/generation
+  paths, or product behavior changes.
 tags: [novel, metadata, no-leak, regression, test-only, offline]
 implementation_readiness: >
-  READY_FOR_ACCEPTANCE - Codex architect selected the bounded metadata inertness
-  matrix hardening slice and the controller materialized validated design/checklist
-  artifacts. The executor implemented only the runtime test. Controller reran
-  py_compile, the new focused test, the full novel-runtime test file, Tavern-wide
-  plugin tests, full pytest, CodeStable validators, reverse-scope guards, and
-  git diff --check successfully. Final acceptance report/status writeback is
-  intentionally left for a later docs/status-only slice.
+  ACCEPTED - Codex architect selected the bounded metadata inertness matrix
+  hardening slice, the executor implemented only the runtime test, and the S2
+  docs/status-only closeout is complete. Controller reran py_compile, the new
+  focused test, the full novel-runtime test file, Tavern-wide plugin tests, full
+  pytest, CodeStable validators, reverse-scope guards, and git diff --check
+  successfully before final acceptance.
 likely_touched_files:
   - tests/test_hermes_tavern_novel_runtime.py
   - design/codestable/features/2026-06-06-hermes-tavern-phase141-metadata-inertness-matrix/design.md
   - design/codestable/features/2026-06-06-hermes-tavern-phase141-metadata-inertness-matrix/checklist.yaml
+  - design/codestable/features/2026-06-06-hermes-tavern-phase141-metadata-inertness-matrix/hermes-tavern-phase141-metadata-inertness-matrix-acceptance.md
 planning_verification:
   - command: "rg -n \"^status: *(planned|in_progress|draft|pending)\\b|status: *(planned|in_progress|draft|pending) *#\" design/codestable/features"
     result: "No matches; no active planned/in_progress/draft/pending feature status found."
@@ -93,13 +93,20 @@ steps:
         result: "passed"
   - id: S2
     name: "S2: Verify and accept metadata inertness matrix"
-    status: planned
+    status: completed
+    completed_at: "2026-06-06"
     description: >
       Docs/status-only acceptance pass after S1. Rerun focused/Tavern/full pytest,
       CodeStable validators, reverse-scope guards, and git diff --check; create the
       acceptance report and mark the feature accepted only after controller verification.
       No architecture or root-design writeback is expected because Phase 141 changes
       tests only.
+    result: >
+      ACCEPTED - Acceptance artifact created and finalized at
+      hermes-tavern-phase141-metadata-inertness-matrix-acceptance.md after
+      controller reran the focused runtime test, full novel-runtime tests,
+      Tavern-wide tests, full pytest, CodeStable validators, reverse-scope guards,
+      and git diff --check successfully.
     allowed_files:
       - design/codestable/features/2026-06-06-hermes-tavern-phase141-metadata-inertness-matrix/design.md
       - design/codestable/features/2026-06-06-hermes-tavern-phase141-metadata-inertness-matrix/checklist.yaml
@@ -159,4 +166,13 @@ checks:
 verification_notes: |
   - S1 implementation is complete and controller-verified.
   - Executor's optional Tavern-wide run reported 8 image-test failures, but the controller reran the same Tavern-wide command successfully (1015 passed), then reran full pytest successfully (1015 passed).
-  - Final acceptance/report writeback remains planned as S2.
+  - S2 acceptance/report writeback is complete and controller-verified.
+  - Controller reran verification ledger on 2026-06-06:
+    1. PYTHONDONTWRITEBYTECODE=1 python -m py_compile tests/test_hermes_tavern_novel_runtime.py — passed (no output)
+    2. PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel_runtime.py::test_all_current_inert_metadata_markers_do_not_leak_to_debug_prompt_or_context -q -o 'addopts=' -p no:cacheprovider — passed (1 passed in 0.38s)
+    3. PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel_runtime.py -q -o 'addopts=' -p no:cacheprovider — passed (169 passed in 9.09s)
+    4. PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_*.py -q -o 'addopts=' -p no:cacheprovider — passed (1015 passed in 45.99s)
+    5. PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts=' -p no:cacheprovider — passed (1015 passed in 43.41s)
+    6. CodeStable design/checklist/acceptance validators — passed after controller finalization
+    7. Protected reverse-scope guard — passed (empty output)
+    8. git diff --check — passed
