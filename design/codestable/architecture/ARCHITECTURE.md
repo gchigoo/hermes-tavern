@@ -157,6 +157,13 @@ importers/
   rendering/getter path; no schema, project mutation, export, prompt/module,
   provider/model, generation, retrieval/vectorization, credential, content-mode,
   minors/underage, safety behavior, or deferred project lifecycle/tooling changes.
+- Phase 148: Card Greeting Inspect (`/rp card greeting <card>`) reads one existing
+  stored card row via the existing `get_card(card_id_or_name)` resolver (including
+  `last`) and existing greeting normalization. It renders one bounded `first_mes`
+  row plus nonblank `alternate_greetings` rows as indexed options; no schema,
+  card/session/message mutation, prompt/module, provider/model/generation,
+  retrieval/vectorization, credential, archive/import/export, content-mode,
+  minors/underage, or safety-bypass behavior changes.
 
 ### Plugin flow
 
@@ -197,12 +204,12 @@ from vectorization/retrieval, provider/model routing, content mode,
 credentials, automation, summarization, and generation; they are visible only
 through command output and Markdown export.
 
-### /rp command surface (current through Phase 147)
+### /rp command surface (current through Phase 148)
 
 ```
 /rp help | status | assets
 /rp cards [limit] [page]                    ← paginated (Phase 17)
-/rp card import <file> | inspect <card> | use <card>     ← `last` resolves to the session-lifetime most recently imported card
+/rp card import <file> | inspect <card> | use <card> | greeting <card>     ← `last` resolves to the session-lifetime most recently imported card
 /rp start <card> | end | retry | undo | edit last <text> ← `/rp start last` starts the most recently imported card; retry/undo/edit replies include mobile repeat hints
 /rp speak | voice [on|off]                   ← placeholder speech surface; no real TTS/network call yet
 /rp history [limit] [page]                  ← paginated chronological (Phase 18)
@@ -298,7 +305,7 @@ through command output and Markdown export.
 /rp relationship delete <relationship-id>
 ```
 
-### DB schema (current through Phase 147; unchanged by Phase 147)
+### DB schema (current through Phase 148; unchanged by Phase 148)
 
 ```sql
 cards(id, name, data_json, source_path, created_at)
@@ -338,6 +345,7 @@ CREATE INDEX idx_novel_relationship_states_project ON novel_relationship_states(
 novel_character_states(id, project_id, label, state_text, created_at, updated_at)
 -- project_id REFERENCES novel_projects(id) ON DELETE CASCADE
 CREATE INDEX idx_novel_character_states_project ON novel_character_states(project_id)
+
 novel_locations(id, project_id, label, description_text, created_at, updated_at)
 -- project_id REFERENCES novel_projects(id) ON DELETE CASCADE
 CREATE INDEX idx_novel_locations_project ON novel_locations(project_id)
@@ -432,6 +440,14 @@ Phase 147 uses the existing `/rp project info <id>` rendering/getter path for
 present, is command-visible only, and has no schema, project mutation, export,
 prompt/module selection, provider/model, generation, retrieval/vectorization,
 credential, content-mode, minors/underage, or safety side effects.
+
+Phase 148 uses the existing stored-card lookup plus
+`runtime_turns.greeting_options(data)` for `/rp card greeting <card>`. It reads
+`cards.data_json` fields (`first_mes` and nonblank `alternate_greetings`) and
+renders bounded command output only; it adds no schema/table/index migration and
+has no card/session/message mutation, prompt/module selection, provider/model,
+generation, import/export, retrieval/vectorization, credential, content-mode,
+minors/underage, or safety side effects.
 
 Phase 131 adds `novel_character_states` as project-scoped character metadata.
 Character-state rows are managed through `/rp character state ...` and emitted as
@@ -543,4 +559,11 @@ These phases do not change schema or core prompt/generation assembly.
 - **Phase 145 chapter inspect boundary**: `/rp chapter inspect <chapter-id>` is command-visible metadata inspection only for existing `novel_chapters` rows. It keeps chapter schema, ordering, summary storage/mutation, markdown export, prompt/provider/generation/retrieval/vectorization coupling, archive/import, credential persistence, automatic extraction, and safety bypass unchanged and deferred.
 - **Phase 146 scene inspect boundary**: `/rp scene inspect <scene-id>` is command-visible metadata inspection only for existing `novel_scenes` rows. It keeps scene schema, ordering, summary mutation, scene mutation, scene start/linking, markdown export, prompt/provider/generation/retrieval/vectorization coupling, archive/import, credential persistence, content-mode behavior, minors/underage handling, automatic extraction, and safety bypass unchanged and deferred.
 - **Phase 147 project inspect boundary**: `/rp project inspect <project-id>` is command-visible metadata inspection only for existing `novel_projects` rows. It reuses existing `/rp project info <id>` rendering/getter behavior (`get_project(project_id)` and existing brief/outline getters for the preview blocks) and keeps project schema/mutations/export, prompt/provider/generation coupling, retrieval/vectorization, credentials, content-mode, minors/underage handling, and safety-bypass behavior unchanged and deferred.
+- **Phase 148 card greeting inspect boundary**: `/rp card greeting <card>` reads one
+  existing stored card row and renders bounded `first_mes` + nonblank
+  `alternate_greetings` rows through existing `get_card(...)` and
+  `greeting_options(...)` behavior. It keeps card schema, card/session/message
+  mutation, table/index migration, prompt/module coupling, provider/model routing,
+  generation, retrieval/vectorization, credentials, content-mode, minors/underage,
+  and safety-bypass behavior unchanged.
 - **Tavern lore regex complexity guard**: lorebook regex keys are screened locally before matching. Entries with patterns longer than 256 characters or nested quantified groups (for example `(a+)+`, `(.+)*`, `([a-z]+){2,}`) are excluded with bounded reasons (`regex rejected: ...`), preserving raw imported lore data while preventing unbounded local matching behavior.

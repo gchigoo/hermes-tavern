@@ -1,13 +1,13 @@
 ---
 doc_type: feature-design
-status: approved
+status: accepted
 feature: "2026-06-06-hermes-tavern-phase148-card-greeting-inspect"
 date: "2026-06-06"
 summary: >
-  Phase 148 S1 adds a read-only /rp card greeting <card> surface that lists
-  first_mes and alternate greetings for one stored character card without
+  Phase 148 adds and accepts a read-only /rp card greeting <card> surface that
+  lists first_mes and alternate greetings for one stored character card without
   requiring an active session or mutating chat history. S2 acceptance/writeback
-  remains planned.
+  is complete.
 tags: [hermes-tavern, card, greeting, command-surface, read-only, offline]
 created: "2026-06-06"
 updated: "2026-06-06"
@@ -145,11 +145,11 @@ verification. S2 acceptance/writeback remains a separate planned slice.
 
 ## S2 Acceptance / Writeback
 
-S2 is separate. It may update only the Phase 148 CodeStable artifacts plus
-architecture/root-design current-state docs to record that `/rp card greeting <card>`
-is now current read-only card metadata inspection. S2 must not edit source, tests,
-README, protected core files, provider/prompt/generation files, importer files,
-plugin files, or build outputs.
+S2 was accepted on 2026-06-06 after controller verification. It updated only
+the Phase 148 CodeStable artifacts plus architecture/root-design current-state
+docs to record that `/rp card greeting <card>` is now current read-only card
+metadata inspection. S2 did not edit source, tests, README, protected core files,
+provider/prompt/generation files, importer files, plugin files, or build outputs.
 
 ## Acceptance Criteria
 

@@ -1,13 +1,13 @@
 doc_type: feature-checklist
-status: implemented
+status: accepted
 feature: "2026-06-06-hermes-tavern-phase148-card-greeting-inspect"
 date: "2026-06-06"
 implementation_ready: true
 summary: >
-  IMPLEMENTED - Phase 148 S1 adds a read-only /rp card greeting <card> command
+  ACCEPTED - Phase 148 adds a read-only /rp card greeting <card> command
   that lists first_mes and alternate greetings for one stored card without
   session mutation, provider calls, prompt changes, schema changes, or active
-  /rp greeting list/use behavior changes. S2 acceptance/writeback remains planned.
+  /rp greeting list/use behavior changes. S2 acceptance/writeback is complete.
 tags:
   - hermes-tavern
   - card
@@ -16,11 +16,13 @@ tags:
   - read-only
   - offline
 implementation_readiness: >
-  READY/IMPLEMENTED - Codex architect validated the existing Phase 148 artifact
+  ACCEPTED - Codex architect validated the existing Phase 148 artifact
   as READY_TO_IMPLEMENT, Codex executor implemented only the bounded S1 surface,
   and the controller reran py_compile, focused pytest, Tavern-wide pytest, full
   pytest, protected-path guards, and git diff --check successfully before marking
-  S1 implemented.
+  S1 implemented. The S2 Codex architect/executor docs-status pass was controller-
+  verified with validators, focused/Tavern-wide/full pytest, protected scope guards,
+  stale/current wording guards, and git diff --check before final accepted status.
 steps:
   - id: S1
     name: "S1: Implement read-only card greeting inspect"
@@ -87,11 +89,18 @@ steps:
         result: "passed before controller-owned status synchronization"
   - id: S2
     name: "S2: Accept and write back current docs"
-    status: planned
+    status: completed
+    completed_at: "2026-06-06"
     description: >
       After S1 passes, create the acceptance report, finalize checklist status,
       and update only current-state architecture/root-design docs for the new
       read-only card greeting inspect surface.
+    result: >
+      ACCEPTED - Created the Phase 148 acceptance report, finalized checklist/design
+      status, and updated current-state architecture/root-design docs for the
+      read-only stored-card greeting inspection surface. Controller reran validators,
+      py_compile, focused pytest, Tavern-wide pytest, full pytest, protected scope
+      guards, stale/current wording guards, and git diff --check before finalizing.
     allowed_files:
       - design/codestable/features/2026-06-06-hermes-tavern-phase148-card-greeting-inspect/design.md
       - design/codestable/features/2026-06-06-hermes-tavern-phase148-card-greeting-inspect/checklist.yaml
@@ -167,5 +176,9 @@ verification_notes: |
   - Codex architect artifact: /tmp/hermes-tavern-architect-phase148-s1.jsonl (RESULT: READY_TO_IMPLEMENT; IMPLEMENTATION_READY=true).
   - Codex executor smoke artifact: /tmp/hermes-tavern-executor-smoke-phase148-s1.jsonl (EXECUTOR_SMOKE_OK; no files edited).
   - Codex executor artifact: /tmp/hermes-tavern-executor-phase148-s1.jsonl (implemented S1). Executor JSONL included harmless failed discovery/sed probes and an executor-sandbox Tavern-wide image-provider failure; controller reran py_compile, focused pytest, Tavern-wide pytest, full pytest, protected-path guard, and git diff --check successfully.
+  - Codex architect artifact: /tmp/hermes-tavern-architect-phase148-s2.jsonl (RESULT: S2_ACCEPTANCE_ARTIFACT; READY_FOR_EXECUTOR=true).
+  - Codex executor smoke artifact: /tmp/hermes-tavern-executor-smoke-phase148-s2.jsonl (EXECUTOR_SMOKE_OK; no files edited).
+  - Codex executor artifact: /tmp/hermes-tavern-executor-phase148-s2.jsonl (drafted S2 docs/status writeback). Executor JSONL included one expected missing-acceptance-file read before creation and one harmless no-match rg probe; controller reran validators, py_compile, focused pytest, Tavern-wide pytest, full pytest, protected scope guards, stale/current wording guards, risk wording review, and git diff --check successfully before finalizing.
 notes:
-  - "2026-06-06 S1: Codex executor implemented the nested card greeting inspect surface in allowed files only; controller reran focused, Tavern-wide, and full pytest gates plus protected-file diff guard and git diff --check. S2 acceptance/writeback remains planned."
+  - "2026-06-06 S1: Codex executor implemented the nested card greeting inspect surface in allowed files only; controller reran focused, Tavern-wide, and full pytest gates plus protected-file diff guard and git diff --check. S2 acceptance/writeback has since completed."
+  - "2026-06-06 S2: Codex executor drafted docs/status writeback in allowed files only; controller finalized acceptance after validators, focused/Tavern-wide/full pytest, protected scope guards, stale/current wording guards, risk wording review, and git diff --check passed."

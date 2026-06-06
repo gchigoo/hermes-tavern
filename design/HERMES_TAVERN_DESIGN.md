@@ -326,6 +326,14 @@ Commands:
 /rp card export <card>
 ```
 
+Phase 148 adds `/rp card greeting <card>` as the read-only greeting-inspection
+path for one stored card. It reuses existing card resolution (including `last`)
+and existing greeting normalization logic to render `first_mes` and nonblank
+`alternate_greetings` with bounded mobile previews. It does not require an active
+session and is distinct from active-session `/rp greeting list` / `/rp greeting use <n>`;
+no session start/bind/message mutation, prompt/provider/generation, credential,
+content-mode, minors/underage, or safety-bypass behavior is introduced.
+
 ### 6.3 Persona
 
 Personas represent user-side identities and narrator modes.
@@ -1367,6 +1375,15 @@ with `project_id UNIQUE REFERENCES novel_projects(id) ON DELETE CASCADE` and
 Current chapter/scene summary metadata:
 `novel_chapters.summary` and `novel_scenes.summary` are reused by Phase 129 for
 local chapter/scene summary commands and Markdown export visibility.
+
+Current Character Card storage model includes:
+`cards(id, name, source_path, data_json, created_at)` with `first_mes` and
+`alternate_greetings` stored in `data_json`. Phase 148 reads these existing fields
+for `/rp card greeting <card>` through existing card lookup and greeting
+normalization. It does not change `cards` schema, indexes, migrations,
+sessions/messages, prompt assembly, provider/model routing, generation,
+import/export, credentials, content mode, minors/underage handling, or safety
+behavior.
 
 Phase 145 adds read-only chapter inspection over existing `novel_chapters` rows
 via the existing `runtime.store.get_chapter(chapter_id)` helper.
