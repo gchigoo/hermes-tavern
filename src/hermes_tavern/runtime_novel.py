@@ -114,7 +114,15 @@ def timeline_command(runtime: Any, command: RPCommand, event: Any) -> str:
         return timeline_add(runtime, command, event)
     if subcommand == "list":
         return timeline_list(runtime, command, event)
-    return "Usage: /rp timeline add <project-id> <date> <title> [description...] | /rp timeline list [project-id]"
+    if subcommand == "inspect":
+        return timeline_inspect(runtime, command, event)
+    return _TIMELINE_USAGE
+
+
+_TIMELINE_USAGE = (
+    "Usage: /rp timeline add <project-id> <date> <title> [description...] | "
+    "/rp timeline list [project-id] | /rp timeline inspect <timeline-id>"
+)
 
 
 def character_command(runtime: Any, command: RPCommand, event: Any) -> str:
@@ -1691,6 +1699,30 @@ def timeline_list(runtime: Any, command: RPCommand, event: Any) -> str:
         suffix = f" — {description}" if description else ""
         lines.append(f"  - [{entry['sort_key'] or entry['event_date']}] {entry['title']}{suffix}")
     return "\n".join(lines)
+
+
+def timeline_inspect(runtime: Any, command: RPCommand, event: Any) -> str:
+    del event
+    if len(command.args) != 2:
+        return _TIMELINE_USAGE
+    timeline_event_id = _safe_int(command.args[1])
+    if timeline_event_id is None or timeline_event_id <= 0:
+        return _TIMELINE_USAGE
+    timeline_event = runtime.store.get_timeline_event(timeline_event_id)
+    if timeline_event is None:
+        return f"No timeline event found for id [{timeline_event_id}]."
+    description = _mobile_preview(timeline_event.get("description") or "", 180)
+    sort_key = (timeline_event.get("sort_key") or "").strip()
+    sort_key_part = (
+        f" | sort key: {sort_key}"
+        if sort_key
+        else ""
+    )
+    return (
+        f"Timeline [{timeline_event['id']}] for project [{timeline_event['project_id']}]: "
+        f"event date: {timeline_event['event_date']} | title: {timeline_event['title']}"
+        f"{sort_key_part} | description: {description}"
+    )
 
 
 def relationship_add(runtime: Any, command: RPCommand, event: Any) -> str:

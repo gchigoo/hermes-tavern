@@ -2169,6 +2169,15 @@ class NovelDBMixin:
             ).fetchone()
         return _row_to_dict(row)
 
+    def get_timeline_event(self, timeline_event_id: int) -> dict[str, Any] | None:
+        self.migrate()
+        with self.connect() as conn:
+            row = conn.execute(
+                "SELECT * FROM novel_timeline WHERE id = ?",
+                (timeline_event_id,),
+            ).fetchone()
+        return _row_to_dict(row)
+
     def list_timeline(self, project_id: int) -> list[dict[str, Any]]:
         self.migrate()
         with self.connect() as conn:

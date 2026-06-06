@@ -190,6 +190,14 @@ def test_help_lists_project_revision_commands():
     assert "/rp project revision delete <note-id>" in help_text
 
 
+def test_help_lists_timeline_commands():
+    help_text = _build_help_text()
+
+    assert "/rp timeline add <project-id> <date> <title> [description...]" in help_text
+    assert "/rp timeline list [project-id]" in help_text
+    assert "/rp timeline inspect <timeline-id>" in help_text
+
+
 def test_help_lists_binding_commands():
     help_text = _build_help_text()
 

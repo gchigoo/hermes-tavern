@@ -284,6 +284,13 @@ def test_readme_core_commands_includes_scene_and_chapter_summary_literals():
     assert "/rp scene summary clear <scene-id>" in core_commands
 
 
+def test_readme_core_commands_include_timeline_literals():
+    core_commands = _readme_core_commands_text()
+
+    assert "/rp timeline add/list" in core_commands
+    assert "/rp timeline inspect <timeline-id>" in core_commands
+
+
 def test_readme_core_commands_include_project_style_literals():
     core_commands = _readme_core_commands_text()
 

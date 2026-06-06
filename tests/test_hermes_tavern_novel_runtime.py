@@ -245,6 +245,9 @@ def test_novel_command_table_has_expected_families():
     assert "/rp style sample inspect <style-sample-id>" in TAVERN_COMMAND_TABLE["style"].help_lines
     assert "/rp style sample update <style-sample-id> <sample...>" in TAVERN_COMMAND_TABLE["style"].help_lines
     assert "/rp style sample delete <style-sample-id>" in TAVERN_COMMAND_TABLE["style"].help_lines
+    assert "/rp timeline add <project-id> <date> <title> [description...]" in TAVERN_COMMAND_TABLE["timeline"].help_lines
+    assert "/rp timeline list [project-id]" in TAVERN_COMMAND_TABLE["timeline"].help_lines
+    assert "/rp timeline inspect <timeline-id>" in TAVERN_COMMAND_TABLE["timeline"].help_lines
 
 
 def test_project_routes_create_list_info_set(tmp_path):
@@ -464,6 +467,16 @@ def test_project_command_help_includes_character_state_lines(tmp_path):
     assert "/rp character state inspect <character-state-id>" in help_output
     assert "/rp character state update <character-state-id> <state...>" in help_output
     assert "/rp character state delete <character-state-id>" in help_output
+
+
+def test_project_command_help_includes_timeline_lines(tmp_path):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+
+    help_output = runtime.handle_command_sync(RPCommand("help", [], "/rp"), Event())
+
+    assert "/rp timeline add <project-id> <date> <title> [description...]" in help_output
+    assert "/rp timeline list [project-id]" in help_output
+    assert "/rp timeline inspect <timeline-id>" in help_output
 
 
 def test_project_command_help_includes_location_lines(tmp_path):
@@ -3536,6 +3549,81 @@ def test_canon_inspect_route_not_found_is_bounded(tmp_path):
             Event(),
         )
         == "No canon fact found for id [9999]."
+    )
+
+
+def test_timeline_inspect_route_returns_compact_bound_preview(tmp_path):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    project = runtime.store.create_project("Atlas")
+    timeline = runtime.store.create_timeline_event(
+        project["id"],
+        "2450-01-01",
+        "Arrival",
+        description="Fog wraps the harbor. " * 12,
+        sort_key="2450.01",
+    )
+
+    response = runtime.handle_command_sync(
+        RPCommand("timeline", ["inspect", str(timeline["id"])], f"/rp timeline inspect {timeline['id']}"),
+        Event(),
+    )
+
+    assert (
+        response
+        == (
+            f"Timeline [{timeline['id']}] for project [{project['id']}]: "
+            f"event date: {timeline['event_date']} | title: Arrival | sort key: 2450.01 | "
+            f"description: {_mobile_preview(timeline['description'], 180)}"
+        )
+    )
+
+
+def test_timeline_inspect_route_rejects_malformed_or_non_positive_args(tmp_path):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    malformed_usage = (
+        "Usage: /rp timeline add <project-id> <date> <title> [description...] | "
+        "/rp timeline list [project-id] | /rp timeline inspect <timeline-id>"
+    )
+
+    assert (
+        runtime.handle_command_sync(
+            RPCommand("timeline", ["inspect"], "/rp timeline inspect"),
+            Event(),
+        )
+        == malformed_usage
+    )
+    assert (
+        runtime.handle_command_sync(
+            RPCommand("timeline", ["inspect", "abc"], "/rp timeline inspect abc"),
+            Event(),
+        )
+        == malformed_usage
+    )
+    assert (
+        runtime.handle_command_sync(
+            RPCommand("timeline", ["inspect", "0"], "/rp timeline inspect 0"),
+            Event(),
+        )
+        == malformed_usage
+    )
+    assert (
+        runtime.handle_command_sync(
+            RPCommand("timeline", ["inspect", "1", "extra"], "/rp timeline inspect 1 extra"),
+            Event(),
+        )
+        == malformed_usage
+    )
+
+
+def test_timeline_inspect_route_not_found_is_bounded(tmp_path):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+
+    assert (
+        runtime.handle_command_sync(
+            RPCommand("timeline", ["inspect", "9999"], "/rp timeline inspect 9999"),
+            Event(),
+        )
+        == "No timeline event found for id [9999]."
     )
 
 

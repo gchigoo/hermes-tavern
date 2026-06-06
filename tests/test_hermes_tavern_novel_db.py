@@ -1744,6 +1744,23 @@ def test_timeline_ordering(tmp_path):
     ]
 
 
+def test_get_timeline_event_found_and_missing(tmp_path):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    novel_project = store.create_project("Timeline")
+
+    first = store.create_timeline_event(
+        novel_project["id"],
+        "2450.01",
+        "First",
+        description="At dawn.",
+    )
+
+    assert store.get_timeline_event(first["id"])["title"] == "First"
+    assert store.get_timeline_event(first["id"])["project_id"] == novel_project["id"]
+    assert store.get_timeline_event(first["id"])["description"] == "At dawn."
+    assert store.get_timeline_event(9999) is None
+
+
 def test_export_project_markdown_structure(tmp_path):
     store = TavernStore(tmp_path / "tavern.sqlite3")
 
