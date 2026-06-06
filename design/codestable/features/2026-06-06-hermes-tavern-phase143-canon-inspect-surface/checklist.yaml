@@ -1,0 +1,105 @@
+doc_type: feature-checklist
+feature: "2026-06-06-hermes-tavern-phase143-canon-inspect-surface"
+date: "2026-06-06"
+status: planned
+summary: >
+  PLANNED - Add a read-only /rp canon inspect <canon-id> command for existing
+  canon facts, without schema, prompt, provider, generation, export, archive/import,
+  retrieval/vectorization, or deferred canon-tool behavior changes.
+tags: [hermes-tavern, canon, command-surface, offline]
+implementation_readiness: >
+  DRAFT - This artifact is plan-only. A future executor must rerun the active
+  checklist guard and source probes before implementing S1.
+steps:
+  - id: S1
+    name: "S1: Add read-only canon inspect command"
+    status: planned
+    description: >
+      Add a TavernStore canon getter, nested /rp canon inspect command handling,
+      help/README visibility, and focused offline tests. Keep canon prompt behavior
+      unchanged and do not implement deferred canon analysis tools.
+    allowed_files:
+      - src/hermes_tavern/db_novel.py
+      - src/hermes_tavern/runtime_novel.py
+      - src/hermes_tavern/commands.py
+      - README.md
+      - tests/test_hermes_tavern_novel_db.py
+      - tests/test_hermes_tavern_novel_runtime.py
+      - tests/test_hermes_tavern_commands.py
+      - tests/test_hermes_tavern_readme_docs.py
+    prohibited_files:
+      - run_agent.py
+      - cli.py
+      - gateway/run.py
+      - src/hermes_tavern/runtime.py
+      - src/hermes_tavern/runtime_prompt_modules.py
+      - src/hermes_tavern/prompt.py
+      - src/hermes_tavern/runtime_debug.py
+      - src/hermes_tavern/model_router.py
+      - src/hermes_tavern/provider_bridge.py
+      - src/hermes_tavern/adapters.py
+      - src/hermes_tavern/runtime_generation.py
+      - src/hermes_tavern/runtime_content.py
+      - src/hermes_tavern/importers/**
+      - plugins/**
+      - build/lib/**
+      - design/HERMES_TAVERN_DESIGN.md
+      - design/codestable/architecture/ARCHITECTURE.md
+    exact_scope:
+      - "Add TavernStore.get_canon(canon_id) as a read-only helper returning one row or None."
+      - "Add /rp canon inspect <canon-id> under runtime_novel.canon_command."
+      - "Return bounded output with id, project id, title, canon group, and content preview."
+      - "Return usage for malformed ids and a bounded not-found message for missing rows."
+      - "Add the inspect literal to generated help and README Core commands."
+      - "Add focused DB/runtime/help/README tests."
+      - "Do not alter list_canon ordering or get_canon_for_prompt behavior."
+      - "Do not add canon check, conflict, pin, correlation, update, delete, graph, extraction, generation, provider, archive/import, credential, or safety behavior."
+    verification:
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m py_compile src/hermes_tavern/db_novel.py src/hermes_tavern/runtime_novel.py src/hermes_tavern/commands.py tests/test_hermes_tavern_novel_db.py tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_commands.py tests/test_hermes_tavern_readme_docs.py"
+        result: "pending"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel_db.py tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_commands.py tests/test_hermes_tavern_readme_docs.py -q -o 'addopts=' -p no:cacheprovider"
+        result: "pending"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_*.py -q -o 'addopts=' -p no:cacheprovider"
+        result: "pending"
+      - command: "git diff --name-only -- run_agent.py cli.py gateway/run.py src/hermes_tavern/runtime.py src/hermes_tavern/runtime_prompt_modules.py src/hermes_tavern/prompt.py src/hermes_tavern/runtime_debug.py src/hermes_tavern/model_router.py src/hermes_tavern/provider_bridge.py src/hermes_tavern/adapters.py src/hermes_tavern/runtime_generation.py src/hermes_tavern/runtime_content.py src/hermes_tavern/importers plugins build/lib design/HERMES_TAVERN_DESIGN.md design/codestable/architecture/ARCHITECTURE.md"
+        result: "pending"
+      - command: "git diff --check"
+        result: "pending"
+  - id: S2
+    name: "S2: Verify and accept"
+    status: planned
+    description: >
+      Controller-owned acceptance/writeback after S1.
+    allowed_files:
+      - design/codestable/features/2026-06-06-hermes-tavern-phase143-canon-inspect-surface/design.md
+      - design/codestable/features/2026-06-06-hermes-tavern-phase143-canon-inspect-surface/checklist.yaml
+      - design/codestable/features/2026-06-06-hermes-tavern-phase143-canon-inspect-surface/hermes-tavern-phase143-canon-inspect-surface-acceptance.md
+acceptance:
+  - id: AC1
+    criteria: "/rp canon inspect <canon-id> returns bounded details for one existing canon row."
+    status: planned
+  - id: AC2
+    criteria: "Malformed and missing ids return bounded command output."
+    status: planned
+  - id: AC3
+    criteria: "Generated help and README Core commands include the canon inspect literal."
+    status: planned
+  - id: AC4
+    criteria: "Deferred canon check/conflict/pin literals remain absent from help, command table, and README."
+    status: planned
+  - id: AC5
+    criteria: "No protected core, runtime.py, prompt/provider/generation, retrieval/vectorization, archive/import, credential, plugin, build, architecture, or root-design files change during S1."
+    status: planned
+checks:
+  - id: C1
+    name: "Canon inspect helper"
+    status: planned
+    criteria: "A read-only store helper fetches one canon row by id without changing schema or ordering."
+  - id: C2
+    name: "Nested command route"
+    status: planned
+    criteria: "The inspect command routes through the existing canon family and does not add a new top-level command."
+  - id: C3
+    name: "Offline verification"
+    status: planned
+    criteria: "Focused and Tavern-wide offline tests run with -o 'addopts=' and no cacheprovider."
