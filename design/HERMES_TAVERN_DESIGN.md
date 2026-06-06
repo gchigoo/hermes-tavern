@@ -334,6 +334,15 @@ session and is distinct from active-session `/rp greeting list` / `/rp greeting 
 no session start/bind/message mutation, prompt/provider/generation, credential,
 content-mode, minors/underage, or safety-bypass behavior is introduced.
 
+Phase 149 adds `/rp card export <card>` as offline character-card export parity.
+It resolves the card with existing `get_card(...)` semantics (including `last`),
+reads one stored `cards` row, prefers `cards.data_json.raw` when it is a JSON
+object, and otherwise builds a normalized SillyTavern-compatible fallback export
+from existing stored fields. The command writes one local export file and returns a
+quoted `MEDIA` marker. No schema/index/migration or prompt/provider/model/generation,
+retrieval/vectorization, content-mode, minors/underage, or safety-bypass behavior is
+introduced.
+
 ### 6.3 Persona
 
 Personas represent user-side identities and narrator modes.
@@ -1378,12 +1387,15 @@ local chapter/scene summary commands and Markdown export visibility.
 
 Current Character Card storage model includes:
 `cards(id, name, source_path, data_json, created_at)` with `first_mes` and
-`alternate_greetings` stored in `data_json`. Phase 148 reads these existing fields
-for `/rp card greeting <card>` through existing card lookup and greeting
-normalization. It does not change `cards` schema, indexes, migrations,
-sessions/messages, prompt assembly, provider/model routing, generation,
-import/export, credentials, content mode, minors/underage handling, or safety
-behavior.
+`alternate_greetings` stored in `data_json`. Phase 149 adds `/rp card export <card>`
+for JSON export parity over one existing stored card row. It prefers
+`data_json.raw` when present and valid JSON object; otherwise it exports a
+normalized SillyTavern-compatible fallback derived from existing card fields.
+It does not change `cards` schema, indexes, migrations, sessions/messages,
+prompt assembly, provider/model routing, generation, retrieval/vectorization,
+credentials, content mode, minors/underage handling, or safety behavior.
+Phase 148 and earlier card greeting behavior continues to read `first_mes` and
+`alternate_greetings` via existing card resolution and normalization.
 
 Phase 145 adds read-only chapter inspection over existing `novel_chapters` rows
 via the existing `runtime.store.get_chapter(chapter_id)` helper.
@@ -1484,8 +1496,9 @@ ST preset JSON
 ST lorebook/world info JSON
 ```
 
-Hermes Tavern native project archives are deferred; the current Phase 121–147
-implementation provides Markdown export only, not project/novel import.
+Hermes Tavern native project archives are deferred; the current Phase 121–149
+implementation provides Markdown project export and single-card JSON export, not
+project/novel import.
 Relationship-state, character-state, location, organization, plot-thread, and
 style-sample rows, plus revision-note and scene-beat rows, remain local metadata
 and are not bound to ST card objects in this phase.
@@ -1507,15 +1520,19 @@ Markdown novel projects
 Required exporters:
 
 ```text
-card export JSON
+`/rp card export <card>` card export JSON
 preset export JSON/native
 lorebook export JSON
 chat export JSONL
 novel export Markdown
 ```
 
-Project archive ZIP remains a future exporter/importer; current Phase 121–147 writes
-local Markdown via `/rp project export [id]`.
+Project archive ZIP remains a future exporter/importer; current Phase 121–149 writes
+local Markdown via `/rp project export [id]` and single-card JSON via
+`/rp card export <card>`. PNG card exports, bulk card export, project archive
+ZIP/import, card editing/deletion/merge tooling, provider/generation side effects,
+retrieval/vectorization coupling, content-mode/minors handling, and safety-bypass
+behavior remain deferred to later phases.
 Project Brief and Project Outline are exported as optional top-level `## Project Brief`
 and `## Outline` sections after `## Summary` when non-empty. Project style guides
 are exported as a top-level `## Style Guide` section after optional Project Brief

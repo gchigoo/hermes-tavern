@@ -1,7 +1,7 @@
 # Hermes Agent — Architecture
 
 > Status: current snapshot
-> Last updated: 2026-06-06
+> Last updated: 2026-06-07
 
 ## 1. Project Summary
 
@@ -164,6 +164,15 @@ importers/
   card/session/message mutation, prompt/module, provider/model/generation,
   retrieval/vectorization, credential, archive/import/export, content-mode,
   minors/underage, or safety-bypass behavior changes.
+- Phase 149: Card JSON Export (`/rp card export <card>`) reads one existing stored
+  card via the same `get_card(card_id_or_name)` resolver (including `last`) and
+  writes one UTF-8 JSON file under
+  `get_hermes_home()/plugins/hermes-tavern/exports/cards` with quoted `MEDIA`
+  attachment output. It prefers `cards.data_json.raw` if it is JSON, otherwise
+  normalizes an ST-compatible fallback payload from existing card fields; no schema
+  or table/index migrations are added and no prompt/provider/model/generation,
+  retrieval/vectorization, content-mode, minors/underage, or safety-bypass behavior
+  changes occur.
 
 ### Plugin flow
 
@@ -204,12 +213,12 @@ from vectorization/retrieval, provider/model routing, content mode,
 credentials, automation, summarization, and generation; they are visible only
 through command output and Markdown export.
 
-### /rp command surface (current through Phase 148)
+### /rp command surface (current through Phase 149)
 
 ```
 /rp help | status | assets
 /rp cards [limit] [page]                    ← paginated (Phase 17)
-/rp card import <file> | inspect <card> | use <card> | greeting <card>     ← `last` resolves to the session-lifetime most recently imported card
+/rp card import <file> | inspect <card> | use <card> | export <card> | greeting <card>     ← `last` resolves to the session-lifetime most recently imported card
 /rp start <card> | end | retry | undo | edit last <text> ← `/rp start last` starts the most recently imported card; retry/undo/edit replies include mobile repeat hints
 /rp speak | voice [on|off]                   ← placeholder speech surface; no real TTS/network call yet
 /rp history [limit] [page]                  ← paginated chronological (Phase 18)
@@ -305,7 +314,7 @@ through command output and Markdown export.
 /rp relationship delete <relationship-id>
 ```
 
-### DB schema (current through Phase 148; unchanged by Phase 148)
+### DB schema (current through Phase 149; unchanged by Phase 149)
 
 ```sql
 cards(id, name, data_json, source_path, created_at)
@@ -449,6 +458,15 @@ has no card/session/message mutation, prompt/module selection, provider/model,
 generation, import/export, retrieval/vectorization, credential, content-mode,
 minors/underage, or safety side effects.
 
+Phase 149 exports one existing stored character card through `/rp card export <card>`.
+It uses `TavernStore.get_card(card_id_or_name)` including `last` resolution, and
+returns one UTF-8 JSON file under `get_hermes_home()/plugins/hermes-tavern/exports/cards`.
+It prefers `data_json.raw` when present as a JSON object and otherwise writes a
+normalized fallback payload from existing stored card fields. It makes no schema,
+index, or migration changes, does not mutate sessions/messages, and leaves prompt,
+provider/model, generation, retrieval/vectorization, content-mode, minors/underage,
+and safety-bypass behavior unchanged.
+
 Phase 131 adds `novel_character_states` as project-scoped character metadata.
 Character-state rows are managed through `/rp character state ...` and emitted as
 optional `## Characters` Markdown metadata; they are not selected for prompt
@@ -541,7 +559,7 @@ These phases do not change schema or core prompt/generation assembly.
 - **Tavern live provider error envelope**: `_generate_with_session_adapter` catches all exceptions and returns a fixed bounded message — `str(exc)` is never forwarded to users.
 - **Tavern image provider error envelope**: `/rp image ...` catches provider exceptions and returns a fixed bounded message with retry/status hints. Failed image jobs persist only sanitized generic error text, never `str(exc)`.
 - **Tavern provider debug sanitizer**: provider/debug dicts must pass recursive, case-insensitive secret-key filtering before display. Secret-like keys include `api_key`, `access_token`, `password`, `secret`, and `token`.
-- **Tavern export MEDIA contract**: `/rp export` returns quoted `MEDIA:"<path>"` markers so gateway adapters preserve attachment paths with spaces. Exports must not include raw event JSON or raw message metadata blobs.
+- **Tavern export MEDIA contract**: `/rp export` and `/rp card export <card>` return quoted `MEDIA:"<path>"` markers so gateway adapters preserve attachment paths with spaces. Exports must not include raw event JSON or raw message metadata blobs.
 - **Phase 121 reverse-scope constraints**: no cloud sync, no collaboration/multi-user workflow, no novel import, no timeline graphics, no DB credential persistence.
 - **Tavern DB never persists `api_key` / `access_token`**: credentials resolved at runtime via `HermesRuntimeProviderResolver`, discarded after use.
 - **Phase 129 summary metadata boundary**: chapter/scene summary text is metadata-only and export-visible but not injected into prompt modules, context budgeting, vectorization, retrieval, provider routing, or generation.
@@ -565,5 +583,11 @@ These phases do not change schema or core prompt/generation assembly.
   `greeting_options(...)` behavior. It keeps card schema, card/session/message
   mutation, table/index migration, prompt/module coupling, provider/model routing,
   generation, retrieval/vectorization, credentials, content-mode, minors/underage,
+  and safety-bypass behavior unchanged.
+- **Phase 149 card export boundary**: `/rp card export <card>` reads one existing
+  stored card and writes one UTF-8 JSON file under profile-safe exports. It keeps
+  `cards` schema, table/index shape, migrations, card/session/message mutation,
+  prompt/module coupling, provider/model routing, generation, retrieval/vectorization,
+  credentials, content-mode, minors/underage, other archive/import/export boundaries,
   and safety-bypass behavior unchanged.
 - **Tavern lore regex complexity guard**: lorebook regex keys are screened locally before matching. Entries with patterns longer than 256 characters or nested quantified groups (for example `(a+)+`, `(.+)*`, `([a-z]+){2,}`) are excluded with bounded reasons (`regex rejected: ...`), preserving raw imported lore data while preventing unbounded local matching behavior.

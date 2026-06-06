@@ -1,13 +1,13 @@
 ---
 doc_type: feature-design
-status: implemented
+status: accepted
 feature: "2026-06-07-hermes-tavern-phase149-card-export-json"
 date: "2026-06-07"
 summary: >
-  IMPLEMENTED S1 - Add a bounded local /rp card export <card> command that writes
-  one stored character card as SillyTavern-compatible JSON and returns a quoted
-  MEDIA marker without mutating runtime state or touching provider/generation
-  paths. S2 acceptance/writeback remains planned.
+  ACCEPTED - Adds a bounded local /rp card export <card> command that writes one
+  stored character card as SillyTavern-compatible JSON and returns a quoted MEDIA
+  marker without mutating runtime state or touching provider/generation paths. S2
+  acceptance/writeback is complete.
 tags: [hermes-tavern, card, export, sillytavern, command-surface, offline]
 created: "2026-06-07"
 updated: "2026-06-07"

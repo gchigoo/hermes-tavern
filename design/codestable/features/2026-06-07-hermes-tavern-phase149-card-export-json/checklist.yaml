@@ -1,14 +1,12 @@
 doc_type: feature-checklist
-status: implemented
+status: accepted
 feature: "2026-06-07-hermes-tavern-phase149-card-export-json"
 date: "2026-06-07"
 implementation_ready: true
 summary: >
-  IMPLEMENTED S1 - Phase 149 adds a bounded /rp card export <card> JSON export
-  surface under the existing card command family. The controller promoted the
-  existing draft for exactly one S1 implementation slice after Codex architect
-  returned READY_TO_IMPLEMENT, Codex executor implemented the bounded slice, and
-  controller verification passed. S2 acceptance/writeback remains planned.
+  ACCEPTED - Phase 149 adds a bounded /rp card export <card> JSON export surface
+  under the existing card command family. S1 implementation and S2
+  acceptance/writeback were Codex-driven and controller-verified.
 tags:
   - hermes-tavern
   - card
@@ -17,11 +15,12 @@ tags:
   - command-surface
   - offline
 implementation_readiness: >
-  IMPLEMENTED S1 - Codex architect validated the existing artifact as
-  READY_TO_IMPLEMENT, Codex executor implemented only the bounded S1 surface, and
-  the controller reran validators, py_compile, focused pytest, Tavern-wide pytest,
-  full pytest, protected-path guards, and git diff --check successfully. S2
-  acceptance/writeback remains planned and must not be finalized during S1.
+  ACCEPTED - Codex architect validated the existing artifact as READY_TO_IMPLEMENT,
+  Codex executor implemented only the bounded S1 surface, and the controller reran
+  validators, py_compile, focused pytest, Tavern-wide pytest, full pytest,
+  protected-path guards, and git diff --check successfully. The S2
+  docs/status/writeback pass was drafted by Codex executor and finalized only after
+  controller reran validators/tests/guards.
 steps:
   - id: S1
     name: "S1: Implement card JSON export"
@@ -91,7 +90,13 @@ steps:
         result: "passed; empty protected-path diff guard (controller rerun)"
   - id: S2
     name: "S2: Accept and write back docs"
-    status: planned
+    status: completed
+    completed_at: "2026-06-07"
+    result: >
+      ACCEPTED - Created the Phase 149 acceptance report, currentized architecture
+      and root design for /rp card export <card>, and finalized design/checklist
+      status after controller-rerun validators, focused/Tavern-wide/full pytest,
+      protected scope guards, stale/current wording guards, and git diff --check.
     description: >
       Controller-owned acceptance/writeback after S1 verification. Create the
       acceptance report, finalize checklist/design status only after verification,
@@ -129,28 +134,28 @@ steps:
 acceptance:
   - id: AC1
     criteria: "/rp card export <card> writes one JSON file for an existing stored card."
-    status: planned
+    status: completed
   - id: AC2
     criteria: "The command works without an active RP session and does not create or mutate sessions/messages."
-    status: planned
+    status: completed
   - id: AC3
     criteria: "The last card reference works consistently with existing card inspect/greeting behavior."
-    status: planned
+    status: completed
   - id: AC4
     criteria: "Missing cards and missing command arguments return bounded user-facing messages."
-    status: planned
+    status: completed
   - id: AC5
     criteria: "Export response includes a path under get_hermes_home() and a quoted MEDIA marker."
-    status: planned
+    status: completed
   - id: AC6
     criteria: "Preserved raw JSON and normalized fallback JSON paths are both covered by tests."
-    status: planned
+    status: completed
   - id: AC7
     criteria: "Generated help and README Core commands include /rp card export <card>."
-    status: planned
+    status: completed
   - id: AC8
     criteria: "No schema, prompt/provider/generation, credential, retrieval/vectorization, content-mode, importer, archive, plugin, build, protected core, minors/underage, or safety-bypass behavior changes occur."
-    status: planned
+    status: completed
 checks:
   - id: C1
     name: "Focused card export tests"
@@ -174,14 +179,28 @@ checks:
     name: "CodeStable validators"
     status: completed
     completed_at: "2026-06-07"
-    criteria: "Design/checklist YAML/frontmatter validates after controller-owned S1 materialization/status sync; acceptance report validation is deferred to S2."
-    result: "passed; Phase 149 design.md and checklist.yaml validators each reported 1 passed, 0 failed before final commit"
+    criteria: "Design/checklist/acceptance YAML/frontmatter validates after controller-owned S1/S2 materialization and final status sync."
+    result: "passed; Phase 149 design.md, checklist.yaml, and acceptance.md validators each reported 1 passed, 0 failed before final commit"
+  - id: C5
+    name: "S2 acceptance/writeback verification"
+    status: completed
+    completed_at: "2026-06-07"
+    criteria: "Docs/status writeback passes controller validators, focused/Tavern-wide/full tests, protected-path guards, stale/current wording guards, and git diff --check."
+    result: >
+      passed; validators passed, focused pytest reported 102 passed, Tavern-wide
+      pytest reported 1073 passed, full pytest reported 1073 passed, protected
+      source/test/README/core diff guard was empty, current docs had no stale
+      Phase 148/121-147 planned wording, and git diff --check passed.
 verification_notes: |
   - Codex architect artifact: /tmp/hermes-tavern-architect-phase149-planning.jsonl (RESULT: PLAN_ONLY_NEW_FEATURE; IMPLEMENTATION_READY=false).
   - Controller promotion artifact: /tmp/hermes-tavern-architect-phase149-s1.jsonl (RESULT: READY_TO_IMPLEMENT; S1 only).
   - Codex executor smoke artifact: /tmp/hermes-tavern-executor-smoke-phase149-s1.jsonl (EXECUTOR_SMOKE_OK; no files edited).
   - Codex executor artifact: /tmp/hermes-tavern-executor-phase149-s1.jsonl (implemented S1). Executor JSONL included recoverable apply_patch/path probes and an executor-sandbox Tavern-wide image-provider failure; controller inspected diffs and reran py_compile, focused pytest, Tavern-wide pytest, full pytest, CodeStable validators, protected-path guard, and git diff --check successfully.
   - Controller added a small filename sanitizer after review so explicit card ids containing path separators stay inside the configured cards export directory.
+  - S2 Codex architect artifact: /tmp/hermes-tavern-architect-phase149-s2.jsonl (RESULT: READY_FOR_EXECUTOR; docs/status only).
+  - S2 Codex executor artifact: /tmp/hermes-tavern-executor-phase149-s2.jsonl (drafted acceptance/writeback docs; included harmless failed exploratory/reference commands that controller reviewed).
+  - Controller finalized S2 only after rerunning validators, focused/Tavern-wide/full pytest, protected scope guards, stale/current wording guards, and git diff --check.
 notes:
   - "Initial 2026-06-07 planning tick created draft/planned artifacts only; later controller promotion was limited to S1 implementation, not acceptance."
-  - "2026-06-07 S1: Codex executor implemented the bounded card JSON export surface in allowed files only; controller reran focused, Tavern-wide, and full pytest gates plus CodeStable validators, protected-file diff guard, and git diff --check. S2 acceptance/writeback remains planned."
+  - "2026-06-07 S1: Codex executor implemented the bounded card JSON export surface in allowed files only; controller reran focused, Tavern-wide, and full pytest gates plus CodeStable validators, protected-file diff guard, and git diff --check."
+  - "2026-06-07 S2: Codex architect/executor drafted acceptance/writeback docs; controller verified and finalized accepted status with validators, focused/Tavern-wide/full pytest, protected scope guards, stale/current wording guards, and git diff --check."
