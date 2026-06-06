@@ -1,11 +1,12 @@
 ---
 doc_type: feature-design
-status: implemented
+status: accepted
 feature: "2026-06-07-hermes-tavern-phase150-lorebook-json-export"
 date: "2026-06-07"
 summary: >
-  IMPLEMENTED - Adds one offline `/rp lore export <lorebook>` JSON export surface for
-  stored lorebooks, with help/README visibility and focused tests.
+  ACCEPTED - Adds one offline `/rp lore export <lorebook>` JSON export surface for
+  stored lorebooks, with help/README visibility, focused tests, and completed
+  architecture/root-design acceptance writeback.
 tags: [hermes-tavern, lorebook, offline]
 created: "2026-06-07"
 updated: "2026-06-07"
@@ -164,5 +165,22 @@ S1 allowed runtime/help/README/test files. Controller verification passed:
 - protected-file reverse-scope guard: empty output
 - `git diff --check`
 
-Acceptance report plus architecture/root-design currentization remain a separate
-S2 closeout slice.
+## S2 Acceptance Result
+
+Codex architect returned `RESULT: READY_FOR_EXECUTOR` for the docs/status-only S2
+closeout in `/tmp/hermes-tavern-architect-phase150-s2.jsonl`. Codex executor
+drafted acceptance/writeback artifacts in `/tmp/hermes-tavern-executor-phase150-s2.jsonl`,
+limited to CodeStable/current-state documentation. Controller verification passed:
+
+- CodeStable frontmatter/YAML validators for this design, checklist, and acceptance report
+- `PYTHONDONTWRITEBYTECODE=1 python -m py_compile src/hermes_tavern/runtime_lore.py src/hermes_tavern/commands.py tests/test_hermes_tavern_lore_runtime.py tests/test_hermes_tavern_commands.py tests/test_hermes_tavern_readme_docs.py`
+- `PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_lore_runtime.py tests/test_hermes_tavern_commands.py tests/test_hermes_tavern_readme_docs.py -q -o 'addopts=' -p no:cacheprovider` (`105 passed`)
+- `PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_*.py -q -o 'addopts=' -p no:cacheprovider` (`1080 passed`)
+- `PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts=' -p no:cacheprovider` (`1080 passed`)
+- protected-path diff guard: empty output
+- stale/current wording guards for Phase 150 docs
+- `git diff --check`
+
+Phase 150 is accepted. Broader lorebook bulk export, preset export, project archive
+ZIP import/export, retrieval/vectorization coupling, provider/model/generation
+behavior, content-mode/minors handling, and safety-bypass changes remain deferred.

@@ -1,20 +1,21 @@
 doc_type: feature-checklist
-status: implemented
+status: accepted
 feature: "2026-06-07-hermes-tavern-phase150-lorebook-json-export"
 date: "2026-06-07"
 implementation_ready: true
 summary: >
-  IMPLEMENTED - Adds one offline `/rp lore export <lorebook>` JSON export surface for
-  stored lorebooks, with help/README visibility and focused tests.
+  ACCEPTED - Adds one offline `/rp lore export <lorebook>` JSON export surface for
+  stored lorebooks, with help/README visibility, focused tests, and completed
+  architecture/root-design acceptance writeback.
 tags:
   - hermes-tavern
   - lorebook
   - offline
 implementation_readiness: >
-  IMPLEMENTED - Codex architect validated S1 as ready, Codex executor implemented
+  ACCEPTED - Codex architect validated S1 as ready, Codex executor implemented
   the bounded runtime/help/README/test slice, and the controller reran targeted,
-  Tavern-wide, full, validator, protected-file, and whitespace gates. Acceptance
-  report plus architecture/root-design currentization remain planned as S2.
+  Tavern-wide, full, validator, protected-file, and whitespace gates. S2 acceptance
+  report plus architecture/root-design currentization are complete and controller-verified.
 steps:
   - id: S1
     name: "S1: Add lorebook JSON export command"
@@ -67,11 +68,11 @@ steps:
       - "Executor JSONL includes two harmless failed exploratory reads for nonexistent runtime_card.py/runtime_export.py and one failing targeted pytest run before executor self-repair; final executor and controller reruns passed."
   - id: S2
     name: "S2: Acceptance and architecture/root-design writeback"
-    status: planned
+    status: completed
     description: >
-      Create the acceptance report, update architecture/root-design docs to make
-      `/rp lore export <lorebook>` current behavior, rerun validators/tests/guards,
-      and mark the feature accepted.
+      Created the acceptance report and updated architecture/root-design docs to
+      record `/rp lore export <lorebook>` current behavior. Controller verification
+      passed and the feature is accepted.
     allowed_files:
       - design/codestable/features/2026-06-07-hermes-tavern-phase150-lorebook-json-export/design.md
       - design/codestable/features/2026-06-07-hermes-tavern-phase150-lorebook-json-export/checklist.yaml
@@ -81,27 +82,41 @@ steps:
     verification:
       - command: "python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-07-hermes-tavern-phase150-lorebook-json-export/hermes-tavern-phase150-lorebook-json-export-acceptance.md --require doc_type --require status --require feature"
         expected: "passes after acceptance report exists"
+        actual: "passed in controller on 2026-06-07"
       - command: "python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-07-hermes-tavern-phase150-lorebook-json-export/design.md --require doc_type --require status --require feature"
         expected: "passes"
+        actual: "passed in controller on 2026-06-07"
       - command: "python design/codestable/tools/validate-yaml.py --yaml-only --file design/codestable/features/2026-06-07-hermes-tavern-phase150-lorebook-json-export/checklist.yaml"
         expected: "passes"
+        actual: "passed in controller on 2026-06-07"
       - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_lore_runtime.py tests/test_hermes_tavern_commands.py tests/test_hermes_tavern_readme_docs.py -q -o 'addopts=' -p no:cacheprovider"
         expected: "passes"
+        actual: "105 passed in controller on 2026-06-07"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_*.py -q -o 'addopts=' -p no:cacheprovider"
+        expected: "passes"
+        actual: "1080 passed in controller on 2026-06-07"
       - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts=' -p no:cacheprovider"
         expected: "passes when feasible"
+        actual: "1080 passed in controller on 2026-06-07"
+      - command: "git diff --name-only -- README.md src tests run_agent.py cli.py gateway/run.py plugins build/lib"
+        expected: "empty output"
+        actual: "empty output in controller on 2026-06-07"
+      - command: "git diff --check"
+        expected: "passes"
+        actual: "passed in controller on 2026-06-07"
 acceptance:
   - id: AC1
     criteria: "`/rp lore export <lorebook>` writes one JSON file under the profile-safe lorebook export directory and returns a quoted MEDIA marker."
-    status: planned
+    status: accepted
   - id: AC2
     criteria: "Valid stored raw lorebook JSON objects are exported unchanged except pretty formatting."
-    status: planned
+    status: accepted
   - id: AC3
     criteria: "Invalid, missing, or non-object raw JSON uses a normalized fallback derived from stored lorebook and entry rows."
-    status: planned
+    status: accepted
   - id: AC4
     criteria: "`last`, usage, not-found, quoted-path, path-containment, help, README, and no-mutation behavior are covered by focused offline tests."
-    status: planned
+    status: accepted
 checks:
   - id: C1
     name: "Offline export boundary"
@@ -110,14 +125,18 @@ checks:
     actual: "Protected-file reverse-scope guard returned empty output; S1 changed only allowed runtime/help/README/test files."
   - id: C2
     name: "Acceptance writeback"
-    status: planned
+    status: completed
     criteria: "Acceptance report and current architecture/root-design docs capture `/rp lore export <lorebook>` as implemented behavior."
+    actual: "S2 acceptance report, ARCHITECTURE.md, and HERMES_TAVERN_DESIGN.md updated and controller-verified on 2026-06-07."
 verification_notes: |
   - Codex planning artifact: /tmp/hermes-tavern-architect-phase150-planning.jsonl
   - Codex S1 architect artifact: /tmp/hermes-tavern-architect-phase150-s1.jsonl
   - Codex executor artifact: /tmp/hermes-tavern-executor-phase150-s1.jsonl
   - Executor smoke artifact: /tmp/hermes-tavern-executor-phase150-smoke.jsonl
+  - Codex S2 architect artifact: /tmp/hermes-tavern-architect-phase150-s2.jsonl
+  - Codex S2 executor artifact: /tmp/hermes-tavern-executor-phase150-s2.jsonl
   - Controller verification on 2026-06-07: py_compile passed; targeted tests 105 passed; Tavern-wide tests 1080 passed; full pytest 1080 passed; validators passed; protected-file guard empty; git diff --check passed.
+  - S2 controller verification on 2026-06-07: validators passed for design/checklist/acceptance; targeted tests 105 passed; Tavern-wide tests 1080 passed; full pytest 1080 passed; stale/current wording guards passed; protected-path diff guard empty; git diff --check passed.
 notes:
   - "Initial 2026-06-07 planning tick created draft/planned artifacts only; implementation was deferred until this tick."
-  - "S1 implementation is complete and locally verified. S2 acceptance/writeback remains planned and should not broaden source/runtime behavior."
+  - "Phase 150 is accepted. S2 acceptance/writeback was docs/status-only and did not broaden source/runtime behavior."

@@ -173,6 +173,16 @@ importers/
   or table/index migrations are added and no prompt/provider/model/generation,
   retrieval/vectorization, content-mode, minors/underage, or safety-bypass behavior
   changes occur.
+- Phase 150: Lorebook JSON Export (`/rp lore export <lorebook>`) reads one existing
+  stored lorebook via the same resolver behavior (`get_lorebook(lorebook_id_or_name)`,
+  including `last`) and writes one UTF-8 JSON file under
+  `get_hermes_home()/plugins/hermes-tavern/exports/lorebooks` with quoted `MEDIA`
+  attachment output. It prefers `lorebooks.raw_json` if it parses to a JSON object;
+  otherwise it normalizes ST-compatible fallback payload fields from existing
+  lorebook and `lorebook_entries` rows; no schema/table/index migrations are added
+  and no prompt/provider/model/generation, retrieval/vectorization, content-mode,
+  minors/underage, safety-bypass, project archive, or ST importer/exporter behavior
+  changes occur.
 
 ### Plugin flow
 
@@ -213,7 +223,7 @@ from vectorization/retrieval, provider/model routing, content mode,
 credentials, automation, summarization, and generation; they are visible only
 through command output and Markdown export.
 
-### /rp command surface (current through Phase 149)
+### /rp command surface (current through Phase 150)
 
 ```
 /rp help | status | assets
@@ -229,7 +239,7 @@ through command output and Markdown export.
 /rp sessions [all] [limit] [page]           ← paginated (Phase 18)
 /rp switch <id> | rename <name> | archive | clone [name]
 /rp preset import [file] | list | inspect <preset> | use <preset>      ← `last` resolves to the session-lifetime most recently imported preset
-/rp lore import [file] | list | inspect <lorebook> | use <lorebook> | test <msg> | debug  ← `last` resolves to the session-lifetime most recently imported lorebook
+/rp lore import [file] | list | inspect <lorebook> | export <lorebook> | use <lorebook> | test <msg> | debug  ← `last` resolves to the session-lifetime most recently imported lorebook
 /rp persona import [file] | list [limit] [page] | inspect <persona> | use <persona> | clear | debug  ← `last` resolves to the session-lifetime most recently imported persona
 /rp note set <text> | clear | inspect | position [before_char|after_history|before_user] | frequency [always|every_n [n]]
 /rp memory add <fact> | list [limit] [page] | summary [set <text>|summarize [limit]] | debug
@@ -314,7 +324,7 @@ through command output and Markdown export.
 /rp relationship delete <relationship-id>
 ```
 
-### DB schema (current through Phase 149; unchanged by Phase 149)
+### DB schema (current through Phase 150; unchanged by Phase 150)
 
 ```sql
 cards(id, name, data_json, source_path, created_at)
@@ -559,7 +569,10 @@ These phases do not change schema or core prompt/generation assembly.
 - **Tavern live provider error envelope**: `_generate_with_session_adapter` catches all exceptions and returns a fixed bounded message — `str(exc)` is never forwarded to users.
 - **Tavern image provider error envelope**: `/rp image ...` catches provider exceptions and returns a fixed bounded message with retry/status hints. Failed image jobs persist only sanitized generic error text, never `str(exc)`.
 - **Tavern provider debug sanitizer**: provider/debug dicts must pass recursive, case-insensitive secret-key filtering before display. Secret-like keys include `api_key`, `access_token`, `password`, `secret`, and `token`.
-- **Tavern export MEDIA contract**: `/rp export` and `/rp card export <card>` return quoted `MEDIA:"<path>"` markers so gateway adapters preserve attachment paths with spaces. Exports must not include raw event JSON or raw message metadata blobs.
+- **Tavern export MEDIA contract**: `/rp export`, `/rp card export <card>`, and
+  `/rp lore export <lorebook>` return quoted `MEDIA:"<path>"` markers so gateway
+  adapters preserve attachment paths with spaces. Exports must not include raw event
+  JSON or raw message metadata blobs.
 - **Phase 121 reverse-scope constraints**: no cloud sync, no collaboration/multi-user workflow, no novel import, no timeline graphics, no DB credential persistence.
 - **Tavern DB never persists `api_key` / `access_token`**: credentials resolved at runtime via `HermesRuntimeProviderResolver`, discarded after use.
 - **Phase 129 summary metadata boundary**: chapter/scene summary text is metadata-only and export-visible but not injected into prompt modules, context budgeting, vectorization, retrieval, provider routing, or generation.
@@ -590,4 +603,11 @@ These phases do not change schema or core prompt/generation assembly.
   prompt/module coupling, provider/model routing, generation, retrieval/vectorization,
   credentials, content-mode, minors/underage, other archive/import/export boundaries,
   and safety-bypass behavior unchanged.
+- **Phase 150 lorebook export boundary**: `/rp lore export <lorebook>` reads one
+  existing stored lorebook and writes one UTF-8 JSON file under profile-safe exports.
+  It keeps `lorebooks` and `lorebook_entries` schema/table shape, migrations,
+  lorebook/session/message mutation, prompt/debug/context behavior, provider/model
+  routing, generation, retrieval/vectorization, content-mode, credentials,
+  minors/underage, project archive, ST importer/exporter, and safety-bypass behavior
+  unchanged.
 - **Tavern lore regex complexity guard**: lorebook regex keys are screened locally before matching. Entries with patterns longer than 256 characters or nested quantified groups (for example `(a+)+`, `(.+)*`, `([a-z]+){2,}`) are excluded with bounded reasons (`regex rejected: ...`), preserving raw imported lore data while preventing unbounded local matching behavior.
