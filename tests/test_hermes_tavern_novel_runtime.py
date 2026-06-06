@@ -295,6 +295,64 @@ def test_project_list_includes_chapter_count_for_created_project(tmp_path):
     assert "(chapters: 1, draft)" in listed
 
 
+def test_project_info_and_inspect_show_same_output(tmp_path):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    project = runtime.store.create_project("Atlas")
+
+    runtime.handle_command_sync(
+        RPCommand("project", ["brief", "type", "set", str(project["id"]), "novel"], "/rp project brief type set 1 novel"),
+        Event(),
+    )
+    runtime.handle_command_sync(
+        RPCommand(
+            "project",
+            ["brief", "premise", "set", str(project["id"]), "A city wakes at dawn."],
+            "/rp project brief premise set 1 A city wakes at dawn.",
+        ),
+        Event(),
+    )
+    runtime.store.set_project_outline(project["id"], "An old lighthouse guards the bay.")
+
+    info_output = runtime.handle_command_sync(
+        RPCommand("project", ["info", str(project["id"])], f"/rp project info {project['id']}"),
+        Event(),
+    )
+    inspect_output = runtime.handle_command_sync(
+        RPCommand("project", ["inspect", str(project["id"])], f"/rp project inspect {project['id']}"),
+        Event(),
+    )
+    assert inspect_output == info_output
+
+
+@pytest.mark.parametrize(
+    "command",
+    [
+        RPCommand("project", ["inspect"], "/rp project inspect"),
+        RPCommand("project", ["inspect", "not-a-number"], "/rp project inspect not-a-number"),
+        RPCommand("project", ["inspect", "0"], "/rp project inspect 0"),
+        RPCommand("project", ["inspect", "-1"], "/rp project inspect -1"),
+        RPCommand("project", ["inspect", "1", "extra"], "/rp project inspect 1 extra"),
+    ],
+)
+def test_project_inspect_invalid_args_return_usage(tmp_path, command):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+
+    response = runtime.handle_command_sync(command, Event())
+
+    assert response.startswith("Usage: /rp project")
+    assert "/rp project inspect <project-id>" in response
+
+
+def test_project_inspect_missing_project_returns_not_found(tmp_path):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+
+    response = runtime.handle_command_sync(
+        RPCommand("project", ["inspect", "9999"], "/rp project inspect 9999"),
+        Event(),
+    )
+    assert response == "No novel project found: 9999"
+
+
 @pytest.mark.parametrize(
     "command, expected_prefix",
     [
@@ -408,6 +466,14 @@ def test_project_command_help_includes_brief_lines(tmp_path):
     assert "/rp project brief type clear <project-id>" in help_output
     assert "/rp project brief premise set <project-id> <text>" in help_output
     assert "/rp project brief premise clear <project-id>" in help_output
+
+
+def test_project_command_help_includes_inspect_line(tmp_path):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+
+    help_output = runtime.handle_command_sync(RPCommand("help", [], "/rp"), Event())
+
+    assert "/rp project inspect <project-id>" in help_output
 
 
 def test_project_command_help_includes_outline_lines(tmp_path):

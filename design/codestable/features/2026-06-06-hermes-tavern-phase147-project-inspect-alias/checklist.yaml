@@ -1,20 +1,21 @@
 doc_type: feature-checklist
 feature: "2026-06-06-hermes-tavern-phase147-project-inspect-alias"
 date: "2026-06-06"
-status: planned
+status: implemented
 summary: >
-  PLANNED - Phase 147 adds a read-only /rp project inspect <project-id>
+  IMPLEMENTED - Phase 147 S1 adds a read-only /rp project inspect <project-id>
   alias under the existing project command family, preserving /rp project info,
   schema, export, prompt/provider/generation, retrieval/vectorization,
   credentials, protected core files, minors/underage boundaries, and safety behavior.
+  S2 acceptance/writeback remains planned.
 tags: [hermes-tavern, project, command-surface, read-only, offline]
 implementation_readiness: >
-  PLANNED - This cron tick writes design/checklist artifacts only. Implementation
-  requires a later S1 executor turn followed by controller-owned S2 acceptance/writeback.
+  IMPLEMENTED - S1 implementation and controller verification completed on
+  2026-06-06. S2 acceptance/writeback remains planned.
 steps:
   - id: S1
     name: "S1: Add read-only project inspect alias"
-    status: planned
+    status: implemented
     description: >
       Add /rp project inspect <project-id> under the existing project command family,
       generated help and README visibility, and focused offline tests. Reuse the
@@ -60,13 +61,13 @@ steps:
       - "Do not mark acceptance/final statuses as accepted or passed during S1."
     verification:
       - command: "PYTHONDONTWRITEBYTECODE=1 python -m py_compile src/hermes_tavern/runtime_novel.py src/hermes_tavern/commands.py tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_commands.py tests/test_hermes_tavern_readme_docs.py"
-        result: "planned"
+        result: "passed: controller py_compile completed"
       - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_commands.py tests/test_hermes_tavern_readme_docs.py -q -o 'addopts=' -p no:cacheprovider"
-        result: "planned"
+        result: "passed: 288 passed"
       - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_*.py -q -o 'addopts=' -p no:cacheprovider"
-        result: "planned"
+        result: "passed: 1058 passed"
       - command: "git diff --name-only -- run_agent.py cli.py gateway/run.py src/hermes_tavern/runtime.py src/hermes_tavern/db.py src/hermes_tavern/db_novel.py src/hermes_tavern/prompt.py src/hermes_tavern/runtime_prompt_modules.py src/hermes_tavern/model_router.py src/hermes_tavern/provider_bridge.py src/hermes_tavern/adapters.py src/hermes_tavern/runtime_generation.py src/hermes_tavern/importers plugins build/lib"
-        result: "planned"
+        result: "passed: empty protected-file diff"
   - id: S2
     name: "S2: Verify and accept project inspect alias"
     status: planned
@@ -119,41 +120,42 @@ steps:
 acceptance:
   - id: AC1
     criteria: "/rp project inspect <project-id> returns existing project metadata."
-    status: planned
+    status: implemented
   - id: AC2
     criteria: "/rp project info <id> remains supported and behavior-compatible."
-    status: planned
+    status: implemented
   - id: AC3
     criteria: "Malformed, missing, non-positive, and extra inspect arguments return bounded project usage output."
-    status: planned
+    status: implemented
   - id: AC4
     criteria: "Missing project rows return No novel project found: <id> without exceptions."
-    status: planned
+    status: implemented
   - id: AC5
     criteria: "Generated help and README Core commands include /rp project inspect <project-id>."
-    status: planned
+    status: implemented
   - id: AC6
     criteria: "No DB/schema, protected core/runtime.py, prompt/provider/generation, retrieval/vectorization, archive/import/export ZIP, credential, content-mode, plugin, build, minors/underage, or safety behavior changes occur."
-    status: planned
+    status: implemented
 checks:
   - id: C1
     name: "Nested command route"
-    status: planned
+    status: implemented
     criteria: "The inspect alias routes through the existing project family and does not add a new top-level command or runtime.py shim."
   - id: C2
     name: "Read-only store use"
-    status: planned
+    status: implemented
     criteria: "The implementation uses existing project info/getter behavior and does not modify schema, migrations, db.py, or db_novel.py."
   - id: C3
     name: "Help and README visibility"
-    status: planned
+    status: implemented
     criteria: "Generated help and README expose /rp project inspect <project-id> without stale or conflicting project command text."
   - id: C4
     name: "Adjacent behavior preservation"
-    status: planned
+    status: implemented
     criteria: "Existing project create/list/info/set/export/style/brief/outline/revision behavior remains covered and unchanged."
   - id: C5
     name: "Offline verification"
-    status: planned
-    criteria: "Focused, Tavern-wide, and full offline tests run with -o 'addopts=' and no cacheprovider after implementation and S2 docs/writeback."
-notes: []
+    status: implemented
+    criteria: "Focused, Tavern-wide, and full offline tests ran with -o 'addopts=' and no cacheprovider after S1 implementation; S2 will rerun the relevant gates before final acceptance."
+notes:
+  - "2026-06-06 S1: Codex executor implemented the nested project inspect alias in allowed files only; controller reran focused, Tavern-wide, and full pytest gates plus validators, protected-file diff guard, and git diff --check. S2 acceptance/writeback remains planned."

@@ -180,6 +180,12 @@ def test_help_lists_project_style_commands():
     assert "/rp project style clear [project-id]" in help_text
 
 
+def test_help_lists_project_inspect_command():
+    help_text = _build_help_text()
+
+    assert "/rp project inspect <project-id>" in help_text
+
+
 def test_help_lists_project_revision_commands():
     help_text = _build_help_text()
 

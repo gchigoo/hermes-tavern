@@ -12,6 +12,21 @@ from hermes_tavern.identity import session_key_from_event
 from hermes_tavern.runtime_utils import mobile_preview as _mobile_preview
 
 
+_PROJECT_COMMAND_USAGE = (
+    "Usage: /rp project create <title> | /rp project list | /rp project info <id> | /rp project inspect <project-id> | "
+    "/rp project set <id> | /rp project export [id] | /rp project style [project-id] | "
+    "/rp project style inspect [project-id] | /rp project style set [project-id] <text> | /rp project style clear [project-id] "
+    "| /rp project brief [project-id] | /rp project brief inspect [project-id] | "
+    "/rp project brief type set <project-id> <novel|serial|rp|worldbuilding|other> | "
+    "/rp project brief type clear <project-id> | /rp project brief premise set <project-id> <text> | "
+    "/rp project brief premise clear <project-id> | /rp project outline [project-id] | /rp project outline inspect [project-id] | "
+    "/rp project outline set [project-id] <text> | /rp project outline clear [project-id] "
+    "| /rp project revision add <project-id> <label> <note...> | /rp project revision list [project-id] | "
+    "/rp project revision inspect <note-id> | /rp project revision update <note-id> <note...> | "
+    "/rp project revision delete <note-id>"
+)
+
+
 def project_command(runtime: Any, command: RPCommand, event: Any) -> str:
     subcommand = command.args[0].lower() if command.args else "list"
     if subcommand == "create":
@@ -20,6 +35,8 @@ def project_command(runtime: Any, command: RPCommand, event: Any) -> str:
         return project_list(runtime)
     if subcommand == "info":
         return project_info(runtime, command)
+    if subcommand == "inspect":
+        return project_inspect(runtime, command)
     if subcommand == "set":
         return project_set(runtime, command, event)
     if subcommand == "outline":
@@ -32,19 +49,16 @@ def project_command(runtime: Any, command: RPCommand, event: Any) -> str:
         return project_style(runtime, command, event)
     if subcommand == "brief":
         return project_brief(runtime, command, event)
-    return (
-        "Usage: /rp project create <title> | /rp project list | /rp project info <id> | /rp project set <id> "
-        "| /rp project export [id] | /rp project style [project-id] | /rp project style inspect [project-id] | "
-        "/rp project style set [project-id] <text> | /rp project style clear [project-id] "
-        "| /rp project brief [project-id] | /rp project brief inspect [project-id] | "
-        "/rp project brief type set <project-id> <novel|serial|rp|worldbuilding|other> | "
-        "/rp project brief type clear <project-id> | /rp project brief premise set <project-id> <text> | "
-        "/rp project brief premise clear <project-id> | /rp project outline [project-id] | /rp project outline inspect [project-id] | "
-        "/rp project outline set [project-id] <text> | /rp project outline clear [project-id] "
-        "| /rp project revision add <project-id> <label> <note...> | /rp project revision list [project-id] | "
-        "/rp project revision inspect <note-id> | /rp project revision update <note-id> <note...> | "
-        "/rp project revision delete <note-id>"
-    )
+    return _PROJECT_COMMAND_USAGE
+
+
+def project_inspect(runtime: Any, command: RPCommand) -> str:
+    if len(command.args) != 2:
+        return _PROJECT_COMMAND_USAGE
+    project_id = _safe_int(command.args[1])
+    if project_id is None or project_id <= 0:
+        return _PROJECT_COMMAND_USAGE
+    return project_info(runtime, RPCommand("project", ["info", str(project_id)], command.raw))
 
 
 def chapter_command(runtime: Any, command: RPCommand, event: Any) -> str:

@@ -124,6 +124,7 @@ Expected behavior:
 /rp image scene/character/face/background/last | /rp image prompt/retry/inspect/history
 /rp image provider/settings/style/safety ...
 /rp project create/list/info/set/export
+/rp project inspect <project-id>
 /rp project style [project-id] | /rp project style inspect [project-id]
 /rp project style set [project-id] <text> | /rp project style clear [project-id]
 /rp style sample add <project-id> <label> <sample...>

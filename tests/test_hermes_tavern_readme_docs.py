@@ -344,6 +344,12 @@ def test_readme_core_commands_include_project_brief_literals():
     assert "/rp project brief premise clear <project-id>" in core_commands
 
 
+def test_readme_core_commands_include_project_inspect_literal():
+    core_commands = _readme_core_commands_text()
+
+    assert "/rp project inspect <project-id>" in core_commands
+
+
 def test_readme_core_commands_include_project_outline_literals():
     core_commands = _readme_core_commands_text()
 

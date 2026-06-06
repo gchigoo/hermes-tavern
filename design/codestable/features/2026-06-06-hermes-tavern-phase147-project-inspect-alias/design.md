@@ -1,7 +1,7 @@
 ---
 doc_type: feature-design
 feature: "2026-06-06-hermes-tavern-phase147-project-inspect-alias"
-status: draft
+status: implemented
 date: "2026-06-06"
 summary: >
   Phase 147 plans a read-only /rp project inspect <project-id> alias for existing
@@ -28,8 +28,8 @@ scene rows. Project metadata already has `/rp project info <id>` backed by
 `inspect` spelling. This leaves project commands less consistent than adjacent
 novel entities while requiring no new persistence or provider behavior.
 
-This cron tick produces planning artifacts only. No source, README, tests,
-or implementation files should be written until a later implementation turn.
+The S1 implementation is now complete and controller-verified. S2 acceptance /
+architecture writeback remains planned as the next bounded docs/status-only turn.
 
 ## Scope
 
@@ -135,6 +135,18 @@ S2 is controller-owned after S1 verification. It may update only the Phase 147
 CodeStable artifacts plus architecture/root design docs to describe the current
 read-only project inspect alias. S2 must not edit source, tests, README, plugin
 shims, build artifacts, or protected core files.
+
+## S1 Controller Verification
+
+Completed on 2026-06-06 by Codex executor with Hermes controller verification.
+
+- `PYTHONDONTWRITEBYTECODE=1 python -m py_compile src/hermes_tavern/runtime_novel.py src/hermes_tavern/commands.py tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_commands.py tests/test_hermes_tavern_readme_docs.py` — passed.
+- `PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_commands.py tests/test_hermes_tavern_readme_docs.py -q -o 'addopts=' -p no:cacheprovider` — 288 passed.
+- `PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_*.py -q -o 'addopts=' -p no:cacheprovider` — 1058 passed.
+- `PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts=' -p no:cacheprovider` — 1058 passed.
+- Phase 147 design/checklist validators passed.
+- Protected-file diff guard for core/DB/prompt/provider/importer/plugin/build paths returned empty.
+- `git diff --check` passed.
 
 Architecture/root design writeback should add only:
 
