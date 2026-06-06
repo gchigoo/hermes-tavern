@@ -965,6 +965,113 @@ def test_project_brief_and_info_includes_fields_only_when_present(tmp_path):
     assert "outline:" not in info_without_outline
 
 
+def test_all_current_inert_metadata_markers_do_not_leak_to_debug_prompt_or_context(tmp_path):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    store.save_card(
+        parse_character_card(
+            {
+                "name": "Mara",
+                "description": "Watchful archivist",
+                "first_mes": "The records begin before dawn.",
+            }
+        )
+    )
+    runtime = TavernRuntime(store)
+    runtime.handle_command_sync(RPCommand("start", ["Mara"], "/rp start Mara"), Event())
+
+    project = store.create_project("Harbor Ledger")
+    chapter = store.create_chapter(project["id"], "Opening Night")
+    scene = store.create_scene(chapter["id"], "Dockside")
+    store.link_scene_session(
+        scene["id"],
+        store.get_active_session(session_key_from_event(Event()))["id"],
+    )
+
+    set_goal = runtime.handle_command_sync(
+        RPCommand(
+            "scene",
+            ["goal", str(scene["id"]), "secure", "the", "lighthouse", "key", "before", "midnight."],
+            "/rp scene goal 1 secure the lighthouse key before midnight.",
+        ),
+        Event(),
+    )
+    assert "Scene goal set for scene [1]: secure the lighthouse key before midnight." in set_goal
+
+    project_premise_marker = "marker: inert: concealed archive beneath the pier."
+    project_outline_marker = "marker: inert: route map with weathered margins."
+    chapter_summary_marker = "marker: inert: chapter remembers the last bell toll."
+    scene_summary_marker = "marker: inert: scene holds a low tide vigil."
+    relationship_state_marker = "marker: inert: cautious trust grows between cartographer and sailor."
+    relationship_label_marker = "marker: inert: label: tidebound compact"
+    character_state_marker = "marker: inert: both keep to formal speech around elders."
+    location_marker = "marker: inert: basalt watchtower overlooking the estuary."
+    organization_marker = "marker: inert: guild of night lantern keepers."
+    plot_thread_marker = "marker: inert: hidden map points to a sealed archive."
+    style_sample_marker = "marker: inert: keep dialogue sparse and reflective."
+    revision_note_marker = "marker: inert: continuity note for lantern color."
+    scene_beat_marker = "marker: inert: inspect the broken chain at the pier."
+    default_binding_marker = "marker: inert: default binding style sample."
+
+    store.set_project_premise(project["id"], project_premise_marker)
+    store.set_project_outline(project["id"], project_outline_marker)
+    store.set_chapter_summary(chapter["id"], chapter_summary_marker)
+    store.set_scene_summary(scene["id"], scene_summary_marker)
+
+    relationship = store.create_relationship_state(
+        project["id"],
+        "harbor-compass",
+        relationship_state_marker,
+    )
+    store.rename_relationship_state(relationship["id"], relationship_label_marker)
+    store.create_character_state(project["id"], "mara", character_state_marker)
+    store.create_location(project["id"], "lighthouse", location_marker)
+    store.create_organization(project["id"], "Lighthouse Guild", organization_marker)
+    store.create_plot_thread(project["id"], "archive-route", plot_thread_marker)
+    store.create_style_sample(project["id"], "tide-speech", style_sample_marker)
+    store.create_revision_note(project["id"], "continuity", revision_note_marker)
+    store.create_scene_beat(scene["id"], "inspection", scene_beat_marker)
+
+    preset_payload = import_st_preset_json(
+        {"name": "No-Lock Binding", "prompts": [{"name": "style", "content": default_binding_marker}]}
+    )
+    default_binding_preset = SimpleNamespace(
+        id="default-no-leak-preset",
+        name=preset_payload.name,
+        source=preset_payload.source,
+        raw=preset_payload.raw,
+        modules=preset_payload.modules,
+    )
+    default_binding_preset_id = store.save_preset(default_binding_preset)
+    runtime.handle_command_sync(
+        RPCommand(
+            "binding",
+            ["set", "project", str(project["id"]), "preset", str(default_binding_preset_id)],
+            f"/rp binding set project {project['id']} preset {default_binding_preset_id}",
+        ),
+        Event(),
+    )
+
+    prompt = runtime.handle_command_sync(RPCommand("debug", ["prompt"], "/rp debug prompt"), Event())
+    context = runtime.handle_command_sync(RPCommand("debug", ["context"], "/rp debug context"), Event())
+
+    assert "Scene goal: secure the lighthouse key before midnight." in prompt
+    for output in (prompt, context):
+        assert project_premise_marker not in output
+        assert project_outline_marker not in output
+        assert chapter_summary_marker not in output
+        assert scene_summary_marker not in output
+        assert relationship_state_marker not in output
+        assert relationship_label_marker not in output
+        assert character_state_marker not in output
+        assert location_marker not in output
+        assert organization_marker not in output
+        assert plot_thread_marker not in output
+        assert style_sample_marker not in output
+        assert revision_note_marker not in output
+        assert scene_beat_marker not in output
+        assert default_binding_marker not in output
+
+
 def test_project_brief_markers_do_not_leak_to_debug_prompt_or_context(tmp_path):
     store = TavernStore(tmp_path / "tavern.sqlite3")
     store.save_card(parse_character_card({"name": "Alice", "description": "Scholar", "first_mes": "Hello."}))

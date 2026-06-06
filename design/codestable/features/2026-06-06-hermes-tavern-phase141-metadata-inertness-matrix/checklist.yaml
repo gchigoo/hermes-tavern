@@ -1,0 +1,162 @@
+doc_type: feature-checklist
+feature: "2026-06-06-hermes-tavern-phase141-metadata-inertness-matrix"
+date: "2026-06-06"
+status: implemented
+summary: >
+  S1_IMPLEMENTED - Test-only Phase 141 adds a single co-presence no-leak
+  regression for current inert novel metadata families in a linked runtime
+  session. It changes only tests/test_hermes_tavern_novel_runtime.py plus
+  controller-owned CodeStable design/checklist artifacts, with no source, docs,
+  commands, export behavior, architecture, provider/generation paths, or
+  acceptance/writeback changes.
+tags: [novel, metadata, no-leak, regression, test-only, offline]
+implementation_readiness: >
+  READY_FOR_ACCEPTANCE - Codex architect selected the bounded metadata inertness
+  matrix hardening slice and the controller materialized validated design/checklist
+  artifacts. The executor implemented only the runtime test. Controller reran
+  py_compile, the new focused test, the full novel-runtime test file, Tavern-wide
+  plugin tests, full pytest, CodeStable validators, reverse-scope guards, and
+  git diff --check successfully. Final acceptance report/status writeback is
+  intentionally left for a later docs/status-only slice.
+likely_touched_files:
+  - tests/test_hermes_tavern_novel_runtime.py
+  - design/codestable/features/2026-06-06-hermes-tavern-phase141-metadata-inertness-matrix/design.md
+  - design/codestable/features/2026-06-06-hermes-tavern-phase141-metadata-inertness-matrix/checklist.yaml
+planning_verification:
+  - command: "rg -n \"^status: *(planned|in_progress|draft|pending)\\b|status: *(planned|in_progress|draft|pending) *#\" design/codestable/features"
+    result: "No matches; no active planned/in_progress/draft/pending feature status found."
+  - command: "rg -n \"feature: \\\"2026-06-06-hermes-tavern-phase141|phase141|phase141-\" design/codestable/features"
+    result: "No matches; Phase 141 slug is unused before materialization."
+  - command: "rg -n \"test_export_project_markdown_orders_all_current_metadata_sections|test_project_export_file_includes_all_current_metadata_sections_in_order|test_.*markers_do_not_leak_to_debug_prompt_or_context|test_binding_markers_do_not_leak_to_debug_prompt_or_context\" tests/test_hermes_tavern_novel_db.py tests/test_hermes_tavern_novel_runtime.py"
+    result: "Found current export matrix tests and fragmented per-family no-leak tests; no single co-presence inertness matrix existed before S1."
+  - command: "sed -n '2250,2335p' src/hermes_tavern/db_novel.py"
+    result: "Current export already handles relationships, revision notes, default bindings, then chapters; no export/source work was needed."
+steps:
+  - id: S1
+    name: "S1: Add runtime metadata inertness matrix test"
+    status: completed
+    completed_at: "2026-06-06"
+    result: >
+      IMPLEMENTED - Added test_all_current_inert_metadata_markers_do_not_leak_to_debug_prompt_or_context
+      to the novel runtime test file. It creates a linked card/project/chapter/scene
+      active session, verifies a scene-goal prompt-active sentinel, adds inert
+      markers for project brief premise, project outline, chapter summary, scene
+      summary, relationship state text, renamed relationship label, character
+      state, location, organization, plot thread, style sample, revision note,
+      scene beat, and default-binding marker content, then proves all inert markers
+      stay out of /rp debug prompt and /rp debug context.
+    description: >
+      Add one test in the existing novel runtime test file that creates a linked
+      active session, adds all current inert metadata families with distinctive
+      markers, confirms an existing prompt-active sentinel is present, and asserts
+      every inert marker is absent from /rp debug prompt and /rp debug context.
+      Do not fix source behavior in this slice; report any exposed source bug.
+    allowed_files:
+      - tests/test_hermes_tavern_novel_runtime.py
+    prohibited_files:
+      - "src/**"
+      - README.md
+      - "docs/**"
+      - design/HERMES_TAVERN_DESIGN.md
+      - "design/codestable/** except controller-owned Phase 141 materialization/status updates"
+      - tests/test_hermes_tavern_novel_db.py
+      - run_agent.py
+      - cli.py
+      - "gateway/**"
+      - "plugins/**"
+      - "build/lib/**"
+    exact_scope:
+      - "Add one test named test_all_current_inert_metadata_markers_do_not_leak_to_debug_prompt_or_context, or an equivalently explicit name."
+      - "Use local TavernStore/TavernRuntime fixtures only; no provider, network, or generation calls."
+      - "Create and link a project/chapter/scene active session so debug prompt/context exercise the real linked-session path."
+      - "Add inert markers for project brief premise, project outline, chapter summary, scene summary, relationship state, renamed relationship label, character state, location, organization, plot thread, style sample, revision note, scene beat, and default binding asset content or marker."
+      - "Assert a prompt-active sentinel appears in /rp debug prompt, then assert every inert marker is absent from /rp debug prompt and /rp debug context."
+      - "Do not edit source, command tables, README/docs, export formatting, architecture/root design, or CodeStable acceptance files."
+    verification:
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m py_compile tests/test_hermes_tavern_novel_runtime.py"
+        result: "passed (controller rerun; no output)"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel_runtime.py::test_all_current_inert_metadata_markers_do_not_leak_to_debug_prompt_or_context -q -o 'addopts=' -p no:cacheprovider"
+        result: "passed (controller rerun; 1 passed in 0.35s)"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel_runtime.py -q -o 'addopts=' -p no:cacheprovider"
+        result: "passed (controller rerun; 169 passed in 8.36s)"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_*.py -q -o 'addopts=' -p no:cacheprovider"
+        result: "passed (controller rerun; 1015 passed in 49.78s; executor's earlier broader image-test failures did not reproduce in controller environment)"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts=' -p no:cacheprovider"
+        result: "passed (controller rerun; 1015 passed in 43.21s)"
+      - command: "python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-06-hermes-tavern-phase141-metadata-inertness-matrix/design.md --require doc_type --require status"
+        result: "passed"
+      - command: "python design/codestable/tools/validate-yaml.py --yaml-only --file design/codestable/features/2026-06-06-hermes-tavern-phase141-metadata-inertness-matrix/checklist.yaml"
+        result: "passed"
+      - command: "git diff --name-only -- src README.md docs design/HERMES_TAVERN_DESIGN.md run_agent.py cli.py gateway plugins build/lib tests/test_hermes_tavern_novel_db.py"
+        result: "passed (empty output; no protected/source/docs/build/DB-test diff)"
+      - command: "git diff --check"
+        result: "passed"
+  - id: S2
+    name: "S2: Verify and accept metadata inertness matrix"
+    status: planned
+    description: >
+      Docs/status-only acceptance pass after S1. Rerun focused/Tavern/full pytest,
+      CodeStable validators, reverse-scope guards, and git diff --check; create the
+      acceptance report and mark the feature accepted only after controller verification.
+      No architecture or root-design writeback is expected because Phase 141 changes
+      tests only.
+    allowed_files:
+      - design/codestable/features/2026-06-06-hermes-tavern-phase141-metadata-inertness-matrix/design.md
+      - design/codestable/features/2026-06-06-hermes-tavern-phase141-metadata-inertness-matrix/checklist.yaml
+      - design/codestable/features/2026-06-06-hermes-tavern-phase141-metadata-inertness-matrix/hermes-tavern-phase141-metadata-inertness-matrix-acceptance.md
+    prohibited_files:
+      - README.md
+      - "src/**"
+      - "tests/**"
+      - run_agent.py
+      - cli.py
+      - gateway/run.py
+      - design/HERMES_TAVERN_DESIGN.md
+      - design/codestable/architecture/ARCHITECTURE.md
+      - "build/lib/**"
+acceptance:
+  - id: AC1
+    criteria: "A linked-session runtime regression proves all current inert metadata markers are absent from /rp debug prompt."
+    status: completed
+  - id: AC2
+    criteria: "The same regression proves all current inert metadata markers are absent from /rp debug context."
+    status: completed
+  - id: AC3
+    criteria: "The regression includes a prompt-active sentinel so the test is not a false positive caused by an unlinked session."
+    status: completed
+  - id: AC4
+    criteria: "Only tests/test_hermes_tavern_novel_runtime.py changes during S1 implementation."
+    status: completed
+checks:
+  - id: C1
+    name: "Test-only scope"
+    status: completed
+    completed_at: "2026-06-06"
+    result: >
+      PASSED - S1 changed only tests/test_hermes_tavern_novel_runtime.py plus
+      controller-owned Phase 141 design/checklist materialization/status files.
+      Protected source/docs/build/DB-test reverse-scope guard was empty.
+    criteria: "No source, docs, architecture, root design, CodeStable acceptance/status, gateway, plugin shim, or build artifact files change."
+  - id: C2
+    name: "No behavior expansion"
+    status: completed
+    completed_at: "2026-06-06"
+    result: >
+      PASSED - The diff adds a runtime test only. It introduces no new command,
+      export, prompt, provider, generation, retrieval, vectorization, graph,
+      alias, merge/split, extraction, credential, archive, safety, or source
+      behavior.
+    criteria: "No new command, export, prompt, provider, generation, retrieval, vectorization, graph, alias, merge/split, extraction, credential, archive, or safety behavior is introduced."
+  - id: C3
+    name: "Offline verification"
+    status: completed
+    completed_at: "2026-06-06"
+    result: >
+      PASSED - Controller reran py_compile, the new focused runtime test, full
+      novel-runtime tests (169 passed), Tavern-wide tests (1015 passed), full
+      pytest (1015 passed), validators, reverse-scope guards, and git diff --check.
+    criteria: "Focused runtime tests and Tavern plugin test glob pass offline with -o 'addopts=' and no cacheprovider."
+verification_notes: |
+  - S1 implementation is complete and controller-verified.
+  - Executor's optional Tavern-wide run reported 8 image-test failures, but the controller reran the same Tavern-wide command successfully (1015 passed), then reran full pytest successfully (1015 passed).
+  - Final acceptance/report writeback remains planned as S2.
