@@ -1,12 +1,14 @@
 doc_type: feature-checklist
-status: planned
+status: implemented
 feature: "2026-06-07-hermes-tavern-phase149-card-export-json"
 date: "2026-06-07"
-implementation_ready: false
+implementation_ready: true
 summary: >
-  Plan-only Phase 149 for a bounded /rp card export <card> JSON export surface.
-  The feature is not approved or implementation-ready until a controller promotes
-  this draft.
+  IMPLEMENTED S1 - Phase 149 adds a bounded /rp card export <card> JSON export
+  surface under the existing card command family. The controller promoted the
+  existing draft for exactly one S1 implementation slice after Codex architect
+  returned READY_TO_IMPLEMENT, Codex executor implemented the bounded slice, and
+  controller verification passed. S2 acceptance/writeback remains planned.
 tags:
   - hermes-tavern
   - card
@@ -15,12 +17,28 @@ tags:
   - command-surface
   - offline
 implementation_readiness: >
-  false - This cron tick produced only a draft design/checklist artifact. S1 must
-  not run until the controller explicitly approves/promotes the feature.
+  IMPLEMENTED S1 - Codex architect validated the existing artifact as
+  READY_TO_IMPLEMENT, Codex executor implemented only the bounded S1 surface, and
+  the controller reran validators, py_compile, focused pytest, Tavern-wide pytest,
+  full pytest, protected-path guards, and git diff --check successfully. S2
+  acceptance/writeback remains planned and must not be finalized during S1.
 steps:
   - id: S1
     name: "S1: Implement card JSON export"
-    status: planned
+    status: completed
+    completed_at: "2026-06-07"
+    result: >
+      IMPLEMENTED - Added /rp card export <card> under the existing card command
+      family in runtime_assets.py. The command resolves stored cards with existing
+      TavernStore.get_card behavior including last, writes one UTF-8 JSON file
+      under get_hermes_home()/plugins/hermes-tavern/exports/cards with a sanitized
+      card-id filename, preserves data_json.raw JSON objects when available,
+      emits a normalized SillyTavern-compatible fallback payload otherwise,
+      returns both file: and quoted MEDIA:"<path>" output, updates generated help
+      and README visibility, and includes focused offline tests. No card/session/
+      message mutation, schema, prompt/provider/generation, credentials,
+      retrieval/vectorization, content-mode, importer/archive, plugin/build,
+      protected core, minors/underage, or safety-bypass behavior changes were made.
     description: >
       Add /rp card export <card> under the existing card command family, write one
       stored card as a profile-safe JSON export with a quoted MEDIA marker, update
@@ -60,13 +78,17 @@ steps:
       - "Do not mutate cards, sessions, messages, prompts, providers, generation, credentials, content mode, imports, archives, or safety behavior."
     verification:
       - command: "PYTHONDONTWRITEBYTECODE=1 python -m py_compile src/hermes_tavern/commands.py src/hermes_tavern/runtime_assets.py tests/test_hermes_tavern_card_export.py tests/test_hermes_tavern_commands.py tests/test_hermes_tavern_readme_docs.py"
-        expected: "passes"
+        result: "passed (controller rerun; no compile output)"
       - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_card_export.py tests/test_hermes_tavern_commands.py tests/test_hermes_tavern_readme_docs.py -q -o 'addopts=' -p no:cacheprovider"
-        expected: "passes"
+        result: "102 passed in 0.48s (controller rerun)"
       - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_*.py -q -o 'addopts=' -p no:cacheprovider"
-        expected: "passes"
+        result: "1073 passed in 45.03s (controller rerun)"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts=' -p no:cacheprovider"
+        result: "1073 passed in 46.17s (controller rerun)"
       - command: "git diff --check"
-        expected: "passes"
+        result: "passed (controller rerun; no output)"
+      - command: "git diff --name-only -- run_agent.py cli.py gateway/run.py src/hermes_tavern/runtime.py src/hermes_tavern/db.py src/hermes_tavern/db_novel.py src/hermes_tavern/prompt.py src/hermes_tavern/runtime_prompt_modules.py src/hermes_tavern/model_router.py src/hermes_tavern/provider_bridge.py src/hermes_tavern/adapters.py src/hermes_tavern/runtime_generation.py src/hermes_tavern/importers plugins build/lib"
+        result: "passed; empty protected-path diff guard (controller rerun)"
   - id: S2
     name: "S2: Accept and write back docs"
     status: planned
@@ -132,20 +154,34 @@ acceptance:
 checks:
   - id: C1
     name: "Focused card export tests"
-    status: planned
+    status: completed
+    completed_at: "2026-06-07"
     criteria: "Focused card export, help, and README docs tests pass offline."
+    result: "passed; 102 passed in 0.48s (controller rerun)"
   - id: C2
     name: "Tavern-wide pytest"
-    status: planned
+    status: completed
+    completed_at: "2026-06-07"
     criteria: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_*.py -q -o 'addopts=' -p no:cacheprovider passes."
+    result: "passed; 1073 passed in 45.03s (controller rerun); full pytest also passed with 1073 passed in 46.17s"
   - id: C3
     name: "Reverse scope guard"
-    status: planned
+    status: completed
+    completed_at: "2026-06-07"
     criteria: "No prohibited core, DB, importer, prompt, provider, generation, plugin, build, or S1 design paths change."
+    result: "passed; protected-path diff guard was empty and git diff --check passed"
   - id: C4
     name: "CodeStable validators"
-    status: planned
-    criteria: "Design/checklist/acceptance YAML frontmatter validates after controller-owned materialization and S2 writeback."
+    status: completed
+    completed_at: "2026-06-07"
+    criteria: "Design/checklist YAML/frontmatter validates after controller-owned S1 materialization/status sync; acceptance report validation is deferred to S2."
+    result: "passed; Phase 149 design.md and checklist.yaml validators each reported 1 passed, 0 failed before final commit"
+verification_notes: |
+  - Codex architect artifact: /tmp/hermes-tavern-architect-phase149-planning.jsonl (RESULT: PLAN_ONLY_NEW_FEATURE; IMPLEMENTATION_READY=false).
+  - Controller promotion artifact: /tmp/hermes-tavern-architect-phase149-s1.jsonl (RESULT: READY_TO_IMPLEMENT; S1 only).
+  - Codex executor smoke artifact: /tmp/hermes-tavern-executor-smoke-phase149-s1.jsonl (EXECUTOR_SMOKE_OK; no files edited).
+  - Codex executor artifact: /tmp/hermes-tavern-executor-phase149-s1.jsonl (implemented S1). Executor JSONL included recoverable apply_patch/path probes and an executor-sandbox Tavern-wide image-provider failure; controller inspected diffs and reran py_compile, focused pytest, Tavern-wide pytest, full pytest, CodeStable validators, protected-path guard, and git diff --check successfully.
+  - Controller added a small filename sanitizer after review so explicit card ids containing path separators stay inside the configured cards export directory.
 notes:
-  - "Draft only on 2026-06-07; do not treat as approved, implemented, or accepted."
-  - "Codex architect artifact: /tmp/hermes-tavern-architect-phase149-planning.jsonl (RESULT: PLAN_ONLY_NEW_FEATURE; IMPLEMENTATION_READY=false)."
+  - "Initial 2026-06-07 planning tick created draft/planned artifacts only; later controller promotion was limited to S1 implementation, not acceptance."
+  - "2026-06-07 S1: Codex executor implemented the bounded card JSON export surface in allowed files only; controller reran focused, Tavern-wide, and full pytest gates plus CodeStable validators, protected-file diff guard, and git diff --check. S2 acceptance/writeback remains planned."

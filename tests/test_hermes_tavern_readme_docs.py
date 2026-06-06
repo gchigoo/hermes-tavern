@@ -297,6 +297,7 @@ def test_readme_core_commands_include_card_greeting_literal():
     core_commands = _readme_core_commands_text()
 
     assert _command_segment_has_literal(core_commands, "/rp card greeting <card>")
+    assert _command_segment_has_literal(core_commands, "/rp card export <card>")
 
 
 def test_readme_core_commands_include_project_style_literals():

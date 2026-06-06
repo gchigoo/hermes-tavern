@@ -9,6 +9,7 @@ from typing import Any
 from pathlib import Path
 
 from hermes_tavern.commands import RPCommand
+from hermes_tavern.hermes_home import get_hermes_home
 from hermes_tavern.identity import session_key_from_event
 from hermes_tavern.import_policy import is_gateway_event, resolve_import_path
 from hermes_tavern.importers.cards import UnsupportedCardFormat, load_card_file
@@ -92,6 +93,8 @@ def card_command(runtime: Any, command: RPCommand, event: Any) -> str:
         return card_import(runtime, command, event)
     if subcommand == "search":
         return card_search(runtime, command)
+    if subcommand == "export":
+        return card_export(runtime, command)
     if subcommand == "inspect":
         return runtime._card_inspect(command)
     if subcommand == "greeting":
@@ -100,8 +103,78 @@ def card_command(runtime: Any, command: RPCommand, event: Any) -> str:
         return runtime._card_use(command, event)
     return (
         "Usage: /rp card import <file> | /rp card search <query> | /rp card inspect <card> | "
-        "/rp card use <card> | /rp card greeting <card>"
+        "/rp card export <card> | /rp card use <card> | /rp card greeting <card>"
     )
+
+
+def _normalize_card_export_payload(card_data: dict[str, Any]) -> dict[str, Any]:
+    raw = card_data.get("raw")
+    if isinstance(raw, dict):
+        return raw
+
+    extensions = card_data.get("extensions")
+    if not isinstance(extensions, dict):
+        extensions = {}
+    alternate_greetings = card_data.get("alternate_greetings")
+    if not isinstance(alternate_greetings, list):
+        alternate_greetings = []
+    tags = card_data.get("tags")
+    if not isinstance(tags, list):
+        tags = []
+    talkativeness = card_data.get("talkativeness")
+    if talkativeness is not None:
+        try:
+            talkativeness = float(talkativeness)
+        except (TypeError, ValueError):
+            talkativeness = None
+
+    return {
+        "spec": "chara_card_v2",
+        "spec_version": "3.0",
+        "data": {
+            "name": card_data.get("name", ""),
+            "description": card_data.get("description", ""),
+            "personality": card_data.get("personality", ""),
+            "scenario": card_data.get("scenario", ""),
+            "first_mes": card_data.get("first_mes", ""),
+            "mes_example": card_data.get("mes_example", ""),
+            "alternate_greetings": alternate_greetings,
+            "creator_notes": card_data.get("creator_notes", ""),
+            "system_prompt": card_data.get("system_prompt_override", ""),
+            "post_history_instructions": card_data.get("post_history_instructions", ""),
+            "tags": tags,
+            "talkativeness": talkativeness,
+            "extensions": extensions,
+        },
+    }
+
+
+def _card_export_filename(card_id: Any) -> str:
+    safe = "".join(
+        char if char.isalnum() or char in {"-", "_", "."} else "_"
+        for char in str(card_id)
+    ).strip("._-")
+    return f"card_{safe or 'unknown'}.json"
+
+
+def card_export(runtime: Any, command: RPCommand) -> str:
+    if len(command.args) < 2:
+        return "Usage: /rp card export <card>"
+
+    card_ref = " ".join(command.args[1:]).strip()
+    card = runtime.store.get_card(card_ref)
+    if card is None:
+        return _card_not_found(card_ref)
+
+    card_data = json.loads(card.get("data_json") or "{}")
+    payload = _normalize_card_export_payload(card_data)
+    payload_text = json.dumps(payload, ensure_ascii=False, indent=2)
+
+    export_dir = get_hermes_home() / "plugins" / "hermes-tavern" / "exports" / "cards"
+    export_dir.mkdir(parents=True, exist_ok=True)
+    export_path = export_dir / _card_export_filename(card["id"])
+    export_path.write_text(payload_text, encoding="utf-8")
+    return f"Card exported as JSON.\nfile: {export_path}\nMEDIA:\"{export_path}\""
 
 
 def card_import(runtime: Any, command: RPCommand, event: Any) -> str:

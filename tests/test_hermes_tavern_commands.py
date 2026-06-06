@@ -353,6 +353,7 @@ def test_help_lists_card_greeting_command():
 
     assert "/rp card search <query>" in help_text
     assert "/rp card greeting <card>" in help_text
+    assert "/rp card export <card>" in help_text
 
 
 
