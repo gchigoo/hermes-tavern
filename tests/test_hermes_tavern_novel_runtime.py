@@ -3475,6 +3475,70 @@ def test_canon_and_timeline_routes_use_active_project(tmp_path):
     assert "Start" in timeline
 
 
+def test_canon_inspect_route_returns_compact_bound_preview(tmp_path):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    project = runtime.store.create_project("Atlas")
+    canon = runtime.store.create_canon(
+        project["id"],
+        "Weather",
+        "Fog wraps the harbor. " * 12,
+        group="world",
+    )
+
+    response = runtime.handle_command_sync(
+        RPCommand("canon", ["inspect", str(canon["id"])], f"/rp canon inspect {canon['id']}"),
+        Event(),
+    )
+
+    assert (
+        response
+        == f"Canon [{canon['id']}] for project [{project['id']}]: "
+        f"title: Weather | group: world | content: {_mobile_preview(canon['content'], 180)}"
+    )
+
+
+def test_canon_inspect_route_rejects_malformed_args(tmp_path):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    malformed_usage = (
+        "Usage: /rp canon add <project-id> <title> <content...> [--group <group>] | "
+        "/rp canon list [project-id] [group] | /rp canon inspect <canon-id> | "
+        "/rp canon group [project-id] <group>"
+    )
+
+    assert (
+        runtime.handle_command_sync(
+            RPCommand("canon", ["inspect"], "/rp canon inspect"), Event()
+        )
+        == malformed_usage
+    )
+    assert (
+        runtime.handle_command_sync(
+            RPCommand("canon", ["inspect", "abc"], "/rp canon inspect abc"),
+            Event(),
+        )
+        == malformed_usage
+    )
+    assert (
+        runtime.handle_command_sync(
+            RPCommand("canon", ["inspect", str(1), "extra"], "/rp canon inspect 1 extra"),
+            Event(),
+        )
+        == malformed_usage
+    )
+
+
+def test_canon_inspect_route_not_found_is_bounded(tmp_path):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+
+    assert (
+        runtime.handle_command_sync(
+            RPCommand("canon", ["inspect", "9999"], "/rp canon inspect 9999"),
+            Event(),
+        )
+        == "No canon fact found for id [9999]."
+    )
+
+
 def test_canon_modules_show_in_debug_prompt_for_project_linked_session(tmp_path):
     store = TavernStore(tmp_path / "tavern.sqlite3")
     store.save_card(parse_character_card({"name": "Alice", "description": "Scholar"}))

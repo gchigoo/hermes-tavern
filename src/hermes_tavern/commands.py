@@ -405,6 +405,7 @@ TAVERN_COMMAND_TABLE: dict[str, TavernCommandEntry] = {
         help_lines=[
             "/rp canon add <project-id> <title> <content...> [--group <group>]",
             "/rp canon list [project-id] [group]",
+            "/rp canon inspect <canon-id>",
             "/rp canon group [project-id] <group>",
         ],
     ),

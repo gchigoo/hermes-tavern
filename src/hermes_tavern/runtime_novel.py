@@ -94,9 +94,18 @@ def canon_command(runtime: Any, command: RPCommand, event: Any) -> str:
         return canon_add(runtime, command, event)
     if subcommand == "list":
         return canon_list(runtime, command, event)
+    if subcommand == "inspect":
+        return canon_inspect(runtime, command, event)
     if subcommand == "group":
         return canon_group(runtime, command, event)
-    return "Usage: /rp canon add <project-id> <title> <content...> | /rp canon list [project-id] [group] | /rp canon group [project-id] <group>"
+    return _CANON_USAGE
+
+
+_CANON_USAGE = (
+    "Usage: /rp canon add <project-id> <title> <content...> [--group <group>] | "
+    "/rp canon list [project-id] [group] | /rp canon inspect <canon-id> | "
+    "/rp canon group [project-id] <group>"
+)
 
 
 def timeline_command(runtime: Any, command: RPCommand, event: Any) -> str:
@@ -1532,29 +1541,48 @@ def scene_narration(runtime: Any, command: RPCommand) -> str:
 def canon_add(runtime: Any, command: RPCommand, event: Any) -> str:
     del event
     if len(command.args) < 4:
-        return "Usage: /rp canon add <project-id> <title> <content...> [--group <group>]"
+        return _CANON_USAGE
     project_id = _safe_int(command.args[1])
     if project_id is None:
-        return "Usage: /rp canon add <project-id> <title> <content...> [--group <group>]"
+        return _CANON_USAGE
     title = command.args[2].strip()
     if not title:
-        return "Usage: /rp canon add <project-id> <title> <content...> [--group <group>]"
+        return _CANON_USAGE
     content_args = list(command.args[3:])
     group = "general"
     if "--group" in content_args:
         group_index = content_args.index("--group")
         if group_index + 1 >= len(content_args):
-            return "Usage: /rp canon add <project-id> <title> <content...> [--group <group>]"
+            return _CANON_USAGE
         group = content_args[group_index + 1]
         content_args = content_args[:group_index]
     content = " ".join(content_args).strip()
     if not content:
-        return "Usage: /rp canon add <project-id> <title> <content...> [--group <group>]"
+        return _CANON_USAGE
     try:
         canon = runtime.store.create_canon(project_id, title, content, group=group)
     except ValueError:
         return f"No novel project found: {project_id}"
     return f"Hermes Tavern canon added: [{canon['id']}] {canon['title']} ({canon['canon_group']})"
+
+
+def canon_inspect(runtime: Any, command: RPCommand, event: Any) -> str:
+    del event
+    if len(command.args) != 2:
+        return _CANON_USAGE
+    canon_id = _safe_int(command.args[1])
+    if canon_id is None:
+        return _CANON_USAGE
+
+    canon = runtime.store.get_canon(canon_id)
+    if canon is None:
+        return f"No canon fact found for id [{canon_id}]."
+
+    return (
+        f"Canon [{canon['id']}] for project [{canon['project_id']}]: "
+        f"title: {canon['title']} | group: {canon['canon_group']} | "
+        f"content: {_mobile_preview(canon.get('content') or '', 180)}"
+    )
 
 
 def canon_list(runtime: Any, command: RPCommand, event: Any) -> str:

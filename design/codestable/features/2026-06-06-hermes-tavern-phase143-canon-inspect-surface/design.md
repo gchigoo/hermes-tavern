@@ -1,13 +1,13 @@
 ---
 doc_type: feature-design
 feature: "2026-06-06-hermes-tavern-phase143-canon-inspect-surface"
-status: draft
+status: approved
 date: "2026-06-06"
 summary: >
-  Draft Phase 143 adds a read-only /rp canon inspect surface for existing canon
+  Phase 143 adds a read-only /rp canon inspect surface for existing canon
   facts while keeping canon check/conflict/pin, generation, provider, archive/import,
   retrieval/vectorization, and safety behavior unchanged.
-tags: [hermes-tavern, canon, command-surface, offline, plan-only]
+tags: [hermes-tavern, canon, command-surface, offline]
 ---
 
 # Phase 143: Canon Inspect Surface

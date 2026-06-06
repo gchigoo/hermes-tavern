@@ -2100,6 +2100,15 @@ class NovelDBMixin:
             ).fetchone()
         return _row_to_dict(row)
 
+    def get_canon(self, canon_id: int) -> dict[str, Any] | None:
+        self.migrate()
+        with self.connect() as conn:
+            row = conn.execute(
+                "SELECT * FROM novel_canon WHERE id = ?",
+                (canon_id,),
+            ).fetchone()
+        return _row_to_dict(row)
+
     def list_canon(self, project_id: int, group: str | None = None) -> list[dict[str, Any]]:
         self.migrate()
         with self.connect() as conn:

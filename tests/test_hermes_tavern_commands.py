@@ -249,6 +249,23 @@ def test_help_lists_project_outline_commands():
     assert "/rp project outline clear [project-id]" in help_text
 
 
+def test_help_lists_canon_commands():
+    help_text = _build_help_text()
+
+    assert "/rp canon add <project-id> <title> <content...> [--group <group>]" in help_text
+    assert "/rp canon list [project-id] [group]" in help_text
+    assert "/rp canon inspect <canon-id>" in help_text
+    assert "/rp canon group [project-id] <group>" in help_text
+
+
+def test_help_omits_deferred_canon_commands():
+    help_text = _build_help_text()
+
+    assert not _command_segment_has_literal(help_text, "/rp canon check")
+    assert not _command_segment_has_literal(help_text, "/rp canon conflict")
+    assert not _command_segment_has_literal(help_text, "/rp canon pin")
+
+
 def test_help_omits_deferred_novel_command_literals():
     help_text = _build_help_text()
 

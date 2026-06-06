@@ -1709,6 +1709,25 @@ def test_canon_group_empty_string_defaults_to_general(tmp_path):
     assert canon[0]["canon_group"] == "general"
 
 
+def test_get_canon_found_and_missing_and_preserves_ordering(tmp_path):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+
+    novel_project = store.create_project("Lore House")
+    first = store.create_canon(novel_project["id"], "Sky", "Blue")
+    second = store.create_canon(novel_project["id"], "Ground", "Brown")
+    third = store.create_canon(novel_project["id"], "Laws", "Magic", group="world")
+
+    assert store.get_canon(first["id"])["title"] == "Sky"
+    assert store.get_canon(second["id"])["project_id"] == novel_project["id"]
+    assert store.get_canon(third["id"])["canon_group"] == "world"
+    assert store.get_canon(9999) is None
+
+    canon = store.list_canon(novel_project["id"])
+    prompt = store.get_canon_for_prompt(novel_project["id"], limit=10)
+    assert [entry["id"] for entry in canon] == [third["id"], second["id"], first["id"]]
+    assert [entry["id"] for entry in prompt] == [third["id"], second["id"], first["id"]]
+
+
 def test_timeline_ordering(tmp_path):
     store = TavernStore(tmp_path / "tavern.sqlite3")
     novel_project = store.create_project("Timeline")

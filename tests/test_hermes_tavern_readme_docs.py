@@ -344,11 +344,25 @@ def test_readme_core_commands_include_project_outline_literals():
     assert "/rp project outline clear [project-id]" in core_commands
 
 
+def test_readme_core_commands_include_canon_inspect_literal():
+    core_commands = _readme_core_commands_text()
+
+    assert "/rp canon inspect <canon-id>" in core_commands
+
+
 def test_readme_core_commands_omit_deferred_novel_command_literals():
     core_commands = _readme_core_commands_text()
 
     for literal in DEFERRED_NOVEL_COMMAND_LITERALS:
         assert not _command_segment_has_literal(core_commands, literal)
+
+
+def test_readme_core_commands_omit_deferred_canon_commands():
+    core_commands = _readme_core_commands_text()
+
+    assert not _command_segment_has_literal(core_commands, "/rp canon check")
+    assert not _command_segment_has_literal(core_commands, "/rp canon conflict")
+    assert not _command_segment_has_literal(core_commands, "/rp canon pin")
 
 
 def test_readme_core_commands_keeps_current_allowed_command_literals():
