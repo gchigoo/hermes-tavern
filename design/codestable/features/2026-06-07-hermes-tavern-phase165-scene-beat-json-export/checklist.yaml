@@ -1,5 +1,5 @@
 doc_type: feature-checklist
-status: approved
+status: accepted
 feature: "2026-06-07-hermes-tavern-phase165-scene-beat-json-export"
 date: "2026-06-07"
 implementation_ready: true
@@ -95,7 +95,8 @@ steps:
         expected: "passes"
   - id: S2
     name: "S2: Verify/accept/write current docs"
-    status: pending
+    status: completed
+    completed_at: "2026-06-07"
     description: >
       Controller-owned acceptance/writeback after S1 passes.
     allowed_files:
@@ -116,19 +117,19 @@ steps:
 checks:
   - id: C1
     name: "Command surface"
-    status: pending
+    status: passed
     criteria: "/rp scene beat export appears in command table, runtime help, README Core commands, and focused command/docs tests."
   - id: C2
     name: "Export payload and file output"
-    status: pending
+    status: passed
     criteria: "Export writes valid JSON with beat metadata, returns file: and MEDIA output, rejects not-found/malformed IDs."
   - id: C3
     name: "No prompt/provider side effects"
-    status: pending
+    status: passed
     criteria: "No beat export text appears in prompt/debug/context paths and no prohibited files change."
   - id: C4
     name: "Existing beat commands unchanged"
-    status: pending
+    status: passed
     criteria: "add/list/inspect/update/delete commands work identically after export is added."
 
 risks:

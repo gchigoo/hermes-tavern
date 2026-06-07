@@ -638,6 +638,19 @@ through `/rp scene beat add/list/inspect/update/delete`, persisted in
 Scene beats are command/export visible only, scene-local, and intentionally omit
 any automatic sequencing or generation behavior.
 
+Phase 165 adds `/rp scene beat export <beat-id>`:
+
+- resolves beat by integer ID through existing `get_scene_beat(beat_id)`,
+  rejecting not-found and non-positive IDs;
+- reads beat metadata (beat_id, scene_id, label, beat_text, created_at, updated_at);
+- exports beat metadata as a UTF-8 JSON file under
+  `get_hermes_home()/plugins/hermes-tavern/exports/scene_beats` with quoted
+  `MEDIA:\"<path>\"` marker output;
+- does not mutate scene beat rows or scene beat lifecycle state;
+- does not change schema, prompt/debug/context-budget, provider/model routing,
+  generation, retrieval/vectorization, credentials, content-mode, minors/underage
+  handling, or safety-bypass behavior.
+
 Revision Notes Metadata v1 is current local project-scoped metadata and is managed
 through `/rp project revision add/list/inspect/update/delete`, persisted in
 `novel_revision_notes(id, project_id, label, note_text, created_at, updated_at)`.

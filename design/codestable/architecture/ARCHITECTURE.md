@@ -264,6 +264,16 @@ importers/
   ordering, label semantics, prompt/module selection, provider/model/generation,
   retrieval/vectorization, content-mode, minors/underage, safety-bypass,
   or deferred character-state visualization/auto-extraction tooling changes occur.
+- Phase 165: Scene Beat JSON Export (`/rp scene beat export <beat-id>`) reads one existing
+  `novel_scene_beats` row by integer id via existing `get_scene_beat(beat_id)`,
+  exports beat metadata (beat_id, scene_id, label, beat_text, created_at,
+  updated_at) as a UTF-8 JSON file under
+  `get_hermes_home()/plugins/hermes-tavern/exports/scene_beats` with quoted
+  `MEDIA:\"<path>\"` attachment output, and returns file path metadata.
+  No schema, table/index migrations, scene beat add/list/inspect/update/delete
+  behavior, prompt/module, provider/model, generation, retrieval/vectorization,
+  content-mode, minors/underage, safety-bypass, or deferred scene-beat tooling
+  changes occur.
 
 ### Plugin flow
 
@@ -304,7 +314,7 @@ from vectorization/retrieval, provider/model routing, content mode,
 credentials, automation, summarization, and generation; they are visible only
 through command output and Markdown export.
 
-### /rp command surface (current through Phase 159)
+### /rp command surface (current through Phase 165)
 
 ```
 /rp help | status | assets
@@ -363,6 +373,7 @@ through command output and Markdown export.
 /rp scene beat inspect <beat-id>
 /rp scene beat update <beat-id> <beat...>
 /rp scene beat delete <beat-id>
+/rp scene beat export <beat-id>
 /rp project revision add <project-id> <label> <note...>
 /rp project revision list [project-id]
 /rp project revision inspect <note-id>
@@ -749,6 +760,12 @@ These phases do not change schema or core prompt/generation assembly.
 - **Phase 163 style sample export boundary**: `/rp style sample export <style-sample-id>` reads one existing
   `novel_style_samples` row and writes one UTF-8 JSON file under profile-safe exports.
   It keeps `novel_style_samples` schema, table/index shape, migrations, style sample
+  add/list/inspect/update/delete behavior, prompt/debug/context behavior, provider/model
+  routing, generation, retrieval/vectorization, content-mode, credentials, project archive,
+  and safety-bypass behavior unchanged.
+- **Phase 165 scene beat export boundary**: `/rp scene beat export <beat-id>` reads one existing
+  `novel_scene_beats` row and writes one UTF-8 JSON file under profile-safe exports.
+  It keeps `novel_scene_beats` schema, table/index shape, migrations, scene beat
   add/list/inspect/update/delete behavior, prompt/debug/context behavior, provider/model
   routing, generation, retrieval/vectorization, content-mode, credentials, project archive,
   and safety-bypass behavior unchanged.
