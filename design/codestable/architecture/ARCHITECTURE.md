@@ -82,7 +82,7 @@ importers/
   lorebooks.py        import_st_lorebook_json / import_lorebook_file → Lorebook
 ```
 
-**Phases 1–38 and 121–152 complete (2026-06-07).** Capability summary:
+**Phases 1–38 and 121–153 complete (2026-06-07).** Capability summary:
 - Phases 1–3: skeleton, SQLite, card import, session CRUD, gateway hook
 - Phase 4: Prompt Compiler (chat + story renderers, card/persona assembly)
 - Phase 5–6: Provider bridge, live model routing
@@ -203,6 +203,14 @@ importers/
   retrieval/vectorization, content-mode, minors/underage, safety-bypass,
   persona import parsing, persona binding, or prompt compiler behavior changes
   occur.
+- Phase 153: Session JSON Export (`/rp session export <id>`) reads one existing
+  stored session by ID prefix via `list_sessions_by_id_prefix_for_scope(...)`,
+  exports all session messages as a st-json-format JSON file under
+  `get_hermes_home()/plugins/hermes-tavern/exports/sessions` with quoted `MEDIA`
+  attachment output, and returns file path metadata. No schema/table/index
+  migrations are added and no session lifecycle, prompt/provider/model/generation,
+  retrieval/vectorization, content-mode, minors/underage, safety-bypass, or
+  archive behavior changes occur.
 
 ### Plugin flow
 
@@ -256,6 +264,7 @@ through command output and Markdown export.
 /rp debug context [limit] [page]             ← read-only context budget report with estimated tokens, omitted-layer summary, and paginated rows (Phase 126)
 /rp export [markdown|st-json]                ← returns file path + quoted MEDIA attachment (Phase 23)
 /rp session info                            ← new (Phase 17)
+/rp session export <id>                     ← Phase 153
 /rp sessions [all] [limit] [page]           ← paginated (Phase 18)
 /rp switch <id> | rename <name> | archive | clone [name]
 /rp preset import [file] | list | inspect <preset> | export <preset> | use <preset>      ← `last` resolves to the session-lifetime most recently imported preset

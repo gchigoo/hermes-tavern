@@ -102,7 +102,7 @@ Expected behavior:
 /rp pause | /rp resume | /rp end | /rp archive
 /rp retry | /rp swipe list | /rp undo | /rp edit last <text>
 /rp speak | /rp voice [on|off] | /rp history [limit] [page]
-/rp session info | /rp sessions [all] [limit] [page] | /rp switch <session-id-prefix>
+/rp session info | /rp session export <id> | /rp sessions [all] [limit] [page] | /rp switch <session-id-prefix>
 /rp rename <name> | /rp clone [name]
 /rp export [markdown|st-json]
 /rp assets | /rp cards

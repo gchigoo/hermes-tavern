@@ -2,9 +2,12 @@
 
 from __future__ import annotations
 
+import datetime
+import json
 from typing import Any
 
 from hermes_tavern.commands import RPCommand
+from hermes_tavern.hermes_home import get_hermes_home
 from hermes_tavern.identity import session_key_from_event
 from hermes_tavern.runtime_utils import parse_pagination
 
@@ -13,6 +16,8 @@ def session_command(runtime: Any, command: RPCommand, event: Any) -> str:
     subcommand = command.args[0].lower() if command.args else "info"
     if subcommand == "info":
         return runtime._session_info(event)
+    if subcommand == "export":
+        return session_export(runtime, command, event)
     return "Usage: /rp session info"
 
 
@@ -62,6 +67,109 @@ def session_info(runtime: Any, event: Any) -> str:
             ]
         )
     return "\n".join(lines)
+
+
+def _session_export_filename(session_id: str) -> str:
+    safe_id = "".join(char for char in str(session_id) if char.isalnum())[:16]
+    if not safe_id:
+        safe_id = "session"
+    return f"session_{safe_id}.json"
+
+
+def session_export(runtime: Any, command: RPCommand, event: Any) -> str:
+    if len(command.args) < 2:
+        return "Usage: /rp session export <id>"
+    id_prefix = " ".join(command.args[1:]).strip()
+    if not id_prefix:
+        return "Usage: /rp session export <id>"
+
+    session_key = session_key_from_event(event)
+    matches = runtime.store.list_sessions_by_id_prefix_for_scope(
+        session_key,
+        id_prefix,
+        include_all=True,
+        limit=3,
+    )
+    if not matches:
+        return f"Session not found: {id_prefix}"
+    if len(matches) > 1:
+        choices = ", ".join(f"[{(session.get('id') or '')[:8]}]" for session in matches[:3])
+        return f"Multiple sessions match {id_prefix}: {choices}. Use a longer session id."
+
+    session = matches[0]
+
+    messages: list[dict[str, Any]] = []
+    page_size = 200
+    offset = 0
+    while True:
+        page = runtime.store.get_messages_page(session["id"], page_size, offset)
+        if not page:
+            break
+        messages.extend(page)
+        offset += page_size
+
+    card_name = session.get("card_name") or "unknown"
+    card_data: dict[str, Any] | None = None
+    if session.get("card_id"):
+        card = runtime.store.get_card(session["card_id"])
+        if card:
+            card_data = json.loads(card.get("data_json") or "{}")
+            card_name = card.get("name") or card_name
+
+    preset_name = "none"
+    if session.get("preset_id"):
+        preset = runtime.store.get_preset(session["preset_id"])
+        if preset:
+            preset_name = preset.get("name") or "unknown"
+
+    lorebook_name = "none"
+    if session.get("lorebook_id"):
+        lorebook = runtime.store.get_lorebook(session["lorebook_id"])
+        if lorebook:
+            lorebook_name = lorebook.get("name") or "unknown"
+
+    content_mode = session.get("content_mode") or "safe"
+    session_title = session.get("title") or session.get("id") or "unnamed"
+
+    chat_history: list[dict[str, Any]] = []
+    for msg in messages:
+        entry: dict[str, Any] = {
+            "role": msg.get("role", "unknown"),
+            "content": msg.get("content", ""),
+        }
+        metadata_json = msg.get("metadata_json")
+        if metadata_json:
+            try:
+                metadata = json.loads(metadata_json)
+                if metadata.get("swipes"):
+                    entry["swipes"] = metadata["swipes"]
+                    entry["active_swipe"] = metadata.get("active_swipe", 0)
+            except (json.JSONDecodeError, TypeError):
+                pass
+        chat_history.append(entry)
+
+    export_doc: dict[str, Any] = {
+        "hermes_tavern_export": True,
+        "exported_at": datetime.datetime.utcnow().isoformat(),
+        "session_title": session_title,
+        "card_name": card_name,
+        "content_mode": content_mode,
+        "preset_name": preset_name,
+        "lorebook_name": lorebook_name,
+        "message_count": len(messages),
+        "messages": chat_history,
+    }
+    if card_data:
+        export_doc["card"] = card_data
+
+    export_dir = get_hermes_home() / "plugins" / "hermes-tavern" / "exports" / "sessions"
+    export_dir.mkdir(parents=True, exist_ok=True)
+    export_path = export_dir / _session_export_filename(session["id"])
+    export_path.write_text(
+        json.dumps(export_doc, ensure_ascii=False, indent=2),
+        encoding="utf-8",
+    )
+    return f"Session exported as JSON.\nfile: {export_path}\nMEDIA:\"{export_path}\""
 
 
 def sessions(runtime: Any, command: RPCommand, event: Any) -> str:

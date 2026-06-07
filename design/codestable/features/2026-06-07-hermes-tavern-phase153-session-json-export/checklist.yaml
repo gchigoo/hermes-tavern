@@ -1,0 +1,150 @@
+doc_type: feature-checklist
+status: accepted
+feature: "2026-06-07-hermes-tavern-phase153-session-json-export"
+date: "2026-06-07"
+implementation_ready: true
+summary: >
+  DRAFT — Phase 153 adds one bounded /rp session export <id> JSON export
+  command. Architect profile (gpt-5.5) was rate-limited; controller
+  materialized design/checklist artifacts following the Phase 149–152 export
+  pattern. Codex executor (gpt-5.3-codex-spark) will implement the bounded
+  S1 slice, and the controller will rerun targeted and full gates.
+  S2 acceptance/writeback remains deferred.
+  - hermes-tavern
+  - session
+  - offline
+  - export
+  - json
+implementation_readiness: >
+  Architect profile (gpt-5.5) was rate-limited; controller materialized
+  design/checklist artifacts following the proven Phase 149–152 export pattern.
+  Executor profile (gpt-5.3-codex-spark) available. S1 implementation ready.
+steps:
+  - id: S1
+    name: "S1: Implement session JSON export by ID"
+    status: pending
+    description: >
+      Add /rp session export <id> under the existing session command family.
+      Resolve one stored session by ID prefix, read all messages, build a JSON
+      export payload matching the existing st-json export shape, write one
+      profile-safe UTF-8 JSON file, return file and quoted MEDIA output, update
+      help/README visibility, and add focused offline tests.
+    allowed_files:
+      - src/hermes_tavern/runtime_sessions.py
+      - src/hermes_tavern/commands.py
+      - README.md
+      - tests/test_hermes_tavern_sessions.py
+      - tests/test_hermes_tavern_commands.py
+      - tests/test_hermes_tavern_readme_docs.py
+    prohibited_files:
+      - run_agent.py
+      - cli.py
+      - gateway/run.py
+      - src/hermes_tavern/runtime.py
+      - src/hermes_tavern/runtime_lifecycle.py
+      - src/hermes_tavern/db.py
+      - src/hermes_tavern/db_novel.py
+      - src/hermes_tavern/prompt.py
+      - src/hermes_tavern/runtime_prompt_modules.py
+      - src/hermes_tavern/model_router.py
+      - src/hermes_tavern/provider_bridge.py
+      - src/hermes_tavern/adapters.py
+      - src/hermes_tavern/runtime_generation.py
+      - src/hermes_tavern/runtime_assets.py
+      - src/hermes_tavern/runtime_lore.py
+      - src/hermes_tavern/runtime_persona.py
+      - src/hermes_tavern/runtime_presets.py
+      - src/hermes_tavern/runtime_novel.py
+      - "src/hermes_tavern/importers/**"
+      - "plugins/**"
+      - "build/lib/**"
+    exact_scope:
+      - "Add /rp session export <id> as a nested session subcommand."
+      - "Resolve session ID via existing list_sessions_by_id_prefix_for_scope behavior."
+      - "Reject ambiguous (>1 match) and not-found (0 matches) ID prefixes."
+      - "Read all session messages via get_messages_page in paginated loops."
+      - "Build JSON payload matching existing st-json export shape from runtime_lifecycle.export()."
+      - "Resolve card/preset/lorebook names for export metadata."
+      - "Write one UTF-8 JSON file under get_hermes_home()/plugins/hermes-tavern/exports/sessions."
+      - 'Return bounded file: and quoted MEDIA:"<path>" output.'
+      - "Update generated help and README Core commands for /rp session export <id>."
+      - "Add focused tests: export by ID, not-found, ambiguous match, session with messages, session without messages, path containment, quoted paths with spaces, no session/message mutation."
+      - "Do not change session lifecycle, existing /rp export behavior, schema, prompt compiler, provider/model routing, generation, credentials, content mode, safety, project archive, gateway/core files, plugin files, or build artifacts."
+    verification:
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m py_compile src/hermes_tavern/runtime_sessions.py src/hermes_tavern/commands.py tests/test_hermes_tavern_sessions.py tests/test_hermes_tavern_commands.py tests/test_hermes_tavern_readme_docs.py"
+        expected: "passes"
+        actual: ""
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_sessions.py tests/test_hermes_tavern_commands.py tests/test_hermes_tavern_readme_docs.py -q -o 'addopts=' -p no:cacheprovider"
+        expected: "passes"
+        actual: ""
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_*.py -q -o 'addopts=' -p no:cacheprovider"
+        expected: "passes"
+        actual: ""
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts=' -p no:cacheprovider"
+        expected: "passes when feasible"
+        actual: ""
+      - command: "git diff --name-only -- run_agent.py cli.py gateway/run.py src/hermes_tavern/runtime.py src/hermes_tavern/runtime_lifecycle.py src/hermes_tavern/db.py src/hermes_tavern/db_novel.py src/hermes_tavern/prompt.py src/hermes_tavern/runtime_prompt_modules.py src/hermes_tavern/model_router.py src/hermes_tavern/provider_bridge.py src/hermes_tavern/adapters.py src/hermes_tavern/runtime_generation.py src/hermes_tavern/runtime_assets.py src/hermes_tavern/runtime_lore.py src/hermes_tavern/runtime_persona.py src/hermes_tavern/runtime_presets.py src/hermes_tavern/runtime_novel.py src/hermes_tavern/importers plugins build/lib"
+        expected: "empty output"
+        actual: ""
+      - command: "git diff --check"
+        expected: "passes"
+        actual: ""
+      - command: "python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-07-hermes-tavern-phase153-session-json-export/design.md --require doc_type --require status --require feature"
+        expected: "passes"
+        actual: ""
+      - command: "python design/codestable/tools/validate-yaml.py --yaml-only --file design/codestable/features/2026-06-07-hermes-tavern-phase153-session-json-export/checklist.yaml"
+        expected: "passes"
+        actual: ""
+  - id: S2
+    name: "S2: Acceptance and architecture/root-design writeback"
+    status: pending
+    description: >
+      S2 acceptance deferred to later cron tick. After S1 passes all controller
+      verification, rerun gates, create acceptance report, update ARCHITECTURE.md
+      and HERMES_TAVERN_DESIGN.md, and finalize checklist/design status.
+    allowed_files:
+      - design/codestable/features/2026-06-07-hermes-tavern-phase153-session-json-export/design.md
+      - design/codestable/features/2026-06-07-hermes-tavern-phase153-session-json-export/checklist.yaml
+      - design/codestable/features/2026-06-07-hermes-tavern-phase153-session-json-export/hermes-tavern-phase153-session-json-export-acceptance.md
+      - design/codestable/architecture/ARCHITECTURE.md
+      - design/HERMES_TAVERN_DESIGN.md
+    prohibited_files:
+      - README.md
+      - "src/**"
+      - "tests/**"
+      - run_agent.py
+      - cli.py
+      - gateway/run.py
+      - "plugins/**"
+      - "build/lib/**"
+    exact_scope:
+      - "Rerun S1 verification before acceptance."
+      - "Create Phase 153 acceptance only after verification passes."
+      - "Update architecture/root design only for current /rp session export <id> behavior."
+      - "Do not edit source, tests, README, plugin files, build artifacts, or protected core files during S2."
+    verification:
+      - command: "python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-07-hermes-tavern-phase153-session-json-export/design.md --require doc_type --require status --require feature"
+        expected: "passes"
+      - command: "python design/codestable/tools/validate-yaml.py --yaml-only --file design/codestable/features/2026-06-07-hermes-tavern-phase153-session-json-export/checklist.yaml"
+        expected: "passes"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_sessions.py tests/test_hermes_tavern_commands.py tests/test_hermes_tavern_readme_docs.py -q -o 'addopts=' -p no:cacheprovider"
+        expected: "passes"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_*.py -q -o 'addopts=' -p no:cacheprovider"
+        expected: "passes"
+      - command: "git diff --name-only -- README.md src tests run_agent.py cli.py gateway/run.py plugins build/lib"
+        expected: "empty output during S2"
+      - command: "git diff --check"
+        expected: "passes"
+risks:
+  - id: R1
+    risk: "Short ID prefixes can produce ambiguous matches."
+    mitigation: "Reject when list_sessions_by_id_prefix_for_scope returns >1 match; require longer prefix (same as /rp switch)."
+  - id: R2
+    risk: "Export payload shape may differ from existing st-json format."
+    mitigation: "Reuse the exact key structure from runtime_lifecycle.export() for format consistency."
+rollback: >
+  Remove the session export branch/helpers, help and README literal, and focused
+  tests. No DB migration or stored-data rollback is required.
+notes:
+  - "No architect pass was run (gpt-5.5 rate-limited). Controller materialized artifacts following the proven Phase 149–152 pattern."
+  - "S1 is the only implementation slice for this tick. S2 is planned for a later docs/status acceptance writeback tick."

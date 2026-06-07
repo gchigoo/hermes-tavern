@@ -108,7 +108,7 @@ TAVERN_COMMAND_TABLE: dict[str, TavernCommandEntry] = {
     # ── session management ──
     "session": TavernCommandEntry(
         handler="_session_command",
-        help_lines=["/rp session info"],
+        help_lines=["/rp session info", "/rp session export <id>"],
     ),
     "sessions": TavernCommandEntry(
         handler="_sessions",

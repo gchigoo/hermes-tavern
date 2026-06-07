@@ -520,6 +520,21 @@ Phase 152 adds `/rp persona export <persona>`:
   provider/model routing, generation, retrieval/vectorization, credentials,
   content-mode, minors/underage handling, or safety-bypass behavior.
 
+Phase 153 adds `/rp session export <id>`:
+
+- resolves session by ID prefix through existing
+  `list_sessions_by_id_prefix_for_scope(...)`, rejecting ambiguous (>1) and
+  not-found (0) matches;
+- exports all session messages as a st-json-format JSON file under
+  `get_hermes_home()/plugins/hermes-tavern/exports/sessions` with quoted
+  `MEDIA:"<path>"` marker output;
+- includes card/preset/lorebook name resolution and swipe metadata when present;
+- matches the existing `/rp export st-json` payload shape from Phase 23;
+- does not mutate session rows, messages, or session lifecycle state;
+- does not change schema, prompt/debug/context-budget, provider/model routing,
+  generation, retrieval/vectorization, credentials, content-mode, minors/underage
+  handling, or safety-bypass behavior.
+
 ### 6.7 Project / Novel
 
 Long-form writing requires a project layer above chat sessions.

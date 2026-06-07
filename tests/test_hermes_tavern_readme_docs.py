@@ -256,6 +256,12 @@ def test_readme_core_commands_includes_scene_goal_literals():
     assert "/rp scene goal clear <scene-id>" in core_commands
 
 
+def test_readme_core_commands_include_session_export_command():
+    core_commands = _readme_core_commands_text()
+
+    assert "/rp session export <id>" in core_commands
+
+
 def test_readme_core_commands_include_scene_beat_literals():
     core_commands = _readme_core_commands_text()
 

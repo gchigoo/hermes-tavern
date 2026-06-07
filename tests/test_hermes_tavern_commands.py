@@ -509,3 +509,7 @@ def test_tavern_command_table_keeps_current_allowed_top_level_families():
     assert "project" in TAVERN_COMMAND_TABLE
     assert "export" in TAVERN_COMMAND_TABLE
     assert "archive" in TAVERN_COMMAND_TABLE
+
+
+def test_tavern_command_table_session_family_includes_export_route():
+    assert "/rp session export <id>" in TAVERN_COMMAND_TABLE["session"].help_lines
