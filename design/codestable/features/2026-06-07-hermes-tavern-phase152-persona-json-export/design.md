@@ -1,14 +1,15 @@
 ---
 doc_type: feature-design
-status: implemented
+status: accepted
 feature: "2026-06-07-hermes-tavern-phase152-persona-json-export"
 date: "2026-06-07"
 summary: >
-  IMPLEMENTED (S1) — Phase 152 adds one bounded offline /rp persona export
+  ACCEPTED — Phase 152 added one bounded offline /rp persona export
   <persona> JSON export surface for stored personas, following the Phase 149
   card export, Phase 150 lorebook export, and Phase 151 preset export pattern
   without schema, importer, prompt, provider, generation, content-mode,
-  archive, or safety behavior changes. S2 acceptance/writeback remains deferred.
+  archive, or safety behavior changes. S2 acceptance/writeback completed
+  2026-06-07.
 tags: [hermes-tavern, persona, offline, export, sillytavern]
 owner: codestable-cron
 ---

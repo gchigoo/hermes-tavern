@@ -368,6 +368,7 @@ Commands:
 /rp persona lock chat
 /rp persona lock card
 /rp persona temp <description>
+/rp persona export <persona>
 ```
 
 ### 6.4 Preset
@@ -504,6 +505,20 @@ Phase 151 adds `/rp preset export <preset>`:
 - does not change schema, importers, preset classification, prompt/debug,
   context-budget, provider/model routing, generation, retrieval/vectorization,
   credentials, content-mode, minors/underage handling, or safety-bypass behavior.
+
+Phase 152 adds `/rp persona export <persona>`:
+
+- resolves through existing `TavernStore.get_persona(...)` including `last`;
+- writes one UTF-8 JSON file under
+  `get_hermes_home()/plugins/hermes-tavern/exports/personas` with quoted
+  `MEDIA:"<path>"` marker output;
+- prefers `personas.raw_json` when it parses as a JSON object and otherwise
+  uses normalized fallback payload from existing persona row fields;
+- does not mutate persona rows, sessions, or messages;
+- does not call session persona binding, use/clear/temp, or prompt compiler paths;
+- does not change schema, persona import parsing, prompt/debug/context-budget,
+  provider/model routing, generation, retrieval/vectorization, credentials,
+  content-mode, minors/underage handling, or safety-bypass behavior.
 
 ### 6.7 Project / Novel
 
@@ -1552,6 +1567,7 @@ Required exporters:
 /rp card export <card> card export JSON
 /rp lore export <lorebook> lorebook export JSON
 /rp preset export <preset> preset export JSON
+/rp persona export <persona> persona export JSON
 chat export JSONL
 novel export Markdown
 ```
@@ -1559,8 +1575,9 @@ novel export Markdown
 Project archive ZIP remains a future exporter/importer; current Phase 121–151 writes
 local Markdown via `/rp project export [id]`, single-card JSON via
 `/rp card export <card>`, single-lorebook JSON via
-`/rp lore export <lorebook>`, and single-preset JSON via
-`/rp preset export <preset>`. PNG card exports, bulk card export, project archive
+`/rp lore export <lorebook>`, single-preset JSON via
+`/rp preset export <preset>`, and single-persona JSON via
+`/rp persona export <persona>`. PNG card exports, bulk card export, project archive
 ZIP/import, card editing/deletion/merge tooling, provider/generation side effects,
 retrieval/vectorization coupling, content-mode/minors handling, and safety-bypass
 behavior remain deferred to later phases.

@@ -82,7 +82,7 @@ importers/
   lorebooks.py        import_st_lorebook_json / import_lorebook_file → Lorebook
 ```
 
-**Phases 1–28 and 30–38 complete (2026-05-25).** Capability summary:
+**Phases 1–38 and 121–152 complete (2026-06-07).** Capability summary:
 - Phases 1–3: skeleton, SQLite, card import, session CRUD, gateway hook
 - Phase 4: Prompt Compiler (chat + story renderers, card/persona assembly)
 - Phase 5–6: Provider bridge, live model routing
@@ -192,6 +192,17 @@ importers/
   `prompt_modules` rows; no schema/table/index migrations are added and no
   prompt/provider/model/generation, retrieval/vectorization, content-mode,
   minors/underage, safety-bypass, or ST importer/exporter behavior changes occur.
+- Phase 152: Persona JSON Export (`/rp persona export <persona>`) reads one existing
+  stored persona via the existing `get_persona(...)` resolver (including `last`)
+  and writes one UTF-8 JSON file under
+  `get_hermes_home()/plugins/hermes-tavern/exports/personas` with quoted `MEDIA`
+  attachment output. It prefers `personas.raw_json` if it parses to a JSON object;
+  otherwise it normalizes a fallback payload from existing persona row fields
+  (`name`, `content`, `source_path`, `created_at`); no schema/table/index
+  migrations are added and no prompt/provider/model/generation,
+  retrieval/vectorization, content-mode, minors/underage, safety-bypass,
+  persona import parsing, persona binding, or prompt compiler behavior changes
+  occur.
 
 ### Plugin flow
 
@@ -232,7 +243,7 @@ from vectorization/retrieval, provider/model routing, content mode,
 credentials, automation, summarization, and generation; they are visible only
 through command output and Markdown export.
 
-### /rp command surface (current through Phase 151)
+### /rp command surface (current through Phase 152)
 
 ```
 /rp help | status | assets
@@ -249,7 +260,7 @@ through command output and Markdown export.
 /rp switch <id> | rename <name> | archive | clone [name]
 /rp preset import [file] | list | inspect <preset> | export <preset> | use <preset>      ← `last` resolves to the session-lifetime most recently imported preset
 /rp lore import [file] | list | inspect <lorebook> | export <lorebook> | use <lorebook> | test <msg> | debug  ← `last` resolves to the session-lifetime most recently imported lorebook
-/rp persona import [file] | list [limit] [page] | inspect <persona> | use <persona> | clear | debug  ← `last` resolves to the session-lifetime most recently imported persona
+/rp persona import [file] | list [limit] [page] | inspect <persona> | use <persona> | clear | debug | export <persona>  ← `last` resolves to the session-lifetime most recently imported persona
 /rp note set <text> | clear | inspect | position [before_char|after_history|before_user] | frequency [always|every_n [n]]
 /rp memory add <fact> | list [limit] [page] | summary [set <text>|summarize [limit]] | debug
 /rp content mode [safe|adult-fiction]
@@ -333,7 +344,7 @@ through command output and Markdown export.
 /rp relationship delete <relationship-id>
 ```
 
-### DB schema (current through Phase 151; unchanged by Phase 151)
+### DB schema (current through Phase 152; unchanged by Phase 152)
 
 ```sql
 cards(id, name, data_json, source_path, created_at)
@@ -625,4 +636,10 @@ These phases do not change schema or core prompt/generation assembly.
   preset/session/message mutation, prompt/debug/context behavior, provider/model
   routing, generation, retrieval/vectorization, content-mode, credentials,
   minors/underage, and safety-bypass behavior unchanged.
+- **Phase 152 persona export boundary**: `/rp persona export <persona>` reads one
+  existing stored persona and writes one UTF-8 JSON file under profile-safe exports.
+  It keeps `personas` schema/table shape, migrations, persona/session/message
+  mutation, persona binding/use/clear/temp behavior, prompt/debug/context behavior,
+  provider/model routing, generation, retrieval/vectorization, content-mode,
+  credentials, minors/underage, and safety-bypass behavior unchanged.
 - **Tavern lore regex complexity guard**: lorebook regex keys are screened locally before matching. Entries with patterns longer than 256 characters or nested quantified groups (for example `(a+)+`, `(.+)*`, `([a-z]+){2,}`) are excluded with bounded reasons (`regex rejected: ...`), preserving raw imported lore data while preventing unbounded local matching behavior.

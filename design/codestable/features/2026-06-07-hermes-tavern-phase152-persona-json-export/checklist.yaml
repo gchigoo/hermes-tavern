@@ -1,15 +1,14 @@
 doc_type: feature-checklist
-status: implemented
+status: accepted
 feature: "2026-06-07-hermes-tavern-phase152-persona-json-export"
 date: "2026-06-07"
 implementation_ready: true
 summary: >
-  IMPLEMENTED - Adds one bounded offline /rp persona export <persona> JSON export surface for
+  ACCEPTED - Added one bounded offline /rp persona export <persona> JSON export surface for
   existing stored personas, using existing lookup semantics including last,
   profile-safe export paths, raw JSON preference, normalized fallback rows,
-  generated help/README visibility, and focused tests. S2 acceptance and
-  architecture/root-design writeback deferred to a later tick.
-tags:
+  generated help/README visibility, and focused tests. S2 acceptance completed
+  on 2026-06-07 with architecture/root-design writeback.
   - hermes-tavern
   - persona
   - offline
@@ -95,11 +94,13 @@ steps:
         actual: "passed in controller on 2026-06-07"
   - id: S2
     name: "S2: Acceptance and architecture/root-design writeback"
-    status: pending
+    status: implemented
     description: >
-      Later tick only. After S1 is implemented and verified, create the acceptance
-      report, finalize design/checklist status, and update current architecture
-      and root design documentation for /rp persona export <persona>.
+      S2 acceptance completed on 2026-06-07. Controller reran all S1 verification
+      gates (116 focused, 1097 Tavern-wide, all passed), created acceptance report,
+      updated ARCHITECTURE.md (capability summary, command surface, boundary) and
+      HERMES_TAVERN_DESIGN.md (persona command list, Phase 152 description,
+      export-parity reference), and finalized checklist/design status.
     allowed_files:
       - design/codestable/features/2026-06-07-hermes-tavern-phase152-persona-json-export/design.md
       - design/codestable/features/2026-06-07-hermes-tavern-phase152-persona-json-export/checklist.yaml
