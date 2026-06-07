@@ -314,6 +314,8 @@ def style_command(runtime: Any, command: RPCommand, event: Any) -> str:
         return style_sample_update(runtime, command)
     if subcommand == "delete":
         return style_sample_delete(runtime, command)
+    if subcommand == "export":
+        return style_sample_export(runtime, command)
 
     return _STYLE_SAMPLE_USAGE
 
@@ -372,7 +374,7 @@ _STYLE_SAMPLE_USAGE = (
     "Usage: /rp style sample add <project-id> <label> <sample...> | "
     "/rp style sample list [project-id] | /rp style sample inspect <style-sample-id> | "
     "/rp style sample update <style-sample-id> <sample...> | "
-    "/rp style sample delete <style-sample-id>"
+    "/rp style sample delete <style-sample-id> | /rp style sample export <style-sample-id>"
 )
 
 
@@ -2707,6 +2709,46 @@ def style_sample_delete(runtime: Any, command: RPCommand) -> str:
         return f"No style sample found: {style_sample_id}"
 
     return f"Style sample deleted for style sample [{style_sample_id}]."
+
+
+def style_sample_export(runtime: Any, command: RPCommand) -> str:
+    if len(command.args) != 3:
+        return _STYLE_SAMPLE_USAGE
+
+    style_sample_id = _safe_int(command.args[2])
+    if style_sample_id is None or style_sample_id <= 0:
+        return _STYLE_SAMPLE_USAGE
+
+    style_sample = runtime.store.get_style_sample(style_sample_id)
+    if style_sample is None:
+        return f"No style sample found: {style_sample_id}"
+
+    export_doc = {
+        "hermes_tavern_export": True,
+        "exported_at": datetime.utcnow().isoformat(),
+        "style_sample_id": style_sample["id"],
+        "project_id": style_sample["project_id"],
+        "label": style_sample["label"],
+        "sample_text": style_sample["sample_text"],
+        "created_at": style_sample.get("created_at"),
+        "updated_at": style_sample.get("updated_at"),
+    }
+
+    export_dir = (
+        get_hermes_home()
+        / "plugins"
+        / "hermes-tavern"
+        / "exports"
+        / "style-samples"
+    )
+    export_dir.mkdir(parents=True, exist_ok=True)
+    export_path = Path(export_dir) / f"style_sample_{style_sample_id}.json"
+    export_path.write_text(
+        json.dumps(export_doc, ensure_ascii=False, indent=2),
+        encoding="utf-8",
+    )
+
+    return f"Style sample exported as JSON.\nfile: {export_path}\nMEDIA:\"{export_path}\""
 
 
 def character_state_add(runtime: Any, command: RPCommand, event: Any) -> str:

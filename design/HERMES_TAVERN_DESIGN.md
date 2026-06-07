@@ -738,6 +738,7 @@ Commands:
 /rp style sample inspect <style-sample-id>
 /rp style sample update <style-sample-id> <sample...>
 /rp style sample delete <style-sample-id>
+/rp style sample export <style-sample-id>
 /rp chapter create [project-id] <title>
 /rp chapter list [project-id]
 /rp chapter export <chapter-id>
@@ -1246,6 +1247,7 @@ relationship label rename is current metadata.
 /rp style sample inspect <style-sample-id>
 /rp style sample update <style-sample-id> <sample...>
 /rp style sample delete <style-sample-id>
+/rp style sample export <style-sample-id>
 /rp relationship add <project-id> <label> <state...>
 /rp relationship list [project-id]
 /rp relationship inspect <relationship-id>

@@ -82,7 +82,7 @@ STYLE_SAMPLE_USAGE = (
     "Usage: /rp style sample add <project-id> <label> <sample...> | "
     "/rp style sample list [project-id] | /rp style sample inspect <style-sample-id> | "
     "/rp style sample update <style-sample-id> <sample...> | "
-    "/rp style sample delete <style-sample-id>"
+    "/rp style sample delete <style-sample-id> | /rp style sample export <style-sample-id>"
 )
 
 BINDING_USAGE = (
@@ -253,6 +253,7 @@ def test_novel_command_table_has_expected_families():
     assert "/rp style sample inspect <style-sample-id>" in TAVERN_COMMAND_TABLE["style"].help_lines
     assert "/rp style sample update <style-sample-id> <sample...>" in TAVERN_COMMAND_TABLE["style"].help_lines
     assert "/rp style sample delete <style-sample-id>" in TAVERN_COMMAND_TABLE["style"].help_lines
+    assert "/rp style sample export <style-sample-id>" in TAVERN_COMMAND_TABLE["style"].help_lines
     assert "/rp timeline add <project-id> <date> <title> [description...]" in TAVERN_COMMAND_TABLE["timeline"].help_lines
     assert "/rp timeline list [project-id]" in TAVERN_COMMAND_TABLE["timeline"].help_lines
     assert "/rp timeline inspect <timeline-id>" in TAVERN_COMMAND_TABLE["timeline"].help_lines
@@ -5855,6 +5856,105 @@ def test_style_sample_markers_do_not_leak_to_debug_prompt_or_context(tmp_path):
     context = runtime.handle_command_sync(RPCommand("debug", ["context"], "/rp debug context"), Event())
     assert "marker: distinctive style sample token" not in prompt
     assert "marker: distinctive style sample token" not in context
+
+
+def test_style_sample_export(tmp_path, monkeypatch):
+    monkeypatch.setenv("HERMES_HOME", str(tmp_path / "hermes home"))
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    project = runtime.store.create_project("Atlas")
+
+    runtime.handle_command_sync(
+        RPCommand(
+            "style",
+            [
+                "sample",
+                "add",
+                str(project["id"]),
+                "sea-letters",
+                "Short, salt-rough prose with rope metaphors.",
+            ],
+            "/rp style sample add 1 sea-letters Short, salt-rough prose with rope metaphors.",
+        ),
+        Event(),
+    )
+
+    list_before = runtime.handle_command_sync(
+        RPCommand("style", ["sample", "list", str(project["id"])], "/rp style sample list 1"),
+        Event(),
+    )
+    inspect_before = runtime.handle_command_sync(
+        RPCommand("style", ["sample", "inspect", "1"], "/rp style sample inspect 1"),
+        Event(),
+    )
+    sample_before = runtime.store.get_style_sample(1).copy()
+
+    export = runtime.handle_command_sync(
+        RPCommand("style", ["sample", "export", "1"], "/rp style sample export 1"),
+        Event(),
+    )
+    assert export.startswith("Style sample exported as JSON.\nfile:")
+    assert "MEDIA:" in export
+
+    file_path = export.split("file: ", 1)[1].splitlines()[0].strip()
+    from pathlib import Path
+
+    export_path = Path(file_path)
+    assert "exports" in export_path.parts
+    assert "style-samples" in export_path.parts
+    assert export_path.name == "style_sample_1.json"
+
+    payload = json.loads(export_path.read_text(encoding="utf-8"))
+    assert payload["hermes_tavern_export"] is True
+    assert payload["style_sample_id"] == 1
+    assert payload["project_id"] == sample_before["project_id"]
+    assert payload["label"] == sample_before["label"]
+    assert payload["sample_text"] == sample_before["sample_text"]
+    assert payload["created_at"] == sample_before["created_at"]
+    assert payload["updated_at"] == sample_before["updated_at"]
+
+    list_after = runtime.handle_command_sync(
+        RPCommand("style", ["sample", "list", str(project["id"])], "/rp style sample list 1"),
+        Event(),
+    )
+    inspect_after = runtime.handle_command_sync(
+        RPCommand("style", ["sample", "inspect", "1"], "/rp style sample inspect 1"),
+        Event(),
+    )
+
+    assert list_before == list_after
+    assert inspect_before == inspect_after
+    assert runtime.store.get_style_sample(1) == sample_before
+
+
+def test_style_sample_export_not_found_nonpositive_and_missing_id(tmp_path):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    runtime.store.create_project("Atlas")
+
+    assert (
+        runtime.handle_command_sync(
+            RPCommand(
+                "style",
+                ["sample", "export", "9999"],
+                "/rp style sample export 9999",
+            ),
+            Event(),
+        )
+        == "No style sample found: 9999"
+    )
+    assert (
+        runtime.handle_command_sync(
+            RPCommand("style", ["sample", "export", "0"], "/rp style sample export 0"),
+            Event(),
+        )
+        == STYLE_SAMPLE_USAGE
+    )
+    assert (
+        runtime.handle_command_sync(
+            RPCommand("style", ["sample", "export"], "/rp style sample export"),
+            Event(),
+        )
+        == STYLE_SAMPLE_USAGE
+    )
 
 
 def test_relationship_markers_do_not_leak_to_debug_prompt_or_context(tmp_path):

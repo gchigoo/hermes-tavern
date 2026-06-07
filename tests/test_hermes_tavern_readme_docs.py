@@ -349,6 +349,7 @@ def test_readme_core_commands_include_style_sample_literals():
     assert "/rp style sample inspect <style-sample-id>" in core_commands
     assert "/rp style sample update <style-sample-id> <sample...>" in core_commands
     assert "/rp style sample delete <style-sample-id>" in core_commands
+    assert "/rp style sample export <style-sample-id>" in core_commands
 
 
 def test_readme_core_commands_include_project_revision_literals():

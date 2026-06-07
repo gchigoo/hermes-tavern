@@ -293,6 +293,7 @@ TAVERN_COMMAND_TABLE: dict[str, TavernCommandEntry] = {
             "/rp style sample inspect <style-sample-id>",
             "/rp style sample update <style-sample-id> <sample...>",
             "/rp style sample delete <style-sample-id>",
+            "/rp style sample export <style-sample-id>",
         ],
     ),
     "character": TavernCommandEntry(

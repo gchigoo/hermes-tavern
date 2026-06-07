@@ -746,4 +746,10 @@ These phases do not change schema or core prompt/generation assembly.
   add/list/inspect/update/delete behavior, prompt/debug/context behavior, provider/model
   routing, generation, retrieval/vectorization, content-mode, credentials, project archive,
   and safety-bypass behavior unchanged.
+- **Phase 163 style sample export boundary**: `/rp style sample export <style-sample-id>` reads one existing
+  `novel_style_samples` row and writes one UTF-8 JSON file under profile-safe exports.
+  It keeps `novel_style_samples` schema, table/index shape, migrations, style sample
+  add/list/inspect/update/delete behavior, prompt/debug/context behavior, provider/model
+  routing, generation, retrieval/vectorization, content-mode, credentials, project archive,
+  and safety-bypass behavior unchanged.
 - **Tavern lore regex complexity guard**: lorebook regex keys are screened locally before matching. Entries with patterns longer than 256 characters or nested quantified groups (for example `(a+)+`, `(.+)*`, `([a-z]+){2,}`) are excluded with bounded reasons (`regex rejected: ...`), preserving raw imported lore data while preventing unbounded local matching behavior.

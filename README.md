@@ -134,6 +134,7 @@ Expected behavior:
 /rp style sample inspect <style-sample-id>
 /rp style sample update <style-sample-id> <sample...>
 /rp style sample delete <style-sample-id>
+/rp style sample export <style-sample-id>
 /rp project brief [project-id] | /rp project brief inspect [project-id]
 /rp project brief type set <project-id> <novel|serial|rp|worldbuilding|other> | /rp project brief type clear <project-id>
 /rp project brief premise set <project-id> <text> | /rp project brief premise clear <project-id>
