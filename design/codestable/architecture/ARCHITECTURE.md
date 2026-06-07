@@ -82,7 +82,7 @@ importers/
   lorebooks.py        import_st_lorebook_json / import_lorebook_file → Lorebook
 ```
 
-**Phases 1–38 and 121–166 complete (2026-06-08).** Capability summary:
+**Phases 1–38 and 121–167 complete (2026-06-08).** Capability summary:
 - Phases 1–3: skeleton, SQLite, card import, session CRUD, gateway hook
 - Phase 4: Prompt Compiler (chat + story renderers, card/persona assembly)
 - Phase 5–6: Provider bridge, live model routing
@@ -294,6 +294,17 @@ importers/
   behavior, prompt/module, provider/model, generation, retrieval/vectorization,
   content-mode, minors/underage, safety-bypass, or deferred revision-note
   tooling changes occur.
+- Phase 167: Project JSON Bundle Export (`/rp project export json <project-id>`) reads
+  all project-scoped entities (chapters, scenes, canon, timeline, relationships,
+  character states, locations, organizations, plot threads, style samples,
+  bindings, scene beats, revision notes) via existing list API calls, calls
+  existing individual JSON export functions for each entity, collects files
+  under `get_hermes_home()/plugins/hermes-tavern/exports/projects/<project-id>/`,
+  returns a summary with entity-type counts, directory path, and quoted
+  `MEDIA:\"<path>\"` attachment output. No schema, table/index migrations,
+  individual entity CRUD, prompt/module, provider/model, generation,
+  retrieval/vectorization, content-mode, minors/underage, safety-bypass,
+  or deferred project archive/ZIP/cloud-sync tooling changes occur.
 
 ### Plugin flow
 

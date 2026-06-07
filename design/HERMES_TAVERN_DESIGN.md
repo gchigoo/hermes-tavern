@@ -677,6 +677,21 @@ Phase 166 adds `/rp project revision export <note-id>`:
   generation, retrieval/vectorization, credentials, content-mode, minors/underage
   handling, or safety-bypass behavior.
 
+Phase 167 adds `/rp project export json <project-id>`:
+
+- resolves project by ID through existing `_resolve_project_id` helper,
+  rejecting not-found projects;
+- reads all project-scoped entities (chapters, scenes, canon, timeline,
+  relationships, character states, locations, organizations, plot threads,
+  style samples, bindings, scene beats, revision notes) via existing list APIs;
+- calls existing individual JSON export functions and collects files under
+  `get_hermes_home()/plugins/hermes-tavern/exports/projects/<project-id>/`;
+- returns a summary with entity-type counts, directory path, and quoted
+  `MEDIA:\"<path>\"` marker output;
+- does not change schema, individual entity CRUD, prompt/debug/context-budget,
+  provider/model routing, generation, retrieval/vectorization, credentials,
+  content-mode, minors/underage handling, or safety-bypass behavior.
+
 Revision Notes Metadata v1 is current local project-scoped metadata and is managed
 through `/rp project revision add/list/inspect/update/delete/export`, persisted in
 `novel_revision_notes(id, project_id, label, note_text, created_at, updated_at)`.

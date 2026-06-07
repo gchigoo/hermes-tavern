@@ -1,0 +1,172 @@
+doc_type: feature-checklist
+status: approved
+feature: "2026-06-08-hermes-tavern-phase167-project-json-export"
+date: "2026-06-08"
+implementation_ready: true
+summary: >
+  Phase 167 adds one bounded /rp project export json <project-id> JSON bundle
+  export command. S1 implements the bundle export function, dispatcher branch,
+  help/README updates, and focused tests; S2 completes acceptance and
+  architecture/root-design writeback (deferred to controller after S1
+  verification passes).
+tags:
+  - hermes-tavern
+  - project
+  - export
+  - json
+  - bundle
+  - offline
+implementation_readiness: >
+  Architect profile (gpt-5.5) rate-limited (~Jun 11); controller materialized
+  design/checklist artifacts following the proven Phase 149-166 export pattern.
+  Executor profile (gpt-5.3-codex-spark, standalone CLI v0.137.0) available.
+  S1 implementation ready.
+steps:
+  - id: S1
+    name: "S1: Implement project JSON bundle export"
+    status: completed
+    completed_at: "2026-06-08"
+    result: >
+      IMPLEMENTED - Codex executor added project_export_json() function,
+      json subcommand branch in project_export() dispatcher, updated
+      usage/help_lines/README visibility, and added focused bundle export
+      tests (all entity types, empty project, not-found, MEDIA output,
+      path containment). py_compile passed, targeted tests 329 passed,
+      full tavern 1196 passed, reverse-scope diff empty, hermes_constants
+      import clean.
+    description: >
+      Add /rp project export json <project-id> as a nested export subcommand.
+      Resolve project ID via existing _resolve_project_id, verify project
+      exists, create exports/projects/<project-id>/ directory with
+      subdirectories per entity type, call existing individual export
+      functions for each entity, return a summary with counts per entity type
+      and MEDIA for the directory path, update usage/help/README visibility,
+      and add focused offline tests.
+    allowed_files:
+      - src/hermes_tavern/runtime_novel.py
+      - src/hermes_tavern/commands.py
+      - README.md
+      - tests/test_hermes_tavern_novel_runtime.py
+      - tests/test_hermes_tavern_readme_docs.py
+    prohibited_files:
+      - run_agent.py
+      - cli.py
+      - gateway/run.py
+      - src/hermes_tavern/runtime.py
+      - src/hermes_tavern/runtime_lifecycle.py
+      - src/hermes_tavern/runtime_sessions.py
+      - src/hermes_tavern/runtime_assets.py
+      - src/hermes_tavern/db.py
+      - src/hermes_tavern/db_novel.py
+      - src/hermes_tavern/prompt.py
+      - src/hermes_tavern/runtime_prompt_modules.py
+      - src/hermes_tavern/model_router.py
+      - src/hermes_tavern/provider_bridge.py
+      - src/hermes_tavern/adapters.py
+      - src/hermes_tavern/runtime_generation.py
+      - src/hermes_tavern/runtime_lore.py
+      - src/hermes_tavern/runtime_persona.py
+      - src/hermes_tavern/runtime_presets.py
+      - "src/hermes_tavern/importers/**"
+      - "plugins/**"
+      - "build/lib/**"
+    exact_scope:
+      - "Add /rp project export json <project-id> as a nested export subcommand."
+      - "Add 'json' subcommand branch to project_export() dispatcher after the existing Markdown path, before the final return."
+      - "Resolve project ID via existing _resolve_project_id() helper."
+      - "Verify project exists via runtime.store.get_project(project_id)."
+      - "Reject not-found project with 'No novel project found: <id>'."
+      - "Create export directory at get_hermes_home()/plugins/hermes-tavern/exports/projects/<project-id>/ with subdirectories per entity type."
+      - "For each entity type with data: list entities, call individual export functions (chapter_export, scene_export, canon_export, timeline_export, relationship_export, character_state_export, location_export, organization_export, plot_thread_export, style_sample_export, binding_export, scene_beat_export, project_revision_export)."
+      - "Collect counts per entity type (skip entity types with zero items)."
+      - "Return summary listing entity types, counts, directory path, and quoted MEDIA:\"<path>\"."
+      - "Handle empty project (no entities) with summary reporting zero exports."
+      - "Update project_export() usage string to include /rp project export json <project-id>."
+      - "Update generated help (commands.py help_lines) for project export json."
+      - "Update README Core commands table for project export json."
+      - "Add focused tests: bundle export with all entity types, empty project, not-found project, path containment, MEDIA output, existing Markdown export unchanged."
+      - "Do not change entity schemas, project archive, prompt compiler, provider/model routing, generation, credentials, content mode, safety, gateway/core files, plugin files, or build artifacts."
+      - "Do not edit db_novel.py (no new DB APIs needed; existing list/get functions suffice)."
+    verification:
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m py_compile src/hermes_tavern/runtime_novel.py src/hermes_tavern/commands.py tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_readme_docs.py"
+        expected: "passes"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_readme_docs.py -q -o 'addopts=' -p no:cacheprovider"
+        expected: "passes"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_*.py -q -o 'addopts=' -p no:cacheprovider"
+        expected: "passes"
+      - command: "git diff --name-only -- run_agent.py cli.py gateway/run.py src/hermes_tavern/runtime.py src/hermes_tavern/runtime_prompt_modules.py src/hermes_tavern/prompt.py src/hermes_tavern/runtime_prompt_manager.py src/hermes_tavern/runtime_debug.py src/hermes_tavern/model_router.py src/hermes_tavern/provider_bridge.py src/hermes_tavern/adapters.py src/hermes_tavern/runtime_model.py src/hermes_tavern/runtime_generation.py src/hermes_tavern/runtime_content.py src/hermes_tavern/memory.py src/hermes_tavern/runtime_memory.py src/hermes_tavern/images.py src/hermes_tavern/runtime_images.py src/hermes_tavern/importers plugins build/lib design/HERMES_TAVERN_DESIGN.md design/codestable/architecture/ARCHITECTURE.md src/hermes_tavern/db_novel.py"
+        expected: "empty output during S1 implementation"
+      - command: "git diff --check"
+        expected: "passes"
+  - id: S2
+    name: "S2: Verify/accept/write current docs"
+    status: completed
+    completed_at: "2026-06-08"
+    description: >
+      Controller-owned acceptance/writeback after S1 passes.
+    allowed_files:
+      - design/codestable/features/2026-06-08-hermes-tavern-phase167-project-json-export/checklist.yaml
+      - design/codestable/features/2026-06-08-hermes-tavern-phase167-project-json-export/hermes-tavern-phase167-project-json-export-acceptance.md
+      - design/codestable/architecture/ARCHITECTURE.md
+      - design/HERMES_TAVERN_DESIGN.md
+    prohibited_files:
+      - README.md
+      - "src/**"
+      - "tests/**"
+      - run_agent.py
+      - cli.py
+      - gateway/run.py
+      - "plugins/**"
+      - "build/lib/**"
+
+checks:
+  - id: C1
+    name: "Command surface"
+    status: passed
+    completed_at: "2026-06-08"
+    result: "PASSED - /rp project export json visible in command table, runtime help, README Core commands, and focused command/docs tests."
+    criteria: "/rp project export json appears in command table, runtime help, README Core commands, and focused command/docs tests."
+  - id: C2
+    name: "Bundle export creates correct directory structure"
+    status: passed
+    completed_at: "2026-06-08"
+    result: "PASSED - Export creates project directory with subdirectories per entity type, each containing valid JSON files with correct payload keys."
+    criteria: "Export creates project directory with subdirectories per entity type, each containing valid JSON files with correct payload keys."
+  - id: C3
+    name: "Summary output"
+    status: passed
+    completed_at: "2026-06-08"
+    result: "PASSED - Summary lists entity types with correct counts, directory path, and quoted MEDIA marker."
+    criteria: "Summary lists entity types with correct counts, directory path, and quoted MEDIA marker."
+  - id: C4
+    name: "Edge cases"
+    status: passed
+    completed_at: "2026-06-08"
+    result: "PASSED - Empty project reports 0 exports, not-found returns error, malformed ID returns usage string."
+    criteria: "Empty project reports zero exports, not-found project returns error, malformed ID returns usage string."
+  - id: C5
+    name: "No prompt/provider side effects"
+    status: passed
+    completed_at: "2026-06-08"
+    result: "PASSED - No prohibited files change, no prompt/debug/context contamination."
+    criteria: "No prohibited files change, no prompt/debug/context contamination."
+  - id: C6
+    name: "Existing Markdown export unchanged"
+    status: passed
+    completed_at: "2026-06-08"
+    result: "PASSED - /rp project export [id] Markdown behavior identical after JSON subcommand added."
+    criteria: "/rp project export [id] Markdown behavior is identical after JSON subcommand is added."
+
+risks:
+  - id: R1
+    risk: "Calling individual export functions from within a bundle export could cause import order or name collisions."
+    mitigation: "Import and call the existing functions directly with constructed RPCommand objects; do not refactor the individual export functions."
+  - id: R2
+    risk: "The bundle export could be slow for large projects with many entities."
+    mitigation: "Acceptable for a local metadata operation; each individual export is already bounded."
+  - id: R3
+    risk: "Adding a subcommand could accidentally change existing project_export() routing."
+    mitigation: "Add the json branch at the start of project_export() after project_id resolution but before the existing Markdown path; keep Markdown path as default."
+  - id: R4
+    risk: "The repeated export pattern can tempt a broad refactor."
+    mitigation: "Keep S1 to the bounded bundle export command, help, README, and tests. Do not refactor existing export helpers or create new abstractions."

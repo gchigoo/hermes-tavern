@@ -16,7 +16,7 @@ from hermes_tavern.runtime_utils import mobile_preview as _mobile_preview
 
 _PROJECT_COMMAND_USAGE = (
     "Usage: /rp project create <title> | /rp project list | /rp project info <id> | /rp project inspect <project-id> | "
-    "/rp project set <id> | /rp project export [id] | /rp project style [project-id] | "
+    "/rp project set <id> | /rp project export [id] | /rp project export json [project-id] | /rp project style [project-id] | "
     "/rp project style inspect [project-id] | /rp project style set [project-id] <text> | /rp project style clear [project-id] "
     "| /rp project brief [project-id] | /rp project brief inspect [project-id] | "
     "/rp project brief type set <project-id> <novel|serial|rp|worldbuilding|other> | "
@@ -1215,15 +1215,24 @@ def project_style_clear(runtime: Any, project_id: int) -> str:
 
 
 def project_export(runtime: Any, command: RPCommand, event: Any) -> str:
+    command_has_json = len(command.args) > 1 and command.args[1].lower() == "json"
+    usage = (
+        "Usage: /rp project export [id] | /rp project export json [project-id]"
+    )
+
     project_id, err = _resolve_project_id(
         runtime,
         command,
         event=event,
-        usage="Usage: /rp project export [id]",
+        usage=usage,
         default_ok=True,
+        fallback_index=2 if command_has_json else 1,
     )
     if project_id is None:
-        return err or "Usage: /rp project export [id]"
+        return err or usage
+
+    if command_has_json:
+        return project_export_json(runtime, command, event)
 
     try:
         markdown = runtime.store.export_project_markdown(project_id)
@@ -1235,6 +1244,228 @@ def project_export(runtime: Any, command: RPCommand, event: Any) -> str:
     export_path = Path(export_dir) / f"project_{project_id}.md"
     export_path.write_text(markdown, encoding="utf-8")
     return f"Project exported as Markdown.\nfile: {export_path}\nMEDIA:\"{export_path}\""
+
+
+def project_export_json(runtime: Any, command: RPCommand, event: Any) -> str:
+    project_id, err = _resolve_project_id(
+        runtime,
+        command,
+        event=event,
+        usage="Usage: /rp project export json [project-id]",
+        default_ok=True,
+        fallback_index=2 if (len(command.args) > 1 and command.args[1].lower() == "json") else 1,
+    )
+    if project_id is None:
+        return err or "Usage: /rp project export json [project-id]"
+
+    project = runtime.store.get_project(project_id)
+    if project is None:
+        return f"No novel project found: {project_id}"
+
+    exports_root = get_hermes_home() / "plugins" / "hermes-tavern" / "exports"
+    project_export_dir = exports_root / "projects" / str(project_id)
+    project_export_dir.mkdir(parents=True, exist_ok=True)
+
+    export_counts = []
+    exported_types = 0
+
+    chapters = runtime.store.list_chapters(project_id)
+    if chapters:
+        chapters_dir = project_export_dir / "chapters"
+        chapters_dir.mkdir(parents=True, exist_ok=True)
+        for chapter in chapters:
+            chapter_export(
+                runtime,
+                RPCommand("chapter", ["export", str(chapter["id"])], f"/rp chapter export {chapter['id']}"),
+            )
+            source = exports_root / "chapters" / f"chapter_{chapter['id']}.json"
+            source.replace(chapters_dir / source.name)
+    export_counts.append(("chapters", len(chapters)))
+    if chapters:
+        exported_types += 1
+
+    scenes = []
+    for chapter in chapters:
+        scenes.extend(runtime.store.list_scenes(chapter["id"]))
+    if scenes:
+        scenes_dir = project_export_dir / "scenes"
+        scenes_dir.mkdir(parents=True, exist_ok=True)
+        for scene in scenes:
+            scene_export(runtime, RPCommand("scene", ["export", str(scene["id"])], f"/rp scene export {scene['id']}"))
+            source = exports_root / "scenes" / f"scene_{scene['id']}.json"
+            source.replace(scenes_dir / source.name)
+    export_counts.append(("scenes", len(scenes)))
+    if scenes:
+        exported_types += 1
+
+    canon_entries = runtime.store.list_canon(project_id)
+    if canon_entries:
+        canon_dir = project_export_dir / "canon"
+        canon_dir.mkdir(parents=True, exist_ok=True)
+        for entry in canon_entries:
+            canon_export(runtime, RPCommand("canon", ["export", str(entry["id"])], f"/rp canon export {entry['id']}"))
+            source = exports_root / "canon" / f"canon_{entry['id']}.json"
+            source.replace(canon_dir / source.name)
+    export_counts.append(("canon", len(canon_entries)))
+    if canon_entries:
+        exported_types += 1
+
+    timeline_entries = runtime.store.list_timeline(project_id)
+    if timeline_entries:
+        timeline_dir = project_export_dir / "timeline"
+        timeline_dir.mkdir(parents=True, exist_ok=True)
+        for entry in timeline_entries:
+            timeline_export(
+                runtime,
+                RPCommand("timeline", ["export", str(entry["id"])], f"/rp timeline export {entry['id']}"),
+            )
+            source = exports_root / "timeline" / f"timeline_{entry['id']}.json"
+            source.replace(timeline_dir / source.name)
+    export_counts.append(("timeline", len(timeline_entries)))
+    if timeline_entries:
+        exported_types += 1
+
+    relationship_states = runtime.store.list_relationship_states(project_id)
+    if relationship_states:
+        relationship_states_dir = project_export_dir / "relationships"
+        relationship_states_dir.mkdir(parents=True, exist_ok=True)
+        for relationship_state in relationship_states:
+            relationship_export(
+                runtime,
+                RPCommand("relationship", ["export", str(relationship_state["id"])], f"/rp relationship export {relationship_state['id']}"),
+            )
+            source = exports_root / "relationships" / f"relationship_{relationship_state['id']}.json"
+            source.replace(relationship_states_dir / source.name)
+    export_counts.append(("relationships", len(relationship_states)))
+    if relationship_states:
+        exported_types += 1
+
+    character_states = runtime.store.list_character_states(project_id)
+    if character_states:
+        character_states_dir = project_export_dir / "character_states"
+        character_states_dir.mkdir(parents=True, exist_ok=True)
+        for character_state in character_states:
+            character_state_export(
+                runtime,
+                RPCommand("character", ["state", "export", str(character_state["id"])], f"/rp character state export {character_state['id']}"),
+            )
+            source = exports_root / "character-states" / f"character_state_{character_state['id']}.json"
+            source.replace(character_states_dir / source.name)
+    export_counts.append(("character_states", len(character_states)))
+    if character_states:
+        exported_types += 1
+
+    locations = runtime.store.list_locations(project_id)
+    if locations:
+        locations_dir = project_export_dir / "locations"
+        locations_dir.mkdir(parents=True, exist_ok=True)
+        for location in locations:
+            location_export(runtime, RPCommand("location", ["export", str(location["id"])], f"/rp location export {location['id']}"))
+            source = exports_root / "locations" / f"location_{location['id']}.json"
+            source.replace(locations_dir / source.name)
+    export_counts.append(("locations", len(locations)))
+    if locations:
+        exported_types += 1
+
+    organizations = runtime.store.list_organizations(project_id)
+    if organizations:
+        organizations_dir = project_export_dir / "organizations"
+        organizations_dir.mkdir(parents=True, exist_ok=True)
+        for organization in organizations:
+            organization_export(
+                runtime,
+                RPCommand("organization", ["export", str(organization["id"])], f"/rp organization export {organization['id']}"),
+            )
+            source = exports_root / "organizations" / f"organization_{organization['id']}.json"
+            source.replace(organizations_dir / source.name)
+    export_counts.append(("organizations", len(organizations)))
+    if organizations:
+        exported_types += 1
+
+    plot_threads = runtime.store.list_plot_threads(project_id)
+    if plot_threads:
+        plot_threads_dir = project_export_dir / "plot_threads"
+        plot_threads_dir.mkdir(parents=True, exist_ok=True)
+        for plot_thread in plot_threads:
+            plot_thread_export(
+                runtime,
+                RPCommand("plot", ["thread", "export", str(plot_thread["id"])], f"/rp plot thread export {plot_thread['id']}"),
+            )
+            source = exports_root / "plot-threads" / f"plot-thread_{plot_thread['id']}.json"
+            source.replace(plot_threads_dir / source.name)
+    export_counts.append(("plot_threads", len(plot_threads)))
+    if plot_threads:
+        exported_types += 1
+
+    style_samples = runtime.store.list_style_samples(project_id)
+    if style_samples:
+        style_samples_dir = project_export_dir / "style_samples"
+        style_samples_dir.mkdir(parents=True, exist_ok=True)
+        for style_sample in style_samples:
+            style_sample_export(
+                runtime,
+                RPCommand("style", ["sample", "export", str(style_sample["id"])], f"/rp style sample export {style_sample['id']}"),
+            )
+            source = exports_root / "style-samples" / f"style_sample_{style_sample['id']}.json"
+            source.replace(style_samples_dir / source.name)
+    export_counts.append(("style_samples", len(style_samples)))
+    if style_samples:
+        exported_types += 1
+
+    bindings = runtime.store.list_default_bindings_for_project(project_id)
+    if bindings:
+        bindings_dir = project_export_dir / "bindings"
+        bindings_dir.mkdir(parents=True, exist_ok=True)
+        for binding in bindings:
+            binding_export(runtime, RPCommand("binding", ["export", str(binding["id"])], f"/rp binding export {binding['id']}"))
+            source = exports_root / "bindings" / f"binding_{binding['id']}.json"
+            source.replace(bindings_dir / source.name)
+    export_counts.append(("bindings", len(bindings)))
+    if bindings:
+        exported_types += 1
+
+    scene_beats: list[dict[str, Any]] = []
+    for scene in scenes:
+        scene_beats.extend(runtime.store.list_scene_beats(scene["id"]))
+    if scene_beats:
+        scene_beats_dir = project_export_dir / "scene_beats"
+        scene_beats_dir.mkdir(parents=True, exist_ok=True)
+        for scene_beat in scene_beats:
+            scene_beat_export(runtime, scene_beat["id"])
+            source = exports_root / "scene_beats" / f"beat_{scene_beat['id']}.json"
+            source.replace(scene_beats_dir / source.name)
+    export_counts.append(("scene_beats", len(scene_beats)))
+    if scene_beats:
+        exported_types += 1
+
+    revision_notes = runtime.store.list_revision_notes(project_id)
+    if revision_notes:
+        revision_notes_dir = project_export_dir / "revision_notes"
+        revision_notes_dir.mkdir(parents=True, exist_ok=True)
+        for revision_note in revision_notes:
+            project_revision_export(
+                runtime,
+                RPCommand("project", ["revision", "export", str(revision_note["id"])], f"/rp project revision export {revision_note['id']}"),
+            )
+            source = exports_root / "revision_notes" / f"note_{revision_note['id']}.json"
+            source.replace(revision_notes_dir / source.name)
+    export_counts.append(("revision_notes", len(revision_notes)))
+    if revision_notes:
+        exported_types += 1
+
+    if exported_types:
+        export_summary = ", ".join(
+            f"{count} {label}" for label, count in export_counts if count > 0
+        )
+    else:
+        export_summary = ", ".join(f"{count} {label}" for label, count in export_counts)
+
+    return (
+        f'Project JSON export complete for project [{project_id}] "{project["title"]}".\n'
+        f"Exported {exported_types} entity types: {export_summary}.\n"
+        f"Directory: {project_export_dir}\n"
+        f'MEDIA:"{project_export_dir}"'
+    )
 
 
 def chapter_create(runtime: Any, command: RPCommand, event: Any) -> str:

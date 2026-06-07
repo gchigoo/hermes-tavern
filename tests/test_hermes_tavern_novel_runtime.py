@@ -1,4 +1,5 @@
 import json
+from pathlib import Path
 from dataclasses import replace
 from types import SimpleNamespace
 import pytest
@@ -3865,6 +3866,177 @@ def test_project_export_omits_revision_notes_when_empty(tmp_path, monkeypatch):
     exported = Path(file_path).read_text(encoding="utf-8")
 
     assert "## Revision Notes" not in exported
+
+
+def test_project_export_json_creates_all_entity_files(tmp_path, monkeypatch):
+    monkeypatch.setenv("HERMES_HOME", str(tmp_path / "hermes home"))
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+
+    project = runtime.store.create_project("Atlas", "A long voyage")
+    chapter = runtime.store.create_chapter(project["id"], "Arrival")
+    scene = runtime.store.create_scene(chapter["id"], "Opening")
+    canon = runtime.store.create_canon(project["id"], "Climate", "Snow is common.")
+    timeline = runtime.store.create_timeline_event(project["id"], "Day 1", "Departure", description="At dawn.")
+    relationship = runtime.store.create_relationship_state(
+        project["id"],
+        "mara-elya",
+        "Trust is a habit, then a promise.",
+    )
+    character_state = runtime.store.create_character_state(
+        project["id"],
+        "mara",
+        "Curious and careful.",
+    )
+    location = runtime.store.create_location(project["id"], "Harbor", "A lamp posts the river mouth.")
+    organization = runtime.store.create_organization(
+        project["id"],
+        "Harbor Office",
+        "Tracks trade by bell schedule and fog signal.",
+    )
+    plot_thread = runtime.store.create_plot_thread(
+        project["id"],
+        "Thread 1",
+        "Main story thread.",
+    )
+    style_sample = runtime.store.create_style_sample(
+        project["id"],
+        "sea-song",
+        "Bells and gulls in low light.",
+    )
+    card = _card_with_id(runtime.store, "chartest")
+    binding = runtime.store.set_default_binding("project", project["id"], "card", card)
+    scene_beat = runtime.store.create_scene_beat(scene["id"], "opening", "A bell rings")
+    note = runtime.store.create_revision_note(project["id"], "continuity", "Foreshadow the missing bell once.")
+
+    response = runtime.handle_command_sync(
+        RPCommand(
+            "project",
+            ["export", "json", str(project["id"])],
+            f"/rp project export json {project['id']}",
+        ),
+        Event(),
+    )
+
+    assert response.startswith(f'Project JSON export complete for project [{project["id"]}]')
+    assert "Exported 13 entity types" in response
+
+    media_path = response.split("MEDIA:", 1)[1].strip().strip('"')
+    project_export_dir = Path(media_path)
+    assert project_export_dir == tmp_path / "hermes home" / "plugins" / "hermes-tavern" / "exports" / "projects" / str(project["id"])
+
+    chapter_payload = json.loads((project_export_dir / "chapters" / f"chapter_{chapter['id']}.json").read_text(encoding="utf-8"))
+    assert chapter_payload["chapter_id"] == chapter["id"]
+    assert chapter_payload["project_id"] == project["id"]
+
+    scene_payload = json.loads((project_export_dir / "scenes" / f"scene_{scene['id']}.json").read_text(encoding="utf-8"))
+    assert scene_payload["scene_id"] == scene["id"]
+
+    canon_payload = json.loads((project_export_dir / "canon" / f"canon_{canon['id']}.json").read_text(encoding="utf-8"))
+    assert canon_payload["canon_id"] == canon["id"]
+
+    timeline_payload = json.loads((project_export_dir / "timeline" / f"timeline_{timeline['id']}.json").read_text(encoding="utf-8"))
+    assert timeline_payload["timeline_id"] == timeline["id"]
+
+    relationship_payload = json.loads((project_export_dir / "relationships" / f"relationship_{relationship['id']}.json").read_text(encoding="utf-8"))
+    assert relationship_payload["relationship_id"] == relationship["id"]
+
+    character_payload = json.loads((project_export_dir / "character_states" / f"character_state_{character_state['id']}.json").read_text(encoding="utf-8"))
+    assert character_payload["character_state_id"] == character_state["id"]
+
+    location_payload = json.loads((project_export_dir / "locations" / f"location_{location['id']}.json").read_text(encoding="utf-8"))
+    assert location_payload["location_id"] == location["id"]
+
+    organization_payload = json.loads((project_export_dir / "organizations" / f"organization_{organization['id']}.json").read_text(encoding="utf-8"))
+    assert organization_payload["organization_id"] == organization["id"]
+
+    plot_thread_payload = json.loads((project_export_dir / "plot_threads" / f"plot-thread_{plot_thread['id']}.json").read_text(encoding="utf-8"))
+    assert plot_thread_payload["plot_thread_id"] == plot_thread["id"]
+
+    style_payload = json.loads((project_export_dir / "style_samples" / f"style_sample_{style_sample['id']}.json").read_text(encoding="utf-8"))
+    assert style_payload["style_sample_id"] == style_sample["id"]
+
+    binding_payload = json.loads((project_export_dir / "bindings" / f"binding_{binding['id']}.json").read_text(encoding="utf-8"))
+    assert binding_payload["scope_type"] == "project"
+
+    beat_payload = json.loads((project_export_dir / "scene_beats" / f"beat_{scene_beat['id']}.json").read_text(encoding="utf-8"))
+    assert beat_payload["beat_id"] == scene_beat["id"]
+
+    revision_payload = json.loads((project_export_dir / "revision_notes" / f"note_{note['id']}.json").read_text(encoding="utf-8"))
+    assert revision_payload["note_id"] == note["id"]
+
+
+def test_project_export_json_empty_project(tmp_path, monkeypatch):
+    monkeypatch.setenv("HERMES_HOME", str(tmp_path / "hermes home"))
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+
+    project = runtime.store.create_project("Atlas", "A quiet beginning")
+    response = runtime.handle_command_sync(
+        RPCommand("project", ["export", "json", str(project["id"])], f"/rp project export json {project['id']}"),
+        Event(),
+    )
+
+    assert "Exported 0 entity types" in response
+    assert "0 chapters" in response
+    assert "0 scenes" in response
+    assert "0 canon" in response
+
+
+def test_project_export_json_not_found(tmp_path):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+
+    response = runtime.handle_command_sync(
+        RPCommand("project", ["export", "json", "999"], "/rp project export json 999"),
+        Event(),
+    )
+
+    assert response == "No novel project found: 999"
+
+
+def test_project_export_json_media_output(tmp_path, monkeypatch):
+    monkeypatch.setenv("HERMES_HOME", str(tmp_path / "hermes home"))
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+
+    project = runtime.store.create_project("Atlas")
+    response = runtime.handle_command_sync(
+        RPCommand("project", ["export", "json", str(project["id"])], f"/rp project export json {project['id']}"),
+        Event(),
+    )
+
+    media_marker = response.split("MEDIA:", 1)[1].strip()
+    assert media_marker.startswith('"') and media_marker.endswith('"')
+    media_path = media_marker.strip('"')
+    assert media_path == str(
+        tmp_path
+        / "hermes home"
+        / "plugins"
+        / "hermes-tavern"
+        / "exports"
+        / "projects"
+        / str(project["id"])
+    )
+
+
+def test_project_export_json_path_containment(tmp_path, monkeypatch):
+    monkeypatch.setenv("HERMES_HOME", str(tmp_path / "hermes home"))
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+
+    project = runtime.store.create_project("Atlas")
+    response = runtime.handle_command_sync(
+        RPCommand("project", ["export", "json", str(project["id"])], f"/rp project export json {project['id']}"),
+        Event(),
+    )
+    media_path = response.split("MEDIA:", 1)[1].strip().strip('"')
+
+    expected_prefix = str(
+        tmp_path
+        / "hermes home"
+        / "plugins"
+        / "hermes-tavern"
+        / "exports"
+        / "projects"
+        / str(project["id"])
+    )
+    assert media_path.startswith(expected_prefix)
 
 
 def test_scene_create_list_and_start_links_session(tmp_path):

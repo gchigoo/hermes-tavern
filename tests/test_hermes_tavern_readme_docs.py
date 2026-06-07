@@ -249,6 +249,12 @@ def test_readme_core_commands_includes_debug_context_literal():
     assert "/rp debug context [limit] [page]" in core_commands
 
 
+def test_readme_core_commands_include_project_export_json():
+    core_commands = _readme_core_commands_text()
+
+    assert "/rp project export json [project-id]" in core_commands
+
+
 def test_readme_core_commands_includes_scene_goal_literals():
     core_commands = _readme_core_commands_text()
 
