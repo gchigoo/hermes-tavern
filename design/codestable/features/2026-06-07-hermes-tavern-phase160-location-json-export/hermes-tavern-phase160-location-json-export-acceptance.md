@@ -31,8 +31,8 @@ No protected files modified. No schema/prompt/provider/generation changes.
 
 ## Architecture Writeback
 
-- ARCHITECTURE.md: TBD in this tick
-- HERMES_TAVERN_DESIGN.md: TBD in this tick
+- ARCHITECTURE.md: Updated — `/rp location export <location-id>` added to command reference (line 384) and Phase 160 export boundary documented (lines 729–734).
+- HERMES_TAVERN_DESIGN.md: Updated — `/rp location export <location-id>` added to location command list (line 1230).
 
 ## Next Steps
 
