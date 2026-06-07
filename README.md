@@ -176,6 +176,7 @@ Expected behavior:
 /rp plot thread inspect <plot-thread-id>
 /rp plot thread update <plot-thread-id> <description...>
 /rp plot thread delete <plot-thread-id>
+/rp plot thread export <plot-thread-id>
 /rp organization add <project-id> <label> <description...>
 /rp organization list [project-id]
 /rp organization inspect <organization-id>

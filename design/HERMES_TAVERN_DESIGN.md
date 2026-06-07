@@ -732,6 +732,7 @@ Commands:
 /rp plot thread inspect <plot-thread-id>
 /rp plot thread update <plot-thread-id> <description...>
 /rp plot thread delete <plot-thread-id>
+/rp plot thread export <plot-thread-id>
 /rp style sample add <project-id> <label> <sample...>
 /rp style sample list [project-id]
 /rp style sample inspect <style-sample-id>
@@ -1239,6 +1240,7 @@ relationship label rename is current metadata.
 /rp plot thread inspect <plot-thread-id>
 /rp plot thread update <plot-thread-id> <description...>
 /rp plot thread delete <plot-thread-id>
+/rp plot thread export <plot-thread-id>
 /rp style sample add <project-id> <label> <sample...>
 /rp style sample list [project-id]
 /rp style sample inspect <style-sample-id>

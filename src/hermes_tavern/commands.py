@@ -348,6 +348,7 @@ TAVERN_COMMAND_TABLE: dict[str, TavernCommandEntry] = {
             "/rp plot thread inspect <plot-thread-id>",
             "/rp plot thread update <plot-thread-id> <description...>",
             "/rp plot thread delete <plot-thread-id>",
+            "/rp plot thread export <plot-thread-id>",
         ],
     ),
     "project": TavernCommandEntry(

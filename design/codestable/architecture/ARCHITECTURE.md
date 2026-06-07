@@ -82,7 +82,7 @@ importers/
   lorebooks.py        import_st_lorebook_json / import_lorebook_file → Lorebook
 ```
 
-**Phases 1–38 and 121–159 complete (2026-06-07).** Capability summary:
+**Phases 1–38 and 121–162 complete (2026-06-07).** Capability summary:
 - Phases 1–3: skeleton, SQLite, card import, session CRUD, gateway hook
 - Phase 4: Prompt Compiler (chat + story renderers, card/persona assembly)
 - Phase 5–6: Provider bridge, live model routing
@@ -393,6 +393,7 @@ through command output and Markdown export.
 /rp plot thread inspect <plot-thread-id>
 /rp plot thread update <plot-thread-id> <description...>
 /rp plot thread delete <plot-thread-id>
+/rp plot thread export <plot-thread-id>
 /rp style sample add <project-id> <label> <sample...>
 /rp style sample list [project-id]
 /rp style sample inspect <style-sample-id>
@@ -736,6 +737,12 @@ These phases do not change schema or core prompt/generation assembly.
 - **Phase 161 organization export boundary**: `/rp organization export <organization-id>` reads one existing
   `novel_organizations` row and writes one UTF-8 JSON file under profile-safe exports.
   It keeps `novel_organizations` schema, table/index shape, migrations, organization
+  add/list/inspect/update/delete behavior, prompt/debug/context behavior, provider/model
+  routing, generation, retrieval/vectorization, content-mode, credentials, project archive,
+  and safety-bypass behavior unchanged.
+- **Phase 162 plot thread export boundary**: `/rp plot thread export <plot-thread-id>` reads one existing
+  `novel_plot_threads` row and writes one UTF-8 JSON file under profile-safe exports.
+  It keeps `novel_plot_threads` schema, table/index shape, migrations, plot thread
   add/list/inspect/update/delete behavior, prompt/debug/context behavior, provider/model
   routing, generation, retrieval/vectorization, content-mode, credentials, project archive,
   and safety-bypass behavior unchanged.

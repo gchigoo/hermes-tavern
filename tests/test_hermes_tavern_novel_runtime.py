@@ -76,7 +76,7 @@ PLOT_THREAD_USAGE = (
     "Usage: /rp plot thread add <project-id> <label> <description...> | "
     "/rp plot thread list [project-id] | /rp plot thread inspect <plot-thread-id> | "
     "/rp plot thread update <plot-thread-id> <description...> | "
-    "/rp plot thread delete <plot-thread-id>"
+    "/rp plot thread delete <plot-thread-id> | /rp plot thread export <plot-thread-id>"
 )
 STYLE_SAMPLE_USAGE = (
     "Usage: /rp style sample add <project-id> <label> <sample...> | "
@@ -247,6 +247,7 @@ def test_novel_command_table_has_expected_families():
     assert "/rp plot thread inspect <plot-thread-id>" in TAVERN_COMMAND_TABLE["plot"].help_lines
     assert "/rp plot thread update <plot-thread-id> <description...>" in TAVERN_COMMAND_TABLE["plot"].help_lines
     assert "/rp plot thread delete <plot-thread-id>" in TAVERN_COMMAND_TABLE["plot"].help_lines
+    assert "/rp plot thread export <plot-thread-id>" in TAVERN_COMMAND_TABLE["plot"].help_lines
     assert "/rp style sample add <project-id> <label> <sample...>" in TAVERN_COMMAND_TABLE["style"].help_lines
     assert "/rp style sample list [project-id]" in TAVERN_COMMAND_TABLE["style"].help_lines
     assert "/rp style sample inspect <style-sample-id>" in TAVERN_COMMAND_TABLE["style"].help_lines
@@ -591,6 +592,7 @@ def test_project_command_help_includes_plot_thread_lines(tmp_path):
     assert "/rp plot thread inspect <plot-thread-id>" in help_output
     assert "/rp plot thread update <plot-thread-id> <description...>" in help_output
     assert "/rp plot thread delete <plot-thread-id>" in help_output
+    assert "/rp plot thread export <plot-thread-id>" in help_output
 
 
 def test_binding_routes_set_list_inspect_and_clear(tmp_path):
@@ -5485,6 +5487,94 @@ def test_plot_thread_not_found_and_missing_project_errors(tmp_path):
             Event(),
         )
         == "No plot thread found: 9999"
+    )
+
+
+def test_plot_thread_export(tmp_path, monkeypatch):
+    monkeypatch.setenv("HERMES_HOME", str(tmp_path / "hermes home"))
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    project = runtime.store.create_project("Atlas")
+
+    runtime.handle_command_sync(
+        RPCommand(
+            "plot",
+            ["thread", "add", str(project["id"]), "missing-heir", "The heir has vanished."],
+            "/rp plot thread add 1 missing-heir The heir has vanished.",
+        ),
+        Event(),
+    )
+
+    list_before = runtime.handle_command_sync(
+        RPCommand("plot", ["thread", "list", str(project["id"])], "/rp plot thread list 1"),
+        Event(),
+    )
+    inspect_before = runtime.handle_command_sync(
+        RPCommand("plot", ["thread", "inspect", "1"], "/rp plot thread inspect 1"),
+        Event(),
+    )
+
+    export = runtime.handle_command_sync(
+        RPCommand("plot", ["thread", "export", "1"], "/rp plot thread export 1"),
+        Event(),
+    )
+    assert export.startswith("Plot thread exported as JSON.\nfile:")
+    assert "MEDIA:" in export
+
+    file_path = export.split("file: ", 1)[1].splitlines()[0].strip()
+    from pathlib import Path
+
+    export_path = Path(file_path)
+    assert "exports" in export_path.parts
+    assert "plot-threads" in export_path.parts
+    assert export_path.name == "plot-thread_1.json"
+
+    payload = json.loads(export_path.read_text(encoding="utf-8"))
+    assert payload["hermes_tavern_export"] is True
+    assert payload["plot_thread_id"] == 1
+    assert payload["project_id"] == project["id"]
+    assert payload["label"] == "missing-heir"
+
+    list_after = runtime.handle_command_sync(
+        RPCommand("plot", ["thread", "list", str(project["id"])], "/rp plot thread list 1"),
+        Event(),
+    )
+    inspect_after = runtime.handle_command_sync(
+        RPCommand("plot", ["thread", "inspect", "1"], "/rp plot thread inspect 1"),
+        Event(),
+    )
+
+    assert list_before == list_after
+    assert inspect_before == inspect_after
+
+
+def test_plot_thread_export_not_found_nonpositive_and_missing_id(tmp_path):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    runtime.store.create_project("Atlas")
+
+    assert (
+        runtime.handle_command_sync(
+            RPCommand(
+                "plot",
+                ["thread", "export", "9999"],
+                "/rp plot thread export 9999",
+            ),
+            Event(),
+        )
+        == "No plot thread found: 9999"
+    )
+    assert (
+        runtime.handle_command_sync(
+            RPCommand("plot", ["thread", "export", "0"], "/rp plot thread export 0"),
+            Event(),
+        )
+        == PLOT_THREAD_USAGE
+    )
+    assert (
+        runtime.handle_command_sync(
+            RPCommand("plot", ["thread", "export"], "/rp plot thread export"),
+            Event(),
+        )
+        == PLOT_THREAD_USAGE
     )
 
 

@@ -478,6 +478,7 @@ def test_readme_core_commands_include_plot_thread_literals():
     assert "/rp plot thread inspect <plot-thread-id>" in core_commands
     assert "/rp plot thread update <plot-thread-id> <description...>" in core_commands
     assert "/rp plot thread delete <plot-thread-id>" in core_commands
+    assert "/rp plot thread export <plot-thread-id>" in core_commands
 
 
 def test_readme_card_import_format_docs_are_accurate():

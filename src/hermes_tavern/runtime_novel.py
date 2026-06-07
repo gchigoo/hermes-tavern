@@ -270,6 +270,8 @@ def plot_command(runtime: Any, command: RPCommand, event: Any) -> str:
         return plot_thread_update(runtime, command)
     if subcommand == "delete":
         return plot_thread_delete(runtime, command)
+    if subcommand == "export":
+        return plot_thread_export(runtime, command)
 
     return _PLOT_THREAD_USAGE
 
@@ -361,7 +363,8 @@ _PLOT_THREAD_USAGE = (
     "Usage: /rp plot thread add <project-id> <label> <description...> | "
     "/rp plot thread list [project-id] | /rp plot thread inspect <plot-thread-id> | "
     "/rp plot thread update <plot-thread-id> <description...> | "
-    "/rp plot thread delete <plot-thread-id>"
+    "/rp plot thread delete <plot-thread-id> | "
+    "/rp plot thread export <plot-thread-id>"
 )
 
 
@@ -2553,6 +2556,46 @@ def plot_thread_delete(runtime: Any, command: RPCommand) -> str:
         return f"No plot thread found: {plot_thread_id}"
 
     return f"Plot thread deleted for plot thread [{plot_thread_id}]."
+
+
+def plot_thread_export(runtime: Any, command: RPCommand) -> str:
+    if len(command.args) != 3:
+        return _PLOT_THREAD_USAGE
+
+    plot_thread_id = _safe_int(command.args[2])
+    if plot_thread_id is None or plot_thread_id <= 0:
+        return _PLOT_THREAD_USAGE
+
+    plot_thread = runtime.store.get_plot_thread(plot_thread_id)
+    if plot_thread is None:
+        return f"No plot thread found: {plot_thread_id}"
+
+    export_doc = {
+        "hermes_tavern_export": True,
+        "exported_at": datetime.utcnow().isoformat(),
+        "plot_thread_id": plot_thread["id"],
+        "project_id": plot_thread["project_id"],
+        "label": plot_thread["label"],
+        "description_text": plot_thread["description_text"],
+        "created_at": plot_thread.get("created_at"),
+        "updated_at": plot_thread.get("updated_at"),
+    }
+
+    export_dir = (
+        get_hermes_home()
+        / "plugins"
+        / "hermes-tavern"
+        / "exports"
+        / "plot-threads"
+    )
+    export_dir.mkdir(parents=True, exist_ok=True)
+    export_path = Path(export_dir) / f"plot-thread_{plot_thread_id}.json"
+    export_path.write_text(
+        json.dumps(export_doc, ensure_ascii=False, indent=2),
+        encoding="utf-8",
+    )
+
+    return f"Plot thread exported as JSON.\nfile: {export_path}\nMEDIA:\"{export_path}\""
 
 
 def style_sample_add(runtime: Any, command: RPCommand, event: Any) -> str:
