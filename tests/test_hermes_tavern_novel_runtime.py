@@ -198,6 +198,7 @@ def test_novel_command_table_has_expected_families():
     assert "/rp scene beat inspect <beat-id>" in TAVERN_COMMAND_TABLE["scene"].help_lines
     assert "/rp scene beat update <beat-id> <beat...>" in TAVERN_COMMAND_TABLE["scene"].help_lines
     assert "/rp scene beat delete <beat-id>" in TAVERN_COMMAND_TABLE["scene"].help_lines
+    assert "/rp scene beat export <beat-id>" in TAVERN_COMMAND_TABLE["scene"].help_lines
     assert "/rp scene inspect <scene-id>" in TAVERN_COMMAND_TABLE["scene"].help_lines
     assert "/rp project style" in TAVERN_COMMAND_TABLE["project"].help_lines
     assert "/rp project style inspect [project-id]" in TAVERN_COMMAND_TABLE["project"].help_lines
@@ -3822,6 +3823,7 @@ def test_scene_beat_command_is_listed_in_help_output(tmp_path):
     assert "/rp scene beat inspect <beat-id>" in response
     assert "/rp scene beat update <beat-id> <beat...>" in response
     assert "/rp scene beat delete <beat-id>" in response
+    assert "/rp scene beat export <beat-id>" in response
 
 
 def test_summary_command_is_listed_in_help_output(tmp_path):
@@ -3904,6 +3906,114 @@ def test_scene_beat_set_list_inspect_update_and_delete(tmp_path):
     )
 
 
+def test_scene_beat_export_by_id(tmp_path, monkeypatch):
+    monkeypatch.setenv("HERMES_HOME", str(tmp_path / "hermes home"))
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    project = runtime.store.create_project("Atlas")
+    chapter = runtime.store.create_chapter(project["id"], "Arrival")
+    scene = runtime.store.create_scene(chapter["id"], "Opening")
+    beat = runtime.store.create_scene_beat(scene["id"], "arrival", "A bell sounds at dawn.")
+
+    response = runtime.handle_command_sync(
+        RPCommand("scene", ["beat", "export", str(beat["id"])], f"/rp scene beat export {beat['id']}"),
+        Event(),
+    )
+
+    assert response.startswith("file: ")
+    assert "MEDIA:" in response
+    file_path = response.split("file: ", 1)[1].splitlines()[0].strip()
+    media_path = response.split("MEDIA:", 1)[1].strip().strip('"')
+    assert media_path == file_path
+
+    from pathlib import Path
+
+    export_path = Path(file_path)
+    assert str(export_path) == str(
+        tmp_path
+        / "hermes home"
+        / "plugins"
+        / "hermes-tavern"
+        / "exports"
+        / "scene_beats"
+        / f"beat_{beat['id']}.json"
+    )
+    assert export_path.exists()
+
+    payload = json.loads(export_path.read_text(encoding="utf-8"))
+    assert payload["hermes_tavern_export"] is True
+    assert payload["exported_at"]
+    assert payload["beat_id"] == beat["id"]
+    assert payload["scene_id"] == scene["id"]
+    assert payload["label"] == beat["label"]
+    assert payload["beat_text"] == beat["beat_text"]
+    assert payload["created_at"] == beat["created_at"]
+    assert payload["updated_at"] == beat["updated_at"]
+
+
+def test_scene_beat_export_not_found(tmp_path):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    response = runtime.handle_command_sync(
+        RPCommand("scene", ["beat", "export", "9999"], "/rp scene beat export 9999"),
+        Event(),
+    )
+    assert response == "No scene beat found: 9999"
+
+
+@pytest.mark.parametrize("beat_id", ["0", "-1"])
+def test_scene_beat_export_non_positive_id(tmp_path, beat_id):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    response = runtime.handle_command_sync(
+        RPCommand("scene", ["beat", "export", beat_id], f"/rp scene beat export {beat_id}"),
+        Event(),
+    )
+    assert response.startswith("Usage: /rp scene beat add")
+
+
+def test_scene_beat_export_missing_args(tmp_path):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    response = runtime.handle_command_sync(
+        RPCommand("scene", ["beat", "export"], "/rp scene beat export"),
+        Event(),
+    )
+    assert response.startswith("Usage: /rp scene beat add")
+
+
+def test_scene_beat_export_path_containment(tmp_path, monkeypatch):
+    monkeypatch.setenv("HERMES_HOME", str(tmp_path / "hermes home"))
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    project = runtime.store.create_project("Atlas")
+    chapter = runtime.store.create_chapter(project["id"], "Arrival")
+    scene = runtime.store.create_scene(chapter["id"], "Opening")
+    beat = runtime.store.create_scene_beat(scene["id"], "arrival", "A bell sounds at dawn.")
+
+    response = runtime.handle_command_sync(
+        RPCommand("scene", ["beat", "export", str(beat["id"])], f"/rp scene beat export {beat['id']}"),
+        Event(),
+    )
+    file_path = response.split("file: ", 1)[1].splitlines()[0].strip()
+
+    assert file_path.startswith(
+        str(tmp_path / "hermes home" / "plugins" / "hermes-tavern" / "exports" / "scene_beats")
+    )
+
+
+def test_scene_beat_export_no_mutation(tmp_path, monkeypatch):
+    monkeypatch.setenv("HERMES_HOME", str(tmp_path / "hermes home"))
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    project = runtime.store.create_project("Atlas")
+    chapter = runtime.store.create_chapter(project["id"], "Arrival")
+    scene = runtime.store.create_scene(chapter["id"], "Opening")
+    beat = runtime.store.create_scene_beat(scene["id"], "arrival", "A bell sounds at dawn.")
+
+    before = runtime.store.get_scene_beat(beat["id"])
+    runtime.handle_command_sync(
+        RPCommand("scene", ["beat", "export", str(beat["id"])], f"/rp scene beat export {beat['id']}"),
+        Event(),
+    )
+    after = runtime.store.get_scene_beat(beat["id"])
+    assert after == before
+
+
 def test_scene_beat_set_and_list_omit_empty_result(tmp_path):
     runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
     project = runtime.store.create_project("Atlas")
@@ -3920,13 +4030,14 @@ def test_scene_beat_set_and_list_omit_empty_result(tmp_path):
 @pytest.mark.parametrize(
     "command, expected_prefix",
     [
-        (RPCommand("scene", ["beat"], "/rp scene beat"), "Usage: /rp scene beat add <scene-id> <label> <beat...> | /rp scene beat list <scene-id> | /rp scene beat inspect <beat-id> | /rp scene beat update <beat-id> <beat...> | /rp scene beat delete <beat-id>"),
-        (RPCommand("scene", ["beat", "add"], "/rp scene beat add"), "Usage: /rp scene beat add <scene-id> <label> <beat...> | /rp scene beat list <scene-id> | /rp scene beat inspect <beat-id> | /rp scene beat update <beat-id> <beat...> | /rp scene beat delete <beat-id>"),
-        (RPCommand("scene", ["beat", "add", "1", "label"], "/rp scene beat add 1 label"), "Usage: /rp scene beat add <scene-id> <label> <beat...> | /rp scene beat list <scene-id> | /rp scene beat inspect <beat-id> | /rp scene beat update <beat-id> <beat...> | /rp scene beat delete <beat-id>"),
-        (RPCommand("scene", ["beat", "list"], "/rp scene beat list"), "Usage: /rp scene beat add <scene-id> <label> <beat...> | /rp scene beat list <scene-id> | /rp scene beat inspect <beat-id> | /rp scene beat update <beat-id> <beat...> | /rp scene beat delete <beat-id>"),
-        (RPCommand("scene", ["beat", "inspect"], "/rp scene beat inspect"), "Usage: /rp scene beat add <scene-id> <label> <beat...> | /rp scene beat list <scene-id> | /rp scene beat inspect <beat-id> | /rp scene beat update <beat-id> <beat...> | /rp scene beat delete <beat-id>"),
-        (RPCommand("scene", ["beat", "update", "1"], "/rp scene beat update 1"), "Usage: /rp scene beat add <scene-id> <label> <beat...> | /rp scene beat list <scene-id> | /rp scene beat inspect <beat-id> | /rp scene beat update <beat-id> <beat...> | /rp scene beat delete <beat-id>"),
-        (RPCommand("scene", ["beat", "delete"], "/rp scene beat delete"), "Usage: /rp scene beat add <scene-id> <label> <beat...> | /rp scene beat list <scene-id> | /rp scene beat inspect <beat-id> | /rp scene beat update <beat-id> <beat...> | /rp scene beat delete <beat-id>"),
+        (RPCommand("scene", ["beat"], "/rp scene beat"), "Usage: /rp scene beat add <scene-id> <label> <beat...> | /rp scene beat list <scene-id> | /rp scene beat inspect <beat-id> | /rp scene beat update <beat-id> <beat...> | /rp scene beat delete <beat-id> | /rp scene beat export <beat-id>"),
+        (RPCommand("scene", ["beat", "add"], "/rp scene beat add"), "Usage: /rp scene beat add <scene-id> <label> <beat...> | /rp scene beat list <scene-id> | /rp scene beat inspect <beat-id> | /rp scene beat update <beat-id> <beat...> | /rp scene beat delete <beat-id> | /rp scene beat export <beat-id>"),
+        (RPCommand("scene", ["beat", "add", "1", "label"], "/rp scene beat add 1 label"), "Usage: /rp scene beat add <scene-id> <label> <beat...> | /rp scene beat list <scene-id> | /rp scene beat inspect <beat-id> | /rp scene beat update <beat-id> <beat...> | /rp scene beat delete <beat-id> | /rp scene beat export <beat-id>"),
+        (RPCommand("scene", ["beat", "list"], "/rp scene beat list"), "Usage: /rp scene beat add <scene-id> <label> <beat...> | /rp scene beat list <scene-id> | /rp scene beat inspect <beat-id> | /rp scene beat update <beat-id> <beat...> | /rp scene beat delete <beat-id> | /rp scene beat export <beat-id>"),
+        (RPCommand("scene", ["beat", "inspect"], "/rp scene beat inspect"), "Usage: /rp scene beat add <scene-id> <label> <beat...> | /rp scene beat list <scene-id> | /rp scene beat inspect <beat-id> | /rp scene beat update <beat-id> <beat...> | /rp scene beat delete <beat-id> | /rp scene beat export <beat-id>"),
+        (RPCommand("scene", ["beat", "update", "1"], "/rp scene beat update 1"), "Usage: /rp scene beat add <scene-id> <label> <beat...> | /rp scene beat list <scene-id> | /rp scene beat inspect <beat-id> | /rp scene beat update <beat-id> <beat...> | /rp scene beat delete <beat-id> | /rp scene beat export <beat-id>"),
+        (RPCommand("scene", ["beat", "delete"], "/rp scene beat delete"), "Usage: /rp scene beat add <scene-id> <label> <beat...> | /rp scene beat list <scene-id> | /rp scene beat inspect <beat-id> | /rp scene beat update <beat-id> <beat...> | /rp scene beat delete <beat-id> | /rp scene beat export <beat-id>"),
+        (RPCommand("scene", ["beat", "export"], "/rp scene beat export"), "Usage: /rp scene beat add <scene-id> <label> <beat...> | /rp scene beat list <scene-id> | /rp scene beat inspect <beat-id> | /rp scene beat update <beat-id> <beat...> | /rp scene beat delete <beat-id> | /rp scene beat export <beat-id>"),
     ],
 )
 def test_scene_beat_bad_arguments_return_usage(tmp_path, command, expected_prefix):
@@ -3943,6 +4054,7 @@ def test_scene_beat_bad_arguments_return_usage(tmp_path, command, expected_prefi
         (RPCommand("scene", ["beat", "inspect", "9999"], "/rp scene beat inspect 9999"), "No scene beat found: 9999"),
         (RPCommand("scene", ["beat", "update", "9999", "no"], "/rp scene beat update 9999 no"), "No scene beat found: 9999"),
         (RPCommand("scene", ["beat", "delete", "9999"], "/rp scene beat delete 9999"), "No scene beat found: 9999"),
+        (RPCommand("scene", ["beat", "export", "9999"], "/rp scene beat export 9999"), "No scene beat found: 9999"),
     ],
 )
 def test_scene_beat_missing_entity_returns_not_found(tmp_path, command, expected_message):
@@ -4161,10 +4273,10 @@ def test_scene_inspect_route_returns_compact_bound_preview_and_not_linked_marker
 @pytest.mark.parametrize(
     "command, expected_prefix",
     [
-        (RPCommand("scene", ["inspect"], "/rp scene inspect"), "Usage: /rp scene create <chapter-id> <title> | /rp scene list <chapter-id> | /rp scene inspect <scene-id> | /rp scene start <scene-id> | /rp scene goal <scene-id> [text] | /rp scene goal clear <scene-id> | /rp scene beat add <scene-id> <label> <beat...> | /rp scene beat list <scene-id> | /rp scene beat inspect <beat-id> | /rp scene beat update <beat-id> <beat...> | /rp scene beat delete <beat-id> | /rp scene summary <scene-id> [text] | /rp scene summary clear <scene-id> | /rp scene narration <scene-id> | /rp scene narration clear <scene-id> | /rp scene narration pov <scene-id> <label> | /rp scene narration tense <scene-id> <past|present>"),
-        (RPCommand("scene", ["inspect", "not-a-number"], "/rp scene inspect not-a-number"), "Usage: /rp scene create <chapter-id> <title> | /rp scene list <chapter-id> | /rp scene inspect <scene-id> | /rp scene start <scene-id> | /rp scene goal <scene-id> [text] | /rp scene goal clear <scene-id> | /rp scene beat add <scene-id> <label> <beat...> | /rp scene beat list <scene-id> | /rp scene beat inspect <beat-id> | /rp scene beat update <beat-id> <beat...> | /rp scene beat delete <beat-id> | /rp scene summary <scene-id> [text] | /rp scene summary clear <scene-id> | /rp scene narration <scene-id> | /rp scene narration clear <scene-id> | /rp scene narration pov <scene-id> <label> | /rp scene narration tense <scene-id> <past|present>"),
-        (RPCommand("scene", ["inspect", "0"], "/rp scene inspect 0"), "Usage: /rp scene create <chapter-id> <title> | /rp scene list <chapter-id> | /rp scene inspect <scene-id> | /rp scene start <scene-id> | /rp scene goal <scene-id> [text] | /rp scene goal clear <scene-id> | /rp scene beat add <scene-id> <label> <beat...> | /rp scene beat list <scene-id> | /rp scene beat inspect <beat-id> | /rp scene beat update <beat-id> <beat...> | /rp scene beat delete <beat-id> | /rp scene summary <scene-id> [text] | /rp scene summary clear <scene-id> | /rp scene narration <scene-id> | /rp scene narration clear <scene-id> | /rp scene narration pov <scene-id> <label> | /rp scene narration tense <scene-id> <past|present>"),
-        (RPCommand("scene", ["inspect", "1", "extra"], "/rp scene inspect 1 extra"), "Usage: /rp scene create <chapter-id> <title> | /rp scene list <chapter-id> | /rp scene inspect <scene-id> | /rp scene start <scene-id> | /rp scene goal <scene-id> [text] | /rp scene goal clear <scene-id> | /rp scene beat add <scene-id> <label> <beat...> | /rp scene beat list <scene-id> | /rp scene beat inspect <beat-id> | /rp scene beat update <beat-id> <beat...> | /rp scene beat delete <beat-id> | /rp scene summary <scene-id> [text] | /rp scene summary clear <scene-id> | /rp scene narration <scene-id> | /rp scene narration clear <scene-id> | /rp scene narration pov <scene-id> <label> | /rp scene narration tense <scene-id> <past|present>"),
+        (RPCommand("scene", ["inspect"], "/rp scene inspect"), "Usage: /rp scene create <chapter-id> <title> | /rp scene list <chapter-id> | /rp scene inspect <scene-id> | /rp scene start <scene-id> | /rp scene goal <scene-id> [text] | /rp scene goal clear <scene-id> | /rp scene beat add <scene-id> <label> <beat...> | /rp scene beat list <scene-id> | /rp scene beat inspect <beat-id> | /rp scene beat update <beat-id> <beat...> | /rp scene beat delete <beat-id> | /rp scene beat export <beat-id> | /rp scene summary <scene-id> [text] | /rp scene summary clear <scene-id> | /rp scene narration <scene-id> | /rp scene narration clear <scene-id> | /rp scene narration pov <scene-id> <label> | /rp scene narration tense <scene-id> <past|present>"),
+        (RPCommand("scene", ["inspect", "not-a-number"], "/rp scene inspect not-a-number"), "Usage: /rp scene create <chapter-id> <title> | /rp scene list <chapter-id> | /rp scene inspect <scene-id> | /rp scene start <scene-id> | /rp scene goal <scene-id> [text] | /rp scene goal clear <scene-id> | /rp scene beat add <scene-id> <label> <beat...> | /rp scene beat list <scene-id> | /rp scene beat inspect <beat-id> | /rp scene beat update <beat-id> <beat...> | /rp scene beat delete <beat-id> | /rp scene beat export <beat-id> | /rp scene summary <scene-id> [text] | /rp scene summary clear <scene-id> | /rp scene narration <scene-id> | /rp scene narration clear <scene-id> | /rp scene narration pov <scene-id> <label> | /rp scene narration tense <scene-id> <past|present>"),
+        (RPCommand("scene", ["inspect", "0"], "/rp scene inspect 0"), "Usage: /rp scene create <chapter-id> <title> | /rp scene list <chapter-id> | /rp scene inspect <scene-id> | /rp scene start <scene-id> | /rp scene goal <scene-id> [text] | /rp scene goal clear <scene-id> | /rp scene beat add <scene-id> <label> <beat...> | /rp scene beat list <scene-id> | /rp scene beat inspect <beat-id> | /rp scene beat update <beat-id> <beat...> | /rp scene beat delete <beat-id> | /rp scene beat export <beat-id> | /rp scene summary <scene-id> [text] | /rp scene summary clear <scene-id> | /rp scene narration <scene-id> | /rp scene narration clear <scene-id> | /rp scene narration pov <scene-id> <label> | /rp scene narration tense <scene-id> <past|present>"),
+        (RPCommand("scene", ["inspect", "1", "extra"], "/rp scene inspect 1 extra"), "Usage: /rp scene create <chapter-id> <title> | /rp scene list <chapter-id> | /rp scene inspect <scene-id> | /rp scene start <scene-id> | /rp scene goal <scene-id> [text] | /rp scene goal clear <scene-id> | /rp scene beat add <scene-id> <label> <beat...> | /rp scene beat list <scene-id> | /rp scene beat inspect <beat-id> | /rp scene beat update <beat-id> <beat...> | /rp scene beat delete <beat-id> | /rp scene beat export <beat-id> | /rp scene summary <scene-id> [text] | /rp scene summary clear <scene-id> | /rp scene narration <scene-id> | /rp scene narration clear <scene-id> | /rp scene narration pov <scene-id> <label> | /rp scene narration tense <scene-id> <past|present>"),
     ],
 )
 def test_scene_inspect_bad_arguments_return_usage(tmp_path, command, expected_prefix):

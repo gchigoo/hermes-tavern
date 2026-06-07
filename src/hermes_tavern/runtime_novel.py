@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any
 
 from hermes_tavern.commands import RPCommand
@@ -153,6 +153,7 @@ _SCENE_USAGE = (
     "/rp scene goal clear <scene-id> | /rp scene beat add <scene-id> <label> <beat...> | "
     "/rp scene beat list <scene-id> | /rp scene beat inspect <beat-id> | "
     "/rp scene beat update <beat-id> <beat...> | /rp scene beat delete <beat-id> | "
+    "/rp scene beat export <beat-id> | "
     "/rp scene summary <scene-id> [text] | /rp scene summary clear <scene-id> | "
     "/rp scene narration <scene-id> | /rp scene narration clear <scene-id> | "
     "/rp scene narration pov <scene-id> <label> | /rp scene narration tense <scene-id> <past|present> | "
@@ -1572,12 +1573,44 @@ def scene_goal(runtime: Any, command: RPCommand) -> str:
     return f"Scene goal set for scene [{scene_id}]: {_mobile_preview(text, 180)}"
 
 
+def scene_beat_export(runtime: Any, beat_id: int) -> str:
+    beat = runtime.store.get_scene_beat(beat_id)
+    if beat is None:
+        return f"No scene beat found: {beat_id}"
+
+    export_dir = (
+        get_hermes_home()
+        / "plugins"
+        / "hermes-tavern"
+        / "exports"
+        / "scene_beats"
+    )
+    export_dir.mkdir(parents=True, exist_ok=True)
+    filepath = export_dir / f"beat_{beat_id}.json"
+
+    payload = {
+        "hermes_tavern_export": True,
+        "exported_at": datetime.now(timezone.utc).isoformat(),
+        "beat_id": beat["id"],
+        "scene_id": beat["scene_id"],
+        "label": beat["label"],
+        "beat_text": beat["beat_text"],
+        "created_at": beat["created_at"],
+        "updated_at": beat["updated_at"],
+    }
+
+    with filepath.open("w", encoding="utf-8") as f:
+        json.dump(payload, f, ensure_ascii=False, indent=2)
+
+    return f"file: {filepath}\n\nMEDIA:\"{filepath}\""
+
+
 def scene_beat(runtime: Any, command: RPCommand, event: Any) -> str:
     del event
     usage = (
         "Usage: /rp scene beat add <scene-id> <label> <beat...> | /rp scene beat list <scene-id> | "
         "/rp scene beat inspect <beat-id> | /rp scene beat update <beat-id> <beat...> | "
-        "/rp scene beat delete <beat-id>"
+        "/rp scene beat delete <beat-id> | /rp scene beat export <beat-id>"
     )
     if len(command.args) < 2:
         return usage
@@ -1672,6 +1705,14 @@ def scene_beat(runtime: Any, command: RPCommand, event: Any) -> str:
         if not runtime.store.delete_scene_beat(beat_id):
             return f"No scene beat found: {beat_id}"
         return f"Scene beat deleted for scene beat [{beat_id}]."
+
+    if subcommand == "export":
+        if len(command.args) != 3:
+            return usage
+        beat_id = _safe_int(command.args[2])
+        if beat_id is None or beat_id <= 0:
+            return usage
+        return scene_beat_export(runtime, beat_id)
 
     return usage
 

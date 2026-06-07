@@ -277,6 +277,7 @@ def test_readme_core_commands_include_scene_beat_literals():
     assert "/rp scene beat inspect <beat-id>" in core_commands
     assert "/rp scene beat update <beat-id> <beat...>" in core_commands
     assert "/rp scene beat delete <beat-id>" in core_commands
+    assert "/rp scene beat export <beat-id>" in core_commands
 
 
 def test_readme_core_commands_includes_scene_narration_literals():

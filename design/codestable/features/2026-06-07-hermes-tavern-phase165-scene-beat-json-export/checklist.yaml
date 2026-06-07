@@ -1,0 +1,134 @@
+doc_type: feature-checklist
+status: approved
+feature: "2026-06-07-hermes-tavern-phase165-scene-beat-json-export"
+date: "2026-06-07"
+implementation_ready: true
+summary: >
+  Phase 165 adds one bounded /rp scene beat export <beat-id> JSON export
+  command. S1 implements scene beat export by ID; S2 completes acceptance and
+  architecture/root-design writeback (deferred to controller after S1
+  verification passes).
+tags:
+  - hermes-tavern
+  - scene-beats
+  - novel
+  - offline
+  - export
+  - json
+implementation_readiness: >
+  Architect profile (gpt-5.5) rate-limited (~Jun 11); controller materialized
+  design/checklist artifacts following the proven Phase 149-164 export pattern.
+  Executor profile (gpt-5.3-codex-spark, standalone CLI v0.137.0) available.
+  S1 implementation ready.
+steps:
+  - id: S1
+    name: "S1: Implement scene beat JSON export by ID"
+    status: pending
+    description: >
+      Add /rp scene beat export <beat-id> under the existing scene beat command family.
+      Resolve one stored scene beat by integer ID, read beat metadata, build a
+      JSON export payload, write one profile-safe UTF-8 JSON file, return file
+      and quoted MEDIA output, update usage/help/README visibility, and add focused
+      offline tests.
+    allowed_files:
+      - src/hermes_tavern/runtime_novel.py
+      - src/hermes_tavern/commands.py
+      - README.md
+      - tests/test_hermes_tavern_novel_runtime.py
+      - tests/test_hermes_tavern_readme_docs.py
+    prohibited_files:
+      - run_agent.py
+      - cli.py
+      - gateway/run.py
+      - src/hermes_tavern/runtime.py
+      - src/hermes_tavern/runtime_lifecycle.py
+      - src/hermes_tavern/runtime_sessions.py
+      - src/hermes_tavern/runtime_assets.py
+      - src/hermes_tavern/db.py
+      - src/hermes_tavern/db_novel.py
+      - src/hermes_tavern/prompt.py
+      - src/hermes_tavern/runtime_prompt_modules.py
+      - src/hermes_tavern/model_router.py
+      - src/hermes_tavern/provider_bridge.py
+      - src/hermes_tavern/adapters.py
+      - src/hermes_tavern/runtime_generation.py
+      - src/hermes_tavern/runtime_lore.py
+      - src/hermes_tavern/runtime_persona.py
+      - src/hermes_tavern/runtime_presets.py
+      - "src/hermes_tavern/importers/**"
+      - "plugins/**"
+      - "build/lib/**"
+    exact_scope:
+      - "Add /rp scene beat export <beat-id> as a nested scene beat subcommand."
+      - "Add 'export' subcommand branch to scene_beat() dispatcher after the 'delete' case, before the final 'return usage'."
+      - "Resolve beat ID via existing get_scene_beat(beat_id) API."
+      - "Reject not-found beat with 'No scene beat found: <id>'."
+      - "Read beat metadata fields (id, scene_id, label, beat_text, created_at, updated_at)."
+      - "Build JSON payload with beat metadata keyed as 'beat_id'."
+      - "Write one UTF-8 JSON file under get_hermes_home()/plugins/hermes-tavern/exports/scene_beats."
+      - 'Return bounded file: and quoted MEDIA:"<path>" output.'
+      - "Update scene_beat() usage string to include /rp scene beat export <beat-id>."
+      - "Update generated help (commands.py help_lines) for /rp scene beat export <beat-id>."
+      - "Update README Core commands table for scene beat export."
+      - "Add focused tests: export by ID, not-found beat, non-positive ID, missing args, path containment, MEDIA output, no beat mutation."
+      - "Do not change scene beat schema, project archive, prompt compiler, provider/model routing, generation, credentials, content mode, safety, gateway/core files, plugin files, or build artifacts."
+      - "Do not edit db_novel.py (no new DB APIs needed; get_scene_beat already exists)."
+    verification:
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m py_compile src/hermes_tavern/runtime_novel.py src/hermes_tavern/commands.py tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_readme_docs.py"
+        expected: "passes"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_readme_docs.py -q -o 'addopts=' -p no:cacheprovider"
+        expected: "passes"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_*.py -q -o 'addopts=' -p no:cacheprovider"
+        expected: "passes"
+      - command: "git diff --name-only -- run_agent.py cli.py gateway/run.py src/hermes_tavern/runtime.py src/hermes_tavern/runtime_prompt_modules.py src/hermes_tavern/prompt.py src/hermes_tavern/runtime_prompt_manager.py src/hermes_tavern/runtime_debug.py src/hermes_tavern/model_router.py src/hermes_tavern/provider_bridge.py src/hermes_tavern/adapters.py src/hermes_tavern/runtime_model.py src/hermes_tavern/runtime_generation.py src/hermes_tavern/runtime_content.py src/hermes_tavern/memory.py src/hermes_tavern/runtime_memory.py src/hermes_tavern/images.py src/hermes_tavern/runtime_images.py src/hermes_tavern/importers plugins build/lib design/HERMES_TAVERN_DESIGN.md design/codestable/architecture/ARCHITECTURE.md src/hermes_tavern/db_novel.py"
+        expected: "empty output during S1 implementation"
+      - command: "git diff --check"
+        expected: "passes"
+  - id: S2
+    name: "S2: Verify/accept/write current docs"
+    status: pending
+    description: >
+      Controller-owned acceptance/writeback after S1 passes.
+    allowed_files:
+      - design/codestable/features/2026-06-07-hermes-tavern-phase165-scene-beat-json-export/checklist.yaml
+      - design/codestable/features/2026-06-07-hermes-tavern-phase165-scene-beat-json-export/hermes-tavern-phase165-scene-beat-json-export-acceptance.md
+      - design/codestable/architecture/ARCHITECTURE.md
+      - design/HERMES_TAVERN_DESIGN.md
+    prohibited_files:
+      - README.md
+      - "src/**"
+      - "tests/**"
+      - run_agent.py
+      - cli.py
+      - gateway/run.py
+      - "plugins/**"
+      - "build/lib/**"
+
+checks:
+  - id: C1
+    name: "Command surface"
+    status: pending
+    criteria: "/rp scene beat export appears in command table, runtime help, README Core commands, and focused command/docs tests."
+  - id: C2
+    name: "Export payload and file output"
+    status: pending
+    criteria: "Export writes valid JSON with beat metadata, returns file: and MEDIA output, rejects not-found/malformed IDs."
+  - id: C3
+    name: "No prompt/provider side effects"
+    status: pending
+    criteria: "No beat export text appears in prompt/debug/context paths and no prohibited files change."
+  - id: C4
+    name: "Existing beat commands unchanged"
+    status: pending
+    criteria: "add/list/inspect/update/delete commands work identically after export is added."
+
+risks:
+  - id: R1
+    risk: "Larger beat_text payloads could inflate export output."
+    mitigation: "Keep exact scope limited to the existing get_scene_beat row. Export is bounded by user-authored beat size."
+  - id: R2
+    risk: "Adding export to the scene beat command family could accidentally change existing command routing."
+    mitigation: "Add the export branch to the existing if/elif chain before the final return usage; do not change other branches."
+  - id: R3
+    risk: "The repeated export pattern can tempt a broad refactor."
+    mitigation: "Keep S1 to the bounded export command, help, README, and tests. Do not refactor existing export helpers."

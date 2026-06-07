@@ -408,6 +408,7 @@ TAVERN_COMMAND_TABLE: dict[str, TavernCommandEntry] = {
             "/rp scene beat inspect <beat-id>",
             "/rp scene beat update <beat-id> <beat...>",
             "/rp scene beat delete <beat-id>",
+            "/rp scene beat export <beat-id>",
             "/rp scene summary <scene-id> [text]",
             "/rp scene summary clear <scene-id>",
             "/rp scene narration <scene-id>",
