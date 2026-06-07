@@ -282,6 +282,7 @@ TAVERN_COMMAND_TABLE: dict[str, TavernCommandEntry] = {
             "/rp binding list <project|chapter|scene> <scope-id>",
             "/rp binding inspect <binding-id>",
             "/rp binding clear <binding-id>",
+            "/rp binding export <binding-id>",
             "/rp binding rows are metadata-only/inert; not auto-applied",
         ],
     ),

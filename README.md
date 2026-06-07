@@ -119,6 +119,7 @@ Expected behavior:
 /rp binding list <project|chapter|scene> <scope-id>
 /rp binding inspect <binding-id>
 /rp binding clear <binding-id>
+/rp binding export <binding-id>
 /rp binding rows are metadata-only/inert; they are not auto-applied to prompts, sessions, providers, or generation
 /rp note set/clear/inspect/position/frequency
 /rp content mode [safe|adult-fiction]

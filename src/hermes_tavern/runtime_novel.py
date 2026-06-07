@@ -289,6 +289,8 @@ def binding_command(runtime: Any, command: RPCommand, event: Any) -> str:
         return binding_inspect(runtime, command)
     if subcommand == "clear":
         return binding_clear(runtime, command)
+    if subcommand == "export":
+        return binding_export(runtime, command)
 
     return BINDING_USAGE
 
@@ -330,7 +332,8 @@ def _safe_int(text: str) -> int | None:
 BINDING_USAGE = (
     "Usage: /rp binding set <project|chapter|scene> <scope-id> <card|preset|lorebook|persona> <asset-id> | "
     "/rp binding list <project|chapter|scene> <scope-id> | "
-    "/rp binding inspect <binding-id> | /rp binding clear <binding-id>. "
+    "/rp binding inspect <binding-id> | /rp binding clear <binding-id> | "
+    "/rp binding export <binding-id>. "
     "Default bindings are metadata-only/inert and are not auto-applied."
 )
 
@@ -506,6 +509,41 @@ def binding_clear(runtime: Any, command: RPCommand) -> str:
     if runtime.store.clear_default_binding(binding_id):
         return f"Default binding [{binding_id}] cleared. (metadata-only/inert)"
     return f"No default binding found: {binding_id}"
+
+
+def binding_export(runtime: Any, command: RPCommand) -> str:
+    if len(command.args) != 2:
+        return BINDING_USAGE
+
+    binding_id = _safe_int(command.args[1])
+    if binding_id is None or binding_id <= 0:
+        return BINDING_USAGE
+
+    binding = runtime.store.get_default_binding(binding_id)
+    if binding is None:
+        return f"No default binding found: {binding_id}"
+
+    export_doc = {
+        "hermes_tavern_export": True,
+        "exported_at": datetime.utcnow().isoformat(),
+        "binding_id": binding["id"],
+        "scope_type": binding["scope_type"],
+        "scope_id": binding["scope_id"],
+        "asset_type": binding["asset_type"],
+        "asset_id": binding["asset_id"],
+        "created_at": binding.get("created_at"),
+        "updated_at": binding.get("updated_at"),
+    }
+
+    export_dir = get_hermes_home() / "plugins" / "hermes-tavern" / "exports" / "bindings"
+    export_dir.mkdir(parents=True, exist_ok=True)
+    export_path = Path(export_dir) / f"binding_{binding_id}.json"
+    export_path.write_text(
+        json.dumps(export_doc, ensure_ascii=False, indent=2),
+        encoding="utf-8",
+    )
+
+    return f"Default binding exported as JSON.\nfile: {export_path}\nMEDIA:\"{export_path}\""
 
 
 def _scene_card_unavailable_message(runtime: Any) -> str:

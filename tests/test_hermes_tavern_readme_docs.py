@@ -369,6 +369,7 @@ def test_readme_core_commands_include_binding_literals():
     assert "/rp binding list <project|chapter|scene> <scope-id>" in core_commands
     assert "/rp binding inspect <binding-id>" in core_commands
     assert "/rp binding clear <binding-id>" in core_commands
+    assert "/rp binding export <binding-id>" in core_commands
     assert "metadata-only/inert" in core_commands
     assert "not auto-applied to prompts, sessions, providers, or generation" in core_commands
 

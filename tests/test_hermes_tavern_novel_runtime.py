@@ -88,7 +88,7 @@ STYLE_SAMPLE_USAGE = (
 BINDING_USAGE = (
     "Usage: /rp binding set <project|chapter|scene> <scope-id> <card|preset|lorebook|persona> <asset-id> | "
     "/rp binding list <project|chapter|scene> <scope-id> | "
-    "/rp binding inspect <binding-id> | /rp binding clear <binding-id>. "
+    "/rp binding inspect <binding-id> | /rp binding clear <binding-id> | /rp binding export <binding-id>. "
     "Default bindings are metadata-only/inert and are not auto-applied."
 )
 
@@ -217,6 +217,7 @@ def test_novel_command_table_has_expected_families():
     assert "/rp binding list <project|chapter|scene> <scope-id>" in TAVERN_COMMAND_TABLE["binding"].help_lines
     assert "/rp binding inspect <binding-id>" in TAVERN_COMMAND_TABLE["binding"].help_lines
     assert "/rp binding clear <binding-id>" in TAVERN_COMMAND_TABLE["binding"].help_lines
+    assert "/rp binding export <binding-id>" in TAVERN_COMMAND_TABLE["binding"].help_lines
     assert "/rp binding rows are metadata-only/inert; not auto-applied" in TAVERN_COMMAND_TABLE["binding"].help_lines
     assert "/rp relationship add <project-id> <label> <state...>" in TAVERN_COMMAND_TABLE["relationship"].help_lines
     assert "/rp relationship list [project-id]" in TAVERN_COMMAND_TABLE["relationship"].help_lines
@@ -517,6 +518,7 @@ def test_project_command_help_includes_binding_lines(tmp_path):
     assert "/rp binding list <project|chapter|scene> <scope-id>" in help_output
     assert "/rp binding inspect <binding-id>" in help_output
     assert "/rp binding clear <binding-id>" in help_output
+    assert "/rp binding export <binding-id>" in help_output
     assert "/rp binding rows are metadata-only/inert; not auto-applied" in help_output
 
 
@@ -823,6 +825,103 @@ def test_binding_command_validation_and_lookup_errors(tmp_path):
     assert (
         runtime.handle_command_sync(
             RPCommand("binding", ["inspect"], "/rp binding inspect"),
+            Event(),
+        )
+        == BINDING_USAGE
+    )
+
+
+def test_binding_export(tmp_path, monkeypatch):
+    monkeypatch.setenv("HERMES_HOME", str(tmp_path / "hermes home"))
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    store = runtime.store
+    project = store.create_project("Atlas")
+    card_id = _card_with_id(store, "card-export-alpha")
+
+    set_output = runtime.handle_command_sync(
+        RPCommand(
+            "binding",
+            ["set", "project", str(project["id"]), "card", str(card_id)],
+            f"/rp binding set project {project['id']} card {card_id}",
+        ),
+        Event(),
+    )
+    binding_id = int(set_output.split("[", 1)[1].split("]", 1)[0])
+
+    list_before = runtime.handle_command_sync(
+        RPCommand("binding", ["list", "project", str(project["id"])], "/rp binding list project 1"),
+        Event(),
+    )
+    inspect_before = runtime.handle_command_sync(
+        RPCommand("binding", ["inspect", str(binding_id)], f"/rp binding inspect {binding_id}"),
+        Event(),
+    )
+    binding_before = runtime.store.get_default_binding(binding_id).copy()
+
+    export = runtime.handle_command_sync(
+        RPCommand("binding", ["export", str(binding_id)], f"/rp binding export {binding_id}"),
+        Event(),
+    )
+    assert export.startswith("Default binding exported as JSON.\nfile:")
+    assert "MEDIA:" in export
+
+    file_path = export.split("file: ", 1)[1].splitlines()[0].strip()
+    from pathlib import Path
+
+    export_path = Path(file_path)
+    assert "exports" in export_path.parts
+    assert "bindings" in export_path.parts
+    assert export_path.name == f"binding_{binding_id}.json"
+
+    payload = json.loads(export_path.read_text(encoding="utf-8"))
+    assert payload["hermes_tavern_export"] is True
+    assert payload["binding_id"] == binding_id
+    assert payload["scope_type"] == binding_before["scope_type"]
+    assert payload["scope_id"] == binding_before["scope_id"]
+    assert payload["asset_type"] == binding_before["asset_type"]
+    assert payload["asset_id"] == binding_before["asset_id"]
+
+    list_after = runtime.handle_command_sync(
+        RPCommand("binding", ["list", "project", str(project["id"])], "/rp binding list project 1"),
+        Event(),
+    )
+    inspect_after = runtime.handle_command_sync(
+        RPCommand("binding", ["inspect", str(binding_id)], f"/rp binding inspect {binding_id}"),
+        Event(),
+    )
+
+    assert list_before == list_after
+    assert inspect_before == inspect_after
+    assert runtime.store.get_default_binding(binding_id) == binding_before
+    assert payload["created_at"] == binding_before.get("created_at")
+    assert payload["updated_at"] == binding_before.get("updated_at")
+
+
+def test_binding_export_not_found_nonpositive_and_missing_id(tmp_path):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    runtime.store.create_project("Atlas")
+
+    assert (
+        runtime.handle_command_sync(
+            RPCommand(
+                "binding",
+                ["export", "9999"],
+                "/rp binding export 9999",
+            ),
+            Event(),
+        )
+        == "No default binding found: 9999"
+    )
+    assert (
+        runtime.handle_command_sync(
+            RPCommand("binding", ["export", "0"], "/rp binding export 0"),
+            Event(),
+        )
+        == BINDING_USAGE
+    )
+    assert (
+        runtime.handle_command_sync(
+            RPCommand("binding", ["export"], "/rp binding export"),
             Event(),
         )
         == BINDING_USAGE
