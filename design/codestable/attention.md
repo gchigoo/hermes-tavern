@@ -44,7 +44,7 @@ This file is the CodeStable skill startup mandatory read for the hermes-agent re
 
 - Plugin entrypoint contract: `plugin.yaml` (metadata) + `__init__.py` exposing `register(ctx) -> None` which calls `ctx.register_hook("pre_gateway_dispatch", handler)`.
 - Design doc: `HERMES_TAVERN_DESIGN.md` (root). Implementation plan: `.hermes/plans/hermes-tavern-implementation-v0.1.md`.
-- Current status (2026-05-18): Phases 1–3 implemented (skeleton, SQLite, card import, session CRUD, gateway hook, runtime placeholder). Phase 3.5 hardening in progress before Phase 4 (Prompt Compiler).
+- Current status (2026-06-08): All phases 1–167 complete — skeleton, SQLite, card import, session CRUD, gateway hook, Phase 3.5 hardening, Phase 4 Prompt Compiler, Phase 5–6 provider bridge/integration, Phase 7–38 core runtime + hardening, Phase 121–167 novel project layer + metadata + JSON export for all entity types.
 - Adult-fiction non-negotiable boundaries defined in design doc §12.3 — do not build features that bypass provider safety systems.
 
 ### Hermes Tavern 凭证约束
