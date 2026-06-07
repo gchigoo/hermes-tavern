@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
+from datetime import datetime
 from typing import Any
 
 from hermes_tavern.commands import RPCommand
@@ -69,6 +71,8 @@ def chapter_command(runtime: Any, command: RPCommand, event: Any) -> str:
         return chapter_list(runtime, command, event)
     if subcommand == "inspect":
         return chapter_inspect(runtime, command, event)
+    if subcommand == "export":
+        return chapter_export(runtime, command)
     if subcommand == "summary":
         return chapter_summary(runtime, command, event)
     return _CHAPTER_USAGE
@@ -134,6 +138,7 @@ _TIMELINE_USAGE = (
 _CHAPTER_USAGE = (
     "Usage: /rp chapter create [project-id] <title> | /rp chapter list [project-id] | "
     "/rp chapter inspect <chapter-id> | /rp chapter summary <chapter-id> [text] | /rp chapter summary clear <chapter-id>"
+    " | /rp chapter export <chapter-id>"
 )
 _SCENE_USAGE = (
     "Usage: /rp scene create <chapter-id> <title> | /rp scene list <chapter-id> | "
@@ -1246,6 +1251,50 @@ def chapter_summary(runtime: Any, command: RPCommand, event: Any) -> str:
         f"Chapter summary set for chapter [{chapter_id}]: "
         f"{_mobile_preview(text, 180)}"
     )
+
+
+def chapter_export(runtime: Any, command: RPCommand) -> str:
+    if len(command.args) != 2:
+        return _CHAPTER_USAGE
+
+    chapter_id = _safe_int(command.args[1])
+    if chapter_id is None:
+        return _CHAPTER_USAGE
+
+    chapter = runtime.store.get_chapter(chapter_id)
+    if chapter is None:
+        return f"No novel chapter found: {chapter_id}"
+
+    scenes = runtime.store.list_scenes(chapter_id)
+
+    export_doc = {
+        "hermes_tavern_export": True,
+        "exported_at": datetime.utcnow().isoformat(),
+        "chapter_id": chapter["id"],
+        "project_id": chapter["project_id"],
+        "title": chapter["title"],
+        "chapter_number": chapter["chapter_number"],
+        "status": chapter["status"],
+        "summary": chapter.get("summary") or "",
+        "scenes": [
+            {
+                "scene_id": scene["id"],
+                "title": scene["title"],
+                "scene_number": scene["scene_number"],
+                "summary": scene.get("summary") or "",
+                "status": scene["status"],
+                "session_id": scene.get("session_id"),
+            }
+            for scene in scenes
+        ],
+    }
+
+    export_dir = get_hermes_home() / "plugins" / "hermes-tavern" / "exports" / "chapters"
+    export_dir.mkdir(parents=True, exist_ok=True)
+    export_path = Path(export_dir) / f"chapter_{chapter_id}.json"
+    export_path.write_text(json.dumps(export_doc, ensure_ascii=False, indent=2), encoding="utf-8")
+
+    return f"Chapter exported as JSON.\nfile: {export_path}\nMEDIA:\"{export_path}\""
 
 
 def scene_create(runtime: Any, command: RPCommand, event: Any) -> str:

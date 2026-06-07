@@ -384,6 +384,7 @@ TAVERN_COMMAND_TABLE: dict[str, TavernCommandEntry] = {
             "/rp chapter inspect <chapter-id>",
             "/rp chapter summary <chapter-id> [text]",
             "/rp chapter summary clear <chapter-id>",
+            "/rp chapter export <chapter-id>",
         ],
     ),
     "scene": TavernCommandEntry(
