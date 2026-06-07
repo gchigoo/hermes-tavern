@@ -1,0 +1,133 @@
+doc_type: feature-checklist
+status: accepted
+feature: "2026-06-07-hermes-tavern-phase161-organization-json-export"
+date: "2026-06-07"
+implementation_ready: true
+summary: >
+  Phase 161 adds one bounded /rp organization export <organization-id> JSON export
+  command. S1 implements organization export by ID; S2 completes acceptance and
+  architecture/root-design writeback (deferred to controller after S1
+  verification passes).
+  - hermes-tavern
+  - organization
+  - novel
+  - offline
+  - export
+  - json
+implementation_readiness: >
+  Architect profile (gpt-5.5) was rate-limited; controller materialized
+  design/checklist artifacts following the proven Phase 149-160 export pattern.
+  Executor profile (gpt-5.3-codex-spark) available. S1 implementation ready.
+steps:
+  - id: S1
+    name: "S1: Implement organization JSON export by ID"
+    status: pending
+    description: >
+      Add /rp organization export <organization-id> under the existing organization command family.
+      Resolve one stored organization by integer ID, read organization metadata, build a
+      JSON export payload, write one profile-safe UTF-8 JSON file, return file
+      and quoted MEDIA output, update help/README visibility, and add focused
+      offline tests.
+    allowed_files:
+      - src/hermes_tavern/runtime_novel.py
+      - src/hermes_tavern/commands.py
+      - README.md
+      - tests/test_hermes_tavern_novel_runtime.py
+      - tests/test_hermes_tavern_readme_docs.py
+    prohibited_files:
+      - run_agent.py
+      - cli.py
+      - gateway/run.py
+      - src/hermes_tavern/runtime.py
+      - src/hermes_tavern/runtime_lifecycle.py
+      - src/hermes_tavern/runtime_sessions.py
+      - src/hermes_tavern/runtime_assets.py
+      - src/hermes_tavern/db.py
+      - src/hermes_tavern/db_novel.py
+      - src/hermes_tavern/prompt.py
+      - src/hermes_tavern/runtime_prompt_modules.py
+      - src/hermes_tavern/model_router.py
+      - src/hermes_tavern/provider_bridge.py
+      - src/hermes_tavern/adapters.py
+      - src/hermes_tavern/runtime_generation.py
+      - src/hermes_tavern/runtime_lore.py
+      - src/hermes_tavern/runtime_persona.py
+      - src/hermes_tavern/runtime_presets.py
+      - "src/hermes_tavern/importers/**"
+      - "plugins/**"
+      - "build/lib/**"
+    exact_scope:
+      - "Add /rp organization export <organization-id> as a nested organization subcommand."
+      - "Add export branch to organization_command() dispatcher after the delete case."
+      - "Resolve organization ID via existing get_organization(organization_id) behavior."
+      - "Reject not-found organization with 'No organization found: <id>'."
+      - "Read organization metadata fields (id, project_id, label, description_text, created_at, updated_at)."
+      - "Build JSON payload with organization metadata."
+      - "Write one UTF-8 JSON file under get_hermes_home()/plugins/hermes-tavern/exports/organizations."
+      - 'Return bounded file: and quoted MEDIA:"<path>" output.'
+      - "Update generated help (commands.py help_lines) for /rp organization export <organization-id>."
+      - "Update README Core commands table for organization export."
+      - "Add focused tests: export by ID, not-found organization, non-positive ID, missing args, path containment, MEDIA output, no organization mutation."
+      - "Do not change organization schema, project archive, prompt compiler, provider/model routing, generation, credentials, content mode, safety, gateway/core files, plugin files, or build artifacts."
+      - "Do not edit db_novel.py (no new DB APIs needed; get_organization already exists)."
+    verification:
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m py_compile src/hermes_tavern/runtime_novel.py src/hermes_tavern/commands.py tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_readme_docs.py"
+        expected: "passes"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_readme_docs.py -q -o 'addopts=' -p no:cacheprovider"
+        expected: "passes"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_*.py -q -o 'addopts=' -p no:cacheprovider"
+        expected: "passes"
+      - command: "git diff --name-only -- run_agent.py cli.py gateway/run.py src/hermes_tavern/runtime.py src/hermes_tavern/runtime_lifecycle.py src/hermes_tavern/runtime_sessions.py src/hermes_tavern/runtime_assets.py src/hermes_tavern/db.py src/hermes_tavern/db_novel.py src/hermes_tavern/prompt.py src/hermes_tavern/runtime_prompt_modules.py src/hermes_tavern/model_router.py src/hermes_tavern/provider_bridge.py src/hermes_tavern/adapters.py src/hermes_tavern/runtime_generation.py src/hermes_tavern/runtime_lore.py src/hermes_tavern/runtime_persona.py src/hermes_tavern/runtime_presets.py src/hermes_tavern/importers plugins build/lib"
+        expected: "empty output"
+      - command: "git diff --check"
+        expected: "passes"
+  - id: S2
+    name: "S2: Acceptance and architecture/root-design writeback"
+    status: pending
+    description: >
+      S2 acceptance deferred to later cron tick/controller. After S1 passes
+      all controller verification, rerun gates, create acceptance report,
+      update ARCHITECTURE.md and HERMES_TAVERN_DESIGN.md, and finalize
+      checklist/design status.
+    allowed_files:
+      - design/codestable/features/2026-06-07-hermes-tavern-phase161-organization-json-export/design.md
+      - design/codestable/features/2026-06-07-hermes-tavern-phase161-organization-json-export/checklist.yaml
+      - design/codestable/architecture/ARCHITECTURE.md
+      - design/HERMES_TAVERN_DESIGN.md
+    prohibited_files:
+      - README.md
+      - "src/**"
+      - "tests/**"
+      - run_agent.py
+      - cli.py
+      - gateway/run.py
+      - "plugins/**"
+      - "build/lib/**"
+    exact_scope:
+      - "Rerun S1 verification before acceptance."
+      - "Create Phase 161 acceptance only after verification passes."
+      - "Update architecture/root design only for current /rp organization export <organization-id> behavior."
+      - "Do not edit source, tests, README, plugin files, build artifacts, or protected core files during S2."
+    verification:
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_novel_runtime.py tests/test_hermes_tavern_readme_docs.py -q -o 'addopts=' -p no:cacheprovider"
+        expected: "passes"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_*.py -q -o 'addopts=' -p no:cacheprovider"
+        expected: "passes"
+      - command: "git diff --name-only -- README.md src tests run_agent.py cli.py gateway/run.py plugins build/lib"
+        expected: "empty output during S2"
+      - command: "git diff --check"
+        expected: "passes"
+risks:
+  - id: R1
+    risk: "Organization ID may be invalid or not found."
+    mitigation: "Reject with 'No organization found: <id>' (same UX as organization_inspect)."
+  - id: R2
+    risk: "Organization description_text may be large; export payload could be large."
+    mitigation: "Description text is stored as TEXT; no auto-summarization or truncation in export (same as existing inspect behavior)."
+rollback: >
+  Remove the organization export branch, the organization_export function, help and README
+  literal, and focused tests. No DB migration or stored-data rollback is required.
+notes:
+  - "No architect pass was run (gpt-5.5 rate-limited). Controller materialized artifacts following the proven Phase 149-160 pattern."
+  - "S1 will be implemented by Codex executor (gpt-5.3-codex-spark). S2 acceptance writeback to be completed by controller."
+  - "db_novel.py is in prohibited_files because get_organization already exists and no new DB APIs are needed."
