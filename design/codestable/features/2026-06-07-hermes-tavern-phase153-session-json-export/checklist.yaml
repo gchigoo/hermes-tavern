@@ -97,7 +97,7 @@ steps:
         actual: ""
   - id: S2
     name: "S2: Acceptance and architecture/root-design writeback"
-    status: pending
+    status: completed
     description: >
       S2 acceptance deferred to later cron tick. After S1 passes all controller
       verification, rerun gates, create acceptance report, update ARCHITECTURE.md
