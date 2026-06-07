@@ -84,7 +84,15 @@ steps:
         expected: "passes"
   - id: S2
     name: "S2: Acceptance and architecture/root-design writeback"
-    status: pending
+    status: completed
+    completed_at: "2026-06-07"
+    result: >
+      ACCEPTED - Controller completed S2 writeback after S1 verification
+      confirmed passing (316/316 novel_runtime + readme_docs tests, clean
+      diff, no protected file changes). Created Phase 164 acceptance doc,
+      updated ARCHITECTURE.md (phase listing, command surface, boundary),
+      and updated HERMES_TAVERN_DESIGN.md (Phase 164 export description
+      after default binding metadata section).
     description: >
       S2 acceptance deferred to later cron tick/controller. After S1 passes
       all controller verification, rerun gates, create acceptance report,

@@ -612,6 +612,19 @@ remain deferred; automatic default application is explicitly out of scope.
 `canon_policy` and `content_mode` remain deferred.
 ST card/preset/lorebook/persona importer/exporter compatibility remains unchanged.
 
+Phase 164 adds `/rp binding export <binding-id>`:
+
+- resolves binding by integer ID through existing `get_default_binding(binding_id)`,
+  rejecting not-found and non-positive IDs;
+- reads binding metadata (binding_id, scope_type, scope_id, asset_type, asset_id, created_at, updated_at);
+- exports binding metadata as a UTF-8 JSON file under
+  `get_hermes_home()/plugins/hermes-tavern/exports/bindings` with quoted
+  `MEDIA:\"<path>\"` marker output;
+- does not mutate binding rows or binding lifecycle state;
+- does not change schema, prompt/debug/context-budget, provider/model routing,
+  generation, retrieval/vectorization, credentials, content-mode, minors/underage
+  handling, or safety-bypass behavior.
+
 Relationship state is now current local metadata and is managed through
 `novel_relationship_states(id, project_id, label, state_text, created_at, updated_at)`.
 It can be corrected with `/rp relationship rename <relationship-id> <label>`, which

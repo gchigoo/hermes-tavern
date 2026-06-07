@@ -264,6 +264,16 @@ importers/
   ordering, label semantics, prompt/module selection, provider/model/generation,
   retrieval/vectorization, content-mode, minors/underage, safety-bypass,
   or deferred character-state visualization/auto-extraction tooling changes occur.
+- Phase 164: Default Binding JSON Export (`/rp binding export <binding-id>`) reads one existing
+  `novel_default_bindings` row by integer id via existing `get_default_binding(binding_id)`,
+  exports binding metadata (binding_id, scope_type, scope_id, asset_type, asset_id,
+  created_at, updated_at) as a UTF-8 JSON file under
+  `get_hermes_home()/plugins/hermes-tavern/exports/bindings` with quoted
+  `MEDIA:\"<path>\"` attachment output, and returns file path metadata.
+  No schema, table/index migrations, binding set/list/inspect/clear
+  behavior, prompt/module, provider/model, generation, retrieval/vectorization,
+  content-mode, minors/underage, safety-bypass, or deferred scalar-defaults
+  changes occur.
 - Phase 165: Scene Beat JSON Export (`/rp scene beat export <beat-id>`) reads one existing
   `novel_scene_beats` row by integer id via existing `get_scene_beat(beat_id)`,
   exports beat metadata (beat_id, scene_id, label, beat_text, created_at,
@@ -414,6 +424,7 @@ through command output and Markdown export.
 /rp binding list <project|chapter|scene> <scope-id>
 /rp binding inspect <binding-id>
 /rp binding clear <binding-id>
+/rp binding export <binding-id>
 /rp relationship add <project-id> <label> <state...>
 /rp relationship list [project-id]
 /rp relationship inspect <relationship-id>
@@ -761,6 +772,12 @@ These phases do not change schema or core prompt/generation assembly.
   `novel_style_samples` row and writes one UTF-8 JSON file under profile-safe exports.
   It keeps `novel_style_samples` schema, table/index shape, migrations, style sample
   add/list/inspect/update/delete behavior, prompt/debug/context behavior, provider/model
+  routing, generation, retrieval/vectorization, content-mode, credentials, project archive,
+  and safety-bypass behavior unchanged.
+- **Phase 164 default binding export boundary**: `/rp binding export <binding-id>` reads one existing
+  `novel_default_bindings` row and writes one UTF-8 JSON file under profile-safe exports.
+  It keeps `novel_default_bindings` schema, table/index shape, migrations, binding
+  set/list/inspect/clear behavior, prompt/debug/context behavior, provider/model
   routing, generation, retrieval/vectorization, content-mode, credentials, project archive,
   and safety-bypass behavior unchanged.
 - **Phase 165 scene beat export boundary**: `/rp scene beat export <beat-id>` reads one existing
