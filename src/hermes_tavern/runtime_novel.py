@@ -243,6 +243,8 @@ def organization_command(runtime: Any, command: RPCommand, event: Any) -> str:
         return organization_update(runtime, command)
     if subcommand == "delete":
         return organization_delete(runtime, command)
+    if subcommand == "export":
+        return organization_export(runtime, command)
 
     return _ORGANIZATION_USAGE
 
@@ -351,7 +353,8 @@ _ORGANIZATION_USAGE = (
     "Usage: /rp organization add <project-id> <label> <description...> | "
     "/rp organization list [project-id] | /rp organization inspect <organization-id> | "
     "/rp organization update <organization-id> <description...> | "
-    "/rp organization delete <organization-id>"
+    "/rp organization delete <organization-id> | "
+    "/rp organization export <organization-id>"
 )
 
 _PLOT_THREAD_USAGE = (
@@ -2391,6 +2394,46 @@ def organization_delete(runtime: Any, command: RPCommand) -> str:
         return f"No organization found: {organization_id}"
 
     return f"Organization deleted for organization [{organization_id}]."
+
+
+def organization_export(runtime: Any, command: RPCommand) -> str:
+    if len(command.args) != 2:
+        return _ORGANIZATION_USAGE
+
+    organization_id = _safe_int(command.args[1])
+    if organization_id is None or organization_id <= 0:
+        return _ORGANIZATION_USAGE
+
+    organization = runtime.store.get_organization(organization_id)
+    if organization is None:
+        return f"No organization found: {organization_id}"
+
+    export_doc = {
+        "hermes_tavern_export": True,
+        "exported_at": datetime.utcnow().isoformat(),
+        "organization_id": organization["id"],
+        "project_id": organization["project_id"],
+        "label": organization["label"],
+        "description_text": organization["description_text"],
+        "created_at": organization.get("created_at"),
+        "updated_at": organization.get("updated_at"),
+    }
+
+    export_dir = (
+        get_hermes_home()
+        / "plugins"
+        / "hermes-tavern"
+        / "exports"
+        / "organizations"
+    )
+    export_dir.mkdir(parents=True, exist_ok=True)
+    export_path = Path(export_dir) / f"organization_{organization_id}.json"
+    export_path.write_text(
+        json.dumps(export_doc, ensure_ascii=False, indent=2),
+        encoding="utf-8",
+    )
+
+    return f"Organization exported as JSON.\nfile: {export_path}\nMEDIA:\"{export_path}\""
 
 
 def plot_thread_add(runtime: Any, command: RPCommand, event: Any) -> str:

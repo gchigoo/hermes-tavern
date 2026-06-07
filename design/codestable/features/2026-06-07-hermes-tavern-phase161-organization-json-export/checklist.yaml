@@ -21,7 +21,7 @@ implementation_readiness: >
 steps:
   - id: S1
     name: "S1: Implement organization JSON export by ID"
-    status: pending
+    status: completed
     description: >
       Add /rp organization export <organization-id> under the existing organization command family.
       Resolve one stored organization by integer ID, read organization metadata, build a

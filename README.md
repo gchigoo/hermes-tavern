@@ -181,6 +181,7 @@ Expected behavior:
 /rp organization inspect <organization-id>
 /rp organization update <organization-id> <description...>
 /rp organization delete <organization-id>
+/rp organization export <organization-id>
 /rp relationship add <project-id> <label> <state...>
 /rp relationship list [project-id]
 /rp relationship inspect <relationship-id>

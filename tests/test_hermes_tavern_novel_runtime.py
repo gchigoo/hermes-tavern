@@ -69,7 +69,8 @@ ORGANIZATION_USAGE = (
     "Usage: /rp organization add <project-id> <label> <description...> | "
     "/rp organization list [project-id] | /rp organization inspect <organization-id> | "
     "/rp organization update <organization-id> <description...> | "
-    "/rp organization delete <organization-id>"
+    "/rp organization delete <organization-id> | "
+    "/rp organization export <organization-id>"
 )
 PLOT_THREAD_USAGE = (
     "Usage: /rp plot thread add <project-id> <label> <description...> | "
@@ -1984,6 +1985,156 @@ def test_organization_not_found_and_missing_project_errors(tmp_path):
         )
         == "No organization found: 9999"
     )
+
+
+def test_organization_export_by_id(tmp_path, monkeypatch):
+    monkeypatch.setenv("HERMES_HOME", str(tmp_path / "hermes home"))
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    project = runtime.store.create_project("Atlas")
+    organization = runtime.store.create_organization(
+        project["id"],
+        "watchtower",
+        "A bell signals weather changes over the harbor.",
+    )
+
+    response = runtime.handle_command_sync(
+        RPCommand(
+            "organization",
+            ["export", str(organization["id"])],
+            f"/rp organization export {organization['id']}",
+        ),
+        Event(),
+    )
+
+    assert response.startswith("Organization exported as JSON.")
+    assert "file:" in response
+    assert "MEDIA:" in response
+    file_path = response.split("file: ", 1)[1].splitlines()[0].strip()
+    media_path = response.split("MEDIA:", 1)[1].strip().strip('"')
+    assert media_path == file_path
+
+
+def test_organization_export_payload_contains_fields(tmp_path, monkeypatch):
+    monkeypatch.setenv("HERMES_HOME", str(tmp_path / "hermes home"))
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    project = runtime.store.create_project("Atlas")
+    organization = runtime.store.create_organization(
+        project["id"],
+        "reef",
+        "Signals fire at dusk.",
+    )
+
+    response = runtime.handle_command_sync(
+        RPCommand("organization", ["export", str(organization["id"])], f"/rp organization export {organization['id']}"),
+        Event(),
+    )
+    assert response.startswith("Organization exported as JSON.")
+
+    from pathlib import Path
+
+    export_path = Path(response.split("file: ", 1)[1].splitlines()[0].strip())
+    payload = json.loads(export_path.read_text(encoding="utf-8"))
+    assert payload["organization_id"] == organization["id"]
+    assert payload["project_id"] == project["id"]
+    assert payload["label"] == organization["label"]
+    assert payload["description_text"] == organization["description_text"]
+    assert payload["created_at"] == organization["created_at"]
+    assert payload["updated_at"] == organization["updated_at"]
+
+
+def test_organization_export_not_found(tmp_path):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    response = runtime.handle_command_sync(
+        RPCommand("organization", ["export", "9999"], "/rp organization export 9999"),
+        Event(),
+    )
+    assert response == "No organization found: 9999"
+
+
+@pytest.mark.parametrize("organization_id", ["0", "-1"])
+def test_organization_export_non_positive_id(tmp_path, organization_id):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    response = runtime.handle_command_sync(
+        RPCommand("organization", ["export", organization_id], f"/rp organization export {organization_id}"),
+        Event(),
+    )
+    assert response == ORGANIZATION_USAGE
+
+
+def test_organization_export_missing_args(tmp_path):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    assert (
+        runtime.handle_command_sync(
+            RPCommand("organization", ["export"], "/rp organization export"),
+            Event(),
+        )
+        == ORGANIZATION_USAGE
+    )
+
+
+def test_organization_export_path_containment(tmp_path, monkeypatch):
+    monkeypatch.setenv("HERMES_HOME", str(tmp_path / "hermes home"))
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    project = runtime.store.create_project("Atlas")
+    organization = runtime.store.create_organization(
+        project["id"],
+        "watchtower",
+        "A bell signals weather changes over the harbor.",
+    )
+
+    response = runtime.handle_command_sync(
+        RPCommand("organization", ["export", str(organization["id"])], f"/rp organization export {organization['id']}"),
+        Event(),
+    )
+    file_path = response.split("file: ", 1)[1].splitlines()[0].strip()
+    assert file_path.startswith(
+        str(
+            tmp_path
+            / "hermes home"
+            / "plugins"
+            / "hermes-tavern"
+            / "exports"
+            / "organizations"
+        )
+    )
+
+
+def test_organization_export_media_output(tmp_path, monkeypatch):
+    monkeypatch.setenv("HERMES_HOME", str(tmp_path / "hermes home"))
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    project = runtime.store.create_project("Atlas")
+    organization = runtime.store.create_organization(
+        project["id"],
+        "watchtower",
+        "A bell signals weather changes over the harbor.",
+    )
+
+    response = runtime.handle_command_sync(
+        RPCommand("organization", ["export", str(organization["id"])], f"/rp organization export {organization['id']}"),
+        Event(),
+    )
+    file_path = response.split("file: ", 1)[1].splitlines()[0].strip()
+    media_path = response.split("MEDIA:", 1)[1].strip().strip('"')
+    assert media_path == file_path
+
+
+def test_organization_export_no_mutation(tmp_path, monkeypatch):
+    monkeypatch.setenv("HERMES_HOME", str(tmp_path / "hermes home"))
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    project = runtime.store.create_project("Atlas")
+    organization = runtime.store.create_organization(
+        project["id"],
+        "watchtower",
+        "A bell signals weather changes over the harbor.",
+    )
+
+    before = runtime.store.get_organization(organization["id"])
+    runtime.handle_command_sync(
+        RPCommand("organization", ["export", str(organization["id"])], f"/rp organization export {organization['id']}"),
+        Event(),
+    )
+    after = runtime.store.get_organization(organization["id"])
+    assert after == before
 
 
 def test_organization_no_active_project_and_list_falls_back_to_usage(tmp_path):

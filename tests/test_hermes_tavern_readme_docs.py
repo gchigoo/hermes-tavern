@@ -467,6 +467,7 @@ def test_readme_core_commands_include_organization_state_literals():
     assert "/rp organization inspect <organization-id>" in core_commands
     assert "/rp organization update <organization-id> <description...>" in core_commands
     assert "/rp organization delete <organization-id>" in core_commands
+    assert "/rp organization export <organization-id>" in core_commands
 
 
 def test_readme_core_commands_include_plot_thread_literals():

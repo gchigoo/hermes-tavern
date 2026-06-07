@@ -337,6 +337,7 @@ TAVERN_COMMAND_TABLE: dict[str, TavernCommandEntry] = {
             "/rp organization inspect <organization-id>",
             "/rp organization update <organization-id> <description...>",
             "/rp organization delete <organization-id>",
+            "/rp organization export <organization-id>",
         ],
     ),
     "plot": TavernCommandEntry(
