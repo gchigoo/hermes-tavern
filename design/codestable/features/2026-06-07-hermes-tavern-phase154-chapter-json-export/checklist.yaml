@@ -4,12 +4,11 @@ feature: "2026-06-07-hermes-tavern-phase154-chapter-json-export"
 date: "2026-06-07"
 implementation_ready: true
 summary: >
-  DRAFT — Phase 154 adds one bounded /rp chapter export <chapter-id> JSON export
-  command. Architect profile (gpt-5.5) was rate-limited; controller materialized
-  design/checklist artifacts following the proven Phase 149-153 export pattern.
-  Codex executor (gpt-5.3-codex-spark) will implement the bounded S1 slice, and
-  the controller will rerun targeted and full gates. S2 acceptance/writeback
-  remains deferred.
+  Phase 154 adds one bounded /rp chapter export <chapter-id> JSON export
+  command. S1 implemented chapter export by ID, S2 completed acceptance and
+  architecture/root-design writeback. Full acceptance verified 2026-06-07:
+  1115 Tavern tests passing, protected-files diff clean, ARCHITECTURE.md and
+  HERMES_TAVERN_DESIGN.md updated.
   - hermes-tavern
   - chapter
   - novel
@@ -97,7 +96,7 @@ steps:
         actual: "passed"
   - id: S2
     name: "S2: Acceptance and architecture/root-design writeback"
-    status: pending
+    status: completed
     description: >
       S2 acceptance deferred to later cron tick. After S1 passes all controller
       verification, rerun gates, create acceptance report, update ARCHITECTURE.md
@@ -147,4 +146,4 @@ rollback: >
   tests. No DB migration or stored-data rollback is required.
 notes:
   - "No architect pass was run (gpt-5.5 rate-limited). Controller materialized artifacts following the proven Phase 149-153 pattern."
-  - "S1 is the only implementation slice for this tick. S2 is planned for a later docs/status acceptance writeback tick."
+  - "S1 implemented by Codex executor (gpt-5.3-codex-spark). S2 acceptance writeback completed by controller 2026-06-07."

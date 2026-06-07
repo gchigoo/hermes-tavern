@@ -535,6 +535,22 @@ Phase 153 adds `/rp session export <id>`:
   generation, retrieval/vectorization, credentials, content-mode, minors/underage
   handling, or safety-bypass behavior.
 
+Phase 154 adds `/rp chapter export <chapter-id>`:
+
+- resolves chapter by integer ID through existing `get_chapter(chapter_id)`,
+  rejecting not-found matches;
+- reads chapter metadata (title, chapter_number, summary, status, project_id) and
+  associated scenes via `list_scenes(chapter_id)`;
+- exports chapter metadata plus scenes array as a UTF-8 JSON file under
+  `get_hermes_home()/plugins/hermes-tavern/exports/chapters` with quoted
+  `MEDIA:"<path>"` marker output;
+- includes scene metadata (scene_id, title, scene_number, summary, status,
+  session_id) and empty scenes array for chapters with zero scenes;
+- does not mutate chapter rows, scenes, or chapter/scene lifecycle state;
+- does not change schema, prompt/debug/context-budget, provider/model routing,
+  generation, retrieval/vectorization, credentials, content-mode, minors/underage
+  handling, or safety-bypass behavior.
+
 ### 6.7 Project / Novel
 
 Long-form writing requires a project layer above chat sessions.
@@ -708,6 +724,7 @@ Commands:
 /rp style sample delete <style-sample-id>
 /rp chapter create [project-id] <title>
 /rp chapter list [project-id]
+/rp chapter export <chapter-id>
 /rp chapter inspect <chapter-id>
 /rp chapter summary <chapter-id> [text]
 /rp chapter summary clear <chapter-id>
@@ -1216,6 +1233,7 @@ relationship label rename is current metadata.
 /rp relationship update <relationship-id> <state...>
 /rp relationship delete <relationship-id>
 /rp chapter create/list
+/rp chapter export <chapter-id>
 /rp chapter inspect <chapter-id>
 /rp chapter summary <chapter-id> [text]
 /rp chapter summary clear <chapter-id>

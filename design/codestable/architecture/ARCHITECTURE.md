@@ -211,6 +211,14 @@ importers/
   migrations are added and no session lifecycle, prompt/provider/model/generation,
   retrieval/vectorization, content-mode, minors/underage, safety-bypass, or
   archive behavior changes occur.
+- Phase 154: Chapter JSON Export (`/rp chapter export <chapter-id>`) reads one existing
+  `novel_chapters` row by id via `get_chapter(chapter_id)`, lists associated scenes
+  via `list_scenes(chapter_id)`, and exports chapter metadata plus scenes array as a
+  UTF-8 JSON file under `get_hermes_home()/plugins/hermes-tavern/exports/chapters`
+  with quoted `MEDIA` attachment output. No schema/table/index migrations are added
+  and no chapter/scene lifecycle, prompt/provider/model/generation,
+  retrieval/vectorization, content-mode, minors/underage, safety-bypass,
+  or archive behavior changes occur.
 
 ### Plugin flow
 
@@ -251,7 +259,7 @@ from vectorization/retrieval, provider/model routing, content mode,
 credentials, automation, summarization, and generation; they are visible only
 through command output and Markdown export.
 
-### /rp command surface (current through Phase 152)
+### /rp command surface (current through Phase 154)
 
 ```
 /rp help | status | assets
@@ -291,6 +299,7 @@ through command output and Markdown export.
 /rp project outline set [project-id] <text>
 /rp project outline clear [project-id]
 /rp chapter create/list
+/rp chapter export <chapter-id>               ← Phase 154
 /rp chapter inspect <chapter-id>
 /rp chapter summary <chapter-id> [text]
 /rp chapter summary clear <chapter-id>
@@ -353,7 +362,7 @@ through command output and Markdown export.
 /rp relationship delete <relationship-id>
 ```
 
-### DB schema (current through Phase 152; unchanged by Phase 152)
+### DB schema (current through Phase 154; unchanged by Phase 154)
 
 ```sql
 cards(id, name, data_json, source_path, created_at)
