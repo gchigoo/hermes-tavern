@@ -94,11 +94,12 @@ steps:
         actual: "passed"
   - id: S2
     name: "S2: Acceptance and architecture/root-design writeback"
-    status: pending
+    status: completed
+    completed_at: "2026-06-07"
     description: >
-      S2 acceptance deferred to later cron tick/controller. After S1 passes
-      all controller verification, rerun gates, create acceptance report,
-      update ARCHITECTURE.md and HERMES_TAVERN_DESIGN.md, and finalize
+      S2 acceptance and architecture/root-design writeback completed by
+      controller in same tick as S1. Reran gates, created acceptance report,
+      updated ARCHITECTURE.md and HERMES_TAVERN_DESIGN.md, and finalized
       checklist/design status.
     allowed_files:
       - design/codestable/features/2026-06-07-hermes-tavern-phase155-scene-json-export/design.md
