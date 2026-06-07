@@ -111,13 +111,15 @@ def canon_command(runtime: Any, command: RPCommand, event: Any) -> str:
         return canon_inspect(runtime, command, event)
     if subcommand == "group":
         return canon_group(runtime, command, event)
+    if subcommand == "export":
+        return canon_export(runtime, command)
     return _CANON_USAGE
 
 
 _CANON_USAGE = (
     "Usage: /rp canon add <project-id> <title> <content...> [--group <group>] | "
     "/rp canon list [project-id] [group] | /rp canon inspect <canon-id> | "
-    "/rp canon group [project-id] <group>"
+    "/rp canon group [project-id] <group> | /rp canon export <canon-id>"
 )
 
 
@@ -1800,6 +1802,39 @@ def canon_group(runtime: Any, command: RPCommand, event: Any) -> str:
         preview = _mobile_preview(entry.get("content") or "", 80)
         lines.append(f"  - [{entry['id']}] {entry['title']}: {preview}")
     return "\n".join(lines)
+
+
+def canon_export(runtime: Any, command: RPCommand) -> str:
+    if len(command.args) != 2:
+        return _CANON_USAGE
+
+    canon_id = _safe_int(command.args[1])
+    if canon_id is None or canon_id <= 0:
+        return _CANON_USAGE
+
+    canon = runtime.store.get_canon(canon_id)
+    if canon is None:
+        return f"No canon fact found: {canon_id}"
+
+    export_doc = {
+        "hermes_tavern_export": True,
+        "exported_at": datetime.utcnow().isoformat(),
+        "canon_id": canon["id"],
+        "project_id": canon["project_id"],
+        "title": canon["title"],
+        "content": canon["content"],
+        "canon_group": canon["canon_group"],
+        "importance": canon["importance"],
+        "created_at": canon.get("created_at"),
+        "updated_at": canon.get("updated_at"),
+    }
+
+    export_dir = get_hermes_home() / "plugins" / "hermes-tavern" / "exports" / "canon"
+    export_dir.mkdir(parents=True, exist_ok=True)
+    export_path = Path(export_dir) / f"canon_{canon_id}.json"
+    export_path.write_text(json.dumps(export_doc, ensure_ascii=False, indent=2), encoding="utf-8")
+
+    return f"Canon fact exported as JSON.\nfile: {export_path}\nMEDIA:\"{export_path}\""
 
 
 def timeline_add(runtime: Any, command: RPCommand, event: Any) -> str:

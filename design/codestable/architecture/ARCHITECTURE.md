@@ -228,6 +228,15 @@ importers/
   lifecycle, session linking, prompt/provider/model/generation,
   retrieval/vectorization, content-mode, minors/underage, safety-bypass,
   or archive behavior changes occur.
+- Phase 156: Canon JSON Export (`/rp canon export <canon-id>`) reads one existing
+  `novel_canon` row by id via `get_canon(canon_id)`, and exports canon metadata
+  (id, project_id, title, content, canon_group, importance,
+  created_at, updated_at) as a UTF-8 JSON file under
+  `get_hermes_home()/plugins/hermes-tavern/exports/canon` with quoted `MEDIA`
+  attachment output. No schema/table/index migrations are added and no canon
+  inspection, prompt/module selection, provider/model/generation,
+  retrieval/vectorization, content-mode, minors/underage, safety-bypass,
+  or deferred `/rp canon check`/`/rp canon conflict`/`/rp canon pin` tooling changes occur.
 
 ### Plugin flow
 
@@ -332,7 +341,7 @@ through command output and Markdown export.
 /rp project revision inspect <note-id>
 /rp project revision update <note-id> <note...>
 /rp project revision delete <note-id>
-/rp canon add/list/group | /rp canon inspect <canon-id>
+/rp canon add/list/group | /rp canon inspect <canon-id> | /rp canon export <canon-id>
 /rp timeline add/list | /rp timeline inspect <timeline-id>
 /rp character state add <project-id> <label> <state...>
 /rp character state list [project-id]

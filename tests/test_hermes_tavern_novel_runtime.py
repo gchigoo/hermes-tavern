@@ -3989,7 +3989,7 @@ def test_canon_inspect_route_rejects_malformed_args(tmp_path):
     malformed_usage = (
         "Usage: /rp canon add <project-id> <title> <content...> [--group <group>] | "
         "/rp canon list [project-id] [group] | /rp canon inspect <canon-id> | "
-        "/rp canon group [project-id] <group>"
+        "/rp canon group [project-id] <group> | /rp canon export <canon-id>"
     )
 
     assert (
@@ -4024,6 +4024,129 @@ def test_canon_inspect_route_not_found_is_bounded(tmp_path):
         )
         == "No canon fact found for id [9999]."
     )
+
+
+def test_canon_export_by_id(tmp_path, monkeypatch):
+    monkeypatch.setenv("HERMES_HOME", str(tmp_path / "hermes home"))
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    project = runtime.store.create_project("Atlas")
+    canon = runtime.store.create_canon(project["id"], "Weather", "Fog is common.", group="world")
+
+    response = runtime.handle_command_sync(
+        RPCommand("canon", ["export", str(canon["id"])], f"/rp canon export {canon['id']}"),
+        Event(),
+    )
+
+    assert response.startswith("Canon fact exported as JSON.")
+    file_path = response.split("file: ", 1)[1].splitlines()[0].strip()
+    from pathlib import Path
+
+    export_path = Path(file_path)
+    assert export_path.exists()
+
+    payload = json.loads(export_path.read_text(encoding="utf-8"))
+    assert payload["hermes_tavern_export"] is True
+    assert payload["exported_at"]
+    assert payload["canon_id"] == canon["id"]
+    assert payload["project_id"] == project["id"]
+    assert payload["title"] == "Weather"
+    assert payload["content"] == "Fog is common."
+    assert payload["canon_group"] == "world"
+    assert payload["importance"] == canon["importance"]
+    assert payload["created_at"] == canon["created_at"]
+    assert payload["updated_at"] == canon["updated_at"]
+
+
+def test_canon_export_not_found(tmp_path):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+
+    assert (
+        runtime.handle_command_sync(
+            RPCommand("canon", ["export", "9999"], "/rp canon export 9999"),
+            Event(),
+        )
+        == "No canon fact found: 9999"
+    )
+
+
+def test_canon_export_missing_args(tmp_path):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    response = runtime.handle_command_sync(
+        RPCommand("canon", ["export"], "/rp canon export"),
+        Event(),
+    )
+    assert response == (
+        "Usage: /rp canon add <project-id> <title> <content...> [--group <group>] | "
+        "/rp canon list [project-id] [group] | /rp canon inspect <canon-id> | "
+        "/rp canon group [project-id] <group> | /rp canon export <canon-id>"
+    )
+
+
+@pytest.mark.parametrize("canon_id", ["0", "-1"])
+def test_canon_export_non_positive_id(tmp_path, canon_id):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    response = runtime.handle_command_sync(
+        RPCommand("canon", ["export", canon_id], f"/rp canon export {canon_id}"),
+        Event(),
+    )
+    assert response == (
+        "Usage: /rp canon add <project-id> <title> <content...> [--group <group>] | "
+        "/rp canon list [project-id] [group] | /rp canon inspect <canon-id> | "
+        "/rp canon group [project-id] <group> | /rp canon export <canon-id>"
+    )
+
+
+def test_canon_export_media_output(tmp_path, monkeypatch):
+    monkeypatch.setenv("HERMES_HOME", str(tmp_path / "hermes home"))
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    project = runtime.store.create_project("Atlas")
+    canon = runtime.store.create_canon(project["id"], "Weather", "Fog is common.", group="world")
+
+    response = runtime.handle_command_sync(
+        RPCommand("canon", ["export", str(canon["id"])], f"/rp canon export {canon['id']}"),
+        Event(),
+    )
+    file_path = response.split("file: ", 1)[1].splitlines()[0].strip()
+    media_path = response.split("MEDIA:", 1)[1].strip().strip('"')
+    assert media_path == file_path
+
+
+def test_canon_export_path_containment(tmp_path, monkeypatch):
+    monkeypatch.setenv("HERMES_HOME", str(tmp_path / "hermes home"))
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    project = runtime.store.create_project("Atlas")
+    canon = runtime.store.create_canon(project["id"], "Weather", "Fog is common.")
+
+    response = runtime.handle_command_sync(
+        RPCommand("canon", ["export", str(canon["id"])], f"/rp canon export {canon['id']}"),
+        Event(),
+    )
+    file_path = response.split("file: ", 1)[1].splitlines()[0].strip()
+    assert file_path.startswith(
+        str(
+            tmp_path
+            / "hermes home"
+            / "plugins"
+            / "hermes-tavern"
+            / "exports"
+            / "canon"
+        )
+    )
+
+
+def test_canon_export_no_mutation(tmp_path, monkeypatch):
+    monkeypatch.setenv("HERMES_HOME", str(tmp_path / "hermes home"))
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    project = runtime.store.create_project("Atlas")
+    canon = runtime.store.create_canon(project["id"], "Weather", "Fog is common.")
+
+    before = runtime.store.get_canon(canon["id"])
+    runtime.handle_command_sync(
+        RPCommand("canon", ["export", str(canon["id"])], f"/rp canon export {canon['id']}"),
+        Event(),
+    )
+    after = runtime.store.get_canon(canon["id"])
+    assert after == before
 
 
 def test_timeline_inspect_route_returns_compact_bound_preview(tmp_path):

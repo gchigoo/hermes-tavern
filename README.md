@@ -158,7 +158,7 @@ Expected behavior:
 /rp scene narration clear <scene-id>
 /rp scene narration pov <scene-id> <label>
 /rp scene narration tense <scene-id> <past|present> | /rp scene export <scene-id>
-/rp canon add/list/group | /rp canon inspect <canon-id> | /rp timeline add/list | /rp timeline inspect <timeline-id>
+/rp canon add/list/group | /rp canon inspect <canon-id> | /rp canon export <canon-id> | /rp timeline add/list | /rp timeline inspect <timeline-id>
 /rp character state add <project-id> <label> <state...>
 /rp character state list [project-id]
 /rp character state inspect <character-state-id>

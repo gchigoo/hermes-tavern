@@ -401,6 +401,7 @@ def test_readme_core_commands_include_canon_inspect_literal():
     core_commands = _readme_core_commands_text()
 
     assert "/rp canon inspect <canon-id>" in core_commands
+    assert "/rp canon export <canon-id>" in core_commands
 
 
 def test_readme_core_commands_omit_deferred_novel_command_literals():
