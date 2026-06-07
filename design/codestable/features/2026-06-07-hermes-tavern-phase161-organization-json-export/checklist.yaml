@@ -83,7 +83,7 @@ steps:
         expected: "passes"
   - id: S2
     name: "S2: Acceptance and architecture/root-design writeback"
-    status: pending
+    status: completed
     description: >
       S2 acceptance deferred to later cron tick/controller. After S1 passes
       all controller verification, rerun gates, create acceptance report,

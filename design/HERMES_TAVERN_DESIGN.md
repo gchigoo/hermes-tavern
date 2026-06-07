@@ -1233,6 +1233,7 @@ relationship label rename is current metadata.
 /rp organization inspect <organization-id>
 /rp organization update <organization-id> <description...>
 /rp organization delete <organization-id>
+/rp organization export <organization-id>
 /rp plot thread add <project-id> <label> <description...>
 /rp plot thread list [project-id]
 /rp plot thread inspect <plot-thread-id>

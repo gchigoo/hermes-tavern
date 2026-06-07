@@ -387,6 +387,7 @@ through command output and Markdown export.
 /rp organization inspect <organization-id>
 /rp organization update <organization-id> <description...>
 /rp organization delete <organization-id>
+/rp organization export <organization-id>
 /rp plot thread add <project-id> <label> <description...>
 /rp plot thread list [project-id]
 /rp plot thread inspect <plot-thread-id>
@@ -729,6 +730,12 @@ These phases do not change schema or core prompt/generation assembly.
 - **Phase 160 location export boundary**: `/rp location export <location-id>` reads one existing
   `novel_locations` row and writes one UTF-8 JSON file under profile-safe exports.
   It keeps `novel_locations` schema, table/index shape, migrations, location
+  add/list/inspect/update/delete behavior, prompt/debug/context behavior, provider/model
+  routing, generation, retrieval/vectorization, content-mode, credentials, project archive,
+  and safety-bypass behavior unchanged.
+- **Phase 161 organization export boundary**: `/rp organization export <organization-id>` reads one existing
+  `novel_organizations` row and writes one UTF-8 JSON file under profile-safe exports.
+  It keeps `novel_organizations` schema, table/index shape, migrations, organization
   add/list/inspect/update/delete behavior, prompt/debug/context behavior, provider/model
   routing, generation, retrieval/vectorization, content-mode, credentials, project archive,
   and safety-bypass behavior unchanged.
