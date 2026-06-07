@@ -82,7 +82,7 @@ importers/
   lorebooks.py        import_st_lorebook_json / import_lorebook_file → Lorebook
 ```
 
-**Phases 1–38 and 121–157 complete (2026-06-07).** Capability summary:
+**Phases 1–38 and 121–158 complete (2026-06-07).** Capability summary:
 - Phases 1–3: skeleton, SQLite, card import, session CRUD, gateway hook
 - Phase 4: Prompt Compiler (chat + story renderers, card/persona assembly)
 - Phase 5–6: Provider bridge, live model routing
@@ -246,6 +246,15 @@ importers/
   ordering, prompt/module selection, provider/model/generation,
   retrieval/vectorization, content-mode, minors/underage, safety-bypass,
   or deferred timeline graph/map/geocode tooling changes occur.
+- Phase 158: Relationship State JSON Export (`/rp relationship export <relationship-id>`) reads one existing
+  `novel_relationship_states` row by id via `get_relationship_state(relationship_id)`, and exports
+  relationship metadata (id, project_id, label, state_text,
+  created_at, updated_at) as a UTF-8 JSON file under
+  `get_hermes_home()/plugins/hermes-tavern/exports/relationships` with quoted `MEDIA`
+  attachment output. No schema/table/index migrations are added and no relationship
+  ordering, label semantics, prompt/module selection, provider/model/generation,
+  retrieval/vectorization, content-mode, minors/underage, safety-bypass,
+  or deferred relationship graph/merge-split/auto-extraction tooling changes occur.
 
 ### Plugin flow
 
@@ -286,7 +295,7 @@ from vectorization/retrieval, provider/model routing, content mode,
 credentials, automation, summarization, and generation; they are visible only
 through command output and Markdown export.
 
-### /rp command surface (current through Phase 157)
+### /rp command surface (current through Phase 158)
 
 ```
 /rp help | status | assets
@@ -387,9 +396,10 @@ through command output and Markdown export.
 /rp relationship rename <relationship-id> <label>
 /rp relationship update <relationship-id> <state...>
 /rp relationship delete <relationship-id>
+/rp relationship export <relationship-id>
 ```
 
-### DB schema (current through Phase 157; unchanged by Phase 157)
+### DB schema (current through Phase 158; unchanged by Phase 158)
 
 ```sql
 cards(id, name, data_json, source_path, created_at)
@@ -693,4 +703,10 @@ These phases do not change schema or core prompt/generation assembly.
   timeline list/inspect behavior, prompt/debug/context behavior, provider/model
   routing, generation, retrieval/vectorization, content-mode, credentials,
   minors/underage, project archive, and safety-bypass behavior unchanged.
+- **Phase 158 relationship export boundary**: `/rp relationship export <relationship-id>` reads one existing
+  `novel_relationship_states` row and writes one UTF-8 JSON file under profile-safe exports.
+  It keeps `novel_relationship_states` schema, table/index shape, migrations, relationship
+  ordering, relationship add/list/inspect/rename/update/delete behavior, prompt/debug/context
+  behavior, provider/model routing, generation, retrieval/vectorization, content-mode,
+  credentials, minors/underage, project archive, and safety-bypass behavior unchanged.
 - **Tavern lore regex complexity guard**: lorebook regex keys are screened locally before matching. Entries with patterns longer than 256 characters or nested quantified groups (for example `(a+)+`, `(.+)*`, `([a-z]+){2,}`) are excluded with bounded reasons (`regex rejected: ...`), preserving raw imported lore data while preventing unbounded local matching behavior.

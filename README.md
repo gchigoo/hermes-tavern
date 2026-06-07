@@ -185,6 +185,7 @@ Expected behavior:
 /rp relationship update <relationship-id> <state...>
 /rp relationship rename <relationship-id> <label>
 /rp relationship delete <relationship-id>
+/rp relationship export <relationship-id>
 /rp debug prompt [limit] [page] | /rp debug context [limit] [page] | /rp debug swipes
 ```
 

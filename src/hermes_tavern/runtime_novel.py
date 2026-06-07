@@ -199,6 +199,8 @@ def relationship_command(runtime: Any, command: RPCommand, event: Any) -> str:
         return relationship_update(runtime, command)
     if subcommand == "delete":
         return relationship_delete(runtime, command)
+    if subcommand == "export":
+        return relationship_export(runtime, command)
 
     return _RELATIONSHIP_USAGE
 
@@ -328,7 +330,7 @@ _RELATIONSHIP_USAGE = (
     "/rp relationship list [project-id] | /rp relationship inspect <relationship-id> | "
     "/rp relationship rename <relationship-id> <label> | "
     "/rp relationship update <relationship-id> <state...> | "
-    "/rp relationship delete <relationship-id>"
+    "/rp relationship delete <relationship-id> | /rp relationship export <relationship-id>"
 )
 
 
@@ -1948,6 +1950,37 @@ def timeline_export(runtime: Any, command: RPCommand) -> str:
     export_path.write_text(json.dumps(export_doc, ensure_ascii=False, indent=2), encoding="utf-8")
 
     return f"Timeline event exported as JSON.\nfile: {export_path}\nMEDIA:\"{export_path}\""
+
+
+def relationship_export(runtime: Any, command: RPCommand) -> str:
+    if len(command.args) != 2:
+        return _RELATIONSHIP_USAGE
+
+    relationship_id = _safe_int(command.args[1])
+    if relationship_id is None or relationship_id <= 0:
+        return _RELATIONSHIP_USAGE
+
+    relationship = runtime.store.get_relationship_state(relationship_id)
+    if relationship is None:
+        return f"No relationship state found: {relationship_id}"
+
+    export_doc = {
+        "hermes_tavern_export": True,
+        "exported_at": datetime.utcnow().isoformat(),
+        "relationship_id": relationship["id"],
+        "project_id": relationship["project_id"],
+        "label": relationship["label"],
+        "state_text": relationship["state_text"],
+        "created_at": relationship.get("created_at"),
+        "updated_at": relationship.get("updated_at"),
+    }
+
+    export_dir = get_hermes_home() / "plugins" / "hermes-tavern" / "exports" / "relationships"
+    export_dir.mkdir(parents=True, exist_ok=True)
+    export_path = Path(export_dir) / f"relationship_{relationship_id}.json"
+    export_path.write_text(json.dumps(export_doc, ensure_ascii=False, indent=2), encoding="utf-8")
+
+    return f"Relationship state exported as JSON.\nfile: {export_path}\nMEDIA:\"{export_path}\""
 
 
 def relationship_add(runtime: Any, command: RPCommand, event: Any) -> str:

@@ -50,7 +50,7 @@ RELATIONSHIP_USAGE = (
     "/rp relationship list [project-id] | /rp relationship inspect <relationship-id> | "
     "/rp relationship rename <relationship-id> <label> | "
     "/rp relationship update <relationship-id> <state...> | "
-    "/rp relationship delete <relationship-id>"
+    "/rp relationship delete <relationship-id> | /rp relationship export <relationship-id>"
 )
 CHARACTER_STATE_USAGE = (
     "Usage: /rp character state add <project-id> <label> <state...> | "
@@ -222,6 +222,7 @@ def test_novel_command_table_has_expected_families():
     assert "/rp relationship rename <relationship-id> <label>" in TAVERN_COMMAND_TABLE["relationship"].help_lines
     assert "/rp relationship update <relationship-id> <state...>" in TAVERN_COMMAND_TABLE["relationship"].help_lines
     assert "/rp relationship delete <relationship-id>" in TAVERN_COMMAND_TABLE["relationship"].help_lines
+    assert "/rp relationship export <relationship-id>" in TAVERN_COMMAND_TABLE["relationship"].help_lines
     assert "/rp character state add <project-id> <label> <state...>" in TAVERN_COMMAND_TABLE["character"].help_lines
     assert "/rp character state list [project-id]" in TAVERN_COMMAND_TABLE["character"].help_lines
     assert "/rp character state inspect <character-state-id>" in TAVERN_COMMAND_TABLE["character"].help_lines
@@ -524,6 +525,7 @@ def test_project_command_help_includes_relationship_lines(tmp_path):
     assert "/rp relationship rename <relationship-id> <label>" in help_output
     assert "/rp relationship update <relationship-id> <state...>" in help_output
     assert "/rp relationship delete <relationship-id>" in help_output
+    assert "/rp relationship export <relationship-id>" in help_output
 
 
 def test_project_command_help_includes_character_state_lines(tmp_path):
@@ -4371,6 +4373,122 @@ def test_timeline_export_no_mutation(tmp_path, monkeypatch):
         Event(),
     )
     after = runtime.store.get_timeline_event(timeline["id"])
+    assert after == before
+
+
+def test_relationship_export_by_id(tmp_path, monkeypatch):
+    monkeypatch.setenv("HERMES_HOME", str(tmp_path / "hermes home"))
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    project = runtime.store.create_project("Atlas")
+    relationship = runtime.store.create_relationship_state(
+        project["id"],
+        "mara-elya",
+        "Trust deepens as fog lifts over harbor plans.",
+    )
+
+    response = runtime.handle_command_sync(
+        RPCommand(
+            "relationship",
+            ["export", str(relationship["id"])],
+            f"/rp relationship export {relationship['id']}",
+        ),
+        Event(),
+    )
+
+    assert response.startswith("Relationship state exported as JSON.")
+    file_path = response.split("file: ", 1)[1].splitlines()[0].strip()
+    from pathlib import Path
+
+    export_path = Path(file_path)
+    assert export_path.exists()
+
+    payload = json.loads(export_path.read_text(encoding="utf-8"))
+    assert payload["hermes_tavern_export"] is True
+    assert payload["exported_at"]
+    assert payload["relationship_id"] == relationship["id"]
+    assert payload["project_id"] == project["id"]
+    assert payload["label"] == relationship["label"]
+    assert payload["state_text"] == relationship["state_text"]
+    assert payload["created_at"] == relationship["created_at"]
+    assert payload["updated_at"] == relationship["updated_at"]
+
+
+def test_relationship_export_not_found(tmp_path):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+
+    assert (
+        runtime.handle_command_sync(
+            RPCommand("relationship", ["export", "9999"], "/rp relationship export 9999"),
+            Event(),
+        )
+        == "No relationship state found: 9999"
+    )
+
+
+@pytest.mark.parametrize("relationship_id", ["0", "-1"])
+def test_relationship_export_non_positive_id(tmp_path, relationship_id):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    response = runtime.handle_command_sync(
+        RPCommand("relationship", ["export", relationship_id], f"/rp relationship export {relationship_id}"),
+        Event(),
+    )
+    assert response == RELATIONSHIP_USAGE
+
+
+def test_relationship_export_missing_args(tmp_path):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    assert (
+        runtime.handle_command_sync(
+            RPCommand("relationship", ["export"], "/rp relationship export"),
+            Event(),
+        )
+        == RELATIONSHIP_USAGE
+    )
+
+
+def test_relationship_export_media_output(tmp_path, monkeypatch):
+    monkeypatch.setenv("HERMES_HOME", str(tmp_path / "hermes home"))
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    project = runtime.store.create_project("Atlas")
+    relationship = runtime.store.create_relationship_state(
+        project["id"],
+        "mara-elya",
+        "Trust deepens as fog lifts over harbor plans.",
+    )
+
+    response = runtime.handle_command_sync(
+        RPCommand(
+            "relationship",
+            ["export", str(relationship["id"])],
+            f"/rp relationship export {relationship['id']}",
+        ),
+        Event(),
+    )
+    file_path = response.split("file: ", 1)[1].splitlines()[0].strip()
+    media_path = response.split("MEDIA:", 1)[1].strip().strip('"')
+    assert media_path == file_path
+
+
+def test_relationship_export_no_mutation(tmp_path, monkeypatch):
+    monkeypatch.setenv("HERMES_HOME", str(tmp_path / "hermes home"))
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    project = runtime.store.create_project("Atlas")
+    relationship = runtime.store.create_relationship_state(
+        project["id"],
+        "mara-elya",
+        "Trust deepens as fog lifts over harbor plans.",
+    )
+
+    before = runtime.store.get_relationship_state(relationship["id"])
+    runtime.handle_command_sync(
+        RPCommand(
+            "relationship",
+            ["export", str(relationship["id"])],
+            f"/rp relationship export {relationship['id']}",
+        ),
+        Event(),
+    )
+    after = runtime.store.get_relationship_state(relationship["id"])
     assert after == before
 
 
