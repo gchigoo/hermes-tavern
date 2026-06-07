@@ -291,6 +291,25 @@ def test_session_runtime_export_exports_exact_id_payload(tmp_path, monkeypatch):
     assert payload["card"] == json.loads(card_row.get("data_json") or "{}")
 
 
+def test_session_runtime_export_by_valid_id_prefix(tmp_path, monkeypatch):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    runtime = _runtime_with_home(tmp_path / "hermes home", store, monkeypatch)
+    store.start_session(SESSION_KEY)
+    session = store.get_active_session(SESSION_KEY)
+    assert session is not None
+    prefix = (session["id"] or "")[:12]
+
+    response = runtime.handle_command_sync(
+        RPCommand("session", ["export", prefix], f"/rp session export {prefix}"),
+        Event(),
+    )
+    payload = json.loads(Path(_extract_export_paths(response)[0]).read_text(encoding="utf-8"))
+
+    assert payload["session_title"] == session["id"]
+    assert payload["message_count"] == 0
+    assert payload["messages"] == []
+
+
 def test_session_runtime_export_returns_not_found_for_missing_id(tmp_path, monkeypatch):
     store = TavernStore(tmp_path / "tavern.sqlite3")
     runtime = _runtime_with_home(tmp_path / "hermes home", store, monkeypatch)
@@ -344,6 +363,25 @@ def test_session_runtime_export_exports_all_messages_with_pagination(tmp_path, m
     assert len(payload["messages"]) == 250
     assert payload["messages"][0]["content"] == "msg-0"
     assert payload["messages"][-1]["content"] == "msg-249"
+
+
+def test_session_runtime_export_with_message_contents_includes_content(tmp_path, monkeypatch):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    runtime = _runtime_with_home(tmp_path / "hermes home", store, monkeypatch)
+    store.start_session(SESSION_KEY)
+    session = store.get_active_session(SESSION_KEY)
+    assert session is not None
+    store.append_message(session["id"], "user", "first line")
+    store.append_message(session["id"], "assistant", "second line")
+
+    response = runtime.handle_command_sync(
+        RPCommand("session", ["export", session["id"]], f"/rp session export {session['id']}"),
+        Event(),
+    )
+    payload = json.loads(Path(_extract_export_paths(response)[0]).read_text(encoding="utf-8"))
+
+    assert payload["messages"][0]["content"] == "first line"
+    assert payload["messages"][1]["content"] == "second line"
 
 
 def test_session_runtime_export_returns_empty_messages_array_for_empty_session(tmp_path, monkeypatch):
@@ -405,6 +443,24 @@ def test_session_runtime_export_file_stays_within_sessions_export_dir(tmp_path, 
     assert export_path.parent == export_dir
     assert export_path.resolve().is_relative_to(export_dir.resolve())
     assert export_path.name == "session_" + "".join(c for c in session["id"] if c.isalnum())[:16] + ".json"
+
+
+def test_session_runtime_export_quotes_media_path_with_spaces(tmp_path, monkeypatch):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    runtime = _runtime_with_home(tmp_path / "hermes home with spaces", store, monkeypatch)
+    store.start_session(SESSION_KEY)
+    session = store.get_active_session(SESSION_KEY)
+    assert session is not None
+    response = runtime.handle_command_sync(
+        RPCommand("session", ["export", session["id"]], f"/rp session export {session['id']}"),
+        Event(),
+    )
+    file_path, media_path = _extract_export_paths(response)
+
+    assert " " in media_path
+    assert media_path == file_path
+    assert 'MEDIA:"' in response
+    assert f'MEDIA:"{media_path}"' in response
 
 
 def test_session_runtime_export_does_not_mutate_session_or_messages(tmp_path, monkeypatch):

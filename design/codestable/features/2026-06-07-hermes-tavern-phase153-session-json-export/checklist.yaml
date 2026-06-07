@@ -22,7 +22,7 @@ implementation_readiness: >
 steps:
   - id: S1
     name: "S1: Implement session JSON export by ID"
-    status: pending
+    status: completed
     description: >
       Add /rp session export <id> under the existing session command family.
       Resolve one stored session by ID prefix, read all messages, build a JSON
