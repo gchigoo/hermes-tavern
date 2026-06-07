@@ -82,7 +82,7 @@ importers/
   lorebooks.py        import_st_lorebook_json / import_lorebook_file → Lorebook
 ```
 
-**Phases 1–38 and 121–155 complete (2026-06-07).** Capability summary:
+**Phases 1–38 and 121–157 complete (2026-06-07).** Capability summary:
 - Phases 1–3: skeleton, SQLite, card import, session CRUD, gateway hook
 - Phase 4: Prompt Compiler (chat + story renderers, card/persona assembly)
 - Phase 5–6: Provider bridge, live model routing
@@ -237,6 +237,15 @@ importers/
   inspection, prompt/module selection, provider/model/generation,
   retrieval/vectorization, content-mode, minors/underage, safety-bypass,
   or deferred `/rp canon check`/`/rp canon conflict`/`/rp canon pin` tooling changes occur.
+- Phase 157: Timeline JSON Export (`/rp timeline export <timeline-id>`) reads one existing
+  `novel_timeline` row by id via `get_timeline_event(timeline_event_id)`, and exports
+  timeline metadata (id, project_id, event_date, title, description, chapter_id,
+  sort_key, created_at) as a UTF-8 JSON file under
+  `get_hermes_home()/plugins/hermes-tavern/exports/timeline` with quoted `MEDIA`
+  attachment output. No schema/table/index migrations are added and no timeline
+  ordering, prompt/module selection, provider/model/generation,
+  retrieval/vectorization, content-mode, minors/underage, safety-bypass,
+  or deferred timeline graph/map/geocode tooling changes occur.
 
 ### Plugin flow
 
@@ -277,7 +286,7 @@ from vectorization/retrieval, provider/model routing, content mode,
 credentials, automation, summarization, and generation; they are visible only
 through command output and Markdown export.
 
-### /rp command surface (current through Phase 154)
+### /rp command surface (current through Phase 157)
 
 ```
 /rp help | status | assets
@@ -342,7 +351,7 @@ through command output and Markdown export.
 /rp project revision update <note-id> <note...>
 /rp project revision delete <note-id>
 /rp canon add/list/group | /rp canon inspect <canon-id> | /rp canon export <canon-id>
-/rp timeline add/list | /rp timeline inspect <timeline-id>
+/rp timeline add/list | /rp timeline inspect <timeline-id> | /rp timeline export <timeline-id>
 /rp character state add <project-id> <label> <state...>
 /rp character state list [project-id]
 /rp character state inspect <character-state-id>
@@ -380,7 +389,7 @@ through command output and Markdown export.
 /rp relationship delete <relationship-id>
 ```
 
-### DB schema (current through Phase 154; unchanged by Phase 154)
+### DB schema (current through Phase 157; unchanged by Phase 157)
 
 ```sql
 cards(id, name, data_json, source_path, created_at)
@@ -678,4 +687,10 @@ These phases do not change schema or core prompt/generation assembly.
   mutation, persona binding/use/clear/temp behavior, prompt/debug/context behavior,
   provider/model routing, generation, retrieval/vectorization, content-mode,
   credentials, minors/underage, and safety-bypass behavior unchanged.
+- **Phase 157 timeline export boundary**: `/rp timeline export <timeline-id>` reads one existing
+  `novel_timeline` row and writes one UTF-8 JSON file under profile-safe exports.
+  It keeps `novel_timeline` schema, table/index shape, migrations, timeline ordering,
+  timeline list/inspect behavior, prompt/debug/context behavior, provider/model
+  routing, generation, retrieval/vectorization, content-mode, credentials,
+  minors/underage, project archive, and safety-bypass behavior unchanged.
 - **Tavern lore regex complexity guard**: lorebook regex keys are screened locally before matching. Entries with patterns longer than 256 characters or nested quantified groups (for example `(a+)+`, `(.+)*`, `([a-z]+){2,}`) are excluded with bounded reasons (`regex rejected: ...`), preserving raw imported lore data while preventing unbounded local matching behavior.

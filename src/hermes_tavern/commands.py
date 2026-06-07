@@ -426,6 +426,7 @@ TAVERN_COMMAND_TABLE: dict[str, TavernCommandEntry] = {
             "/rp timeline add <project-id> <date> <title> [description...]",
             "/rp timeline list [project-id]",
             "/rp timeline inspect <timeline-id>",
+            "/rp timeline export <timeline-id>",
         ],
     ),
 }

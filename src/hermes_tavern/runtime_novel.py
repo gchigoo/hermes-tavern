@@ -131,12 +131,15 @@ def timeline_command(runtime: Any, command: RPCommand, event: Any) -> str:
         return timeline_list(runtime, command, event)
     if subcommand == "inspect":
         return timeline_inspect(runtime, command, event)
+    if subcommand == "export":
+        return timeline_export(runtime, command)
     return _TIMELINE_USAGE
 
 
 _TIMELINE_USAGE = (
     "Usage: /rp timeline add <project-id> <date> <title> [description...] | "
-    "/rp timeline list [project-id] | /rp timeline inspect <timeline-id>"
+    "/rp timeline list [project-id] | /rp timeline inspect <timeline-id> | "
+    "/rp timeline export <timeline-id>"
 )
 
 _CHAPTER_USAGE = (
@@ -1912,6 +1915,39 @@ def timeline_inspect(runtime: Any, command: RPCommand, event: Any) -> str:
         f"event date: {timeline_event['event_date']} | title: {timeline_event['title']}"
         f"{sort_key_part} | description: {description}"
     )
+
+
+def timeline_export(runtime: Any, command: RPCommand) -> str:
+    if len(command.args) != 2:
+        return _TIMELINE_USAGE
+
+    timeline_event_id = _safe_int(command.args[1])
+    if timeline_event_id is None or timeline_event_id <= 0:
+        return _TIMELINE_USAGE
+
+    timeline_event = runtime.store.get_timeline_event(timeline_event_id)
+    if timeline_event is None:
+        return f"No timeline event found: {timeline_event_id}"
+
+    export_doc = {
+        "hermes_tavern_export": True,
+        "exported_at": datetime.utcnow().isoformat(),
+        "timeline_id": timeline_event["id"],
+        "project_id": timeline_event["project_id"],
+        "event_date": timeline_event["event_date"],
+        "title": timeline_event["title"],
+        "description": timeline_event["description"],
+        "chapter_id": timeline_event.get("chapter_id"),
+        "sort_key": timeline_event.get("sort_key"),
+        "created_at": timeline_event.get("created_at"),
+    }
+
+    export_dir = get_hermes_home() / "plugins" / "hermes-tavern" / "exports" / "timeline"
+    export_dir.mkdir(parents=True, exist_ok=True)
+    export_path = Path(export_dir) / f"timeline_{timeline_event_id}.json"
+    export_path.write_text(json.dumps(export_doc, ensure_ascii=False, indent=2), encoding="utf-8")
+
+    return f"Timeline event exported as JSON.\nfile: {export_path}\nMEDIA:\"{export_path}\""
 
 
 def relationship_add(runtime: Any, command: RPCommand, event: Any) -> str:

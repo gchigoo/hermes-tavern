@@ -304,6 +304,7 @@ def test_readme_core_commands_include_timeline_literals():
 
     assert "/rp timeline add/list" in core_commands
     assert "/rp timeline inspect <timeline-id>" in core_commands
+    assert "/rp timeline export <timeline-id>" in core_commands
 
 
 def test_readme_core_commands_include_card_greeting_literal():
