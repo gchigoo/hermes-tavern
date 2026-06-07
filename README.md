@@ -146,6 +146,7 @@ Expected behavior:
 /rp project revision inspect <note-id>
 /rp project revision update <note-id> <note...>
 /rp project revision delete <note-id>
+/rp project revision export <note-id>
 /rp chapter create/list
 /rp chapter inspect <chapter-id>
 /rp chapter summary <chapter-id> [text]

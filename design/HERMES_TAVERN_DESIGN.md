@@ -664,8 +664,21 @@ Phase 165 adds `/rp scene beat export <beat-id>`:
   generation, retrieval/vectorization, credentials, content-mode, minors/underage
   handling, or safety-bypass behavior.
 
+Phase 166 adds `/rp project revision export <note-id>`:
+
+- resolves revision note by integer ID through existing `get_revision_note(note_id)`,
+  rejecting not-found and non-positive IDs;
+- reads note metadata (note_id, project_id, label, note_text, created_at, updated_at);
+- exports note metadata as a UTF-8 JSON file under
+  `get_hermes_home()/plugins/hermes-tavern/exports/revision_notes` with quoted
+  `MEDIA:\"<path>\"` marker output;
+- does not mutate revision note rows or revision note lifecycle state;
+- does not change schema, prompt/debug/context-budget, provider/model routing,
+  generation, retrieval/vectorization, credentials, content-mode, minors/underage
+  handling, or safety-bypass behavior.
+
 Revision Notes Metadata v1 is current local project-scoped metadata and is managed
-through `/rp project revision add/list/inspect/update/delete`, persisted in
+through `/rp project revision add/list/inspect/update/delete/export`, persisted in
 `novel_revision_notes(id, project_id, label, note_text, created_at, updated_at)`.
 Revision notes are informational-only: command/export visible local metadata that
 does not alter prompt module injection, provider routing, context-budget reporting,

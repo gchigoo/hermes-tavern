@@ -43,7 +43,8 @@ PROJECT_OUTLINE_USAGE = (
 PROJECT_REVISION_USAGE = (
     "Usage: /rp project revision add <project-id> <label> <note...> | "
     "/rp project revision list [project-id] | /rp project revision inspect <note-id> | "
-    "/rp project revision update <note-id> <note...> | /rp project revision delete <note-id>"
+    "/rp project revision update <note-id> <note...> | /rp project revision delete <note-id> | "
+    "/rp project revision export <note-id>"
 )
 RELATIONSHIP_USAGE = (
     "Usage: /rp relationship add <project-id> <label> <state...> | "
@@ -2433,6 +2434,131 @@ def test_project_revision_routes_explicit_id_flow(tmp_path):
             "  - [1] continuity: Keep dialogue grounded, then deliberate."
         )
     )
+
+
+def test_project_revision_export_by_id(tmp_path, monkeypatch):
+    monkeypatch.setenv("HERMES_HOME", str(tmp_path / "hermes home"))
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    project = runtime.store.create_project("Atlas")
+    note = runtime.store.create_revision_note(
+        project["id"],
+        "continuity",
+        "Keep the harbor scenes measured.",
+    )
+
+    response = runtime.handle_command_sync(
+        RPCommand("project", ["revision", "export", str(note["id"])], f"/rp project revision export {note['id']}"),
+        Event(),
+    )
+
+    from pathlib import Path
+
+    expected_path = Path(
+        tmp_path
+        / "hermes home"
+        / "plugins"
+        / "hermes-tavern"
+        / "exports"
+        / "revision_notes"
+        / f"note_{note['id']}.json"
+    )
+    assert response == f"file: {expected_path}\nMEDIA:\"{expected_path}\""
+
+    export_path = Path(response.split("file: ", 1)[1].splitlines()[0].strip())
+    payload = json.loads(export_path.read_text(encoding="utf-8"))
+
+    assert payload["hermes_tavern_export"] is True
+    assert payload["note_id"] == note["id"]
+    assert payload["project_id"] == project["id"]
+    assert payload["label"] == note["label"]
+    assert payload["note_text"] == note["note_text"]
+    assert payload["created_at"] == note["created_at"]
+    assert payload["updated_at"] == note["updated_at"]
+    assert payload["exported_at"]
+    assert response.split("MEDIA:", 1)[1].strip().strip('"') == str(export_path)
+
+
+def test_project_revision_export_not_found(tmp_path):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    response = runtime.handle_command_sync(
+        RPCommand("project", ["revision", "export", "9999"], "/rp project revision export 9999"),
+        Event(),
+    )
+    assert response == "No revision note found: 9999"
+
+
+@pytest.mark.parametrize("revision_note_id", ["0", "-1"])
+def test_project_revision_export_non_positive_id(tmp_path, revision_note_id):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    assert (
+        runtime.handle_command_sync(
+            RPCommand("project", ["revision", "export", revision_note_id], f"/rp project revision export {revision_note_id}"),
+            Event(),
+        )
+        == PROJECT_REVISION_USAGE
+    )
+
+
+def test_project_revision_export_missing_args(tmp_path):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    assert (
+        runtime.handle_command_sync(
+            RPCommand("project", ["revision", "export"], "/rp project revision export"),
+            Event(),
+        )
+        == PROJECT_REVISION_USAGE
+    )
+
+
+def test_project_revision_export_path_containment(tmp_path, monkeypatch):
+    monkeypatch.setenv("HERMES_HOME", str(tmp_path / "hermes home"))
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    project = runtime.store.create_project("Atlas")
+    note = runtime.store.create_revision_note(project["id"], "continuity", "Keep tides consistent.")
+
+    response = runtime.handle_command_sync(
+        RPCommand("project", ["revision", "export", str(note["id"])], f"/rp project revision export {note['id']}"),
+        Event(),
+    )
+    file_path = response.split("file: ", 1)[1].splitlines()[0].strip()
+    assert file_path.startswith(
+        str(
+            tmp_path
+            / "hermes home"
+            / "plugins"
+            / "hermes-tavern"
+            / "exports"
+            / "revision_notes"
+        )
+    )
+    assert file_path == str(
+        tmp_path
+        / "hermes home"
+        / "plugins"
+        / "hermes-tavern"
+        / "exports"
+        / "revision_notes"
+        / f"note_{note['id']}.json"
+    )
+
+
+def test_project_revision_export_no_mutation(tmp_path, monkeypatch):
+    monkeypatch.setenv("HERMES_HOME", str(tmp_path / "hermes home"))
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    project = runtime.store.create_project("Atlas")
+    note = runtime.store.create_revision_note(
+        project["id"],
+        "continuity",
+        "Keep tide timing clear.",
+    )
+
+    before = runtime.store.get_revision_note(note["id"])
+    runtime.handle_command_sync(
+        RPCommand("project", ["revision", "export", str(note["id"])], f"/rp project revision export {note['id']}"),
+        Event(),
+    )
+    after = runtime.store.get_revision_note(note["id"])
+    assert after == before
 
 
 def test_project_revision_routes_list_active_project_fallback_and_add_requires_project_id(tmp_path):

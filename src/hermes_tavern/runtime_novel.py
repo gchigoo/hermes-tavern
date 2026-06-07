@@ -939,6 +939,8 @@ def project_revision(runtime: Any, command: RPCommand, event: Any) -> str:
         return project_revision_update(runtime, command)
     if mode == "delete":
         return project_revision_delete(runtime, command)
+    if mode == "export":
+        return project_revision_export(runtime, command)
 
     return _PROJECT_REVISION_USAGE
 
@@ -946,7 +948,8 @@ def project_revision(runtime: Any, command: RPCommand, event: Any) -> str:
 _PROJECT_REVISION_USAGE = (
     "Usage: /rp project revision add <project-id> <label> <note...> | "
     "/rp project revision list [project-id] | /rp project revision inspect <note-id> | "
-    "/rp project revision update <note-id> <note...> | /rp project revision delete <note-id>"
+    "/rp project revision update <note-id> <note...> | /rp project revision delete <note-id> | "
+    "/rp project revision export <note-id>"
 )
 
 
@@ -1067,6 +1070,45 @@ def project_revision_delete(runtime: Any, command: RPCommand) -> str:
         return f"No revision note found: {revision_note_id}"
 
     return f"Revision note deleted for revision note [{revision_note_id}]."
+
+
+def project_revision_export(runtime: Any, command: RPCommand) -> str:
+    if len(command.args) != 3:
+        return _PROJECT_REVISION_USAGE
+
+    revision_note_id = _safe_int(command.args[2])
+    if revision_note_id is None or revision_note_id <= 0:
+        return _PROJECT_REVISION_USAGE
+
+    revision_note = runtime.store.get_revision_note(revision_note_id)
+    if revision_note is None:
+        return f"No revision note found: {revision_note_id}"
+
+    export_dir = (
+        get_hermes_home()
+        / "plugins"
+        / "hermes-tavern"
+        / "exports"
+        / "revision_notes"
+    )
+    export_dir.mkdir(parents=True, exist_ok=True)
+    export_path = export_dir / f"note_{revision_note_id}.json"
+
+    payload = {
+        "hermes_tavern_export": True,
+        "exported_at": datetime.now(timezone.utc).isoformat(),
+        "note_id": revision_note["id"],
+        "project_id": revision_note["project_id"],
+        "label": revision_note["label"],
+        "note_text": revision_note["note_text"],
+        "created_at": revision_note.get("created_at"),
+        "updated_at": revision_note.get("updated_at"),
+    }
+
+    with export_path.open("w", encoding="utf-8") as f:
+        json.dump(payload, f, ensure_ascii=False, indent=2)
+
+    return f"file: {export_path}\nMEDIA:\"{export_path}\""
 
 
 _PROJECT_STYLE_USAGE = (
