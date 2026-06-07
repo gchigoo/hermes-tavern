@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import math
+import json
 from typing import Any
 
 from hermes_tavern.commands import RPCommand
@@ -10,6 +11,7 @@ from hermes_tavern.identity import session_key_from_event
 from hermes_tavern.import_policy import resolve_import_path
 from hermes_tavern.importers.personas import import_persona_file, import_raw_persona_text
 from hermes_tavern.runtime_utils import mobile_preview, parse_pagination
+from hermes_tavern.hermes_home import get_hermes_home
 
 _IMPORTABLE_PERSONA_SUFFIXES = {".json", ".txt"}
 
@@ -18,6 +20,38 @@ def _persona_not_found(ref: str) -> str:
     if ref.strip().lower() == "last":
         return "No persona has been imported yet. Import a persona first: /rp persona import <file>"
     return f"Persona not found: {ref}"
+
+
+def _coerce_raw_json_object(value: Any) -> dict[str, Any] | None:
+    if isinstance(value, dict):
+        return value
+    if isinstance(value, str):
+        try:
+            parsed = json.loads(value)
+        except (TypeError, ValueError, json.JSONDecodeError):
+            return None
+        return parsed if isinstance(parsed, dict) else None
+    return None
+
+
+def _sanitize_persona_id(persona_id: Any) -> str:
+    return str(persona_id).replace("/", "_").replace("..", "_")
+
+
+def _normalize_persona_payload(persona: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "name": persona["name"],
+        "content": persona.get("content") or "",
+        "source_path": persona.get("source_path") or "unknown",
+        "created_at": persona.get("created_at", ""),
+    }
+
+
+def _build_persona_export_path(persona_id: Any) -> Any:
+    export_dir = get_hermes_home() / "plugins" / "hermes-tavern" / "exports" / "personas"
+    export_dir.mkdir(parents=True, exist_ok=True)
+    sanitized = _sanitize_persona_id(persona_id) or "unknown"
+    return export_dir / f"persona_{sanitized}.json"
 
 
 def persona_command(runtime: Any, command: RPCommand, event: Any) -> str:
@@ -34,11 +68,13 @@ def persona_command(runtime: Any, command: RPCommand, event: Any) -> str:
         return runtime._persona_use(command, event)
     if subcommand == "temp":
         return persona_temp(runtime, command, event)
+    if subcommand == "export":
+        return persona_export(runtime, command)
     if subcommand == "clear":
         return runtime._persona_clear(event)
     if subcommand == "debug":
         return runtime._persona_debug(event)
-    return "Usage: /rp persona import <file> | /rp persona new <name> <text> | /rp persona list [limit] [page] | /rp persona inspect <persona> | /rp persona use <persona> | /rp persona temp <text> | /rp persona clear | /rp persona debug"
+    return "Usage: /rp persona import <file> | /rp persona new <name> <text> | /rp persona list [limit] [page] | /rp persona inspect <persona> | /rp persona use <persona> | /rp persona export <persona> | /rp persona temp <text> | /rp persona clear | /rp persona debug"
 
 
 def persona_import(runtime: Any, command: RPCommand, event: Any) -> str:
@@ -168,6 +204,30 @@ def persona_temp(runtime: Any, command: RPCommand, event: Any) -> str:
         f"Hermes Tavern temporary persona bound ({persona_id[:8]}).\n"
         f"preview: {mobile_preview(content, 160)}"
     )
+
+
+def persona_export(runtime: Any, command: RPCommand) -> str:
+    if len(command.args) < 2:
+        return "Usage: /rp persona export <persona>"
+
+    persona_ref = " ".join(command.args[1:]).strip()
+    if not persona_ref:
+        return "Usage: /rp persona export <persona>"
+
+    persona = runtime.store.get_persona(persona_ref)
+    if persona is None:
+        return _persona_not_found(persona_ref)
+
+    payload = _coerce_raw_json_object(persona.get("raw_json"))
+    if payload is None:
+        payload = _normalize_persona_payload(persona)
+
+    export_path = _build_persona_export_path(persona["id"])
+    export_path.write_text(
+        json.dumps(payload, ensure_ascii=False, indent=2),
+        encoding="utf-8",
+    )
+    return f"Persona exported as JSON.\nfile: {export_path}\nMEDIA:\"{export_path}\""
 
 
 def persona_clear(runtime: Any, event: Any) -> str:

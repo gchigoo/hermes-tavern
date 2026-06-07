@@ -306,6 +306,12 @@ def test_readme_core_commands_include_lore_export_literal():
     assert _command_segment_has_literal(core_commands, "/rp lore export <lorebook>")
 
 
+def test_readme_core_commands_include_persona_export_literal():
+    core_commands = _readme_core_commands_text()
+
+    assert _command_segment_has_literal(core_commands, "/rp persona export <persona>")
+
+
 def test_readme_core_commands_include_preset_export_literal():
     core_commands = _readme_core_commands_text()
 

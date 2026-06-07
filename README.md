@@ -114,6 +114,7 @@ Expected behavior:
 /rp lore export <lorebook>
 /rp memory add/forget/list/summary/debug
 /rp persona import/new/list/inspect/use/temp/clear/debug
+/rp persona export <persona>
 /rp binding set <project|chapter|scene> <scope-id> <card|preset|lorebook|persona> <asset-id>
 /rp binding list <project|chapter|scene> <scope-id>
 /rp binding inspect <binding-id>

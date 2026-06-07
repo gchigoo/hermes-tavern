@@ -237,6 +237,7 @@ TAVERN_COMMAND_TABLE: dict[str, TavernCommandEntry] = {
             "/rp persona list [limit] [page]",
             "/rp persona inspect <persona>",
             "/rp persona use <persona>",
+            "/rp persona export <persona>",
             "/rp persona temp <text>",
             "/rp persona clear",
             "/rp persona debug",

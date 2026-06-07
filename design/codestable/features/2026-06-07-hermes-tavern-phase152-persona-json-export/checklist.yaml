@@ -1,0 +1,155 @@
+doc_type: feature-checklist
+status: implemented
+feature: "2026-06-07-hermes-tavern-phase152-persona-json-export"
+date: "2026-06-07"
+implementation_ready: true
+summary: >
+  IMPLEMENTED - Adds one bounded offline /rp persona export <persona> JSON export surface for
+  existing stored personas, using existing lookup semantics including last,
+  profile-safe export paths, raw JSON preference, normalized fallback rows,
+  generated help/README visibility, and focused tests. S2 acceptance and
+  architecture/root-design writeback deferred to a later tick.
+tags:
+  - hermes-tavern
+  - persona
+  - offline
+  - export
+  - sillytavern
+implementation_readiness: >
+  Architect profile (gpt-5.5) was rate-limited; controller materialized
+  design/checklist artifacts following the proven Phase 149–151 export pattern.
+  Codex executor (gpt-5.3-codex-spark) implemented the bounded S1 slice, and
+  the controller reran focused (116 passed), Tavern-wide (1097 passed), full
+  (1097 passed), protected-file, and whitespace gates. S2 acceptance/writeback
+  remains deferred.
+steps:
+  - id: S1
+    name: "S1: Implement persona JSON export command"
+    status: implemented
+    description: >
+      Add /rp persona export <persona> under the existing persona command family.
+      Resolve one stored persona with existing store semantics, write one
+      profile-safe UTF-8 JSON file, return file and quoted MEDIA output, update
+      help/README visibility, and add focused offline tests.
+      Codex executor implemented; controller reran and passed all gates.
+    allowed_files:
+      - src/hermes_tavern/runtime_persona.py
+      - src/hermes_tavern/commands.py
+      - README.md
+      - tests/test_hermes_tavern_personas.py
+      - tests/test_hermes_tavern_commands.py
+      - tests/test_hermes_tavern_readme_docs.py
+    prohibited_files:
+      - run_agent.py
+      - cli.py
+      - gateway/run.py
+      - src/hermes_tavern/runtime.py
+      - src/hermes_tavern/db.py
+      - src/hermes_tavern/db_novel.py
+      - src/hermes_tavern/prompt.py
+      - src/hermes_tavern/runtime_prompt_modules.py
+      - src/hermes_tavern/model_router.py
+      - src/hermes_tavern/provider_bridge.py
+      - src/hermes_tavern/adapters.py
+      - src/hermes_tavern/runtime_generation.py
+      - src/hermes_tavern/runtime_assets.py
+      - src/hermes_tavern/runtime_lore.py
+      - src/hermes_tavern/runtime_presets.py
+      - "src/hermes_tavern/importers/**"
+      - "plugins/**"
+      - "build/lib/**"
+    exact_scope:
+      - "Add /rp persona export <persona> as a nested persona subcommand."
+      - "Resolve personas with existing TavernStore.get_persona behavior, including last."
+      - "Write one UTF-8 JSON file under get_hermes_home()/plugins/hermes-tavern/exports/personas."
+      - "Prefer stored personas.raw_json when it parses as a JSON object."
+      - "Use a normalized fallback from the existing persona row when raw JSON is unavailable as an object."
+      - 'Return bounded file: and quoted MEDIA:"<path>" output.'
+      - "Update generated help and README Core commands for /rp persona export <persona>."
+      - "Add focused offline tests for raw export, fallback export, last, usage/not-found, quoted paths with spaces, export-directory containment, and no session/message/persona mutation."
+      - "Do not change persona import parsing, persona new/temp text handling, persona use/binding, prompt compiler, prompt/debug/context-budget, provider/model routing, generation, credentials, content mode, safety, project archive, schema/index/migration code, gateway/core files, plugin files, or build artifacts."
+    verification:
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m py_compile src/hermes_tavern/runtime_persona.py src/hermes_tavern/commands.py tests/test_hermes_tavern_personas.py tests/test_hermes_tavern_commands.py tests/test_hermes_tavern_readme_docs.py"
+        expected: "passes"
+        actual: "passed in controller on 2026-06-07"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_personas.py tests/test_hermes_tavern_commands.py tests/test_hermes_tavern_readme_docs.py -q -o 'addopts=' -p no:cacheprovider"
+        expected: "passes"
+        actual: "116 passed in controller on 2026-06-07"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_*.py -q -o 'addopts=' -p no:cacheprovider"
+        expected: "passes"
+        actual: "1097 passed in controller on 2026-06-07"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts=' -p no:cacheprovider"
+        expected: "passes when feasible"
+        actual: "1097 passed in controller on 2026-06-07"
+      - command: "git diff --name-only -- run_agent.py cli.py gateway/run.py src/hermes_tavern/runtime.py src/hermes_tavern/db.py src/hermes_tavern/db_novel.py src/hermes_tavern/prompt.py src/hermes_tavern/runtime_prompt_modules.py src/hermes_tavern/model_router.py src/hermes_tavern/provider_bridge.py src/hermes_tavern/adapters.py src/hermes_tavern/runtime_generation.py src/hermes_tavern/runtime_assets.py src/hermes_tavern/runtime_lore.py src/hermes_tavern/runtime_presets.py src/hermes_tavern/importers plugins build/lib"
+        expected: "empty output"
+        actual: "empty output in controller on 2026-06-07"
+      - command: "git diff --check"
+        expected: "passes"
+        actual: "passed in controller on 2026-06-07"
+      - command: "python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-07-hermes-tavern-phase152-persona-json-export/design.md --require doc_type --require status --require feature"
+        expected: "passes"
+        actual: "passed in controller on 2026-06-07"
+      - command: "python design/codestable/tools/validate-yaml.py --yaml-only --file design/codestable/features/2026-06-07-hermes-tavern-phase152-persona-json-export/checklist.yaml"
+        expected: "passes"
+        actual: "passed in controller on 2026-06-07"
+  - id: S2
+    name: "S2: Acceptance and architecture/root-design writeback"
+    status: pending
+    description: >
+      Later tick only. After S1 is implemented and verified, create the acceptance
+      report, finalize design/checklist status, and update current architecture
+      and root design documentation for /rp persona export <persona>.
+    allowed_files:
+      - design/codestable/features/2026-06-07-hermes-tavern-phase152-persona-json-export/design.md
+      - design/codestable/features/2026-06-07-hermes-tavern-phase152-persona-json-export/checklist.yaml
+      - design/codestable/features/2026-06-07-hermes-tavern-phase152-persona-json-export/hermes-tavern-phase152-persona-json-export-acceptance.md
+      - design/codestable/architecture/ARCHITECTURE.md
+      - design/HERMES_TAVERN_DESIGN.md
+    prohibited_files:
+      - README.md
+      - "src/**"
+      - "tests/**"
+      - run_agent.py
+      - cli.py
+      - gateway/run.py
+      - "plugins/**"
+      - "build/lib/**"
+    exact_scope:
+      - "Rerun S1 verification before acceptance."
+      - "Create Phase 152 acceptance only after verification passes."
+      - "Update architecture/root design only for current /rp persona export <persona> behavior."
+      - "Preserve deferred bulk export, persona editing, persona validation, prompt-order semantics, generation settings, provider/model routing, retrieval/vectorization, content-mode, minors/underage, archive import/export, and safety-bypass boundaries."
+      - "Do not edit source, tests, README, plugin files, build artifacts, or protected core files during S2."
+    verification:
+      - command: "python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-07-hermes-tavern-phase152-persona-json-export/design.md --require doc_type --require status --require feature"
+        expected: "passes"
+      - command: "python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-07-hermes-tavern-phase152-persona-json-export/hermes-tavern-phase152-persona-json-export-acceptance.md --require doc_type --require status --require feature"
+        expected: "passes after acceptance report exists"
+      - command: "python design/codestable/tools/validate-yaml.py --yaml-only --file design/codestable/features/2026-06-07-hermes-tavern-phase152-persona-json-export/checklist.yaml"
+        expected: "passes"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_personas.py tests/test_hermes_tavern_commands.py tests/test_hermes_tavern_readme_docs.py -q -o 'addopts=' -p no:cacheprovider"
+        expected: "passes"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_*.py -q -o 'addopts=' -p no:cacheprovider"
+        expected: "passes"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts=' -p no:cacheprovider"
+        expected: "passes when feasible"
+      - command: "git diff --name-only -- README.md src tests run_agent.py cli.py gateway/run.py plugins build/lib"
+        expected: "empty output during S2"
+      - command: "git diff --check"
+        expected: "passes"
+risks:
+  - id: R1
+    risk: "Persona raw JSON shape can differ from normalized row fallback shape."
+    mitigation: "Match Phase 149/150/151 behavior: prefer preserved raw object; fallback only when raw is unavailable as an object."
+  - id: R2
+    risk: "Exported persona content could be confused with active session persona binding."
+    mitigation: "Keep export file-only, never call session persona binding, and verify no session/persona binding changes."
+rollback: >
+  Remove the persona export branch/helpers, help and README literal, and focused
+  tests. No DB migration or stored-data rollback is required.
+notes:
+  - "No architect pass was run (gpt-5.5 rate-limited). Controller materialized artifacts following the proven Phase 149–151 pattern."
+  - "S1 is the only implementation slice for this tick. S2 is planned for a later docs/status acceptance writeback tick."
+  - "Codex executor artifact: /tmp/hermes-tavern-executor-phase152-persona-json-export.jsonl (101 lines, 116 tests passed in executor self-verification)"
+  - "Controller discovered and fixed one packaging import issue (hermes_constants → hermes_tavern.hermes_home) before final verification."
