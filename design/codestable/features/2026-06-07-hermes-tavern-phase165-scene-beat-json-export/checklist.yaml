@@ -23,7 +23,16 @@ implementation_readiness: >
 steps:
   - id: S1
     name: "S1: Implement scene beat JSON export by ID"
-    status: pending
+    status: completed
+    completed_at: "2026-06-07"
+    result: >
+      IMPLEMENTED - Codex executor added scene_beat_export() function,
+      export subcommand branch in scene_beat() dispatcher, updated
+      _SCENE_USAGE/help_lines/README visibility, and added focused
+      export tests (export by ID, not-found, non-positive ID, missing
+      args, path containment, MEDIA output, no mutation). py_compile
+      passed, targeted tests 316 passed, full tavern 1183 passed,
+      reverse-scope diff empty, hermes_constants import clean.
     description: >
       Add /rp scene beat export <beat-id> under the existing scene beat command family.
       Resolve one stored scene beat by integer ID, read beat metadata, build a
