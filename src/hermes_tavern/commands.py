@@ -326,6 +326,7 @@ TAVERN_COMMAND_TABLE: dict[str, TavernCommandEntry] = {
             "/rp location inspect <location-id>",
             "/rp location update <location-id> <description...>",
             "/rp location delete <location-id>",
+            "/rp location export <location-id>",
         ],
     ),
     "organization": TavernCommandEntry(

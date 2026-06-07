@@ -1221,11 +1221,13 @@ relationship label rename is current metadata.
 /rp character state inspect <character-state-id>
 /rp character state update <character-state-id> <state...>
 /rp character state delete <character-state-id>
+/rp character state export <character-state-id>
 /rp location add <project-id> <label> <description...>
 /rp location list [project-id]
 /rp location inspect <location-id>
 /rp location update <location-id> <description...>
 /rp location delete <location-id>
+/rp location export <location-id>
 /rp organization add <project-id> <label> <description...>
 /rp organization list [project-id]
 /rp organization inspect <organization-id>

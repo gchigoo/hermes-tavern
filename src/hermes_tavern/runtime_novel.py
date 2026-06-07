@@ -222,6 +222,8 @@ def location_command(runtime: Any, command: RPCommand, event: Any) -> str:
         return location_update(runtime, command)
     if subcommand == "delete":
         return location_delete(runtime, command)
+    if subcommand == "export":
+        return location_export(runtime, command)
 
     return _LOCATION_USAGE
 
@@ -340,7 +342,8 @@ _LOCATION_USAGE = (
     "Usage: /rp location add <project-id> <label> <description...> | "
     "/rp location list [project-id] | /rp location inspect <location-id> | "
     "/rp location update <location-id> <description...> | "
-    "/rp location delete <location-id>"
+    "/rp location delete <location-id> | "
+    "/rp location export <location-id>"
 )
 
 
@@ -2224,6 +2227,37 @@ def location_update(runtime: Any, command: RPCommand) -> str:
         f"Location updated for location [{location['id']}]: "
         f"{_mobile_preview(location['description_text'], 180)}"
     )
+
+
+def location_export(runtime: Any, command: RPCommand) -> str:
+    if len(command.args) != 2:
+        return _LOCATION_USAGE
+
+    location_id = _safe_int(command.args[1])
+    if location_id is None or location_id <= 0:
+        return _LOCATION_USAGE
+
+    location = runtime.store.get_location(location_id)
+    if location is None:
+        return f"No location found: {location_id}"
+
+    export_doc = {
+        "hermes_tavern_export": True,
+        "exported_at": datetime.utcnow().isoformat(),
+        "location_id": location["id"],
+        "project_id": location["project_id"],
+        "label": location["label"],
+        "description_text": location["description_text"],
+        "created_at": location.get("created_at"),
+        "updated_at": location.get("updated_at"),
+    }
+
+    export_dir = get_hermes_home() / "plugins" / "hermes-tavern" / "exports" / "locations"
+    export_dir.mkdir(parents=True, exist_ok=True)
+    export_path = Path(export_dir) / f"location_{location_id}.json"
+    export_path.write_text(json.dumps(export_doc, ensure_ascii=False, indent=2), encoding="utf-8")
+
+    return f"Location exported as JSON.\nfile: {export_path}\nMEDIA:\"{export_path}\""
 
 
 def location_delete(runtime: Any, command: RPCommand) -> str:

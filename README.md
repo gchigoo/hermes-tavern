@@ -170,6 +170,7 @@ Expected behavior:
 /rp location inspect <location-id>
 /rp location update <location-id> <description...>
 /rp location delete <location-id>
+/rp location export <location-id>
 /rp plot thread add <project-id> <label> <description...>
 /rp plot thread list [project-id]
 /rp plot thread inspect <plot-thread-id>

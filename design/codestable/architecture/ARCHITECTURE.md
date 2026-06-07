@@ -381,6 +381,7 @@ through command output and Markdown export.
 /rp location inspect <location-id>
 /rp location update <location-id> <description...>
 /rp location delete <location-id>
+/rp location export <location-id>
 /rp organization add <project-id> <label> <description...>
 /rp organization list [project-id]
 /rp organization inspect <organization-id>
@@ -725,4 +726,10 @@ These phases do not change schema or core prompt/generation assembly.
   ordering, character state add/list/inspect/update/delete behavior, prompt/debug/context
   behavior, provider/model routing, generation, retrieval/vectorization, content-mode,
   credentials, minors/underage, project archive, and safety-bypass behavior unchanged.
+- **Phase 160 location export boundary**: `/rp location export <location-id>` reads one existing
+  `novel_locations` row and writes one UTF-8 JSON file under profile-safe exports.
+  It keeps `novel_locations` schema, table/index shape, migrations, location
+  add/list/inspect/update/delete behavior, prompt/debug/context behavior, provider/model
+  routing, generation, retrieval/vectorization, content-mode, credentials, project archive,
+  and safety-bypass behavior unchanged.
 - **Tavern lore regex complexity guard**: lorebook regex keys are screened locally before matching. Entries with patterns longer than 256 characters or nested quantified groups (for example `(a+)+`, `(.+)*`, `([a-z]+){2,}`) are excluded with bounded reasons (`regex rejected: ...`), preserving raw imported lore data while preventing unbounded local matching behavior.

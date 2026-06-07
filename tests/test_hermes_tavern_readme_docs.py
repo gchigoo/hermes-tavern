@@ -456,6 +456,7 @@ def test_readme_core_commands_include_location_state_literals():
     assert "/rp location inspect <location-id>" in core_commands
     assert "/rp location update <location-id> <description...>" in core_commands
     assert "/rp location delete <location-id>" in core_commands
+    assert "/rp location export <location-id>" in core_commands
 
 
 def test_readme_core_commands_include_organization_state_literals():

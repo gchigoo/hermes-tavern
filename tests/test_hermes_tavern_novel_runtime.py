@@ -62,7 +62,8 @@ LOCATION_USAGE = (
     "Usage: /rp location add <project-id> <label> <description...> | "
     "/rp location list [project-id] | /rp location inspect <location-id> | "
     "/rp location update <location-id> <description...> | "
-    "/rp location delete <location-id>"
+    "/rp location delete <location-id> | "
+    "/rp location export <location-id>"
 )
 ORGANIZATION_USAGE = (
     "Usage: /rp organization add <project-id> <label> <description...> | "
@@ -234,6 +235,7 @@ def test_novel_command_table_has_expected_families():
     assert "/rp location inspect <location-id>" in TAVERN_COMMAND_TABLE["location"].help_lines
     assert "/rp location update <location-id> <description...>" in TAVERN_COMMAND_TABLE["location"].help_lines
     assert "/rp location delete <location-id>" in TAVERN_COMMAND_TABLE["location"].help_lines
+    assert "/rp location export <location-id>" in TAVERN_COMMAND_TABLE["location"].help_lines
     assert "/rp organization add <project-id> <label> <description...>" in TAVERN_COMMAND_TABLE["organization"].help_lines
     assert "/rp organization list [project-id]" in TAVERN_COMMAND_TABLE["organization"].help_lines
     assert "/rp organization inspect <organization-id>" in TAVERN_COMMAND_TABLE["organization"].help_lines
@@ -563,6 +565,7 @@ def test_project_command_help_includes_location_lines(tmp_path):
     assert "/rp location inspect <location-id>" in help_output
     assert "/rp location update <location-id> <description...>" in help_output
     assert "/rp location delete <location-id>" in help_output
+    assert "/rp location export <location-id>" in help_output
 
 
 def test_project_command_help_includes_organization_lines(tmp_path):
@@ -1677,6 +1680,118 @@ def test_location_not_found_and_missing_project_errors(tmp_path):
         )
         == "No location found: 9999"
     )
+
+
+def test_location_export_by_id(tmp_path, monkeypatch):
+    monkeypatch.setenv("HERMES_HOME", str(tmp_path / "hermes home"))
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    project = runtime.store.create_project("Atlas")
+    location = runtime.store.create_location(
+        project["id"],
+        "watchtower",
+        "A bell signals weather changes over the harbor.",
+    )
+
+    response = runtime.handle_command_sync(
+        RPCommand(
+            "location",
+            ["export", str(location["id"])],
+            f"/rp location export {location['id']}",
+        ),
+        Event(),
+    )
+
+    assert response.startswith("Location exported as JSON.")
+    assert "file:" in response
+    assert "MEDIA:" in response
+    file_path = response.split("file: ", 1)[1].splitlines()[0].strip()
+    media_path = response.split("MEDIA:", 1)[1].strip().strip('"')
+    assert media_path == file_path
+
+    from pathlib import Path
+
+    export_path = Path(file_path)
+    assert str(export_path) == str(
+        tmp_path
+        / "hermes home"
+        / "plugins"
+        / "hermes-tavern"
+        / "exports"
+        / "locations"
+        / f"location_{location['id']}.json"
+    )
+    assert export_path.exists()
+
+
+def test_location_export_payload_contains_fields(tmp_path, monkeypatch):
+    monkeypatch.setenv("HERMES_HOME", str(tmp_path / "hermes home"))
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    project = runtime.store.create_project("Atlas")
+    location = runtime.store.create_location(project["id"], "reef", "Signal fires glow at dusk.")
+
+    response = runtime.handle_command_sync(
+        RPCommand("location", ["export", str(location["id"])], f"/rp location export {location['id']}"),
+        Event(),
+    )
+    assert response.startswith("Location exported as JSON.")
+
+    from pathlib import Path
+
+    export_path = Path(response.split("file: ", 1)[1].splitlines()[0].strip())
+    payload = json.loads(export_path.read_text(encoding="utf-8"))
+    assert payload["hermes_tavern_export"] is True
+    assert payload["exported_at"]
+    assert payload["location_id"] == location["id"]
+    assert payload["project_id"] == project["id"]
+    assert payload["label"] == location["label"]
+    assert payload["description_text"] == location["description_text"]
+    assert payload["created_at"] == location["created_at"]
+    assert payload["updated_at"] == location["updated_at"]
+
+
+def test_location_export_not_found(tmp_path):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    response = runtime.handle_command_sync(
+        RPCommand("location", ["export", "9999"], "/rp location export 9999"),
+        Event(),
+    )
+    assert response == "No location found: 9999"
+
+
+@pytest.mark.parametrize("location_id", ["0", "-1"])
+def test_location_export_non_positive_id(tmp_path, location_id):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    response = runtime.handle_command_sync(
+        RPCommand("location", ["export", location_id], f"/rp location export {location_id}"),
+        Event(),
+    )
+    assert response == LOCATION_USAGE
+
+
+def test_location_export_missing_args(tmp_path):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    assert (
+        runtime.handle_command_sync(
+            RPCommand("location", ["export"], "/rp location export"),
+            Event(),
+        )
+        == LOCATION_USAGE
+    )
+
+
+def test_location_export_no_mutation(tmp_path, monkeypatch):
+    monkeypatch.setenv("HERMES_HOME", str(tmp_path / "hermes home"))
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    project = runtime.store.create_project("Atlas")
+    location = runtime.store.create_location(project["id"], "wharf", "Foghorns echo with each tide.")
+
+    before = runtime.store.get_location(location["id"])
+    runtime.handle_command_sync(
+        RPCommand("location", ["export", str(location["id"])], f"/rp location export {location['id']}"),
+        Event(),
+    )
+    after = runtime.store.get_location(location["id"])
+    assert after == before
 
 
 def test_location_no_active_project_and_list_falls_back_to_usage(tmp_path):
