@@ -303,6 +303,7 @@ TAVERN_COMMAND_TABLE: dict[str, TavernCommandEntry] = {
             "/rp character state inspect <character-state-id>",
             "/rp character state update <character-state-id> <state...>",
             "/rp character state delete <character-state-id>",
+            "/rp character state export <character-state-id>",
         ],
     ),
     "relationship": TavernCommandEntry(

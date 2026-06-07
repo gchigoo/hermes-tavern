@@ -82,7 +82,7 @@ importers/
   lorebooks.py        import_st_lorebook_json / import_lorebook_file → Lorebook
 ```
 
-**Phases 1–38 and 121–158 complete (2026-06-07).** Capability summary:
+**Phases 1–38 and 121–159 complete (2026-06-07).** Capability summary:
 - Phases 1–3: skeleton, SQLite, card import, session CRUD, gateway hook
 - Phase 4: Prompt Compiler (chat + story renderers, card/persona assembly)
 - Phase 5–6: Provider bridge, live model routing
@@ -255,6 +255,15 @@ importers/
   ordering, label semantics, prompt/module selection, provider/model/generation,
   retrieval/vectorization, content-mode, minors/underage, safety-bypass,
   or deferred relationship graph/merge-split/auto-extraction tooling changes occur.
+- Phase 159: Character State JSON Export (`/rp character state export <character-state-id>`) reads one existing
+  `novel_character_states` row by id via `get_character_state(character_state_id)`, and exports
+  character-state metadata (id, project_id, label, state_text,
+  created_at, updated_at) as a UTF-8 JSON file under
+  `get_hermes_home()/plugins/hermes-tavern/exports/character-states` with quoted `MEDIA`
+  attachment output. No schema/table/index migrations are added and no character-state
+  ordering, label semantics, prompt/module selection, provider/model/generation,
+  retrieval/vectorization, content-mode, minors/underage, safety-bypass,
+  or deferred character-state visualization/auto-extraction tooling changes occur.
 
 ### Plugin flow
 
@@ -295,7 +304,7 @@ from vectorization/retrieval, provider/model routing, content mode,
 credentials, automation, summarization, and generation; they are visible only
 through command output and Markdown export.
 
-### /rp command surface (current through Phase 158)
+### /rp command surface (current through Phase 159)
 
 ```
 /rp help | status | assets
@@ -366,6 +375,7 @@ through command output and Markdown export.
 /rp character state inspect <character-state-id>
 /rp character state update <character-state-id> <state...>
 /rp character state delete <character-state-id>
+/rp character state export <character-state-id>
 /rp location add <project-id> <label> <description...>
 /rp location list [project-id]
 /rp location inspect <location-id>
@@ -399,7 +409,7 @@ through command output and Markdown export.
 /rp relationship export <relationship-id>
 ```
 
-### DB schema (current through Phase 158; unchanged by Phase 158)
+### DB schema (current through Phase 159; unchanged by Phase 159)
 
 ```sql
 cards(id, name, data_json, source_path, created_at)
@@ -707,6 +717,12 @@ These phases do not change schema or core prompt/generation assembly.
   `novel_relationship_states` row and writes one UTF-8 JSON file under profile-safe exports.
   It keeps `novel_relationship_states` schema, table/index shape, migrations, relationship
   ordering, relationship add/list/inspect/rename/update/delete behavior, prompt/debug/context
+  behavior, provider/model routing, generation, retrieval/vectorization, content-mode,
+  credentials, minors/underage, project archive, and safety-bypass behavior unchanged.
+- **Phase 159 character-state export boundary**: `/rp character state export <character-state-id>` reads one existing
+  `novel_character_states` row and writes one UTF-8 JSON file under profile-safe exports.
+  It keeps `novel_character_states` schema, table/index shape, migrations, character-state
+  ordering, character state add/list/inspect/update/delete behavior, prompt/debug/context
   behavior, provider/model routing, generation, retrieval/vectorization, content-mode,
   credentials, minors/underage, project archive, and safety-bypass behavior unchanged.
 - **Tavern lore regex complexity guard**: lorebook regex keys are screened locally before matching. Entries with patterns longer than 256 characters or nested quantified groups (for example `(a+)+`, `(.+)*`, `([a-z]+){2,}`) are excluded with bounded reasons (`regex rejected: ...`), preserving raw imported lore data while preventing unbounded local matching behavior.

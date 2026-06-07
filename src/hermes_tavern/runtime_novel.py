@@ -178,6 +178,8 @@ def character_command(runtime: Any, command: RPCommand, event: Any) -> str:
         return character_state_update(runtime, command)
     if subcommand == "delete":
         return character_state_delete(runtime, command)
+    if subcommand == "export":
+        return character_state_export(runtime, command)
 
     return _CHARACTER_USAGE
 
@@ -369,7 +371,7 @@ _CHARACTER_USAGE = (
     "Usage: /rp character state add <project-id> <label> <state...> | "
     "/rp character state list [project-id] | /rp character state inspect <character-state-id> | "
     "/rp character state update <character-state-id> <state...> | "
-    "/rp character state delete <character-state-id>"
+    "/rp character state delete <character-state-id> | /rp character state export <character-state-id>"
 )
 
 
@@ -2706,3 +2708,34 @@ def character_state_delete(runtime: Any, command: RPCommand) -> str:
         return f"No character state found: {character_state_id}"
 
     return f"Character state deleted for character [{character_state_id}]."
+
+
+def character_state_export(runtime: Any, command: RPCommand) -> str:
+    if len(command.args) != 3:
+        return _CHARACTER_USAGE
+
+    character_state_id = _safe_int(command.args[2])
+    if character_state_id is None or character_state_id <= 0:
+        return _CHARACTER_USAGE
+
+    character_state = runtime.store.get_character_state(character_state_id)
+    if character_state is None:
+        return f"No character state found: {character_state_id}"
+
+    export_doc = {
+        "hermes_tavern_export": True,
+        "exported_at": datetime.utcnow().isoformat(),
+        "character_state_id": character_state["id"],
+        "project_id": character_state["project_id"],
+        "label": character_state["label"],
+        "state_text": character_state["state_text"],
+        "created_at": character_state.get("created_at"),
+        "updated_at": character_state.get("updated_at"),
+    }
+
+    export_dir = get_hermes_home() / "plugins" / "hermes-tavern" / "exports" / "character-states"
+    export_dir.mkdir(parents=True, exist_ok=True)
+    export_path = Path(export_dir) / f"character_state_{character_state_id}.json"
+    export_path.write_text(json.dumps(export_doc, ensure_ascii=False, indent=2), encoding="utf-8")
+
+    return f"Character state exported as JSON.\nfile: {export_path}\nMEDIA:\"{export_path}\""

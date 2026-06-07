@@ -56,7 +56,7 @@ CHARACTER_STATE_USAGE = (
     "Usage: /rp character state add <project-id> <label> <state...> | "
     "/rp character state list [project-id] | /rp character state inspect <character-state-id> | "
     "/rp character state update <character-state-id> <state...> | "
-    "/rp character state delete <character-state-id>"
+    "/rp character state delete <character-state-id> | /rp character state export <character-state-id>"
 )
 LOCATION_USAGE = (
     "Usage: /rp location add <project-id> <label> <description...> | "
@@ -228,6 +228,7 @@ def test_novel_command_table_has_expected_families():
     assert "/rp character state inspect <character-state-id>" in TAVERN_COMMAND_TABLE["character"].help_lines
     assert "/rp character state update <character-state-id> <state...>" in TAVERN_COMMAND_TABLE["character"].help_lines
     assert "/rp character state delete <character-state-id>" in TAVERN_COMMAND_TABLE["character"].help_lines
+    assert "/rp character state export <character-state-id>" in TAVERN_COMMAND_TABLE["character"].help_lines
     assert "/rp location add <project-id> <label> <description...>" in TAVERN_COMMAND_TABLE["location"].help_lines
     assert "/rp location list [project-id]" in TAVERN_COMMAND_TABLE["location"].help_lines
     assert "/rp location inspect <location-id>" in TAVERN_COMMAND_TABLE["location"].help_lines
@@ -538,6 +539,7 @@ def test_project_command_help_includes_character_state_lines(tmp_path):
     assert "/rp character state inspect <character-state-id>" in help_output
     assert "/rp character state update <character-state-id> <state...>" in help_output
     assert "/rp character state delete <character-state-id>" in help_output
+    assert "/rp character state export <character-state-id>" in help_output
 
 
 def test_project_command_help_includes_timeline_lines(tmp_path):
@@ -4373,6 +4375,158 @@ def test_timeline_export_no_mutation(tmp_path, monkeypatch):
         Event(),
     )
     after = runtime.store.get_timeline_event(timeline["id"])
+    assert after == before
+
+
+def test_character_state_export_by_id(tmp_path, monkeypatch):
+    monkeypatch.setenv("HERMES_HOME", str(tmp_path / "hermes home"))
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    project = runtime.store.create_project("Atlas")
+    character_state = runtime.store.create_character_state(
+        project["id"],
+        "mara-elya",
+        "Trust deepens as fog lifts over harbor plans.",
+    )
+
+    response = runtime.handle_command_sync(
+        RPCommand(
+            "character",
+            ["state", "export", str(character_state["id"])],
+            f"/rp character state export {character_state['id']}",
+        ),
+        Event(),
+    )
+
+    assert response.startswith("Character state exported as JSON.")
+    file_path = response.split("file: ", 1)[1].splitlines()[0].strip()
+    from pathlib import Path
+
+    export_path = Path(file_path)
+    assert export_path.exists()
+
+    payload = json.loads(export_path.read_text(encoding="utf-8"))
+    assert payload["hermes_tavern_export"] is True
+    assert payload["exported_at"]
+    assert payload["character_state_id"] == character_state["id"]
+    assert payload["project_id"] == project["id"]
+    assert payload["label"] == character_state["label"]
+    assert payload["state_text"] == character_state["state_text"]
+    assert payload["created_at"] == character_state["created_at"]
+    assert payload["updated_at"] == character_state["updated_at"]
+
+
+def test_character_state_export_not_found(tmp_path):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+
+    assert (
+        runtime.handle_command_sync(
+            RPCommand(
+                "character",
+                ["state", "export", "9999"],
+                "/rp character state export 9999",
+            ),
+            Event(),
+        )
+        == "No character state found: 9999"
+    )
+
+
+@pytest.mark.parametrize("character_state_id", ["0", "-1"])
+def test_character_state_export_non_positive_id(tmp_path, character_state_id):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    response = runtime.handle_command_sync(
+        RPCommand("character", ["state", "export", character_state_id], f"/rp character state export {character_state_id}"),
+        Event(),
+    )
+    assert response == CHARACTER_STATE_USAGE
+
+
+def test_character_state_export_missing_args(tmp_path):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+
+    assert (
+        runtime.handle_command_sync(
+            RPCommand("character", ["state", "export"], "/rp character state export"),
+            Event(),
+        )
+        == CHARACTER_STATE_USAGE
+    )
+
+
+def test_character_state_export_media_output(tmp_path, monkeypatch):
+    monkeypatch.setenv("HERMES_HOME", str(tmp_path / "hermes home"))
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    project = runtime.store.create_project("Atlas")
+    character_state = runtime.store.create_character_state(
+        project["id"],
+        "mara-elya",
+        "Trust deepens as fog lifts over harbor plans.",
+    )
+
+    response = runtime.handle_command_sync(
+        RPCommand(
+            "character",
+            ["state", "export", str(character_state["id"])],
+            f"/rp character state export {character_state['id']}",
+        ),
+        Event(),
+    )
+    file_path = response.split("file: ", 1)[1].splitlines()[0].strip()
+    media_path = response.split("MEDIA:", 1)[1].strip().strip('"')
+    assert media_path == file_path
+
+
+def test_character_state_export_path_containment(tmp_path, monkeypatch):
+    monkeypatch.setenv("HERMES_HOME", str(tmp_path / "hermes home"))
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    project = runtime.store.create_project("Atlas")
+    character_state = runtime.store.create_character_state(
+        project["id"],
+        "mara-elya",
+        "Trust deepens as fog lifts over harbor plans.",
+    )
+
+    response = runtime.handle_command_sync(
+        RPCommand(
+            "character",
+            ["state", "export", str(character_state["id"])],
+            f"/rp character state export {character_state['id']}",
+        ),
+        Event(),
+    )
+    file_path = response.split("file: ", 1)[1].splitlines()[0].strip()
+    assert file_path.startswith(
+        str(
+            tmp_path
+            / "hermes home"
+            / "plugins"
+            / "hermes-tavern"
+            / "exports"
+            / "character-states"
+        )
+    )
+
+
+def test_character_state_export_no_mutation(tmp_path, monkeypatch):
+    monkeypatch.setenv("HERMES_HOME", str(tmp_path / "hermes home"))
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    project = runtime.store.create_project("Atlas")
+    character_state = runtime.store.create_character_state(
+        project["id"],
+        "mara-elya",
+        "Trust deepens as fog lifts over harbor plans.",
+    )
+
+    before = runtime.store.get_character_state(character_state["id"])
+    runtime.handle_command_sync(
+        RPCommand(
+            "character",
+            ["state", "export", str(character_state["id"])],
+            f"/rp character state export {character_state['id']}",
+        ),
+        Event(),
+    )
+    after = runtime.store.get_character_state(character_state["id"])
     assert after == before
 
 

@@ -164,6 +164,7 @@ Expected behavior:
 /rp character state inspect <character-state-id>
 /rp character state update <character-state-id> <state...>
 /rp character state delete <character-state-id>
+/rp character state export <character-state-id>
 /rp location add <project-id> <label> <description...>
 /rp location list [project-id]
 /rp location inspect <location-id>
