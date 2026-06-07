@@ -551,6 +551,21 @@ Phase 154 adds `/rp chapter export <chapter-id>`:
   generation, retrieval/vectorization, credentials, content-mode, minors/underage
   handling, or safety-bypass behavior.
 
+Phase 155 adds `/rp scene export <scene-id>`:
+
+- resolves scene by integer ID through existing `get_scene(scene_id)`,
+  rejecting not-found and non-positive IDs;
+- reads scene metadata (id, chapter_id, title, scene_number, summary, status,
+  session_id, created_at, updated_at);
+- exports scene metadata as a UTF-8 JSON file under
+  `get_hermes_home()/plugins/hermes-tavern/exports/scenes` with quoted
+  `MEDIA:"<path>"` marker output;
+- includes session_id (nullable) for scenes linked to a session;
+- does not mutate scene rows or scene lifecycle state;
+- does not change schema, prompt/debug/context-budget, provider/model routing,
+  generation, retrieval/vectorization, credentials, content-mode, minors/underage
+  handling, or safety-bypass behavior.
+
 ### 6.7 Project / Novel
 
 Long-form writing requires a project layer above chat sessions.

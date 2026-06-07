@@ -82,7 +82,7 @@ importers/
   lorebooks.py        import_st_lorebook_json / import_lorebook_file → Lorebook
 ```
 
-**Phases 1–38 and 121–153 complete (2026-06-07).** Capability summary:
+**Phases 1–38 and 121–155 complete (2026-06-07).** Capability summary:
 - Phases 1–3: skeleton, SQLite, card import, session CRUD, gateway hook
 - Phase 4: Prompt Compiler (chat + story renderers, card/persona assembly)
 - Phase 5–6: Provider bridge, live model routing
@@ -217,6 +217,15 @@ importers/
   UTF-8 JSON file under `get_hermes_home()/plugins/hermes-tavern/exports/chapters`
   with quoted `MEDIA` attachment output. No schema/table/index migrations are added
   and no chapter/scene lifecycle, prompt/provider/model/generation,
+  retrieval/vectorization, content-mode, minors/underage, safety-bypass,
+  or archive behavior changes occur.
+- Phase 155: Scene JSON Export (`/rp scene export <scene-id>`) reads one existing
+  `novel_scenes` row by id via `get_scene(scene_id)`, and exports scene metadata
+  (id, chapter_id, title, scene_number, summary, status, session_id,
+  created_at, updated_at) as a UTF-8 JSON file under
+  `get_hermes_home()/plugins/hermes-tavern/exports/scenes` with quoted `MEDIA`
+  attachment output. No schema/table/index migrations are added and no scene
+  lifecycle, session linking, prompt/provider/model/generation,
   retrieval/vectorization, content-mode, minors/underage, safety-bypass,
   or archive behavior changes occur.
 

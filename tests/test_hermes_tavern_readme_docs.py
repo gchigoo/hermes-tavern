@@ -266,6 +266,7 @@ def test_readme_core_commands_include_chapter_export_command():
     core_commands = _readme_core_commands_text()
 
     assert "/rp chapter export <chapter-id>" in core_commands
+    assert "/rp scene export <scene-id>" in core_commands
 
 
 def test_readme_core_commands_include_scene_beat_literals():

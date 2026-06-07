@@ -407,6 +407,7 @@ TAVERN_COMMAND_TABLE: dict[str, TavernCommandEntry] = {
             "/rp scene narration clear <scene-id>",
             "/rp scene narration pov <scene-id> <label>",
             "/rp scene narration tense <scene-id> <past|present>",
+            "/rp scene export <scene-id>",
         ],
     ),
     "canon": TavernCommandEntry(

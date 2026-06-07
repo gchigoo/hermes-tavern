@@ -94,6 +94,8 @@ def scene_command(runtime: Any, command: RPCommand, event: Any) -> str:
         return scene_goal(runtime, command)
     if subcommand == "narration":
         return scene_narration(runtime, command)
+    if subcommand == "export":
+        return scene_export(runtime, command)
     if subcommand == "summary":
         return scene_summary(runtime, command, event)
     return _SCENE_USAGE
@@ -148,7 +150,8 @@ _SCENE_USAGE = (
     "/rp scene beat update <beat-id> <beat...> | /rp scene beat delete <beat-id> | "
     "/rp scene summary <scene-id> [text] | /rp scene summary clear <scene-id> | "
     "/rp scene narration <scene-id> | /rp scene narration clear <scene-id> | "
-    "/rp scene narration pov <scene-id> <label> | /rp scene narration tense <scene-id> <past|present>"
+    "/rp scene narration pov <scene-id> <label> | /rp scene narration tense <scene-id> <past|present> | "
+    "/rp scene export <scene-id>"
 )
 
 
@@ -1406,6 +1409,40 @@ def scene_summary(runtime: Any, command: RPCommand, event: Any) -> str:
         f"Scene summary set for scene [{scene_id}]: "
         f"{_mobile_preview(text, 180)}"
     )
+
+
+def scene_export(runtime: Any, command: RPCommand) -> str:
+    if len(command.args) != 2:
+        return _SCENE_USAGE
+
+    scene_id = _safe_int(command.args[1])
+    if scene_id is None or scene_id <= 0:
+        return _SCENE_USAGE
+
+    scene = runtime.store.get_scene(scene_id)
+    if scene is None:
+        return f"No novel scene found: {scene_id}"
+
+    export_doc = {
+        "hermes_tavern_export": True,
+        "exported_at": datetime.utcnow().isoformat(),
+        "scene_id": scene["id"],
+        "chapter_id": scene["chapter_id"],
+        "title": scene["title"],
+        "scene_number": scene["scene_number"],
+        "summary": scene.get("summary") or "",
+        "status": scene["status"],
+        "session_id": scene.get("session_id"),
+        "created_at": scene.get("created_at"),
+        "updated_at": scene.get("updated_at"),
+    }
+
+    export_dir = get_hermes_home() / "plugins" / "hermes-tavern" / "exports" / "scenes"
+    export_dir.mkdir(parents=True, exist_ok=True)
+    export_path = Path(export_dir) / f"scene_{scene_id}.json"
+    export_path.write_text(json.dumps(export_doc, ensure_ascii=False, indent=2), encoding="utf-8")
+
+    return f"Scene exported as JSON.\nfile: {export_path}\nMEDIA:\"{export_path}\""
 
 
 def scene_start(runtime: Any, command: RPCommand, event: Any) -> str:

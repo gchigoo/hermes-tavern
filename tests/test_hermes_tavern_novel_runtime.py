@@ -2819,6 +2819,122 @@ def test_chapter_export_not_found_returns_error(tmp_path):
     assert response == "No novel chapter found: 9999"
 
 
+# --- Phase 155: scene export by ID ---
+
+
+def test_scene_export_by_id(tmp_path, monkeypatch):
+    monkeypatch.setenv("HERMES_HOME", str(tmp_path / "hermes home"))
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    project = runtime.store.create_project("Atlas")
+    chapter = runtime.store.create_chapter(project["id"], "Arrival")
+    runtime.store.set_chapter_summary(chapter["id"], "Fog drifts past the harbor.")
+    scene = runtime.store.create_scene(chapter["id"], "Opening")
+    runtime.store.set_scene_summary(scene["id"], "Bells ring over the water.")
+
+    response = runtime.handle_command_sync(
+        RPCommand("scene", ["export", str(scene["id"])], f"/rp scene export {scene['id']}"),
+        Event(),
+    )
+    assert response.startswith("Scene exported as JSON.")
+    assert "file:" in response
+    assert "MEDIA:" in response
+
+    file_path = response.split("file: ", 1)[1].splitlines()[0].strip()
+    media_path = response.split("MEDIA:", 1)[1].strip().strip('"')
+    assert media_path == file_path
+
+    from pathlib import Path
+
+    export_path = Path(file_path)
+    assert str(export_path) == str(
+        tmp_path
+        / "hermes home"
+        / "plugins"
+        / "hermes-tavern"
+        / "exports"
+        / "scenes"
+        / f"scene_{scene['id']}.json"
+    )
+    assert export_path.exists()
+
+    payload = json.loads(export_path.read_text(encoding="utf-8"))
+    assert payload["hermes_tavern_export"] is True
+    assert payload["exported_at"]
+    assert payload["scene_id"] == scene["id"]
+    assert payload["chapter_id"] == chapter["id"]
+    assert payload["title"] == "Opening"
+    assert payload["scene_number"] == scene["scene_number"]
+    assert payload["summary"] == "Bells ring over the water."
+    assert payload["status"] == "draft"
+    assert payload.get("session_id") is None
+    assert payload.get("created_at") is not None
+    assert payload.get("updated_at") is not None
+
+
+def test_scene_export_not_found(tmp_path):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    response = runtime.handle_command_sync(
+        RPCommand("scene", ["export", "9999"], "/rp scene export 9999"),
+        Event(),
+    )
+    assert response == "No novel scene found: 9999"
+
+
+def test_scene_export_non_positive_id(tmp_path, monkeypatch):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    response = runtime.handle_command_sync(
+        RPCommand("scene", ["export", "0"], "/rp scene export 0"),
+        Event(),
+    )
+    assert response.startswith("Usage:")
+
+
+def test_scene_export_missing_args(tmp_path):
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    response = runtime.handle_command_sync(
+        RPCommand("scene", ["export"], "/rp scene export"),
+        Event(),
+    )
+    assert response.startswith("Usage:")
+
+
+def test_scene_export_no_mutation(tmp_path, monkeypatch):
+    monkeypatch.setenv("HERMES_HOME", str(tmp_path / "hermes home"))
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    project = runtime.store.create_project("Atlas")
+    chapter = runtime.store.create_chapter(project["id"], "Arrival")
+    scene = runtime.store.create_scene(chapter["id"], "Prologue")
+    runtime.store.set_scene_summary(scene["id"], "Original summary")
+
+    previous = runtime.store.get_scene(scene["id"])
+    runtime.handle_command_sync(
+        RPCommand("scene", ["export", str(scene["id"])], f"/rp scene export {scene['id']}"),
+        Event(),
+    )
+    current = runtime.store.get_scene(scene["id"])
+    assert current == previous
+
+
+def test_scene_export_with_session(tmp_path, monkeypatch):
+    monkeypatch.setenv("HERMES_HOME", str(tmp_path / "hermes home"))
+    runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
+    project = runtime.store.create_project("Atlas")
+    chapter = runtime.store.create_chapter(project["id"], "Arrival")
+    scene = runtime.store.create_scene(chapter["id"], "Linked")
+    session = runtime.store.start_session("test-session-abc")
+    runtime.store.link_scene_session(scene["id"], session["id"])
+
+    response = runtime.handle_command_sync(
+        RPCommand("scene", ["export", str(scene["id"])], f"/rp scene export {scene['id']}"),
+        Event(),
+    )
+    file_path = response.split("file: ", 1)[1].splitlines()[0].strip()
+    from pathlib import Path
+
+    payload = json.loads(Path(file_path).read_text(encoding="utf-8"))
+    assert payload["session_id"] == session["id"]
+
+
 def test_project_export_returns_media_marker_and_path_under_profile_safe_home(tmp_path, monkeypatch):
     monkeypatch.setenv("HERMES_HOME", str(tmp_path / "hermes home"))
     runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
