@@ -1668,9 +1668,10 @@ ST preset JSON
 ST lorebook/world info JSON
 ```
 
-Hermes Tavern native project archives are deferred; the current Phase 121–151
-implementation provides Markdown project export, single-card JSON export, and single-lorebook JSON export, not
-project/novel import.
+Current Phase 121–168 import support keeps card, preset, lorebook, and persona
+local import surfaces, along with mobile attachment import behavior.
+Hermes Tavern native project archives are deferred; project/novel archive import
+is also deferred.
 Relationship-state, character-state, location, organization, plot-thread, and
 style-sample rows, plus revision-note and scene-beat rows, remain local metadata
 and are not bound to ST card objects in this phase.
@@ -1692,21 +1693,33 @@ Markdown novel projects
 Required exporters:
 
 ```text
-/rp card export <card> card export JSON
-/rp lore export <lorebook> lorebook export JSON
-/rp preset export <preset> preset export JSON
-/rp persona export <persona> persona export JSON
-chat export JSONL
-novel export Markdown
+/rp export [markdown|st-json]
+/rp session export <id>
+/rp card export <card>
+/rp lore export <lorebook>
+/rp preset export <preset>
+/rp persona export <persona>
+/rp project export [id]
+/rp chapter export <chapter-id>
+/rp scene export <scene-id>
+/rp canon export <canon-id>
+/rp timeline export <timeline-id>
+/rp relationship export <relationship-id>
+/rp character state export <character-state-id>
+/rp location export <location-id>
+/rp organization export <organization-id>
+/rp plot thread export <plot-thread-id>
+/rp style sample export <style-sample-id>
+/rp binding export <binding-id>
+/rp scene beat export <beat-id>
+/rp project revision export <note-id>
+/rp project export json [project-id]
+/rp image settings export
 ```
 
-Project archive ZIP remains a future exporter/importer; current Phase 121–151 writes
-local Markdown via `/rp project export [id]`, single-card JSON via
-`/rp card export <card>`, single-lorebook JSON via
-`/rp lore export <lorebook>`, single-preset JSON via
-`/rp preset export <preset>`, and single-persona JSON via
-`/rp persona export <persona>`. PNG card exports, bulk card export, project archive
-ZIP/import, card editing/deletion/merge tooling, provider/generation side effects,
+Project archive ZIP remains a future exporter/importer; PNG card exports, bulk card
+export, project archive ZIP/import, cloud/archive sync, graph exports,
+automatic extraction, provider/generation side effects,
 retrieval/vectorization coupling, content-mode/minors handling, and safety-bypass
 behavior remain deferred to later phases.
 Project Brief and Project Outline are exported as optional top-level `## Project Brief`
@@ -1756,14 +1769,31 @@ non-empty fields:
 Commands:
 
 ```text
-/rp import <attachment|url|path>
-/rp export chat
-/rp export project
-/rp export markdown
-/rp backup
+/rp export [markdown|st-json]
+/rp session export <id>
+/rp card export <card>
+/rp lore export <lorebook>
+/rp preset export <preset>
+/rp persona export <persona>
+/rp project export [id]
+/rp chapter export <chapter-id>
+/rp scene export <scene-id>
+/rp canon export <canon-id>
+/rp timeline export <timeline-id>
+/rp relationship export <relationship-id>
+/rp character state export <character-state-id>
+/rp location export <location-id>
+/rp organization export <organization-id>
+/rp plot thread export <plot-thread-id>
+/rp style sample export <style-sample-id>
+/rp binding export <binding-id>
+/rp scene beat export <beat-id>
+/rp project revision export <note-id>
+/rp project export json [project-id]
+/rp image settings export
 ```
 
-Project/novel import is deferred for this phase; only export is implemented.
+Project/novel export is implemented; project/novel import remains deferred.
 
 ---
 

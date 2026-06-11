@@ -1,6 +1,6 @@
 ---
 doc_type: feature-design
-status: draft
+status: approved
 feature: "2026-06-12-hermes-tavern-phase173-root-design-import-export-summary-parity"
 date: "2026-06-12"
 summary: >
@@ -11,7 +11,7 @@ tags: [hermes-tavern, codestable, root-design, import-export, export, docs, test
 created: "2026-06-12"
 updated: "2026-06-12"
 owner: codestable-cron
-implementation_ready: false
+implementation_ready: true
 ---
 
 # Phase 173: Root Design Import / Export Summary Parity

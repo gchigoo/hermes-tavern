@@ -1,9 +1,9 @@
 doc_type: feature-checklist
-status: planned
+status: implemented
 feature: "2026-06-12-hermes-tavern-phase173-root-design-import-export-summary-parity"
 date: "2026-06-12"
 owner: codestable-cron
-implementation_ready: false
+implementation_ready: true
 summary: >
   Sync root design section 17 Import / Export narrative with accepted local
   import/export surfaces through Phase 168, guarded by a focused static
@@ -41,7 +41,17 @@ exact_scope:
 steps:
   - id: S1
     name: "S1: Sync root design section 17 and regression"
-    status: pending
+    status: done
+    completed_at: "2026-06-12"
+    result: >
+      DONE - Codex executor updated design/HERMES_TAVERN_DESIGN.md section 17
+      so the root-design Import / Export summary reflects current local
+      import/export behavior through Phase 168, removed stale Phase 121-151
+      and generic command examples, and added a section-scoped docs regression
+      in tests/test_hermes_tavern_design_docs.py. Controller reran py_compile,
+      focused pytest (10 passed), section-17 stale/current marker guards, the
+      protected-path diff guard, git diff --check, CodeStable validators, and
+      the full pytest suite (1215 passed). Acceptance/writeback remains S2.
     description: >
       Replace stale section-17 Phase 121-151 current-implementation wording with
       a current Phase 121-168 local import/export summary, remove stale generic
@@ -76,27 +86,37 @@ checks:
   - id: C1
     name: "Focused root-design section-17 regression"
     command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_design_docs.py -q -o 'addopts=' -p no:cacheprovider"
-    status: pending
+    status: passed
+    completed_at: "2026-06-12"
+    result: "PASSED - controller rerun after py_compile reported 10 passed in 0.02s."
     expected: "passes"
   - id: C2
     name: "Stale section-17 markers removed"
     command: "rg -n \"current Phase 121(–|-)151|/rp backup|/rp export chat|/rp import <attachment\\|url\\|path>\" design/HERMES_TAVERN_DESIGN.md"
-    status: pending
+    status: passed
+    completed_at: "2026-06-12"
+    result: "PASSED - controller section-17 guard found no stale Phase 121-151 wording or stale generic command markers."
     expected: "empty output"
   - id: C3
     name: "Current export markers present"
     command: "rg -n \"/rp session export <id>|/rp project export json \\[project-id\\]|/rp image settings export|/rp character state export <character-state-id>|/rp project revision export <note-id>\" design/HERMES_TAVERN_DESIGN.md tests/test_hermes_tavern_design_docs.py"
-    status: pending
+    status: passed
+    completed_at: "2026-06-12"
+    result: "PASSED - controller section-17 guard found all representative current export markers in section 17 and the focused regression."
     expected: "finds representative current section-17 export markers and test assertions"
   - id: C4
     name: "Protected paths unchanged"
     command: "git diff --name-only -- run_agent.py cli.py gateway/run.py src plugins README.md design/codestable/attention.md design/codestable/architecture build/lib"
-    status: pending
+    status: passed
+    completed_at: "2026-06-12"
+    result: "PASSED - protected runtime/source/plugin/README/attention/architecture/build diff guard produced empty output."
     expected: "empty output"
   - id: C5
     name: "Whitespace check"
     command: "git diff --check"
-    status: pending
+    status: passed
+    completed_at: "2026-06-12"
+    result: "PASSED - no whitespace errors."
     expected: "passes"
 risks:
   - "Root design section 17 may become too duplicative; keep changes to summary-level current behavior and representative command references."
