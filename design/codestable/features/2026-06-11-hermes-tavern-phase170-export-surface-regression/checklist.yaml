@@ -1,8 +1,8 @@
 doc_type: feature-checklist
-status: planned
+status: implemented
 feature: "2026-06-11-hermes-tavern-phase170-export-surface-regression"
 date: "2026-06-11"
-implementation_ready: false
+implementation_ready: true
 summary: >
   Test-only export command-surface hardening for generated /rp help and README
   Core commands. This phase adds exact regression assertions for implemented
@@ -16,7 +16,15 @@ tags:
 steps:
   - id: S1
     name: "S1: Add export command-surface regression tests"
-    status: planned
+    status: done
+    completed_at: "2026-06-11"
+    result: >
+      DONE - Codex executor added exact generated-help export literal
+      regression coverage in tests/test_hermes_tavern_commands.py and exact
+      README Core command assertions for project revision, character-state, and
+      relationship exports in tests/test_hermes_tavern_readme_docs.py. The slice
+      remained test-only: no source, README, root-design, architecture, plugin,
+      build, gateway/core, provider, prompt, schema, or export behavior changed.
     description: >
       Add focused test assertions for currently implemented export command
       literals in generated /rp help and README Core commands. Keep the slice
@@ -52,8 +60,24 @@ checks:
   - id: C1
     name: "Focused command and README docs tests"
     command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_commands.py tests/test_hermes_tavern_readme_docs.py -q -o 'addopts=' -p no:cacheprovider"
-    status: pending
+    status: passed
+    completed_at: "2026-06-11"
+    result: "PASSED - controller rerun reported 105 passed in 0.14s."
   - id: C2
     name: "No protected or runtime files changed"
     command: "git diff --name-only -- run_agent.py cli.py gateway/run.py src README.md design/HERMES_TAVERN_DESIGN.md design/codestable/architecture/ARCHITECTURE.md plugins build/lib"
-    status: pending
+    status: passed
+    completed_at: "2026-06-11"
+    result: "PASSED - empty output; protected/runtime/docs/source paths were unchanged."
+  - id: C3
+    name: "Full pytest suite passes"
+    command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts=' -p no:cacheprovider"
+    status: passed
+    completed_at: "2026-06-11"
+    result: "PASSED - controller rerun reported 1204 passed in 51.63s."
+  - id: C4
+    name: "git diff --check passes"
+    command: "git diff --check"
+    status: passed
+    completed_at: "2026-06-11"
+    result: "PASSED - no whitespace errors."

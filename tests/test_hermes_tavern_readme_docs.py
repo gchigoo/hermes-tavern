@@ -371,6 +371,7 @@ def test_readme_core_commands_include_project_revision_literals():
     assert "/rp project revision add <project-id> <label> <note...>" in core_commands
     assert "/rp project revision list [project-id]" in core_commands
     assert "/rp project revision inspect <note-id>" in core_commands
+    assert "/rp project revision export <note-id>" in core_commands
     assert "/rp project revision update <note-id> <note...>" in core_commands
     assert "/rp project revision delete <note-id>" in core_commands
 
@@ -448,6 +449,7 @@ def test_readme_core_commands_include_character_state_literals():
     assert "/rp character state add <project-id> <label> <state...>" in core_commands
     assert "/rp character state list [project-id]" in core_commands
     assert "/rp character state inspect <character-state-id>" in core_commands
+    assert "/rp character state export <character-state-id>" in core_commands
     assert "/rp character state update <character-state-id> <state...>" in core_commands
     assert "/rp character state delete <character-state-id>" in core_commands
 
@@ -458,6 +460,7 @@ def test_readme_core_commands_include_relationship_state_literals():
     assert "/rp relationship add <project-id> <label> <state...>" in core_commands
     assert "/rp relationship list [project-id]" in core_commands
     assert "/rp relationship inspect <relationship-id>" in core_commands
+    assert "/rp relationship export <relationship-id>" in core_commands
     assert "/rp relationship rename <relationship-id> <label>" in core_commands
     assert "/rp relationship update <relationship-id> <state...>" in core_commands
     assert "/rp relationship delete <relationship-id>" in core_commands

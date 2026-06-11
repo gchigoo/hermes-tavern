@@ -304,6 +304,28 @@ def test_help_keeps_current_allowed_command_literals():
     assert _command_segment_has_literal(help_text, "/rp archive")
 
 
+def test_help_keeps_current_export_command_literals():
+    help_text = _build_help_text()
+    literals = (
+        "/rp binding export <binding-id>",
+        "/rp style sample export <style-sample-id>",
+        "/rp character state export <character-state-id>",
+        "/rp relationship export <relationship-id>",
+        "/rp location export <location-id>",
+        "/rp organization export <organization-id>",
+        "/rp plot thread export <plot-thread-id>",
+        "/rp project revision export <note-id>",
+        "/rp chapter export <chapter-id>",
+        "/rp scene beat export <beat-id>",
+        "/rp scene export <scene-id>",
+        "/rp canon export <canon-id>",
+        "/rp timeline export <timeline-id>",
+    )
+
+    for literal in literals:
+        assert _command_segment_has_literal(help_text, literal)
+
+
 def test_help_lists_relationship_state_commands():
     help_text = _build_help_text()
 

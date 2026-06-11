@@ -1,6 +1,6 @@
 ---
 doc_type: feature-design
-status: draft
+status: approved
 feature: "2026-06-11-hermes-tavern-phase170-export-surface-regression"
 date: "2026-06-11"
 summary: >
@@ -12,7 +12,7 @@ tags: [hermes-tavern, codestable, command-surface, export, tests]
 created: "2026-06-11"
 updated: "2026-06-11"
 owner: codestable-cron
-implementation_ready: false
+implementation_ready: true
 ---
 # Phase 170: Export Command Surface Regression Coverage
 
