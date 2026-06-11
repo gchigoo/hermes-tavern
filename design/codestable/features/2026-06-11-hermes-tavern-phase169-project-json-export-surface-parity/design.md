@@ -1,6 +1,6 @@
 ---
 doc_type: feature-design
-status: draft
+status: approved
 feature: "2026-06-11-hermes-tavern-phase169-project-json-export-surface-parity"
 date: "2026-06-11"
 summary: >
@@ -10,7 +10,7 @@ tags: [hermes-tavern, codestable, command-surface, json-export, docs, tests]
 created: "2026-06-11"
 updated: "2026-06-11"
 owner: codestable-cron
-implementation_ready: false
+implementation_ready: true
 ---
 # Phase 169: Project JSON Export Surface Parity
 

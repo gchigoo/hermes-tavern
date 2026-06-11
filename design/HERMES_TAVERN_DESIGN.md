@@ -745,6 +745,7 @@ Commands:
 /rp project info <id>
 /rp project set <id>
 /rp project export [id]
+/rp project export json [project-id]
 /rp project inspect <project-id>
 /rp project style [project-id]
 /rp project style inspect [project-id]
@@ -1257,6 +1258,7 @@ relationship label rename is current metadata.
 
 ```text
 /rp project create/list/info/set/export
+/rp project export json [project-id]
 /rp project inspect <project-id>
 /rp project style [project-id]
 /rp project style inspect [project-id]

@@ -1,11 +1,13 @@
 doc_type: feature-checklist
-status: planned
+status: accepted
 feature: "2026-06-11-hermes-tavern-phase169-project-json-export-surface-parity"
 date: "2026-06-11"
-implementation_ready: false
+implementation_ready: true
 summary: >
-  Harden current command-surface docs and help tests so the implemented Phase 167
-  project JSON export command is represented consistently.
+  Phase 169 hardens command-surface docs and help tests so the already-implemented
+  Phase 167 project JSON export command is represented consistently. S1 added
+  the exact command literal to root design and architecture command surfaces plus
+  help-test coverage; S2 completed controller verification and acceptance.
 tags:
   - hermes-tavern
   - codestable
@@ -16,7 +18,13 @@ tags:
 steps:
   - id: S1
     name: "S1: Harden project JSON export command surface parity"
-    status: planned
+    status: done
+    completed_at: "2026-06-11"
+    result: >
+      DONE - Codex executor added `/rp project export json [project-id]` to the
+      root design command surfaces and CodeStable architecture current command
+      surface, and added exact `_build_help_text()` regression coverage without
+      touching runtime/export payload behavior.
     description: >
       Add exact project JSON export command-surface coverage to current docs and
       help tests without changing runtime behavior.
@@ -34,17 +42,24 @@ steps:
       - README.md
     exact_scope:
       - "Add `/rp project export json [project-id]` to the root design Commands block near `/rp project export [id]`."
+      - "Add `/rp project export json [project-id]` to the root design writing-command surface near `/rp project create/list/info/set/export`."
       - "Add `/rp project export json [project-id]` to the architecture current `/rp` command surface near `/rp project create/list/info/set/export`."
       - "Add one exact `_build_help_text()` assertion for `/rp project export json [project-id]` in `tests/test_hermes_tavern_commands.py`."
       - "Do not change runtime handlers, JSON export payloads, README text, schemas, provider/model routing, generation behavior, prompt compiler, gateway/core, archive/ZIP/retrieval/vectorization, or plugin assets."
     verification:
       - command: "python -m pytest tests/test_hermes_tavern_commands.py tests/test_hermes_tavern_readme_docs.py -q -o 'addopts='"
         expected: "passes"
-      - command: 'rg -n "/rp project export json \[project-id\]" README.md src/hermes_tavern/commands.py design/HERMES_TAVERN_DESIGN.md design/codestable/architecture/ARCHITECTURE.md tests/test_hermes_tavern_commands.py tests/test_hermes_tavern_readme_docs.py'
-        expected: "shows the literal in source help, README, root design, architecture, and tests"
+      - command: 'rg -n "/rp project export json \\[project-id\\]" README.md src/hermes_tavern/commands.py design/HERMES_TAVERN_DESIGN.md design/codestable/architecture/ARCHITECTURE.md tests/test_hermes_tavern_commands.py tests/test_hermes_tavern_readme_docs.py'
+        expected: "shows the literal in source help, README, both root-design command surfaces, architecture, and tests"
   - id: S2
     name: "S2: Verify/accept/write current docs"
-    status: planned
+    status: completed
+    completed_at: "2026-06-11"
+    result: >
+      ACCEPTED - Controller reran CodeStable validators, py_compile, targeted
+      command/readme tests (104 passed), exact-literal surface grep, full pytest
+      suite (1203 passed), and git diff --check. Acceptance report and
+      architecture writeback finalized.
     description: >
       Controller-owned acceptance/writeback after S1 passes.
     allowed_files:
@@ -61,12 +76,45 @@ steps:
       - gateway/run.py
       - "plugins/**"
       - "build/lib/**"
+    exact_scope:
+      - "Create phase169-acceptance.md with controller-run evidence."
+      - "Update checklist.yaml statuses/results to accepted/completed."
+      - "Update ARCHITECTURE.md current-through-Phase-169 markers and Phase 169 summary."
+      - "Record that no requirement/roadmap/attention writeback was required."
 checks:
   - id: C1
-    name: "Targeted command and README docs tests pass"
-    command: "python -m pytest tests/test_hermes_tavern_commands.py tests/test_hermes_tavern_readme_docs.py -q -o 'addopts='"
-    status: pending
+    name: "CodeStable design/checklist YAML validates"
+    command: "python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-11-hermes-tavern-phase169-project-json-export-surface-parity/design.md --require doc_type --require status --require feature && python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-11-hermes-tavern-phase169-project-json-export-surface-parity/checklist.yaml --yaml-only --require doc_type --require status --require feature"
+    status: passed
+    completed_at: "2026-06-11"
+    result: "PASSED - validators reported all files valid before acceptance writeback; checklist revalidated after writeback."
   - id: C2
+    name: "Targeted command and README docs tests pass"
+    command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_commands.py tests/test_hermes_tavern_readme_docs.py -q -o 'addopts=' -p no:cacheprovider"
+    status: passed
+    completed_at: "2026-06-11"
+    result: "PASSED - 104 passed."
+  - id: C3
     name: "Project JSON export literal appears across command surfaces"
-    command: 'rg -n "/rp project export json \[project-id\]" README.md src/hermes_tavern/commands.py design/HERMES_TAVERN_DESIGN.md design/codestable/architecture/ARCHITECTURE.md tests/test_hermes_tavern_commands.py tests/test_hermes_tavern_readme_docs.py'
-    status: pending
+    command: 'rg -n "/rp project export json \\[project-id\\]" README.md src/hermes_tavern/commands.py design/HERMES_TAVERN_DESIGN.md design/codestable/architecture/ARCHITECTURE.md tests/test_hermes_tavern_commands.py tests/test_hermes_tavern_readme_docs.py'
+    status: passed
+    completed_at: "2026-06-11"
+    result: "PASSED - literal appears in source help, README, both root-design command blocks, architecture command surface, and tests."
+  - id: C4
+    name: "Full pytest suite passes"
+    command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts=' -p no:cacheprovider"
+    status: passed
+    completed_at: "2026-06-11"
+    result: "PASSED - 1203 passed."
+  - id: C5
+    name: "git diff --check passes"
+    command: "git diff --check"
+    status: passed
+    completed_at: "2026-06-11"
+    result: "PASSED - no whitespace errors."
+  - id: C6
+    name: "Protected runtime/export scope unchanged"
+    command: "controller diff review"
+    status: passed
+    completed_at: "2026-06-11"
+    result: "PASSED - no src/**, README.md, plugins/**, build/lib/**, run_agent.py, cli.py, gateway/run.py, runtime handlers, export payloads, schemas, provider/model routing, prompt/generation, archive/ZIP, retrieval/vectorization, credential, content-mode, or safety behavior changed."

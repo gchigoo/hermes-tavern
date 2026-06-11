@@ -299,6 +299,7 @@ def test_help_keeps_current_allowed_command_literals():
     help_text = _build_help_text()
 
     assert _command_segment_has_literal(help_text, "/rp project export")
+    assert _command_segment_has_literal(help_text, "/rp project export json [project-id]")
     assert _command_segment_has_literal(help_text, "/rp export [markdown|st-json]")
     assert _command_segment_has_literal(help_text, "/rp archive")
 

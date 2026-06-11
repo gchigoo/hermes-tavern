@@ -82,7 +82,7 @@ importers/
   lorebooks.py        import_st_lorebook_json / import_lorebook_file → Lorebook
 ```
 
-**Phases 1–38 and 121–168 complete (2026-06-11).** Capability summary:
+**Phases 1–38 and 121–169 complete (2026-06-11).** Capability summary:
 - Phases 1–3: skeleton, SQLite, card import, session CRUD, gateway hook
 - Phase 4: Prompt Compiler (chat + story renderers, card/persona assembly)
 - Phase 5–6: Provider bridge, live model routing
@@ -312,6 +312,12 @@ importers/
   `MEDIA:\"<path>\"` marker output. It keeps image settings schema, generation,
   prompt/compiler, provider/model routing, retrieval/vectorization,
   content-mode, minors/underage, safety-bypass, and unrelated command behavior unchanged.
+- Phase 169: Project JSON Export Surface Parity documents the existing Phase 167
+  `/rp project export json [project-id]` command consistently in root-design and
+  architecture command surfaces, and adds exact help-test coverage. It changes no
+  runtime command handling, JSON export payloads, schemas, provider/model routing,
+  prompt/compiler behavior, generation, retrieval/vectorization, archive/ZIP,
+  credentials, content mode, or safety behavior.
 
 ### Plugin flow
 
@@ -352,7 +358,7 @@ from vectorization/retrieval, provider/model routing, content mode,
 credentials, automation, summarization, and generation; they are visible only
 through command output and Markdown export.
 
-### /rp command surface (current through Phase 168)
+### /rp command surface (current through Phase 169)
 
 ```
 /rp help | status | assets
@@ -377,6 +383,7 @@ through command output and Markdown export.
 /rp content mode [safe|adult-fiction]
 /rp model status | profiles | seed apiyi | use <profile> | mode [fake|hermes] | live [status|confirm|off] | test
 /rp project create/list/info/set/export
+/rp project export json [project-id]           ← project JSON export command surface (Phase 167)
 /rp project inspect <project-id>
 /rp project style [project-id]
 /rp project style inspect [project-id]
