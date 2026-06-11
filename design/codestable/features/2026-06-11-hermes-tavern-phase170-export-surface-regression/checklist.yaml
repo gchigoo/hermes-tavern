@@ -1,5 +1,5 @@
 doc_type: feature-checklist
-status: implemented
+status: accepted
 feature: "2026-06-11-hermes-tavern-phase170-export-surface-regression"
 date: "2026-06-11"
 implementation_ready: true
@@ -56,6 +56,22 @@ steps:
         expected: "empty output"
       - command: "git diff --check"
         expected: "passes"
+  - id: S2
+    name: "S2: Accept and close Phase 170"
+    status: completed
+    completed_at: "2026-06-11"
+    result: >
+      ACCEPTED - Codex executor drafted phase170-acceptance.md and the controller
+      reran CodeStable validators, py_compile, targeted command/readme tests
+      (105 passed), the full pytest suite (1204 passed), protected-path guards,
+      and git diff --check before finalizing accepted status. No root-design or
+      architecture writeback was required for this test-only regression slice.
+    description: >
+      Create acceptance/reporting artifacts and finalize controller-owned status
+      after rerunning all Phase 170 verification gates.
+    allowed_files:
+      - design/codestable/features/2026-06-11-hermes-tavern-phase170-export-surface-regression/checklist.yaml
+      - design/codestable/features/2026-06-11-hermes-tavern-phase170-export-surface-regression/phase170-acceptance.md
 checks:
   - id: C1
     name: "Focused command and README docs tests"
@@ -81,3 +97,9 @@ checks:
     status: passed
     completed_at: "2026-06-11"
     result: "PASSED - no whitespace errors."
+  - id: C5
+    name: "Acceptance artifact frontmatter validates"
+    command: "python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-11-hermes-tavern-phase170-export-surface-regression/phase170-acceptance.md --require doc_type --require status --require feature"
+    status: passed
+    completed_at: "2026-06-11"
+    result: "PASSED - controller validator accepted phase170-acceptance.md frontmatter and required fields after final status update."
