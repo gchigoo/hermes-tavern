@@ -255,6 +255,12 @@ def test_readme_core_commands_include_project_export_json():
     assert "/rp project export json [project-id]" in core_commands
 
 
+def test_readme_core_commands_include_image_settings_export_literal():
+    core_commands = _readme_core_commands_text()
+
+    assert "/rp image settings export" in core_commands
+
+
 def test_readme_core_commands_includes_scene_goal_literals():
     core_commands = _readme_core_commands_text()
 

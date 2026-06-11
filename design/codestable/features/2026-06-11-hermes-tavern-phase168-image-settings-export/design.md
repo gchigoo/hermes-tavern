@@ -1,6 +1,6 @@
 ---
 doc_type: feature-design
-status: draft
+status: in_progress
 feature: "2026-06-11-hermes-tavern-phase168-image-settings-export"
 date: "2026-06-11"
 summary: >
@@ -11,7 +11,7 @@ tags: [hermes-tavern, image, export, settings, json, offline]
 created: "2026-06-11"
 updated: "2026-06-11"
 owner: codestable-cron
-implementation_ready: false
+implementation_ready: true
 ---
 
 # Phase 168: Image Settings JSON Export

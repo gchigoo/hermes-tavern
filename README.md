@@ -125,7 +125,7 @@ Expected behavior:
 /rp content mode [safe|adult-fiction]
 /rp model status/profiles/seed/use/mode/live/test
 /rp image scene/character/face/background/last | /rp image prompt/retry/inspect/history
-/rp image provider/settings/style/safety ...
+/rp image provider/settings/style/safety | /rp image settings export
 /rp project create/list/info/set/export | /rp project export json [project-id]
 /rp project inspect <project-id>
 /rp project style [project-id] | /rp project style inspect [project-id]

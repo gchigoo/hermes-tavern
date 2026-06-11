@@ -269,7 +269,7 @@ TAVERN_COMMAND_TABLE: dict[str, TavernCommandEntry] = {
             "/rp image inspect",
             "/rp image history [limit] [page]",
             "/rp image provider [list|status|use <name> [model]]",
-            "/rp image settings [set <key> <value>|clear <key|all>]",
+            "/rp image settings [set <key> <value>|clear <key|all>|export]",
             "/rp image style [list|save <name>|use <name>|inspect <name>|delete <name>]",
             "/rp image safety [inspect|mode <safe|mature|explicit>|clear]",
         ],

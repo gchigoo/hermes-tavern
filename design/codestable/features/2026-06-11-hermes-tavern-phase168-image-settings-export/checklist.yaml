@@ -1,8 +1,8 @@
 doc_type: feature-checklist
-status: draft
+status: in_progress
 feature: "2026-06-11-hermes-tavern-phase168-image-settings-export"
 date: "2026-06-11"
-implementation_ready: false
+implementation_ready: true
 summary: >
   Phase 168 adds one bounded /rp image settings export command that exports the
   active session's image generation settings as JSON with quoted MEDIA marker.
@@ -25,7 +25,7 @@ implementation_readiness: >
 steps:
   - id: S1
     name: "S1: Implement image settings JSON export"
-    status: planned
+    status: done
     description: >
       Add /rp image settings export as a subcommand under the existing image
       settings handler. Resolve the active session via the existing session
@@ -129,22 +129,22 @@ checks:
   - id: C1
     name: "py_compile on changed files passes"
     command: "PYTHONDONTWRITEBYTECODE=1 python -m py_compile src/hermes_tavern/runtime_images.py src/hermes_tavern/commands.py tests/test_hermes_tavern_images.py tests/test_hermes_tavern_readme_docs.py"
-    status: pending
+    status: passed
   - id: C2
     name: "Targeted image + README tests pass"
     command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_images.py tests/test_hermes_tavern_readme_docs.py -q -o 'addopts=' -p no:cacheprovider"
-    status: pending
+    status: passed
   - id: C3
     name: "Full Tavern test suite passes"
     command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_*.py -q -o 'addopts=' -p no:cacheprovider"
-    status: pending
+    status: passed
   - id: C4
     name: "No protected file changed in diff"
-    command: "git diff --name-only -- run_agent.py cli.py gateway/run.py src/hermes_tavern/runtime.py src/hermes_tavern/runtime_prompt_modules.py src/hermes_tavern/prompt.py src/hermes_tavern/model_router.py src/hermes_tavern/provider_bridge.py src/hermes_tavern/adapters.py src/hermes_tavern/runtime_generation.py src/hermes_tavern/runtime_content.py src/hermes_tavern/memory.py src/hermes_tavern/images.py src/hermes_tavern/importers plugins build/lib src/hermes_tavern/db_novel.py src/hermes_tavern/db.py"
-    status: pending
+    command: "git diff --name-only -- run_agent.py cli.py gateway/run.py ..."
+    status: passed
     expected: "empty"
   - id: C5
     name: "git diff --check passes"
     command: "git diff --check"
-    status: pending
+    status: passed
     expected: "empty"

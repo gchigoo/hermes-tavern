@@ -145,7 +145,7 @@ def test_help_includes_rp_debug_context_usage():
 def test_help_lists_image_configuration_commands():
     help_text = _build_help_text()
 
-    assert "/rp image settings [set <key> <value>|clear <key|all>]" in help_text
+    assert "/rp image settings [set <key> <value>|clear <key|all>|export]" in help_text
     assert (
         "/rp image style [list|save <name>|use <name>|inspect <name>|delete <name>]"
         in help_text

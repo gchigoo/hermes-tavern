@@ -51,6 +51,10 @@ def _runtime(tmp_path):
     return runtime, store, session, card
 
 
+def _extract_media_path(response: str) -> Path:
+    return Path(response.split('MEDIA:"', 1)[1].split('"', 1)[0])
+
+
 def test_compile_image_prompt_uses_st_character_prefix_and_scene_context(tmp_path):
     runtime, store, session, card = _runtime(tmp_path)
     store.append_message(session["id"], "user", "The lake is bright tonight.")
@@ -253,6 +257,127 @@ def test_image_settings_set_clear_and_apply_to_prompt_and_metadata(tmp_path):
     )
     cleared = runtime.handle_command_sync(RPCommand("image", ["settings"], "/rp image settings"), FakeEvent())
     assert "- style_prefix: (empty)" in cleared
+
+
+def test_image_settings_export_writes_json_file(tmp_path, monkeypatch):
+    runtime, store, session, card = _runtime(tmp_path)
+    monkeypatch.setattr("plugins.hermes_tavern.runtime_images.get_hermes_home", lambda: tmp_path / "hermes home")
+
+    response = runtime.handle_command_sync(
+        RPCommand("image", ["settings", "export"], "/rp image settings export"),
+        FakeEvent(),
+    )
+
+    media_path = _extract_media_path(response)
+    safe_session_id = "".join(char for char in str(session["id"]) if char.isalnum())[:16] or "session"
+    expected = tmp_path / "hermes home" / "plugins" / "hermes-tavern" / "exports" / "settings" / f"image_settings_{safe_session_id}.json"
+
+    assert "Image settings exported." in response
+    assert media_path == expected
+    assert media_path.exists()
+    assert media_path.parent == expected.parent
+
+
+def test_image_settings_export_json_contains_expected_keys(tmp_path, monkeypatch):
+    runtime, store, session, card = _runtime(tmp_path)
+    monkeypatch.setattr("plugins.hermes_tavern.runtime_images.get_hermes_home", lambda: tmp_path / "hermes home")
+
+    runtime.handle_command_sync(
+        RPCommand("image", ["settings", "set", "width", "768"], "/rp image settings set width 768"),
+        FakeEvent(),
+    )
+    runtime.handle_command_sync(
+        RPCommand("image", ["settings", "set", "style_prefix", "anime"], "/rp image settings set style_prefix anime"),
+        FakeEvent(),
+    )
+
+    response = runtime.handle_command_sync(
+        RPCommand("image", ["settings", "export"], "/rp image settings export"),
+        FakeEvent(),
+    )
+    path = _extract_media_path(response)
+    payload = json.loads(path.read_text(encoding="utf-8"))
+
+    assert payload["width"] == 768
+    assert payload["style_prefix"] == "anime"
+    assert set(("width", "height", "steps", "cfg_scale", "sampler", "seed", "style_prefix", "style_suffix", "negative_prompt")) <= payload.keys()
+
+
+def test_image_settings_export_returns_media_marker(tmp_path, monkeypatch):
+    runtime, store, session, card = _runtime(tmp_path)
+    monkeypatch.setattr("plugins.hermes_tavern.runtime_images.get_hermes_home", lambda: tmp_path / "hermes home")
+
+    response = runtime.handle_command_sync(
+        RPCommand("image", ["settings", "export"], "/rp image settings export"),
+        FakeEvent(),
+    )
+
+    assert response.startswith("Image settings exported.")
+    assert 'MEDIA:"' in response
+
+
+def test_image_settings_export_no_active_session(tmp_path, monkeypatch):
+    runtime, store, session, card = _runtime(tmp_path)
+    monkeypatch.setattr("plugins.hermes_tavern.runtime_images.get_hermes_home", lambda: tmp_path / "hermes home")
+
+    class OtherSource(FakeSource):
+        chat_id = "other"
+
+    class OtherEvent:
+        source = OtherSource()
+        text = ""
+
+    response = runtime.handle_command_sync(
+        RPCommand("image", ["settings", "export"], "/rp image settings export"),
+        OtherEvent(),
+    )
+
+    assert response == "No active Hermes Tavern session. Start one before generating images."
+
+
+def test_image_settings_export_preserves_existing_inspect(tmp_path, monkeypatch):
+    runtime, store, session, card = _runtime(tmp_path)
+    monkeypatch.setattr("plugins.hermes_tavern.runtime_images.get_hermes_home", lambda: tmp_path / "hermes home")
+
+    before = runtime.handle_command_sync(
+        RPCommand("image", ["settings"], "/rp image settings"),
+        FakeEvent(),
+    )
+    runtime.handle_command_sync(
+        RPCommand("image", ["settings", "export"], "/rp image settings export"),
+        FakeEvent(),
+    )
+    after = runtime.handle_command_sync(
+        RPCommand("image", ["settings"], "/rp image settings"),
+        FakeEvent(),
+    )
+
+    assert before == after
+
+
+def test_image_settings_export_set_clear_unchanged(tmp_path, monkeypatch):
+    runtime, store, session, card = _runtime(tmp_path)
+    monkeypatch.setattr("plugins.hermes_tavern.runtime_images.get_hermes_home", lambda: tmp_path / "hermes home")
+
+    assert "width = 800" in runtime.handle_command_sync(
+        RPCommand("image", ["settings", "set", "width", "800"], "/rp image settings set width 800"),
+        FakeEvent(),
+    )
+
+    runtime.handle_command_sync(
+        RPCommand("image", ["settings", "export"], "/rp image settings export"),
+        FakeEvent(),
+    )
+
+    assert "- width: 800" in runtime.handle_command_sync(
+        RPCommand("image", ["settings"], "/rp image settings"),
+        FakeEvent(),
+    )
+
+    assert "Hermes Tavern image setting cleared: style_prefix" in runtime.handle_command_sync(
+        RPCommand("image", ["settings", "clear", "style_prefix"], "/rp image settings clear style_prefix"),
+        FakeEvent(),
+    )
 
 
 def test_image_styles_seeded_on_migration(tmp_path):

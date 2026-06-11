@@ -6,6 +6,7 @@ import json
 from typing import Any
 
 from hermes_tavern.commands import RPCommand
+from hermes_tavern.hermes_home import get_hermes_home
 from hermes_tavern.identity import session_key_from_event
 from hermes_tavern.images import (
     DEFAULT_IMAGE_SETTINGS,
@@ -107,7 +108,18 @@ def image_settings(runtime, command: RPCommand, session: dict[str, Any]) -> str:
             return "Unknown image setting. Use /rp image settings to inspect valid keys."
         runtime.store.set_image_settings(session["id"], normalize_image_settings(updated))
         return f"Hermes Tavern image setting cleared: {key}"
-    return "Usage: /rp image settings [set <key> <value>|clear <key|all>]"
+    if action == "export":
+        canonical = normalize_image_settings(runtime.store.get_image_settings(session["id"]))
+        safe_session_id = "".join(char for char in str(session["id"]) if char.isalnum())[:16] or "session"
+        export_dir = get_hermes_home() / "plugins" / "hermes-tavern" / "exports" / "settings"
+        export_dir.mkdir(parents=True, exist_ok=True)
+        export_path = export_dir / f"image_settings_{safe_session_id}.json"
+        export_path.write_text(
+            json.dumps(canonical, ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
+        return f"Image settings exported.\nfile: {export_path}\nMEDIA:\"{export_path}\""
+    return "Usage: /rp image settings [set <key> <value>|clear <key|all>|export]"
 
 def image_safety(runtime, command: RPCommand, session: dict[str, Any]) -> str:
     safety = normalize_image_safety(runtime.store.get_image_safety(session["id"]))
