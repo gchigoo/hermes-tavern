@@ -1,0 +1,59 @@
+doc_type: feature-checklist
+status: planned
+feature: "2026-06-11-hermes-tavern-phase170-export-surface-regression"
+date: "2026-06-11"
+implementation_ready: false
+summary: >
+  Test-only export command-surface hardening for generated /rp help and README
+  Core commands. This phase adds exact regression assertions for implemented
+  export literals without changing command behavior or documentation text.
+tags:
+  - hermes-tavern
+  - codestable
+  - command-surface
+  - export
+  - tests
+steps:
+  - id: S1
+    name: "S1: Add export command-surface regression tests"
+    status: planned
+    description: >
+      Add focused test assertions for currently implemented export command
+      literals in generated /rp help and README Core commands. Keep the slice
+      test-only and do not alter runtime command handling or docs text.
+    allowed_files:
+      - tests/test_hermes_tavern_commands.py
+      - tests/test_hermes_tavern_readme_docs.py
+    prohibited_files:
+      - run_agent.py
+      - cli.py
+      - gateway/run.py
+      - "src/**"
+      - README.md
+      - design/HERMES_TAVERN_DESIGN.md
+      - design/codestable/architecture/ARCHITECTURE.md
+      - "plugins/**"
+      - "build/lib/**"
+    exact_scope:
+      - "Add generated-help assertions using existing _build_help_text() and _command_segment_has_literal() helpers."
+      - "Cover exact generated-help export literals for binding, style sample, character state, relationship, location, organization, plot thread, project revision, chapter, scene beat, scene, canon, and timeline exports."
+      - "Add README Core command assertions for `/rp project revision export <note-id>`, `/rp character state export <character-state-id>`, and `/rp relationship export <relationship-id>`."
+      - "Do not edit README command text, source command tables, runtime handlers, export payload builders, schemas, providers, prompt/compiler code, gateway/core files, plugins, or build artifacts."
+    verification:
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m py_compile tests/test_hermes_tavern_commands.py tests/test_hermes_tavern_readme_docs.py"
+        expected: "passes"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_commands.py tests/test_hermes_tavern_readme_docs.py -q -o 'addopts=' -p no:cacheprovider"
+        expected: "passes"
+      - command: "git diff --name-only -- run_agent.py cli.py gateway/run.py src README.md design/HERMES_TAVERN_DESIGN.md design/codestable/architecture/ARCHITECTURE.md plugins build/lib"
+        expected: "empty output"
+      - command: "git diff --check"
+        expected: "passes"
+checks:
+  - id: C1
+    name: "Focused command and README docs tests"
+    command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_commands.py tests/test_hermes_tavern_readme_docs.py -q -o 'addopts=' -p no:cacheprovider"
+    status: pending
+  - id: C2
+    name: "No protected or runtime files changed"
+    command: "git diff --name-only -- run_agent.py cli.py gateway/run.py src README.md design/HERMES_TAVERN_DESIGN.md design/codestable/architecture/ARCHITECTURE.md plugins build/lib"
+    status: pending
