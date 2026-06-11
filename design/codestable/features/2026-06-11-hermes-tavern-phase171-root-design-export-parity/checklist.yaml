@@ -1,5 +1,5 @@
 doc_type: feature-checklist
-status: implemented
+status: accepted
 feature: "2026-06-11-hermes-tavern-phase171-root-design-export-parity"
 date: "2026-06-11"
 implementation_ready: true
@@ -58,7 +58,15 @@ steps:
         expected: "passes"
   - id: S2
     name: "S2: Acceptance and CodeStable status closeout"
-    status: planned
+    status: completed
+    completed_at: "2026-06-11"
+    result: >
+      ACCEPTED - Codex executor drafted phase171-acceptance.md and the
+      controller reran CodeStable validators, py_compile, focused root-design
+      docs tests (9 passed), the full pytest suite (1213 passed), protected-path
+      guards, and git diff --check before finalizing accepted status. No
+      runtime/source/README/root-design/architecture/plugin/build behavior or
+      content changed during S2.
     description: >
       After S1 implementation and controller verification, create the acceptance
       report, finalize checklist status, and record that no runtime/source or
@@ -84,10 +92,16 @@ checks:
     command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts=' -p no:cacheprovider"
     status: passed
     completed_at: "2026-06-11"
-    result: "PASSED - controller rerun reported 1213 passed in 54.83s."
+    result: "PASSED - controller rerun after final status patch reported 1213 passed in 55.83s."
   - id: C4
     name: "git diff --check passes"
     command: "git diff --check"
     status: passed
     completed_at: "2026-06-11"
     result: "PASSED - no whitespace errors."
+  - id: C5
+    name: "Acceptance frontmatter validation"
+    command: "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-11-hermes-tavern-phase171-root-design-export-parity/phase171-acceptance.md --require doc_type --require status --require feature"
+    status: passed
+    completed_at: "2026-06-11"
+    result: "PASSED - controller validator accepted phase171-acceptance.md frontmatter and required fields after final status update."
