@@ -1465,7 +1465,17 @@ Commands:
 /rp image prompt
 /rp image scene
 /rp image character
+/rp image settings [set <key> <value>|clear <key|all>|export]
 ```
+
+Phase 168 adds `/rp image settings [set <key> <value>|clear <key|all>|export]`:
+
+- exports active session image settings using `get_image_settings` and
+  `normalize_image_settings`,
+- writes one UTF-8 JSON file under
+  `get_hermes_home()/plugins/hermes-tavern/exports/settings`,
+- returns quoted `MEDIA:\"<path>\"` attachment output,
+- makes no schema/provider/model/generation/prompt/debug/context/retrieval/content-mode/minors/safety-bypass behavior changes.
 
 ### 15.3 Future media features
 

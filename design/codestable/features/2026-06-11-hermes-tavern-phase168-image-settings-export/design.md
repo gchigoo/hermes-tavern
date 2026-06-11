@@ -1,10 +1,10 @@
 ---
 doc_type: feature-design
-status: in_progress
+status: approved
 feature: "2026-06-11-hermes-tavern-phase168-image-settings-export"
 date: "2026-06-11"
 summary: >
-  DRAFT — Adds one bounded /rp image settings export command that exports the
+  Adds one bounded /rp image settings export command that exports the
   active session's image generation settings as a JSON file and returns a quoted
   MEDIA marker. Pure local operation, no provider/generation/schema changes.
 tags: [hermes-tavern, image, export, settings, json, offline]

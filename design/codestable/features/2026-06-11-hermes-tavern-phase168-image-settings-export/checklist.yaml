@@ -1,5 +1,5 @@
 doc_type: feature-checklist
-status: in_progress
+status: accepted
 feature: "2026-06-11-hermes-tavern-phase168-image-settings-export"
 date: "2026-06-11"
 implementation_ready: true
@@ -7,8 +7,8 @@ summary: >
   Phase 168 adds one bounded /rp image settings export command that exports the
   active session's image generation settings as JSON with quoted MEDIA marker.
   S1 implements the export subcommand, dispatcher branch, help/README updates,
-  and focused tests; S2 completes acceptance and architecture/root-design
-  writeback (deferred to controller after S1 verification passes).
+  and focused tests; S2 completed acceptance and architecture/root-design
+  writeback after controller verification.
 tags:
   - hermes-tavern
   - image
@@ -93,7 +93,13 @@ steps:
         expected: "passes"
   - id: S2
     name: "S2: Verify/accept/write current docs"
-    status: planned
+    status: completed
+    completed_at: "2026-06-11"
+    result: >
+      ACCEPTED - Controller reran validators, py_compile, focused tests
+      (130 passed), full Tavern tests (1203 passed), reverse-scope guard, and
+      git diff --check. Acceptance report and architecture/root-design writeback
+      finalized.
     description: >
       Controller-owned acceptance/writeback after S1 passes.
     allowed_files:
@@ -119,11 +125,23 @@ steps:
       - "Run git reverse-scope and stale-wording guards."
       - "Run validators on YAML and frontmatter artifacts."
     verification:
-      - command: "python -m pytest tests/test_hermes_tavern_images.py -q -o 'addopts=' -p no:cacheprovider"
+      - command: "test -f design/codestable/features/2026-06-11-hermes-tavern-phase168-image-settings-export/phase168-acceptance.md && rg -n \"^doc_type: feature-acceptance$|^status: accepted$|^feature: \\\"2026-06-11-hermes-tavern-phase168-image-settings-export\\\"$|^date: \\\"2026-06-11\\\"$\" design/codestable/features/2026-06-11-hermes-tavern-phase168-image-settings-export/phase168-acceptance.md"
         expected: "passes"
-      - command: "python -m pytest tests/test_hermes_tavern_*.py -q -o 'addopts=' -p no:cacheprovider"
+      - command: "test -f design/codestable/architecture/ARCHITECTURE.md && test -f design/HERMES_TAVERN_DESIGN.md && rg -n \"Phase 168|/rp image settings \\[set <key> <value>\\|clear <key|all>\\|export\\]|Phase 168 image settings export boundary|current through Phase 168\" design/codestable/architecture/ARCHITECTURE.md design/HERMES_TAVERN_DESIGN.md"
+        expected: "passes"
+      - command: "python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-11-hermes-tavern-phase168-image-settings-export/phase168-acceptance.md --require doc_type --require status --require feature"
+        expected: "passes"
+      - command: "python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-11-hermes-tavern-phase168-image-settings-export/checklist.yaml --yaml-only --require doc_type --require status --require feature"
+        expected: "passes"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_images.py tests/test_hermes_tavern_readme_docs.py tests/test_hermes_tavern_commands.py -q -o 'addopts=' -p no:cacheprovider"
+        expected: "passes"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_*.py -q -o 'addopts=' -p no:cacheprovider"
+        expected: "passes"
+      - command: "controller reverse-scope guard: git status --short changed only Phase 168 design/checklist/acceptance, ARCHITECTURE.md, and HERMES_TAVERN_DESIGN.md"
         expected: "passes"
       - command: "git diff --check"
+        expected: "passes"
+      - command: "controller stale-status guard: no Phase 168 status fields remain planned/in_progress/draft/pending, no current-through-166/167 headings remain, and no controller-pending markers remain"
         expected: "passes"
 checks:
   - id: C1
@@ -148,3 +166,38 @@ checks:
     command: "git diff --check"
     status: passed
     expected: "empty"
+  - id: C6
+    name: "S2 acceptance report and frontmatter"
+    status: passed
+    completed_at: "2026-06-11"
+    result: "PASSED - phase168-acceptance.md exists with accepted frontmatter and complete controller evidence."
+  - id: C7
+    name: "S2 architecture and root-design writeback"
+    status: passed
+    completed_at: "2026-06-11"
+    result: "PASSED - ARCHITECTURE.md and HERMES_TAVERN_DESIGN.md document Phase 168 command, export path, MEDIA marker, and no-side-effect boundary."
+  - id: C8
+    name: "S2 validators"
+    status: passed
+    completed_at: "2026-06-11"
+    result: "PASSED - validate-yaml passed for design.md, checklist.yaml, and phase168-acceptance.md."
+  - id: C9
+    name: "S2 focused tests (images + readme + commands)"
+    status: passed
+    completed_at: "2026-06-11"
+    result: "PASSED - py_compile passed and focused image/readme/command tests reported 130 passed."
+  - id: C10
+    name: "S2 full Tavern tests"
+    status: passed
+    completed_at: "2026-06-11"
+    result: "PASSED - full Tavern test suite reported 1203 passed."
+  - id: C11
+    name: "S2 reverse-scope and stale wording checks"
+    status: passed
+    completed_at: "2026-06-11"
+    result: "PASSED - reverse-scope guard showed only allowed CodeStable/root-design docs changed; stale pending/current-through-166/167 markers absent from current Phase 168 docs."
+  - id: C12
+    name: "S2 diff check"
+    status: passed
+    completed_at: "2026-06-11"
+    result: "PASSED - git diff --check clean."

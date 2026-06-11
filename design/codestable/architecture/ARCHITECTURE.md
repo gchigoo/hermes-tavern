@@ -1,7 +1,7 @@
 # Hermes Agent — Architecture
 
 > Status: current snapshot
-> Last updated: 2026-06-07
+> Last updated: 2026-06-11
 
 ## 1. Project Summary
 
@@ -82,7 +82,7 @@ importers/
   lorebooks.py        import_st_lorebook_json / import_lorebook_file → Lorebook
 ```
 
-**Phases 1–38 and 121–167 complete (2026-06-08).** Capability summary:
+**Phases 1–38 and 121–168 complete (2026-06-11).** Capability summary:
 - Phases 1–3: skeleton, SQLite, card import, session CRUD, gateway hook
 - Phase 4: Prompt Compiler (chat + story renderers, card/persona assembly)
 - Phase 5–6: Provider bridge, live model routing
@@ -305,6 +305,13 @@ importers/
   individual entity CRUD, prompt/module, provider/model, generation,
   retrieval/vectorization, content-mode, minors/underage, safety-bypass,
   or deferred project archive/ZIP/cloud-sync tooling changes occur.
+- Phase 168: Image Settings JSON Export (`/rp image settings [set <key> <value>|clear <key|all>|export]`) reads active-session settings via
+  existing session settings helpers (`get_image_settings` + `normalize_image_settings`),
+  writes one UTF-8 JSON file under
+  `get_hermes_home()/plugins/hermes-tavern/exports/settings`, and returns quoted
+  `MEDIA:\"<path>\"` marker output. It keeps image settings schema, generation,
+  prompt/compiler, provider/model routing, retrieval/vectorization,
+  content-mode, minors/underage, safety-bypass, and unrelated command behavior unchanged.
 
 ### Plugin flow
 
@@ -345,7 +352,7 @@ from vectorization/retrieval, provider/model routing, content mode,
 credentials, automation, summarization, and generation; they are visible only
 through command output and Markdown export.
 
-### /rp command surface (current through Phase 166)
+### /rp command surface (current through Phase 168)
 
 ```
 /rp help | status | assets
@@ -364,6 +371,7 @@ through command output and Markdown export.
 /rp preset import [file] | list | inspect <preset> | export <preset> | use <preset>      ← `last` resolves to the session-lifetime most recently imported preset
 /rp lore import [file] | list | inspect <lorebook> | export <lorebook> | use <lorebook> | test <msg> | debug  ← `last` resolves to the session-lifetime most recently imported lorebook
 /rp persona import [file] | list [limit] [page] | inspect <persona> | use <persona> | clear | debug | export <persona>  ← `last` resolves to the session-lifetime most recently imported persona
+/rp image settings [set <key> <value>|clear <key|all>|export]  ← Phase 168
 /rp note set <text> | clear | inspect | position [before_char|after_history|before_user] | frequency [always|every_n [n]]
 /rp memory add <fact> | list [limit] [page] | summary [set <text>|summarize [limit]] | debug
 /rp content mode [safe|adult-fiction]
@@ -701,7 +709,8 @@ These phases do not change schema or core prompt/generation assembly.
 - **Tavern image provider error envelope**: `/rp image ...` catches provider exceptions and returns a fixed bounded message with retry/status hints. Failed image jobs persist only sanitized generic error text, never `str(exc)`.
 - **Tavern provider debug sanitizer**: provider/debug dicts must pass recursive, case-insensitive secret-key filtering before display. Secret-like keys include `api_key`, `access_token`, `password`, `secret`, and `token`.
 - **Tavern export MEDIA contract**: `/rp export`, `/rp card export <card>`,
-  `/rp lore export <lorebook>`, and `/rp preset export <preset>` return quoted
+  `/rp lore export <lorebook>`, `/rp preset export <preset>`, and
+  `/rp image settings export` return quoted
   `MEDIA:"<path>"` markers so gateway adapters preserve attachment paths with
   spaces. Exports must not include raw event JSON or raw message metadata blobs.
 - **Phase 121 reverse-scope constraints**: no cloud sync, no collaboration/multi-user workflow, no novel import, no timeline graphics, no DB credential persistence.
@@ -807,4 +816,8 @@ These phases do not change schema or core prompt/generation assembly.
   add/list/inspect/update/delete behavior, prompt/debug/context behavior, provider/model
   routing, generation, retrieval/vectorization, content-mode, credentials, project archive,
   and safety-bypass behavior unchanged.
+- **Phase 168 image settings export boundary**: `/rp image settings [set <key> <value>|clear <key|all>|export]` resolves the active session, normalizes settings with `normalize_image_settings` and `get_image_settings`, writes one UTF-8 JSON file under
+  `get_hermes_home()/plugins/hermes-tavern/exports/settings`, and returns quoted
+  `MEDIA:"<path>"`. It makes no changes to schema/provider/model/generation,
+  prompt/debug/context/retrieval, content-mode, minors/underage, or safety-bypass behavior.
 - **Tavern lore regex complexity guard**: lorebook regex keys are screened locally before matching. Entries with patterns longer than 256 characters or nested quantified groups (for example `(a+)+`, `(.+)*`, `([a-z]+){2,}`) are excluded with bounded reasons (`regex rejected: ...`), preserving raw imported lore data while preventing unbounded local matching behavior.
