@@ -1292,6 +1292,7 @@ relationship label rename is current metadata.
 /rp organization update <organization-id> <description...>
 /rp organization delete <organization-id>
 /rp organization export <organization-id>
+/rp binding export <binding-id>
 /rp plot thread add <project-id> <label> <description...>
 /rp plot thread list [project-id]
 /rp plot thread inspect <plot-thread-id>
@@ -1310,6 +1311,7 @@ relationship label rename is current metadata.
 /rp relationship rename <relationship-id> <label>
 /rp relationship update <relationship-id> <state...>
 /rp relationship delete <relationship-id>
+/rp relationship export <relationship-id>
 /rp chapter create/list
 /rp chapter export <chapter-id>
 /rp chapter inspect <chapter-id>
@@ -1317,6 +1319,7 @@ relationship label rename is current metadata.
 /rp chapter summary clear <chapter-id>
 /rp scene create/list/start
 /rp scene inspect <scene-id>
+/rp scene export <scene-id>
 /rp scene summary <scene-id> [text]
 /rp scene summary clear <scene-id>
 /rp scene goal <scene-id> [text]
@@ -1330,13 +1333,17 @@ relationship label rename is current metadata.
 /rp scene beat inspect <beat-id>
 /rp scene beat update <beat-id> <beat...>
 /rp scene beat delete <beat-id>
+/rp scene beat export <beat-id>
 /rp project revision add <project-id> <label> <note...>
 /rp project revision list [project-id]
 /rp project revision inspect <note-id>
 /rp project revision update <note-id> <note...>
 /rp project revision delete <note-id>
+/rp project revision export <note-id>
 /rp canon add/list/group | /rp canon inspect <canon-id>
+/rp canon export <canon-id>
 /rp timeline add/list | /rp timeline inspect <timeline-id>
+/rp timeline export <timeline-id>
 ```
 
 Project Brief and Project Outline commands are metadata-only. They expose local

@@ -1,8 +1,8 @@
 doc_type: feature-checklist
-status: planned
+status: implemented
 feature: "2026-06-11-hermes-tavern-phase171-root-design-export-parity"
 date: "2026-06-11"
-implementation_ready: false
+implementation_ready: true
 summary: >
   Root-design command-surface parity for already-implemented local export
   commands, guarded by a focused design-doc regression test.
@@ -17,7 +17,18 @@ tags:
 steps:
   - id: S1
     name: "S1: Sync root-design export command literals"
-    status: planned
+    status: done
+    completed_at: "2026-06-11"
+    result: >
+      DONE - Codex executor updated design/HERMES_TAVERN_DESIGN.md so the
+      root-design writing command surface includes the already-current local
+      export literals for relationships, bindings, scenes, scene beats,
+      revision notes, canon, and timeline alongside the existing location and
+      organization export literals. It also added
+      tests/test_hermes_tavern_design_docs.py as a docs-only regression that
+      reads the root design command surfaces and asserts all nine Phase 171
+      export literals remain visible. No runtime/source/core/README/
+      architecture/plugin/build files changed.
     description: >
       Update the root design writing command surfaces to include already-current
       local export literals and add a focused regression test that reads
@@ -59,16 +70,24 @@ checks:
   - id: C1
     name: "Focused root-design docs regression"
     command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_design_docs.py -q -o 'addopts=' -p no:cacheprovider"
-    status: pending
+    status: passed
+    completed_at: "2026-06-11"
+    result: "PASSED - controller rerun after py_compile reported 9 passed in 0.01s."
   - id: C2
     name: "No protected or runtime files changed"
     command: "git diff --name-only -- run_agent.py cli.py gateway/run.py src README.md design/codestable/architecture/ARCHITECTURE.md plugins build/lib"
-    status: pending
+    status: passed
+    completed_at: "2026-06-11"
+    result: "PASSED - empty output; protected/runtime/source/core/README/architecture/plugin/build paths were unchanged."
   - id: C3
     name: "Full pytest suite passes"
     command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts=' -p no:cacheprovider"
-    status: pending
+    status: passed
+    completed_at: "2026-06-11"
+    result: "PASSED - controller rerun reported 1213 passed in 54.83s."
   - id: C4
     name: "git diff --check passes"
     command: "git diff --check"
-    status: pending
+    status: passed
+    completed_at: "2026-06-11"
+    result: "PASSED - no whitespace errors."

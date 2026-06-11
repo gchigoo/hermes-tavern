@@ -1,6 +1,6 @@
 ---
 doc_type: feature-design
-status: draft
+status: approved
 feature: "2026-06-11-hermes-tavern-phase171-root-design-export-parity"
 date: "2026-06-11"
 summary: >
@@ -10,7 +10,7 @@ tags: [hermes-tavern, codestable, root-design, command-surface, export, docs, te
 created: "2026-06-11"
 updated: "2026-06-11"
 owner: codestable-cron
-implementation_ready: false
+implementation_ready: true
 ---
 # Phase 171: Root Design Export Command Parity
 
