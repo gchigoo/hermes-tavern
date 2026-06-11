@@ -1,0 +1,72 @@
+doc_type: feature-checklist
+status: planned
+feature: "2026-06-11-hermes-tavern-phase169-project-json-export-surface-parity"
+date: "2026-06-11"
+implementation_ready: false
+summary: >
+  Harden current command-surface docs and help tests so the implemented Phase 167
+  project JSON export command is represented consistently.
+tags:
+  - hermes-tavern
+  - codestable
+  - command-surface
+  - json-export
+  - docs
+  - tests
+steps:
+  - id: S1
+    name: "S1: Harden project JSON export command surface parity"
+    status: planned
+    description: >
+      Add exact project JSON export command-surface coverage to current docs and
+      help tests without changing runtime behavior.
+    allowed_files:
+      - design/HERMES_TAVERN_DESIGN.md
+      - design/codestable/architecture/ARCHITECTURE.md
+      - tests/test_hermes_tavern_commands.py
+    prohibited_files:
+      - run_agent.py
+      - cli.py
+      - gateway/run.py
+      - "plugins/**"
+      - "build/lib/**"
+      - "src/**"
+      - README.md
+    exact_scope:
+      - "Add `/rp project export json [project-id]` to the root design Commands block near `/rp project export [id]`."
+      - "Add `/rp project export json [project-id]` to the architecture current `/rp` command surface near `/rp project create/list/info/set/export`."
+      - "Add one exact `_build_help_text()` assertion for `/rp project export json [project-id]` in `tests/test_hermes_tavern_commands.py`."
+      - "Do not change runtime handlers, JSON export payloads, README text, schemas, provider/model routing, generation behavior, prompt compiler, gateway/core, archive/ZIP/retrieval/vectorization, or plugin assets."
+    verification:
+      - command: "python -m pytest tests/test_hermes_tavern_commands.py tests/test_hermes_tavern_readme_docs.py -q -o 'addopts='"
+        expected: "passes"
+      - command: 'rg -n "/rp project export json \[project-id\]" README.md src/hermes_tavern/commands.py design/HERMES_TAVERN_DESIGN.md design/codestable/architecture/ARCHITECTURE.md tests/test_hermes_tavern_commands.py tests/test_hermes_tavern_readme_docs.py'
+        expected: "shows the literal in source help, README, root design, architecture, and tests"
+  - id: S2
+    name: "S2: Verify/accept/write current docs"
+    status: planned
+    description: >
+      Controller-owned acceptance/writeback after S1 passes.
+    allowed_files:
+      - design/codestable/features/2026-06-11-hermes-tavern-phase169-project-json-export-surface-parity/checklist.yaml
+      - design/codestable/features/2026-06-11-hermes-tavern-phase169-project-json-export-surface-parity/phase169-acceptance.md
+      - design/codestable/architecture/ARCHITECTURE.md
+      - design/HERMES_TAVERN_DESIGN.md
+    prohibited_files:
+      - README.md
+      - "src/**"
+      - "tests/**"
+      - run_agent.py
+      - cli.py
+      - gateway/run.py
+      - "plugins/**"
+      - "build/lib/**"
+checks:
+  - id: C1
+    name: "Targeted command and README docs tests pass"
+    command: "python -m pytest tests/test_hermes_tavern_commands.py tests/test_hermes_tavern_readme_docs.py -q -o 'addopts='"
+    status: pending
+  - id: C2
+    name: "Project JSON export literal appears across command surfaces"
+    command: 'rg -n "/rp project export json \[project-id\]" README.md src/hermes_tavern/commands.py design/HERMES_TAVERN_DESIGN.md design/codestable/architecture/ARCHITECTURE.md tests/test_hermes_tavern_commands.py tests/test_hermes_tavern_readme_docs.py'
+    status: pending
