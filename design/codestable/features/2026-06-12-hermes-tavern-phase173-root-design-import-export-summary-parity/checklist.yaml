@@ -1,5 +1,5 @@
 doc_type: feature-checklist
-status: implemented
+status: accepted
 feature: "2026-06-12-hermes-tavern-phase173-root-design-import-export-summary-parity"
 date: "2026-06-12"
 owner: codestable-cron
@@ -74,7 +74,17 @@ steps:
         expected: "passes"
   - id: S2
     name: "S2: Acceptance closeout"
-    status: pending
+    status: completed
+    completed_at: "2026-06-12"
+    result: >
+      COMPLETED - Codex executor drafted the Phase 173 acceptance report and C6
+      controller-rerun ledger without finalizing statuses. Controller expanded
+      the acceptance report, reran CodeStable validators, py_compile, focused
+      design-doc pytest (10 passed), section-17 stale/current guards,
+      protected-path diff/status guards, git diff --check, and the full pytest
+      suite (1215 passed in 59.22s), then finalized checklist and acceptance
+      statuses. No additional architecture/root-design/attention/requirements/
+      roadmap writeback was needed.
     description: >
       After S1 implementation and controller verification, write the acceptance
       report and finalize checklist/check statuses. Do not update CodeStable
@@ -118,6 +128,24 @@ checks:
     completed_at: "2026-06-12"
     result: "PASSED - no whitespace errors."
     expected: "passes"
+  - id: C6
+    name: "S2 acceptance finalization rerun"
+    command: >
+      controller rerun: validate design/checklist/acceptance frontmatter;
+      py_compile tests/test_hermes_tavern_design_docs.py; focused design-doc
+      pytest; section-17 stale/current marker guard; protected-path diff/status
+      guards; git diff --check; full pytest
+    status: passed
+    completed_at: "2026-06-12"
+    expected: "passes"
+    result: >
+      PASSED - controller reran CodeStable validators for design/checklist/
+      acceptance, py_compile, focused design-doc pytest (10 passed in 0.02s),
+      section-17 stale/current marker guard, protected-path diff/status guards,
+      git diff --check, and full pytest (1215 passed in 59.22s) before
+      finalizing Phase 173 accepted status. After the final status-only patch,
+      validators, focused docs tests, section-17 guards, protected-path guards,
+      and git diff --check were rerun.
 risks:
   - "Root design section 17 may become too duplicative; keep changes to summary-level current behavior and representative command references."
   - "Do not imply project archive ZIP/import, cloud sync, graph tooling, automatic extraction, provider/generation changes, or safety-bypass behavior."
