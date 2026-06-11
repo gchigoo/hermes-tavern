@@ -1,5 +1,5 @@
 doc_type: feature-checklist
-status: implemented
+status: accepted
 feature: "2026-06-12-hermes-tavern-phase174-attention-status-sync-through-phase173"
 date: "2026-06-12"
 owner: codestable-cron
@@ -77,7 +77,16 @@ steps:
         expected: "passes"
   - id: S2
     name: "S2: Acceptance closeout"
-    status: planned
+    status: completed
+    completed_at: "2026-06-12"
+    result: >
+      COMPLETED - Codex executor drafted the Phase 174 acceptance report and C7
+      pending controller-rerun ledger without finalizing statuses. Controller
+      expanded and finalized the acceptance report, reran CodeStable validators,
+      py_compile, focused status pytest (1 passed), current-marker scan, stale
+      terminal-status guard, protected-path diff/status guards, git diff --check,
+      and the full pytest suite (1215 passed in 56.72s), then finalized checklist
+      and acceptance statuses.
     description: >
       After S1 implementation and controller verification, create the Phase 174
       acceptance report and finalize checklist/check statuses. Do not expand
@@ -131,6 +140,24 @@ checks:
     completed_at: "2026-06-12"
     result: "PASSED - controller validators reported design.md and checklist.yaml valid after S1 status writeback."
     expected: "passes"
+  - id: C7
+    name: "S2 controller rerun gates"
+    command: >
+      controller rerun: validate design/checklist/acceptance frontmatter;
+      py_compile tests/test_hermes_tavern_codestable_status.py; focused status
+      pytest; current-marker scan; stale terminal-status guard; protected-path
+      diff/status guards; git diff --check; full pytest
+    status: passed
+    completed_at: "2026-06-12"
+    expected: "passes"
+    result: >
+      PASSED - controller reran CodeStable validators for design/checklist/
+      acceptance, py_compile, focused status pytest (1 passed in 0.01s), current
+      Phase 174 marker scan, stale terminal-status guard, protected-path
+      diff/status guards, git diff --check, and full pytest (1215 passed in
+      56.72s) before finalizing Phase 174 accepted status. After the final
+      status-only patch, validators, focused status tests, marker/stale guards,
+      protected-path guards, and git diff --check were rerun.
 risks:
   - "The status line can become too long; keep it to one bullet and do not create generated phase-summary machinery."
   - "The stale-marker guard must reject only standalone terminal 1-171 markers and must preserve the valid Phase 121-167 internal range."
