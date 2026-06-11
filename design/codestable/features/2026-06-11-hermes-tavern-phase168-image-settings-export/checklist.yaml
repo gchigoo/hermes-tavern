@@ -1,0 +1,150 @@
+doc_type: feature-checklist
+status: draft
+feature: "2026-06-11-hermes-tavern-phase168-image-settings-export"
+date: "2026-06-11"
+implementation_ready: false
+summary: >
+  Phase 168 adds one bounded /rp image settings export command that exports the
+  active session's image generation settings as JSON with quoted MEDIA marker.
+  S1 implements the export subcommand, dispatcher branch, help/README updates,
+  and focused tests; S2 completes acceptance and architecture/root-design
+  writeback (deferred to controller after S1 verification passes).
+tags:
+  - hermes-tavern
+  - image
+  - export
+  - settings
+  - json
+  - offline
+implementation_readiness: >
+  Architect profile (gpt-5.5) identified Phase 168 gap but timed out before
+  producing final artifacts. Controller materialized design/checklist following
+  the proven Phase 149-167 export pattern. Executor profile
+  (gpt-5.3-codex-spark, standalone CLI v0.138.0) available.
+  S1 implementation ready.
+steps:
+  - id: S1
+    name: "S1: Implement image settings JSON export"
+    status: planned
+    description: >
+      Add /rp image settings export as a subcommand under the existing image
+      settings handler. Resolve the active session via the existing session
+      resolution path, call get_image_settings(session_id) and
+      normalize_image_settings(), write one JSON file under
+      get_hermes_home()/plugins/hermes-tavern/exports/settings/, return
+      quoted MEDIA:"<path>", update commands.py help_lines for image settings,
+      update README Core commands table for image settings export, and add
+      focused offline tests.
+    allowed_files:
+      - src/hermes_tavern/runtime_images.py
+      - src/hermes_tavern/commands.py
+      - README.md
+      - tests/test_hermes_tavern_images.py
+      - tests/test_hermes_tavern_readme_docs.py
+    prohibited_files:
+      - run_agent.py
+      - cli.py
+      - gateway/run.py
+      - src/hermes_tavern/runtime.py
+      - src/hermes_tavern/runtime_lifecycle.py
+      - src/hermes_tavern/runtime_sessions.py
+      - src/hermes_tavern/runtime_assets.py
+      - src/hermes_tavern/runtime_novel.py
+      - src/hermes_tavern/runtime_presets.py
+      - src/hermes_tavern/runtime_persona.py
+      - src/hermes_tavern/runtime_lore.py
+      - src/hermes_tavern/db.py
+      - src/hermes_tavern/db_novel.py
+      - src/hermes_tavern/prompt.py
+      - src/hermes_tavern/runtime_prompt_modules.py
+      - src/hermes_tavern/model_router.py
+      - src/hermes_tavern/provider_bridge.py
+      - src/hermes_tavern/adapters.py
+      - src/hermes_tavern/runtime_generation.py
+      - src/hermes_tavern/runtime_content.py
+      - src/hermes_tavern/memory.py
+      - src/hermes_tavern/images.py
+      - "src/hermes_tavern/importers/**"
+      - "plugins/**"
+      - "build/lib/**"
+    exact_scope:
+      - "Add 'export' subcommand branch inside the existing image_settings() handler in runtime_images.py, after the 'clear' branch, before the final inspect return."
+      - "Resolve active session via the existing runtime.store.get_active_session(session_key_from_event(event)) pattern."
+      - "Reject no-active-session with the same message used by existing image settings inspect."
+      - "Call normalize_image_settings(runtime.store.get_image_settings(session['id'])) to get the canonical settings dict."
+      - "Create export directory at get_hermes_home()/plugins/hermes-tavern/exports/settings/."
+      - "Write one JSON file named image_settings_<safe_session_id>.json (alphanumeric-safe, <16 chars)."
+      - "Return response with 'Image settings exported.' and quoted MEDIA:\"<path>\"."
+      - "Update image_settings help in commands.py help_lines to include 'export'."
+      - "Update README Core commands table for image settings subcommand line."
+      - "Add focused tests: export writes JSON file, JSON contains expected settings keys, MEDIA output, no-active-session error, existing settings inspect unchanged, set/clear unchanged."
+      - "Do not change image_settings table schema, image generation, prompt compiler, provider/model routing, credential handling, content mode, safety, gateway/core files, plugin files, or build artifacts."
+      - "Do not add image safety export, image style export, or model profile export."
+    verification:
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m py_compile src/hermes_tavern/runtime_images.py src/hermes_tavern/commands.py tests/test_hermes_tavern_images.py tests/test_hermes_tavern_readme_docs.py"
+        expected: "passes"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_images.py tests/test_hermes_tavern_readme_docs.py -q -o 'addopts=' -p no:cacheprovider"
+        expected: "passes"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_*.py -q -o 'addopts=' -p no:cacheprovider"
+        expected: "passes"
+      - command: "git diff --name-only -- run_agent.py cli.py gateway/run.py src/hermes_tavern/runtime.py src/hermes_tavern/runtime_prompt_modules.py src/hermes_tavern/prompt.py src/hermes_tavern/runtime_prompt_manager.py src/hermes_tavern/runtime_debug.py src/hermes_tavern/model_router.py src/hermes_tavern/provider_bridge.py src/hermes_tavern/adapters.py src/hermes_tavern/runtime_model.py src/hermes_tavern/runtime_generation.py src/hermes_tavern/runtime_content.py src/hermes_tavern/memory.py src/hermes_tavern/runtime_memory.py src/hermes_tavern/images.py src/hermes_tavern/runtime_images.py src/hermes_tavern/importers plugins build/lib design/HERMES_TAVERN_DESIGN.md design/codestable/architecture/ARCHITECTURE.md src/hermes_tavern/db_novel.py src/hermes_tavern/db.py"
+        expected: "empty output during S1 implementation"
+      - command: "git diff --check"
+        expected: "passes"
+  - id: S2
+    name: "S2: Verify/accept/write current docs"
+    status: planned
+    description: >
+      Controller-owned acceptance/writeback after S1 passes.
+    allowed_files:
+      - design/codestable/features/2026-06-11-hermes-tavern-phase168-image-settings-export/checklist.yaml
+      - design/codestable/features/2026-06-11-hermes-tavern-phase168-image-settings-export/phase168-acceptance.md
+      - design/codestable/architecture/ARCHITECTURE.md
+      - design/HERMES_TAVERN_DESIGN.md
+    prohibited_files:
+      - README.md
+      - "src/**"
+      - "tests/**"
+      - run_agent.py
+      - cli.py
+      - gateway/run.py
+      - "plugins/**"
+      - "build/lib/**"
+    exact_scope:
+      - "Update checklist.yaml S2 status to completed."
+      - "Create phase168-acceptance.md acceptance report."
+      - "Update ARCHITECTURE.md command-surface listing for /rp image settings export."
+      - "Update HERMES_TAVERN_DESIGN.md for Phase 168 current behavior."
+      - "Rerun focused Tavern tests and full pytest suite as controller verification."
+      - "Run git reverse-scope and stale-wording guards."
+      - "Run validators on YAML and frontmatter artifacts."
+    verification:
+      - command: "python -m pytest tests/test_hermes_tavern_images.py -q -o 'addopts=' -p no:cacheprovider"
+        expected: "passes"
+      - command: "python -m pytest tests/test_hermes_tavern_*.py -q -o 'addopts=' -p no:cacheprovider"
+        expected: "passes"
+      - command: "git diff --check"
+        expected: "passes"
+checks:
+  - id: C1
+    name: "py_compile on changed files passes"
+    command: "PYTHONDONTWRITEBYTECODE=1 python -m py_compile src/hermes_tavern/runtime_images.py src/hermes_tavern/commands.py tests/test_hermes_tavern_images.py tests/test_hermes_tavern_readme_docs.py"
+    status: pending
+  - id: C2
+    name: "Targeted image + README tests pass"
+    command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_images.py tests/test_hermes_tavern_readme_docs.py -q -o 'addopts=' -p no:cacheprovider"
+    status: pending
+  - id: C3
+    name: "Full Tavern test suite passes"
+    command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_*.py -q -o 'addopts=' -p no:cacheprovider"
+    status: pending
+  - id: C4
+    name: "No protected file changed in diff"
+    command: "git diff --name-only -- run_agent.py cli.py gateway/run.py src/hermes_tavern/runtime.py src/hermes_tavern/runtime_prompt_modules.py src/hermes_tavern/prompt.py src/hermes_tavern/model_router.py src/hermes_tavern/provider_bridge.py src/hermes_tavern/adapters.py src/hermes_tavern/runtime_generation.py src/hermes_tavern/runtime_content.py src/hermes_tavern/memory.py src/hermes_tavern/images.py src/hermes_tavern/importers plugins build/lib src/hermes_tavern/db_novel.py src/hermes_tavern/db.py"
+    status: pending
+    expected: "empty"
+  - id: C5
+    name: "git diff --check passes"
+    command: "git diff --check"
+    status: pending
+    expected: "empty"
