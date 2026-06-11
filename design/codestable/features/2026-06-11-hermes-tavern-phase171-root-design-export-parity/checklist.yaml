@@ -1,0 +1,74 @@
+doc_type: feature-checklist
+status: planned
+feature: "2026-06-11-hermes-tavern-phase171-root-design-export-parity"
+date: "2026-06-11"
+implementation_ready: false
+summary: >
+  Root-design command-surface parity for already-implemented local export
+  commands, guarded by a focused design-doc regression test.
+tags:
+  - hermes-tavern
+  - codestable
+  - root-design
+  - command-surface
+  - export
+  - docs
+  - tests
+steps:
+  - id: S1
+    name: "S1: Sync root-design export command literals"
+    status: planned
+    description: >
+      Update the root design writing command surfaces to include already-current
+      local export literals and add a focused regression test that reads
+      HERMES_TAVERN_DESIGN.md.
+    allowed_files:
+      - design/HERMES_TAVERN_DESIGN.md
+      - tests/test_hermes_tavern_design_docs.py
+    prohibited_files:
+      - run_agent.py
+      - cli.py
+      - gateway/run.py
+      - "src/**"
+      - README.md
+      - design/codestable/architecture/ARCHITECTURE.md
+      - "plugins/**"
+      - "build/lib/**"
+    exact_scope:
+      - "Add only missing already-implemented export command literals to the root design writing command surfaces."
+      - "Add a focused design-doc regression test for those literals."
+      - "Do not change runtime behavior, source help, README, architecture, schemas, providers, prompts, generation, retrieval/vectorization, archives, graph tooling, safety, or plugin assets."
+    verification:
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m py_compile tests/test_hermes_tavern_design_docs.py && PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_design_docs.py -q -o 'addopts=' -p no:cacheprovider"
+        expected: "passes"
+      - command: "git diff --name-only -- run_agent.py cli.py gateway/run.py src README.md design/codestable/architecture/ARCHITECTURE.md plugins build/lib"
+        expected: "empty output"
+      - command: "git diff --check"
+        expected: "passes"
+  - id: S2
+    name: "S2: Acceptance and CodeStable status closeout"
+    status: planned
+    description: >
+      After S1 implementation and controller verification, create the acceptance
+      report, finalize checklist status, and record that no runtime/source or
+      architecture behavior changed.
+    allowed_files:
+      - design/codestable/features/2026-06-11-hermes-tavern-phase171-root-design-export-parity/checklist.yaml
+      - design/codestable/features/2026-06-11-hermes-tavern-phase171-root-design-export-parity/phase171-acceptance.md
+checks:
+  - id: C1
+    name: "Focused root-design docs regression"
+    command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_design_docs.py -q -o 'addopts=' -p no:cacheprovider"
+    status: pending
+  - id: C2
+    name: "No protected or runtime files changed"
+    command: "git diff --name-only -- run_agent.py cli.py gateway/run.py src README.md design/codestable/architecture/ARCHITECTURE.md plugins build/lib"
+    status: pending
+  - id: C3
+    name: "Full pytest suite passes"
+    command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts=' -p no:cacheprovider"
+    status: pending
+  - id: C4
+    name: "git diff --check passes"
+    command: "git diff --check"
+    status: pending
