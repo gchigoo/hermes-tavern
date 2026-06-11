@@ -1,5 +1,5 @@
 doc_type: feature-checklist
-status: implemented
+status: accepted
 feature: "2026-06-11-hermes-tavern-phase172-attention-status-sync"
 date: "2026-06-11"
 owner: codestable-cron
@@ -90,7 +90,13 @@ steps:
         expected: "passes"
   - id: S2
     name: "S2: Acceptance and status closeout"
-    status: planned
+    status: completed
+    completed_at: "2026-06-11"
+    result: >
+      COMPLETED - Codex executor drafted phase172-acceptance.md and added C6
+      as pending; controller reran validators, py_compile, focused pytest,
+      marker/stale scan, protected-path guard, git diff --check, and full
+      pytest (1214 passed in 54.29s), then finalized acceptance status.
     description: >
       After S1 implementation and controller verification, create the acceptance
       report and finalize checklist/check statuses. Executor must not perform
@@ -134,3 +140,10 @@ checks:
     completed_at: "2026-06-11"
     expected: "passes"
     result: "PASSED - controller full-suite rerun reported 1214 passed in 54.51s."
+  - id: C6
+    name: "C6: Acceptance frontmatter validation"
+    command: "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-11-hermes-tavern-phase172-attention-status-sync/phase172-acceptance.md --require doc_type --require status --require feature"
+    status: passed
+    completed_at: "2026-06-11"
+    expected: "passes"
+    result: "PASSED - controller rerun reported 1 passed, 0 failed for phase172-acceptance.md frontmatter."
