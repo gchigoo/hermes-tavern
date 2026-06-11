@@ -1,6 +1,6 @@
 ---
 doc_type: feature-design
-status: draft
+status: approved
 feature: "2026-06-12-hermes-tavern-phase175-attention-status-sync-through-phase174"
 date: "2026-06-12"
 summary: >
@@ -10,7 +10,7 @@ tags: [hermes-tavern, codestable, attention, status-sync, docs, tests]
 created: "2026-06-12"
 updated: "2026-06-12"
 owner: codestable-cron
-implementation_ready: false
+implementation_ready: true
 ---
 
 # Phase 175: CodeStable Attention Status Sync Through Phase 174

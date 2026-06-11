@@ -3,7 +3,7 @@ status: planned
 feature: "2026-06-12-hermes-tavern-phase175-attention-status-sync-through-phase174"
 date: "2026-06-12"
 owner: codestable-cron
-implementation_ready: false
+implementation_ready: true
 summary: >
   Sync the mandatory CodeStable attention current-status line and static
   regression through accepted Phase 174.
@@ -43,7 +43,16 @@ exact_scope:
 steps:
   - id: S1
     name: "S1: Sync CodeStable attention status and regression"
-    status: planned
+    status: done
+    completed_at: "2026-06-12"
+    result: >
+      DONE - Codex executor updated the mandatory CodeStable attention current
+      status bullet through accepted Phase 174 and updated
+      tests/test_hermes_tavern_codestable_status.py as the focused static
+      regression. Controller reran CodeStable validators, py_compile, focused
+      pytest (1 passed), current-marker checks, stale terminal-status guard,
+      protected-path diff guard, git diff --check, and the full pytest suite
+      (1215 passed in 57.18s). Acceptance/writeback remains S2.
     description: >
       Update the mandatory CodeStable attention current-status bullet through
       accepted Phase 174 and update the existing static docs regression to guard
@@ -80,35 +89,52 @@ checks:
   - id: C1
     name: "Focused CodeStable status regression"
     command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_codestable_status.py -q -o 'addopts=' -p no:cacheprovider"
-    status: pending
+    status: passed
+    completed_at: "2026-06-12"
+    result: "PASSED - controller rerun reported 1 passed in 0.01s."
     expected: "passes"
   - id: C2
     name: "Current Phase 175 status markers"
     command: >
       rg -n "Current status \\(2026-06-12\\): All phases 1-174 accepted|Phase 168 image settings JSON export|Phase 169 project JSON export surface parity|Phase 170 export command-surface regression|Phase 171 root-design export parity|Phase 172 attention status sync through Phase 171|Phase 173 root-design section 17 import/export summary parity|Phase 174 attention status sync through Phase 173" design/codestable/attention.md tests/test_hermes_tavern_codestable_status.py
-    status: pending
+    status: passed
+    completed_at: "2026-06-12"
+    result: >
+      PASSED - controller marker search found the updated attention status line
+      and the focused test assertions for all Phase 168-174 status markers.
     expected: "finds all current Phase 175 status markers"
   - id: C3
     name: "Stale terminal status guard"
     command: >
       python -c "from pathlib import Path; import re; s=[l for l in Path('design/codestable/attention.md').read_text(encoding='utf-8').splitlines() if re.match(r'^\\s*-\\s*Current status ', l)]; assert len(s)==1; line=s[0]; assert 'Current status (2026-06-12): All phases 1-174 accepted' in line; assert 'All phases 1-173 accepted' not in line; assert re.search(r'(?<!\\d)1[-\\u2013]173(?!\\d)', line) is None; assert 'Phase 121-167' in line"
-    status: pending
+    status: passed
+    completed_at: "2026-06-12"
+    result: >
+      PASSED - controller guard found exactly one current-status bullet,
+      required the Phase 1-174 accepted text, rejected stale terminal 1-173
+      markers, and preserved the valid Phase 121-167 range.
     expected: "passes"
   - id: C4
     name: "Protected paths unchanged"
     command: "git diff --name-only -- run_agent.py cli.py gateway src plugins README.md design/HERMES_TAVERN_DESIGN.md design/codestable/architecture design/codestable/roadmap design/codestable/requirements design/codestable/compound build/lib"
-    status: pending
+    status: passed
+    completed_at: "2026-06-12"
+    result: "PASSED - protected runtime/source/plugin/root-design/architecture/README/roadmap/requirement/compound/build diff guard produced empty output."
     expected: "empty output"
   - id: C5
     name: "Whitespace check"
     command: "git diff --check"
-    status: pending
+    status: passed
+    completed_at: "2026-06-12"
+    result: "PASSED - no whitespace errors."
     expected: "passes"
   - id: C6
     name: "CodeStable artifact validation"
     command: >
       PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-12-hermes-tavern-phase175-attention-status-sync-through-phase174/design.md --require doc_type --require status --require feature && PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-12-hermes-tavern-phase175-attention-status-sync-through-phase174/checklist.yaml --yaml-only --require doc_type --require status --require feature
-    status: pending
+    status: passed
+    completed_at: "2026-06-12"
+    result: "PASSED - controller validators reported design.md and checklist.yaml valid after S1 status writeback."
     expected: "passes"
 risks:
   - "The status line can become too long; keep it to one bullet and do not create generated phase-summary machinery."
