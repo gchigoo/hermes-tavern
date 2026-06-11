@@ -1,0 +1,104 @@
+doc_type: feature-checklist
+status: planned
+feature: "2026-06-12-hermes-tavern-phase173-root-design-import-export-summary-parity"
+date: "2026-06-12"
+owner: codestable-cron
+implementation_ready: false
+summary: >
+  Sync root design section 17 Import / Export narrative with accepted local
+  import/export surfaces through Phase 168, guarded by a focused static
+  design-doc regression.
+tags:
+  - hermes-tavern
+  - codestable
+  - root-design
+  - import-export
+  - export
+  - docs
+  - tests
+allowed_files:
+  - design/codestable/features/2026-06-12-hermes-tavern-phase173-root-design-import-export-summary-parity/design.md
+  - design/codestable/features/2026-06-12-hermes-tavern-phase173-root-design-import-export-summary-parity/checklist.yaml
+  - design/codestable/features/2026-06-12-hermes-tavern-phase173-root-design-import-export-summary-parity/phase173-acceptance.md
+  - design/HERMES_TAVERN_DESIGN.md
+  - tests/test_hermes_tavern_design_docs.py
+prohibited_files:
+  - run_agent.py
+  - cli.py
+  - gateway/run.py
+  - "src/**"
+  - "plugins/**"
+  - README.md
+  - design/codestable/attention.md
+  - "design/codestable/architecture/**"
+  - "design/codestable/roadmap/**"
+  - "design/codestable/requirements/**"
+  - "build/lib/**"
+exact_scope:
+  - "Update only design/HERMES_TAVERN_DESIGN.md section 17 Import / Export current implementation prose and section-local command sketch."
+  - "Add one focused section-17 regression to tests/test_hermes_tavern_design_docs.py."
+  - "Do not change runtime behavior, source help, README, architecture, CodeStable attention, schemas, providers, prompts, generation, retrieval/vectorization, archives, graph tooling, safety, or plugin assets."
+steps:
+  - id: S1
+    name: "S1: Sync root design section 17 and regression"
+    status: pending
+    description: >
+      Replace stale section-17 Phase 121-151 current-implementation wording with
+      a current Phase 121-168 local import/export summary, remove stale generic
+      current command examples, and add a focused design-doc regression.
+    allowed_files:
+      - design/HERMES_TAVERN_DESIGN.md
+      - tests/test_hermes_tavern_design_docs.py
+    verification:
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m py_compile tests/test_hermes_tavern_design_docs.py"
+        expected: "passes"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_design_docs.py -q -o 'addopts=' -p no:cacheprovider"
+        expected: "passes"
+      - command: "rg -n \"current Phase 121(–|-)151|/rp backup|/rp export chat|/rp import <attachment\\|url\\|path>\" design/HERMES_TAVERN_DESIGN.md"
+        expected: "empty output"
+      - command: "rg -n \"/rp session export <id>|/rp project export json \\[project-id\\]|/rp image settings export|/rp character state export <character-state-id>|/rp project revision export <note-id>\" design/HERMES_TAVERN_DESIGN.md tests/test_hermes_tavern_design_docs.py"
+        expected: "finds representative current section-17 export markers and test assertions"
+      - command: "git diff --name-only -- run_agent.py cli.py gateway/run.py src plugins README.md design/codestable/attention.md design/codestable/architecture build/lib"
+        expected: "empty output"
+      - command: "git diff --check"
+        expected: "passes"
+  - id: S2
+    name: "S2: Acceptance closeout"
+    status: pending
+    description: >
+      After S1 implementation and controller verification, write the acceptance
+      report and finalize checklist/check statuses. Do not update CodeStable
+      attention in this slice.
+    allowed_files:
+      - design/codestable/features/2026-06-12-hermes-tavern-phase173-root-design-import-export-summary-parity/checklist.yaml
+      - design/codestable/features/2026-06-12-hermes-tavern-phase173-root-design-import-export-summary-parity/phase173-acceptance.md
+checks:
+  - id: C1
+    name: "Focused root-design section-17 regression"
+    command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_design_docs.py -q -o 'addopts=' -p no:cacheprovider"
+    status: pending
+    expected: "passes"
+  - id: C2
+    name: "Stale section-17 markers removed"
+    command: "rg -n \"current Phase 121(–|-)151|/rp backup|/rp export chat|/rp import <attachment\\|url\\|path>\" design/HERMES_TAVERN_DESIGN.md"
+    status: pending
+    expected: "empty output"
+  - id: C3
+    name: "Current export markers present"
+    command: "rg -n \"/rp session export <id>|/rp project export json \\[project-id\\]|/rp image settings export|/rp character state export <character-state-id>|/rp project revision export <note-id>\" design/HERMES_TAVERN_DESIGN.md tests/test_hermes_tavern_design_docs.py"
+    status: pending
+    expected: "finds representative current section-17 export markers and test assertions"
+  - id: C4
+    name: "Protected paths unchanged"
+    command: "git diff --name-only -- run_agent.py cli.py gateway/run.py src plugins README.md design/codestable/attention.md design/codestable/architecture build/lib"
+    status: pending
+    expected: "empty output"
+  - id: C5
+    name: "Whitespace check"
+    command: "git diff --check"
+    status: pending
+    expected: "passes"
+risks:
+  - "Root design section 17 may become too duplicative; keep changes to summary-level current behavior and representative command references."
+  - "Do not imply project archive ZIP/import, cloud sync, graph tooling, automatic extraction, provider/generation changes, or safety-bypass behavior."
+  - "Keep regression section-scoped so it does not duplicate README/help command-surface tests."
