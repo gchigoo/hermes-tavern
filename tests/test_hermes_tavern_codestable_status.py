@@ -4,9 +4,9 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 ATTENTION_DOC = REPO_ROOT / "design" / "codestable" / "attention.md"
-STALE_STATUS_PREFIX = "Current status (2026-06-13): All phases 1-197 accepted"
-STALE_PHASE_MARKER = "1-197"
-STALE_PHASE_MARKER_EN_DASH = "1–197"
+STALE_STATUS_PREFIX = "Current status (2026-06-13): All phases 1-198 accepted"
+STALE_PHASE_MARKER = "1-198"
+STALE_PHASE_MARKER_EN_DASH = "1–198"
 REQUIRED_PHASE_LABELS = [
     "Phase 168 image settings JSON export",
     "Phase 169 project JSON export surface parity",
@@ -39,6 +39,7 @@ REQUIRED_PHASE_LABELS = [
     "Phase 196 attention status sync through Phase 195",
     "Phase 197 attention status sync through Phase 196",
     "Phase 198 attention status sync through Phase 197",
+    "Phase 199 attention status sync through Phase 198",
 ]
 
 
@@ -50,7 +51,7 @@ def test_attention_current_status_line_is_current():
     assert len(status_lines) == 1
     status = status_lines[0]
 
-    assert "Current status (2026-06-13): All phases 1-198 accepted" in status
+    assert "Current status (2026-06-13): All phases 1-199 accepted" in status
     for label in REQUIRED_PHASE_LABELS:
         assert label in status
 
@@ -58,18 +59,18 @@ def test_attention_current_status_line_is_current():
     assert re.search(rf"(?<!\d){re.escape(STALE_PHASE_MARKER)}(?!\d)", status) is None
     assert re.search(rf"(?<!\d){re.escape(STALE_PHASE_MARKER_EN_DASH)}(?!\d)", status) is None
     assert status.endswith(
-        "Phase 196 attention status sync through Phase 195, Phase 197 attention status sync through Phase 196, and Phase 198 attention status sync through Phase 197."
+        "Phase 197 attention status sync through Phase 196, Phase 198 attention status sync through Phase 197, and Phase 199 attention status sync through Phase 198."
     )
-    assert all(f"Phase {phase} " in status for phase in range(168, 199))
+    assert all(f"Phase {phase} " in status for phase in range(168, 200))
     assert re.search(r"(?<!\d)Phase 121-167(?!\d)", status) is not None
 
     test = Path(__file__).read_text(encoding="utf-8")
-    assert "Current status (2026-06-13): All phases 1-197 accepted" in test
+    assert "Current status (2026-06-13): All phases 1-199 accepted" in test
     assert all(label in test for label in REQUIRED_PHASE_LABELS)
     assert STALE_STATUS_PREFIX in test
     assert STALE_PHASE_MARKER in test
     assert STALE_PHASE_MARKER_EN_DASH in test
-    assert "range(168, 199)" in test
+    assert "range(168, 200)" in test
     forbidden_glob = "." + "glob("
     forbidden_rglob = "." + "rglob("
     assert forbidden_glob not in test
