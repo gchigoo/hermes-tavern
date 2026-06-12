@@ -14,7 +14,7 @@ def test_attention_current_status_line_is_current():
     assert len(status_lines) == 1
     status = status_lines[0]
 
-    assert "Current status (2026-06-12): All phases 1-191 accepted" in status
+    assert "Current status (2026-06-13): All phases 1-192 accepted" in status
     assert "Phase 168 image settings JSON export" in status
     assert "Phase 169 project JSON export surface parity" in status
     assert "Phase 170 export command-surface regression" in status
@@ -39,11 +39,27 @@ def test_attention_current_status_line_is_current():
     assert "Phase 189 attention status sync through Phase 188" in status
     assert "Phase 190 attention status sync through Phase 189" in status
     assert "Phase 191 attention status sync through Phase 190" in status
+    assert "Phase 192 attention status sync through Phase 191" in status
 
-    assert "Current status (2026-06-12): All phases 1-190 accepted" not in status
-    assert re.search(r"(?<!\d)1-190(?!\d)", status) is None
-    assert re.search(r"(?<!\d)1–190(?!\d)", status) is None
+    assert "Current status (2026-06-12): All phases 1-191 accepted" not in status
+    assert "All phases 1-191 accepted" not in status
+    assert re.search(r"(?<!\d)1-191(?!\d)", status) is None
+    assert re.search(r"(?<!\d)1–191(?!\d)", status) is None
     assert status.endswith(
-        "Phase 189 attention status sync through Phase 188, Phase 190 attention status sync through Phase 189, and Phase 191 attention status sync through Phase 190."
+        "Phase 190 attention status sync through Phase 189, Phase 191 attention status sync through Phase 190, and Phase 192 attention status sync through Phase 191."
     )
     assert re.search(r"(?<!\d)Phase 121-167(?!\d)", status) is not None
+
+    test = Path(__file__).read_text(encoding="utf-8")
+    assert "Current status (2026-06-13): All phases 1-192 accepted" in test
+    assert "All phases 1-191 accepted" in test
+    assert "1-191" in test
+    assert "1–191" in test
+    forbidden_glob = "." + "glob("
+    forbidden_rglob = "." + "rglob("
+    assert forbidden_glob not in test
+    assert forbidden_rglob not in test
+    forbidden_iterdir = "iter" + "dir("
+    forbidden_os_walk = "os" + "." + "walk"
+    assert forbidden_iterdir not in test
+    assert forbidden_os_walk not in test
