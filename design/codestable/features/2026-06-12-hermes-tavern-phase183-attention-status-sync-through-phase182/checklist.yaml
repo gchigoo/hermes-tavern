@@ -1,0 +1,183 @@
+doc_type: feature-checklist
+status: accepted
+feature: "2026-06-12-hermes-tavern-phase183-attention-status-sync-through-phase182"
+date: "2026-06-12"
+owner: codestable-cron
+implementation_ready: true
+summary: >
+  Sync the mandatory CodeStable attention current-status line and focused static
+  regression through accepted Phase 182.
+tags:
+  - hermes-tavern
+  - codestable
+  - attention
+  - status-sync
+  - docs
+  - tests
+allowed_files:
+  - design/codestable/features/2026-06-12-hermes-tavern-phase183-attention-status-sync-through-phase182/design.md
+  - design/codestable/features/2026-06-12-hermes-tavern-phase183-attention-status-sync-through-phase182/checklist.yaml
+  - design/codestable/features/2026-06-12-hermes-tavern-phase183-attention-status-sync-through-phase182/phase183-acceptance.md
+  - design/codestable/attention.md
+  - tests/test_hermes_tavern_codestable_status.py
+prohibited_files:
+  - run_agent.py
+  - cli.py
+  - gateway/run.py
+  - "gateway/**"
+  - "src/**"
+  - "plugins/**"
+  - "build/lib/**"
+  - README.md
+  - design/HERMES_TAVERN_DESIGN.md
+  - "design/codestable/architecture/**"
+  - "design/codestable/reference/**"
+  - "design/codestable/roadmap/**"
+  - "design/codestable/requirements/**"
+  - "design/codestable/compound/**"
+exact_scope:
+  - "Replace only the existing '- Current status ...' bullet in design/codestable/attention.md with the Phase 1-182 accepted text from the design."
+  - "Update only tests/test_hermes_tavern_codestable_status.py for the focused static status regression."
+  - "Assert Phase 168 through Phase 182 short labels are present in the single current-status bullet."
+  - "Assert stale standalone terminal 1-181 / 1–181 markers are absent while preserving the valid Phase 121-167 internal range."
+  - "Do not edit Phase 182 artifacts or any existing accepted phase artifacts."
+  - "Do not add automatic phase discovery, feature-tree scanning, metadata extraction, generated summaries, graph tooling, runtime behavior, provider calls, schema changes, prompt/generation changes, import/export payload changes, archive/cloud tooling, minors/underage handling changes, or safety-bypass behavior."
+steps:
+  - id: S1
+    name: "S1: Sync CodeStable attention status and regression"
+    status: done
+    completed_at: "2026-06-12"
+    result: >
+      DONE - Codex executor updated the mandatory CodeStable attention current
+      status bullet through accepted Phase 182 and updated
+      tests/test_hermes_tavern_codestable_status.py as the focused static
+      regression. Controller tightened the regression to explicit Phase 168-182
+      short-label assertions, then reran artifact validators, py_compile, focused
+      pytest (1 passed), current-marker Python check, stale terminal-status guard,
+      changed-path allowlist guard, protected-path diff guard, git diff --check,
+      and the full pytest suite (1215 passed in 61.27s).
+    description: >
+      Update the mandatory CodeStable attention current-status bullet through
+      accepted Phase 182 and update the existing static docs regression to guard
+      that status line.
+    allowed_files:
+      - design/codestable/attention.md
+      - tests/test_hermes_tavern_codestable_status.py
+    acceptance_criteria:
+      - "design/codestable/attention.md has exactly one current-status bullet."
+      - "The current-status bullet contains 'Current status (2026-06-12): All phases 1-182 accepted'."
+      - "The current-status bullet contains Phase 168 through Phase 182 short labels."
+      - "The current-status bullet contains no standalone terminal 1-181 / 1–181 marker."
+      - "The valid internal Phase 121-167 range remains allowed."
+      - "Protected runtime/source/plugin/root-design/architecture/reference/README/roadmap/requirement/compound/build paths remain unchanged."
+    verification:
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m py_compile tests/test_hermes_tavern_codestable_status.py"
+        expected: "passes"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_codestable_status.py -q -o 'addopts=' -p no:cacheprovider"
+        expected: "passes"
+      - command: "python marker check for Current status and Phase 168-182 labels across design/codestable/attention.md and tests/test_hermes_tavern_codestable_status.py"
+        expected: "finds all current Phase 183 status markers"
+      - command: >
+          python -c "from pathlib import Path; import re; s=[l for l in Path('design/codestable/attention.md').read_text(encoding='utf-8').splitlines() if re.match(r'^\s*-\s*Current status ', l)]; assert len(s)==1; line=s[0]; assert 'Current status (2026-06-12): All phases 1-182 accepted' in line; assert 'All phases 1-181 accepted' not in line; assert re.search(r'(?<!\d)1-181(?!\d)', line) is None; assert re.search(r'(?<!\d)1–181(?!\d)', line) is None; assert 'Phase 121-167' in line; assert 'Phase 182 attention status sync through Phase 181' in line"
+        expected: "passes"
+      - command: "git status --porcelain -- run_agent.py cli.py gateway src plugins README.md design/HERMES_TAVERN_DESIGN.md design/codestable/architecture design/codestable/reference design/codestable/roadmap design/codestable/requirements design/codestable/compound build/lib"
+        expected: "empty output"
+      - command: "git diff --check"
+        expected: "passes"
+  - id: S2
+    name: "S2: Acceptance closeout"
+    status: completed
+    completed_at: "2026-06-12"
+    result: >
+      COMPLETED - Controller wrote the Phase 183 acceptance report and finalized
+      checklist/check statuses after Codex architect produced the bounded artifact
+      plan at /tmp/hermes-tavern-architect-phase183.jsonl and Codex executor
+      implemented S1 at /tmp/hermes-tavern-executor-phase183-s1.jsonl.
+      Controller reran artifact validators, focused status pytest, current-marker
+      Python check, stale/current status guard, changed-path allowlist guard,
+      protected-path diff guard, git diff --check, and full pytest before
+      finalizing.
+    description: >
+      After S1 implementation and controller verification, create the Phase 183
+      acceptance report and finalize checklist/check statuses. Do not expand
+      scope beyond the status-sync docs/test slice.
+    allowed_files:
+      - design/codestable/features/2026-06-12-hermes-tavern-phase183-attention-status-sync-through-phase182/checklist.yaml
+      - design/codestable/features/2026-06-12-hermes-tavern-phase183-attention-status-sync-through-phase182/phase183-acceptance.md
+checks:
+  - id: C1
+    name: "Status test syntax"
+    command: "PYTHONDONTWRITEBYTECODE=1 python -m py_compile tests/test_hermes_tavern_codestable_status.py"
+    status: passed
+    completed_at: "2026-06-12"
+    result: "PASSED - py_compile completed with no syntax errors."
+    expected: "passes"
+  - id: C2
+    name: "Focused CodeStable status regression"
+    command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_codestable_status.py -q -o 'addopts=' -p no:cacheprovider"
+    status: passed
+    completed_at: "2026-06-12"
+    result: "PASSED - controller rerun reported 1 passed in 0.01s."
+    expected: "passes"
+  - id: C3
+    name: "Current Phase 183 status markers"
+    command: "python marker check for Current status and Phase 168-182 labels across attention/test"
+    status: passed
+    completed_at: "2026-06-12"
+    result: "PASSED - controller marker check found 32 current Phase 183 marker occurrences across attention.md and the focused status test."
+    expected: "finds all current Phase 183 status markers"
+  - id: C4
+    name: "Stale terminal status guard"
+    command: >
+      python -c "from pathlib import Path; import re; s=[l for l in Path('design/codestable/attention.md').read_text(encoding='utf-8').splitlines() if re.match(r'^\s*-\s*Current status ', l)]; assert len(s)==1; line=s[0]; assert 'Current status (2026-06-12): All phases 1-182 accepted' in line; assert 'All phases 1-181 accepted' not in line; assert re.search(r'(?<!\d)1-181(?!\d)', line) is None; assert re.search(r'(?<!\d)1–181(?!\d)', line) is None; assert 'Phase 121-167' in line; assert 'Phase 182 attention status sync through Phase 181' in line"
+    status: passed
+    completed_at: "2026-06-12"
+    result: "PASSED - controller guard found exactly one current-status bullet, required Phase 1-182 accepted text, rejected stale terminal 1-181 markers, preserved the valid Phase 121-167 range, and required the Phase 182 short label."
+    expected: "passes"
+  - id: C5
+    name: "Protected paths unchanged"
+    command: "git status --porcelain -- run_agent.py cli.py gateway src plugins README.md design/HERMES_TAVERN_DESIGN.md design/codestable/architecture design/codestable/reference design/codestable/roadmap design/codestable/requirements design/codestable/compound build/lib"
+    status: passed
+    completed_at: "2026-06-12"
+    result: "PASSED - protected runtime/source/plugin/root-design/architecture/reference/README/roadmap/requirement/compound/build status guard produced empty output."
+    expected: "empty output"
+  - id: C6
+    name: "Whitespace check"
+    command: "git diff --check"
+    status: passed
+    completed_at: "2026-06-12"
+    result: "PASSED - no whitespace errors."
+    expected: "passes"
+  - id: C7
+    name: "CodeStable design artifact validation"
+    command: "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-12-hermes-tavern-phase183-attention-status-sync-through-phase182/design.md --require doc_type --require status --require feature"
+    status: passed
+    completed_at: "2026-06-12"
+    result: "PASSED - controller validator reported design.md valid."
+    expected: "passes"
+  - id: C8
+    name: "CodeStable checklist artifact validation"
+    command: "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-12-hermes-tavern-phase183-attention-status-sync-through-phase182/checklist.yaml --yaml-only --require doc_type --require status --require feature"
+    status: passed
+    completed_at: "2026-06-12"
+    result: "PASSED - controller validator reported checklist.yaml valid before S2 finalization."
+    expected: "passes"
+  - id: C9
+    name: "Changed-path allowlist guard"
+    command: "python changed-path allowlist guard using git diff --name-only plus git ls-files --others --exclude-standard"
+    status: passed
+    completed_at: "2026-06-12"
+    result: "PASSED - only Phase 183 artifacts, attention.md, and the focused status test were changed."
+    expected: "only allowed files changed"
+  - id: C10
+    name: "Full pytest suite"
+    command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts=' -p no:cacheprovider"
+    status: passed
+    completed_at: "2026-06-12"
+    result: "PASSED - controller final rerun reported 1215 passed in 61.27s."
+    expected: "passes"
+risks:
+  - "The status line can become too long; keep it to one bullet and do not create generated phase-summary machinery."
+  - "The stale-marker guard must reject only standalone terminal 1-181 / 1–181 markers and must preserve the valid Phase 121-167 internal range."
+  - "Do not treat old accepted feature artifacts as active blockers; this phase updates current startup status only."
+  - "Do not touch runtime, source, plugin, provider, generation, import/export payload, root-design, architecture, reference, README, roadmap, requirement, compound, graph, cloud/archive sync, minors/underage, or safety-bypass behavior."
