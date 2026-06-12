@@ -14,7 +14,7 @@ def test_attention_current_status_line_is_current():
     assert len(status_lines) == 1
     status = status_lines[0]
 
-    assert "Current status (2026-06-12): All phases 1-187 accepted" in status
+    assert "Current status (2026-06-12): All phases 1-188 accepted" in status
     assert "Phase 168 image settings JSON export" in status
     assert "Phase 169 project JSON export surface parity" in status
     assert "Phase 170 export command-surface regression" in status
@@ -35,9 +35,10 @@ def test_attention_current_status_line_is_current():
     assert "Phase 185 attention status sync through Phase 184" in status
     assert "Phase 186 attention status sync through Phase 185" in status
     assert "Phase 187 attention status sync through Phase 186" in status
+    assert "Phase 188 attention status sync through Phase 187" in status
 
-    assert "Current status (2026-06-12): All phases 1-186 accepted" not in status
+    assert "Current status (2026-06-12): All phases 1-187 accepted" not in status
 
-    assert re.search(r"(?<!\d)1-186(?!\d)", status) is None
-    assert re.search(r"(?<!\d)1–186(?!\d)", status) is None
+    assert re.search(r"(?<!\d)1-187(?!\d)", status) is None
+    assert re.search(r"(?<!\d)1–187(?!\d)", status) is None
     assert re.search(r"(?<!\d)Phase 121-167(?!\d)", status) is not None
