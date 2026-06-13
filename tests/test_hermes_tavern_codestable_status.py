@@ -4,10 +4,10 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 ATTENTION_DOC = REPO_ROOT / "design" / "codestable" / "attention.md"
-CURRENT_STATUS_PREFIX = "Current status (2026-06-13): All phases 1-206 accepted"
-STALE_STATUS_PREFIX = "Current status (2026-06-13): All phases 1-205 accepted"
-STALE_PHASE_MARKER = "1-205"
-STALE_PHASE_MARKER_EN_DASH = "1–205"
+CURRENT_STATUS_PREFIX = "Current status (2026-06-13): All phases 1-207 accepted"
+STALE_STATUS_PREFIX = "Current status (2026-06-13): All phases 1-206 accepted"
+STALE_PHASE_MARKER = "1-206"
+STALE_PHASE_MARKER_EN_DASH = "1–206"
 REQUIRED_PHASE_LABELS = [
     "Phase 168 image settings JSON export",
     "Phase 169 project JSON export surface parity",
@@ -48,7 +48,9 @@ REQUIRED_PHASE_LABELS = [
     "Phase 204 attention status sync through Phase 203",
     "Phase 205 attention status sync through Phase 204",
     "Phase 206 attention status sync through Phase 205",
+    "Phase 207 attention status sync through Phase 206",
 ]
+FINAL_STATUS_SUFFIX = "Phase 205 attention status sync through Phase 204, Phase 206 attention status sync through Phase 205, and Phase 207 attention status sync through Phase 206."
 
 
 def test_attention_current_status_line_is_current():
@@ -59,26 +61,21 @@ def test_attention_current_status_line_is_current():
     assert len(status_lines) == 1
     status = status_lines[0]
 
-    assert CURRENT_STATUS_PREFIX in status
+    assert status.startswith(f"- {CURRENT_STATUS_PREFIX}")
     for label in REQUIRED_PHASE_LABELS:
         assert label in status
 
     assert STALE_STATUS_PREFIX not in status
     assert re.search(rf"(?<!\d){re.escape(STALE_PHASE_MARKER)}(?!\d)", status) is None
     assert re.search(rf"(?<!\d){re.escape(STALE_PHASE_MARKER_EN_DASH)}(?!\d)", status) is None
-    assert status.endswith(
-        "Phase 204 attention status sync through Phase 203, Phase 205 attention status sync through Phase 204, and Phase 206 attention status sync through Phase 205."
-    )
-    assert all(f"Phase {phase} " in status for phase in range(168, 207))
+    assert status.endswith(FINAL_STATUS_SUFFIX)
+    assert all(f"Phase {phase} " in status for phase in range(168, 208))
     assert re.search(r"(?<!\d)Phase 121-167(?!\d)", status) is not None
 
     test = Path(__file__).read_text(encoding="utf-8")
     assert CURRENT_STATUS_PREFIX in test
     assert all(label in test for label in REQUIRED_PHASE_LABELS)
-    assert STALE_STATUS_PREFIX in test
-    assert STALE_PHASE_MARKER in test
-    assert STALE_PHASE_MARKER_EN_DASH in test
-    assert "range(168, 207)" in test
+    assert "range(168, 208)" in test
     forbidden_glob = "." + "glob("
     forbidden_rglob = "." + "rglob("
     assert forbidden_glob not in test
