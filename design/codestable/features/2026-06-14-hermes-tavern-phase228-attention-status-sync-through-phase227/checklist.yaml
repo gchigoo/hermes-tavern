@@ -1,0 +1,337 @@
+doc_type: feature-checklist
+status: accepted
+workflow_status: completed
+feature: "2026-06-14-hermes-tavern-phase228-attention-status-sync-through-phase227"
+date: "2026-06-14"
+created: "2026-06-14"
+updated: "2026-06-14"
+owner: codestable-cron
+implementation_ready: true
+summary: >
+  Sync the mandatory CodeStable attention current-status line and focused static
+  regression through accepted Phase 227.
+tags:
+  - hermes-tavern
+  - codestable
+  - attention
+  - status-sync
+  - docs
+  - tests
+allowed_files:
+  - design/codestable/attention.md
+  - tests/test_hermes_tavern_codestable_status.py
+  - design/codestable/features/2026-06-14-hermes-tavern-phase228-attention-status-sync-through-phase227/design.md
+  - design/codestable/features/2026-06-14-hermes-tavern-phase228-attention-status-sync-through-phase227/checklist.yaml
+  - design/codestable/features/2026-06-14-hermes-tavern-phase228-attention-status-sync-through-phase227/phase228-acceptance.md
+allowed_s1_files:
+  - design/codestable/attention.md
+  - tests/test_hermes_tavern_codestable_status.py
+allowed_s2_files:
+  - design/codestable/features/2026-06-14-hermes-tavern-phase228-attention-status-sync-through-phase227/design.md
+  - design/codestable/features/2026-06-14-hermes-tavern-phase228-attention-status-sync-through-phase227/checklist.yaml
+  - design/codestable/features/2026-06-14-hermes-tavern-phase228-attention-status-sync-through-phase227/phase228-acceptance.md
+prohibited_files:
+  - run_agent.py
+  - cli.py
+  - gateway/**
+  - src/**
+  - plugins/**
+  - build/**
+  - build/lib/**
+  - README.md
+  - design/HERMES_TAVERN_DESIGN.md
+  - design/codestable/architecture/**
+  - design/codestable/reference/**
+  - design/codestable/roadmap/**
+  - design/codestable/requirements/**
+  - design/codestable/compound/**
+prohibited_change_categories:
+  - runtime
+  - source
+  - plugin
+  - provider/model routing
+  - prompt
+  - generation
+  - import
+  - export
+  - schema
+  - root-design
+  - architecture
+  - reference
+  - README
+  - roadmap
+  - requirements
+  - compound
+  - build
+  - Hermes core
+  - adult-fiction/RP compatibility
+  - minors/underage handling
+  - provider safety behavior
+  - safety-bypass behavior
+  - SillyTavern asset compatibility
+  - Hermes-native plugin architecture
+expected_status_prefix: "Current status (2026-06-14): All phases 1-227 accepted"
+stale_status_prefix: "Current status (2026-06-14): All phases 1-226 accepted"
+stale_phase_markers:
+  - "1-226"
+  - "1–226"
+valid_internal_range: "Phase 121-167"
+append_only_label: "Phase 227 attention status sync through Phase 226"
+final_status_suffix: "Phase 225 attention status sync through Phase 224, Phase 226 attention status sync through Phase 225, and Phase 227 attention status sync through Phase 226."
+phase_range_assertion: "range(168, 228)"
+phase_labels_delta:
+  preserve: "Phase 168 through Phase 226 labels already present in the focused status regression"
+  append: "Phase 227 attention status sync through Phase 226"
+exact_scope:
+  - "Replace only the existing '- Current status ...' bullet in design/codestable/attention.md."
+  - "Advance only the terminal range to All phases 1-227 accepted and append exactly Phase 227 attention status sync through Phase 226 after Phase 226."
+  - "Update only tests/test_hermes_tavern_codestable_status.py for the focused static status regression."
+  - "Assert exactly one current-status bullet."
+  - "Assert the status bullet starts with Current status (2026-06-14): All phases 1-227 accepted."
+  - "Assert Phase 168 through Phase 227 short labels are present in the single current-status bullet."
+  - "Assert stale Current status (2026-06-14): All phases 1-226 accepted, standalone terminal 1-226, and standalone terminal 1–226 markers are absent from the current-status bullet while preserving the valid Phase 121-167 internal range."
+  - "Assert final-list punctuation ends with Phase 225 attention status sync through Phase 224, Phase 226 attention status sync through Phase 225, and Phase 227 attention status sync through Phase 226."
+  - "Assert aggregate phase coverage with range(168, 228)."
+  - "Keep the focused test static and explicit, with no glob, rglob, iterdir, os.walk, or generated discovery usage."
+  - "Do not edit Phase 227 artifacts or any older accepted phase artifacts during S1."
+  - "S2 acceptance closeout is controller-only and may edit only the new Phase 228 design, checklist, and phase228-acceptance.md."
+  - "Executor S1 must not create phase228-acceptance.md."
+steps:
+  - id: S1
+    name: "S1: Sync CodeStable attention status and regression"
+    status: done
+    completed_at: "2026-06-14"
+    controller_evidence: >
+      Codex executor updated design/codestable/attention.md and
+      tests/test_hermes_tavern_codestable_status.py only. Controller inspected
+      the diff, noted one recovered apply_patch context miss and a locale-only
+      perl warning in the executor JSONL, then reran validators, py_compile,
+      focused pytest, static marker/stale guards, changed-path/protected-path
+      guards, git diff --check, and full pytest before acceptance closeout.
+    description: >
+      Update the mandatory CodeStable attention current-status bullet through
+      accepted Phase 227 and update the existing static docs regression to guard
+      that status line.
+    allowed_files:
+      - design/codestable/attention.md
+      - tests/test_hermes_tavern_codestable_status.py
+    acceptance_criteria:
+      - "design/codestable/attention.md has exactly one current-status bullet."
+      - "The current-status bullet starts with Current status (2026-06-14): All phases 1-227 accepted."
+      - "The current-status bullet contains Phase 168 through Phase 227 short labels."
+      - "The current-status bullet preserves Phase 168 through Phase 226 labels and appends exactly Phase 227 attention status sync through Phase 226."
+      - "The current-status bullet ends with the approved final punctuation: Phase 225 attention status sync through Phase 224, Phase 226 attention status sync through Phase 225, and Phase 227 attention status sync through Phase 226."
+      - "The current-status bullet contains no stale Current status (2026-06-14): All phases 1-226 accepted marker."
+      - "The current-status bullet contains no standalone terminal 1-226 / 1–226 marker."
+      - "The valid internal Phase 121-167 range remains allowed."
+      - "The focused test constants advance from terminal 1-226 guards to terminal 1-227 guards."
+      - "The focused test includes aggregate coverage with range(168, 228)."
+      - "The focused test remains static and explicit, with no generated phase discovery."
+      - "The executor does not mark final accepted statuses and does not create phase228-acceptance.md."
+      - "Protected runtime/source/plugin/provider/prompt/generation/import/export/schema/root-design/architecture/reference/README/roadmap/requirements/compound/build/Hermes core paths remain unchanged."
+    verification:
+      - "PYTHONDONTWRITEBYTECODE=1 python -m py_compile tests/test_hermes_tavern_codestable_status.py"
+      - "PYTHONDONTWRITEBYTECODE=1 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python -m pytest tests/test_hermes_tavern_codestable_status.py -q -o 'addopts=' -p no:cacheprovider -s"
+      - "Static marker guard for one current-status line, terminal 1-227, Phase 168-227 labels, stale 1-226 rejection, valid Phase 121-167 preservation, final suffix through Phase 227, range(168, 228), and no generated discovery."
+      - "Changed-path allowlist guard confirms S1 changed only design/codestable/attention.md and tests/test_hermes_tavern_codestable_status.py."
+      - "Protected-path guard confirms no runtime/source/plugin/provider/prompt/generation/import/export/schema/root-design/architecture/reference/README/roadmap/requirements/compound/build/Hermes core paths changed."
+      - "git diff --check"
+      - "git diff --cached --check"
+  - id: S2
+    name: "S2: Acceptance closeout"
+    status: completed
+    completed_at: "2026-06-14"
+    controller_evidence: >
+      Controller created phase228-acceptance.md, finalized checklist status,
+      validated CodeStable frontmatter/YAML, and kept S2 changes to the new
+      Phase 228 artifacts only.
+    controller_only: true
+    description: >
+      After S1 implementation and controller verification, create the Phase 228
+      acceptance report and finalize checklist/design statuses. Do not expand
+      scope beyond the status-sync docs/test slice, and do not ask the executor
+      to mark final accepted statuses.
+    allowed_files:
+      - design/codestable/features/2026-06-14-hermes-tavern-phase228-attention-status-sync-through-phase227/design.md
+      - design/codestable/features/2026-06-14-hermes-tavern-phase228-attention-status-sync-through-phase227/checklist.yaml
+      - design/codestable/features/2026-06-14-hermes-tavern-phase228-attention-status-sync-through-phase227/phase228-acceptance.md
+    acceptance_criteria:
+      - "phase228-acceptance.md records S1 verification evidence and confirms no residual work."
+      - "Only the new Phase 228 design/checklist/acceptance artifacts are changed during S2."
+      - "S2 does not edit attention.md, the focused status test, runtime/source/plugin/provider/prompt/generation/import/export/schema files, Hermes core files, or protected documentation/build paths."
+      - "S2 finalizes accepted statuses itself and does not delegate acceptance closeout to executor S1."
+    verification:
+      - "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-14-hermes-tavern-phase228-attention-status-sync-through-phase227/phase228-acceptance.md --require doc_type --require status --require feature"
+      - "CodeStable validators for design.md and checklist.yaml after final status patch."
+      - "Changed-path allowlist/protected-path guard for the five allowed files."
+      - "git diff --check"
+      - "git diff --cached --check"
+verification:
+  - id: C1
+    status: passed
+    command: "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-14-hermes-tavern-phase228-attention-status-sync-through-phase227/design.md --require doc_type --require status --require feature --require implementation_ready"
+  - id: C2
+    status: passed
+    command: "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-14-hermes-tavern-phase228-attention-status-sync-through-phase227/checklist.yaml --yaml-only --require doc_type --require status --require feature --require implementation_ready"
+  - id: C3
+    status: passed
+    command: "PYTHONDONTWRITEBYTECODE=1 python -m py_compile tests/test_hermes_tavern_codestable_status.py"
+  - id: C4
+    status: passed
+    command: "PYTHONDONTWRITEBYTECODE=1 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python -m pytest tests/test_hermes_tavern_codestable_status.py -q -o 'addopts=' -p no:cacheprovider -s"
+  - id: C5
+    status: passed
+    command: |
+      PYTHONDONTWRITEBYTECODE=1 python - <<'PY'
+      import re
+      from pathlib import Path
+
+      attention = Path("design/codestable/attention.md").read_text(encoding="utf-8").splitlines()
+      status_lines = [line for line in attention if re.match(r"^\s*-\s*Current status ", line)]
+      assert len(status_lines) == 1, status_lines
+      status = status_lines[0]
+
+      assert status.startswith("- Current status (2026-06-14): All phases 1-227 accepted")
+      required_labels = [
+          "Phase 168 image settings JSON export",
+          "Phase 169 project JSON export surface parity",
+          "Phase 170 export command-surface regression",
+          "Phase 171 root-design export parity",
+          "Phase 172 attention status sync through Phase 171",
+          "Phase 173 root-design section 17 import/export summary parity",
+          "Phase 174 attention status sync through Phase 173",
+          "Phase 175 attention status sync through Phase 174",
+          "Phase 176 attention status sync through Phase 175",
+          "Phase 177 attention status sync through Phase 176",
+          "Phase 178 attention status sync through Phase 177",
+          "Phase 179 attention status sync through Phase 178",
+          "Phase 180 attention status sync through Phase 179",
+          "Phase 181 attention status sync through Phase 180",
+          "Phase 182 attention status sync through Phase 181",
+          "Phase 183 attention status sync through Phase 182",
+          "Phase 184 attention status sync through Phase 183",
+          "Phase 185 attention status sync through Phase 184",
+          "Phase 186 attention status sync through Phase 185",
+          "Phase 187 attention status sync through Phase 186",
+          "Phase 188 attention status sync through Phase 187",
+          "Phase 189 attention status sync through Phase 188",
+          "Phase 190 attention status sync through Phase 189",
+          "Phase 191 attention status sync through Phase 190",
+          "Phase 192 attention status sync through Phase 191",
+          "Phase 193 attention status sync through Phase 192",
+          "Phase 194 attention status sync through Phase 193",
+          "Phase 195 attention status sync through Phase 194",
+          "Phase 196 attention status sync through Phase 195",
+          "Phase 197 attention status sync through Phase 196",
+          "Phase 198 attention status sync through Phase 197",
+          "Phase 199 attention status sync through Phase 198",
+          "Phase 200 attention status sync through Phase 199",
+          "Phase 201 attention status sync through Phase 200",
+          "Phase 202 attention status sync through Phase 201",
+          "Phase 203 attention status sync through Phase 202",
+          "Phase 204 attention status sync through Phase 203",
+          "Phase 205 attention status sync through Phase 204",
+          "Phase 206 attention status sync through Phase 205",
+          "Phase 207 attention status sync through Phase 206",
+          "Phase 208 attention status sync through Phase 207",
+          "Phase 209 attention status sync through Phase 208",
+          "Phase 210 attention status sync through Phase 209",
+          "Phase 211 attention status sync through Phase 210",
+          "Phase 212 attention status sync through Phase 211",
+          "Phase 213 attention status sync through Phase 212",
+          "Phase 214 attention status sync through Phase 213",
+          "Phase 215 attention status sync through Phase 214",
+          "Phase 216 attention status sync through Phase 215",
+          "Phase 217 attention status sync through Phase 216",
+          "Phase 218 attention status sync through Phase 217",
+          "Phase 219 attention status sync through Phase 218",
+          "Phase 220 attention status sync through Phase 219",
+          "Phase 221 attention status sync through Phase 220",
+          "Phase 222 attention status sync through Phase 221",
+          "Phase 223 attention status sync through Phase 222",
+          "Phase 224 attention status sync through Phase 223",
+          "Phase 225 attention status sync through Phase 224",
+          "Phase 226 attention status sync through Phase 225",
+          "Phase 227 attention status sync through Phase 226",
+      ]
+      assert all(label in status for label in required_labels)
+      assert "Current status (2026-06-14): All phases 1-226 accepted" not in status
+      assert re.search(r"(?<!\d)1-226(?!\d)", status) is None
+      assert re.search(r"(?<!\d)1–226(?!\d)", status) is None
+      assert re.search(r"(?<!\d)Phase 121-167(?!\d)", status) is not None
+      assert status.endswith("Phase 225 attention status sync through Phase 224, Phase 226 attention status sync through Phase 225, and Phase 227 attention status sync through Phase 226.")
+
+      test = Path("tests/test_hermes_tavern_codestable_status.py").read_text(encoding="utf-8")
+      assert "Current status (2026-06-14): All phases 1-227 accepted" in test
+      assert "Current status (2026-06-14): All phases 1-226 accepted" in test
+      assert "range(168, 228)" in test
+      assert all(label in test for label in required_labels)
+      for forbidden in ["." + "glob(", "." + "rglob(", "iter" + "dir(", "os" + "." + "walk"]:
+          assert forbidden not in test
+      PY
+  - id: C6
+    status: passed
+    command: |
+      PYTHONDONTWRITEBYTECODE=1 python - <<'PY'
+      import fnmatch
+      import subprocess
+      import sys
+
+      allowed = {
+          "design/codestable/attention.md",
+          "tests/test_hermes_tavern_codestable_status.py",
+          "design/codestable/features/2026-06-14-hermes-tavern-phase228-attention-status-sync-through-phase227/design.md",
+          "design/codestable/features/2026-06-14-hermes-tavern-phase228-attention-status-sync-through-phase227/checklist.yaml",
+          "design/codestable/features/2026-06-14-hermes-tavern-phase228-attention-status-sync-through-phase227/phase228-acceptance.md",
+      }
+      protected = [
+          "run_agent.py",
+          "cli.py",
+          "gateway/**",
+          "src/**",
+          "plugins/**",
+          "build/**",
+          "build/lib/**",
+          "README.md",
+          "design/HERMES_TAVERN_DESIGN.md",
+          "design/codestable/architecture/**",
+          "design/codestable/reference/**",
+          "design/codestable/roadmap/**",
+          "design/codestable/requirements/**",
+          "design/codestable/compound/**",
+      ]
+
+      raw = subprocess.check_output(
+          ["git", "status", "--porcelain=v1", "--untracked-files=all"],
+          text=True,
+      ).splitlines()
+      changed = set()
+      for line in raw:
+          path = line[3:]
+          if " -> " in path:
+              changed.update(path.split(" -> "))
+          else:
+              changed.add(path)
+
+      extra = sorted(changed - allowed)
+      protected_hits = sorted(
+          path for path in changed
+          if any(fnmatch.fnmatch(path, pattern) for pattern in protected)
+      )
+      overlap = sorted(allowed.intersection(
+          path for pattern in protected for path in allowed if fnmatch.fnmatch(path, pattern)
+      ))
+
+      if extra or protected_hits or overlap:
+          print({"extra": extra, "protected_hits": protected_hits, "allowed_protected_overlap": overlap})
+          sys.exit(1)
+      PY
+  - id: C7
+    status: passed
+    command: "git diff --check"
+  - id: C8
+    status: passed
+    command: "git diff --cached --check"
+  - id: C9
+    status: passed
+    command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts=' -p no:cacheprovider"
