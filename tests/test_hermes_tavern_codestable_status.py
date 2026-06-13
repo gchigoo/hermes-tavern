@@ -4,10 +4,10 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 ATTENTION_DOC = REPO_ROOT / "design" / "codestable" / "attention.md"
-CURRENT_STATUS_PREFIX = "Current status (2026-06-13): All phases 1-200 accepted"
-STALE_STATUS_PREFIX = "Current status (2026-06-13): All phases 1-199 accepted"
-STALE_PHASE_MARKER = "1-199"
-STALE_PHASE_MARKER_EN_DASH = "1–199"
+CURRENT_STATUS_PREFIX = "Current status (2026-06-13): All phases 1-201 accepted"
+STALE_STATUS_PREFIX = "Current status (2026-06-13): All phases 1-200 accepted"
+STALE_PHASE_MARKER = "1-200"
+STALE_PHASE_MARKER_EN_DASH = "1–200"
 REQUIRED_PHASE_LABELS = [
     "Phase 168 image settings JSON export",
     "Phase 169 project JSON export surface parity",
@@ -42,6 +42,7 @@ REQUIRED_PHASE_LABELS = [
     "Phase 198 attention status sync through Phase 197",
     "Phase 199 attention status sync through Phase 198",
     "Phase 200 attention status sync through Phase 199",
+    "Phase 201 attention status sync through Phase 200",
 ]
 
 
@@ -61,9 +62,9 @@ def test_attention_current_status_line_is_current():
     assert re.search(rf"(?<!\d){re.escape(STALE_PHASE_MARKER)}(?!\d)", status) is None
     assert re.search(rf"(?<!\d){re.escape(STALE_PHASE_MARKER_EN_DASH)}(?!\d)", status) is None
     assert status.endswith(
-        "Phase 198 attention status sync through Phase 197, Phase 199 attention status sync through Phase 198, and Phase 200 attention status sync through Phase 199."
+        "Phase 199 attention status sync through Phase 198, Phase 200 attention status sync through Phase 199, and Phase 201 attention status sync through Phase 200."
     )
-    assert all(f"Phase {phase} " in status for phase in range(168, 201))
+    assert all(f"Phase {phase} " in status for phase in range(168, 202))
     assert re.search(r"(?<!\d)Phase 121-167(?!\d)", status) is not None
 
     test = Path(__file__).read_text(encoding="utf-8")
@@ -72,7 +73,7 @@ def test_attention_current_status_line_is_current():
     assert STALE_STATUS_PREFIX in test
     assert STALE_PHASE_MARKER in test
     assert STALE_PHASE_MARKER_EN_DASH in test
-    assert "range(168, 201)" in test
+    assert "range(168, 202)" in test
     forbidden_glob = "." + "glob("
     forbidden_rglob = "." + "rglob("
     assert forbidden_glob not in test
