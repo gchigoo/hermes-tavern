@@ -1,0 +1,151 @@
+doc_type: feature-checklist
+status: accepted
+workflow_status: completed
+feature: "2026-06-14-hermes-tavern-phase221-attention-status-sync-through-phase220"
+date: "2026-06-14"
+created: "2026-06-14"
+updated: "2026-06-14"
+owner: codestable-cron
+implementation_ready: true
+summary: >
+  Sync the mandatory CodeStable attention current-status line and focused static
+  regression through accepted Phase 220.
+allowed_s1_files:
+  - design/codestable/attention.md
+  - tests/test_hermes_tavern_codestable_status.py
+allowed_s2_files:
+  - design/codestable/features/2026-06-14-hermes-tavern-phase221-attention-status-sync-through-phase220/design.md
+  - design/codestable/features/2026-06-14-hermes-tavern-phase221-attention-status-sync-through-phase220/checklist.yaml
+  - design/codestable/features/2026-06-14-hermes-tavern-phase221-attention-status-sync-through-phase220/phase221-acceptance.md
+expected_status_prefix: "Current status (2026-06-14): All phases 1-220 accepted"
+stale_status_prefix: "Current status (2026-06-13): All phases 1-219 accepted"
+stale_phase_markers:
+  - "1-219"
+  - "1–219"
+valid_internal_range: "Phase 121-167"
+final_status_suffix: "Phase 218 attention status sync through Phase 217, Phase 219 attention status sync through Phase 218, and Phase 220 attention status sync through Phase 219."
+phase_range_assertion: "range(168, 221)"
+phase_labels:
+  - "Phase 168 image settings JSON export"
+  - "Phase 169 project JSON export surface parity"
+  - "Phase 170 export command-surface regression"
+  - "Phase 171 root-design export parity"
+  - "Phase 172 attention status sync through Phase 171"
+  - "Phase 173 root-design section 17 import/export summary parity"
+  - "Phase 174 attention status sync through Phase 173"
+  - "Phase 175 attention status sync through Phase 174"
+  - "Phase 176 attention status sync through Phase 175"
+  - "Phase 177 attention status sync through Phase 176"
+  - "Phase 178 attention status sync through Phase 177"
+  - "Phase 179 attention status sync through Phase 178"
+  - "Phase 180 attention status sync through Phase 179"
+  - "Phase 181 attention status sync through Phase 180"
+  - "Phase 182 attention status sync through Phase 181"
+  - "Phase 183 attention status sync through Phase 182"
+  - "Phase 184 attention status sync through Phase 183"
+  - "Phase 185 attention status sync through Phase 184"
+  - "Phase 186 attention status sync through Phase 185"
+  - "Phase 187 attention status sync through Phase 186"
+  - "Phase 188 attention status sync through Phase 187"
+  - "Phase 189 attention status sync through Phase 188"
+  - "Phase 190 attention status sync through Phase 189"
+  - "Phase 191 attention status sync through Phase 190"
+  - "Phase 192 attention status sync through Phase 191"
+  - "Phase 193 attention status sync through Phase 192"
+  - "Phase 194 attention status sync through Phase 193"
+  - "Phase 195 attention status sync through Phase 194"
+  - "Phase 196 attention status sync through Phase 195"
+  - "Phase 197 attention status sync through Phase 196"
+  - "Phase 198 attention status sync through Phase 197"
+  - "Phase 199 attention status sync through Phase 198"
+  - "Phase 200 attention status sync through Phase 199"
+  - "Phase 201 attention status sync through Phase 200"
+  - "Phase 202 attention status sync through Phase 201"
+  - "Phase 203 attention status sync through Phase 202"
+  - "Phase 204 attention status sync through Phase 203"
+  - "Phase 205 attention status sync through Phase 204"
+  - "Phase 206 attention status sync through Phase 205"
+  - "Phase 207 attention status sync through Phase 206"
+  - "Phase 208 attention status sync through Phase 207"
+  - "Phase 209 attention status sync through Phase 208"
+  - "Phase 210 attention status sync through Phase 209"
+  - "Phase 211 attention status sync through Phase 210"
+  - "Phase 212 attention status sync through Phase 211"
+  - "Phase 213 attention status sync through Phase 212"
+  - "Phase 214 attention status sync through Phase 213"
+  - "Phase 215 attention status sync through Phase 214"
+  - "Phase 216 attention status sync through Phase 215"
+  - "Phase 217 attention status sync through Phase 216"
+  - "Phase 218 attention status sync through Phase 217"
+  - "Phase 219 attention status sync through Phase 218"
+  - "Phase 220 attention status sync through Phase 219"
+steps:
+  - id: S1
+    name: "Sync attention status and focused regression"
+    status: done
+    completed_at: "2026-06-14"
+    allowed_files:
+      - design/codestable/attention.md
+      - tests/test_hermes_tavern_codestable_status.py
+    acceptance_criteria:
+      - "Single attention current-status bullet starts with Current status (2026-06-14): All phases 1-220 accepted."
+      - "Status appends Phase 220 attention status sync through Phase 219 and preserves prior Phase 168-219 labels."
+      - "Final suffix matches Phase 218, Phase 219, and Phase 220 wording exactly."
+      - "Focused regression rejects stale Current status (2026-06-13): All phases 1-219 accepted."
+      - "Focused regression rejects standalone 1-219 and 1–219 while preserving Phase 121-167."
+      - "REQUIRED_PHASE_LABELS includes Phase 168 through Phase 220."
+      - "Aggregate assertion is range(168, 221)."
+      - "Regression remains static and explicit: no glob, rglob, iterdir, os.walk, or generated discovery."
+      - "S1 does not mark final accepted statuses and does not create phase221-acceptance.md."
+    controller_evidence: >
+      Codex executor updated only attention.md and the focused status test. The
+      executor hit one intermediate focused-test failure after briefly dropping a
+      prior Phase 217 label, then restored it and reran successfully. Controller
+      reconciliation removed one duplicate stale CURRENT_STATUS_PREFIX assignment
+      before final verification.
+  - id: S2
+    name: "Controller acceptance closeout"
+    status: completed
+    completed_at: "2026-06-14"
+    controller_only: true
+    allowed_files:
+      - design/codestable/features/2026-06-14-hermes-tavern-phase221-attention-status-sync-through-phase220/design.md
+      - design/codestable/features/2026-06-14-hermes-tavern-phase221-attention-status-sync-through-phase220/checklist.yaml
+      - design/codestable/features/2026-06-14-hermes-tavern-phase221-attention-status-sync-through-phase220/phase221-acceptance.md
+    acceptance_criteria:
+      - "S2 records verification evidence in phase221-acceptance.md."
+      - "S2 finalizes design/checklist statuses itself."
+      - "S2 does not edit attention.md, the focused test, or any protected runtime/source/plugin/provider/prompt/generation/import/export/schema/root-design/architecture/reference/README/roadmap/requirement/compound/build/Hermes core path."
+checks:
+  - id: C0
+    name: "Design frontmatter validation"
+    command: "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-14-hermes-tavern-phase221-attention-status-sync-through-phase220/design.md --require doc_type --require status --require feature --require implementation_ready"
+    status: passed
+  - id: C1
+    name: "Checklist YAML validation"
+    command: "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-14-hermes-tavern-phase221-attention-status-sync-through-phase220/checklist.yaml --yaml-only --require doc_type --require status --require feature --require implementation_ready"
+    status: passed
+  - id: C2
+    name: "Focused status test compile"
+    command: "PYTHONDONTWRITEBYTECODE=1 python -m py_compile tests/test_hermes_tavern_codestable_status.py"
+    status: passed
+  - id: C3
+    name: "Focused status pytest"
+    command: "PYTHONDONTWRITEBYTECODE=1 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python -m pytest tests/test_hermes_tavern_codestable_status.py -q -o 'addopts=' -p no:cacheprovider -s"
+    status: passed
+  - id: C4
+    name: "Static status guard"
+    command: "controller Python guard for one current-status line, 53 labels, stale 1-219 rejection, range(168, 221), and no generated discovery"
+    status: passed
+  - id: C5
+    name: "Full pytest"
+    command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts=' -p no:cacheprovider"
+    status: passed
+  - id: C6
+    name: "Diff whitespace guard"
+    command: "git diff --check and git diff --cached --check"
+    status: passed
+  - id: C7
+    name: "Changed-path and protected-path guards"
+    command: "controller changed-path/protected-path guard"
+    status: passed
