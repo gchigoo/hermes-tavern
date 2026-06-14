@@ -4,10 +4,10 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 ATTENTION_DOC = REPO_ROOT / "design" / "codestable" / "attention.md"
-CURRENT_STATUS_PREFIX = "Current status (2026-06-14): All phases 1-243 accepted"
-STALE_STATUS_PREFIX = "Current status (2026-06-14): All phases 1-242 accepted"
-STALE_PHASE_MARKER = "1-242"
-STALE_PHASE_MARKER_EN_DASH = "1–242"
+CURRENT_STATUS_PREFIX = "Current status (2026-06-14): All phases 1-244 accepted"
+STALE_STATUS_PREFIX = "Current status (2026-06-14): All phases 1-243 accepted"
+STALE_PHASE_MARKER = "1-243"
+STALE_PHASE_MARKER_EN_DASH = "1–243"
 REQUIRED_PHASE_LABELS = [
     "Phase 168 image settings JSON export",
     "Phase 169 project JSON export surface parity",
@@ -85,8 +85,9 @@ REQUIRED_PHASE_LABELS = [
     "Phase 241 attention status sync through Phase 240",
     "Phase 242 attention status sync through Phase 241",
     "Phase 243 attention status sync through Phase 242",
+    "Phase 244 attention status sync through Phase 243",
 ]
-FINAL_STATUS_SUFFIX = "Phase 241 attention status sync through Phase 240, Phase 242 attention status sync through Phase 241, and Phase 243 attention status sync through Phase 242."
+FINAL_STATUS_SUFFIX = "Phase 242 attention status sync through Phase 241, Phase 243 attention status sync through Phase 242, and Phase 244 attention status sync through Phase 243."
 
 
 def test_attention_current_status_line_is_current():
@@ -105,13 +106,13 @@ def test_attention_current_status_line_is_current():
     assert re.search(rf"(?<!\d){re.escape(STALE_PHASE_MARKER)}(?!\d)", status) is None
     assert re.search(rf"(?<!\d){re.escape(STALE_PHASE_MARKER_EN_DASH)}(?!\d)", status) is None
     assert status.endswith(FINAL_STATUS_SUFFIX)
-    assert all(f"Phase {phase} " in status for phase in range(168, 244))
+    assert all(f"Phase {phase} " in status for phase in range(168, 245))
     assert re.search(r"(?<!\d)Phase 121-167(?!\d)", status) is not None
     test = Path(__file__).read_text(encoding="utf-8")
     assert CURRENT_STATUS_PREFIX in test
     assert all(label in test for label in REQUIRED_PHASE_LABELS)
-    expected_phase_range = "range(168, 244)"
-    stale_phase_range = "range(168, " + "24" + "3)"
+    expected_phase_range = "range(168, 245)"
+    stale_phase_range = "range(168, " + "24" + "4)"
     assert expected_phase_range in test
     assert stale_phase_range not in test
     forbidden_glob = "." + "glob("
