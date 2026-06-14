@@ -1,0 +1,435 @@
+doc_type: feature-checklist
+status: accepted
+workflow_status: completed
+implementation_ready: true
+feature: "2026-06-14-hermes-tavern-phase249-attention-status-sync-through-phase248"
+date: "2026-06-14"
+created: "2026-06-14"
+updated: "2026-06-14"
+owner: codestable-cron
+summary: "Sync the mandatory CodeStable attention current-status line and focused static regression through accepted Phase 248."
+tags:
+  - hermes-tavern
+  - codestable
+  - attention
+  - status-sync
+  - docs
+  - tests
+
+read_only_precheck:
+  status: pass
+  implementation_ready: true
+  evidence:
+    - "Phase 248 checklist has status accepted and workflow_status completed."
+    - "Phase 248 acceptance artifact has status accepted."
+    - "design/codestable/attention.md currently stops at Current status (2026-06-14): All phases 1-247 accepted."
+    - "tests/test_hermes_tavern_codestable_status.py currently guards Current status through Phase 247, stale 1-246 markers, and range(168, 248)."
+    - "This is a docs/test/status-only phase with no service lifecycle command requirement."
+
+allowed_files:
+  - design/codestable/attention.md
+  - tests/test_hermes_tavern_codestable_status.py
+  - design/codestable/features/2026-06-14-hermes-tavern-phase249-attention-status-sync-through-phase248/design.md
+  - design/codestable/features/2026-06-14-hermes-tavern-phase249-attention-status-sync-through-phase248/checklist.yaml
+  - design/codestable/features/2026-06-14-hermes-tavern-phase249-attention-status-sync-through-phase248/phase249-acceptance.md
+
+allowed_s1_files:
+  - design/codestable/attention.md
+  - tests/test_hermes_tavern_codestable_status.py
+
+allowed_s2_files:
+  - design/codestable/features/2026-06-14-hermes-tavern-phase249-attention-status-sync-through-phase248/design.md
+  - design/codestable/features/2026-06-14-hermes-tavern-phase249-attention-status-sync-through-phase248/checklist.yaml
+  - design/codestable/features/2026-06-14-hermes-tavern-phase249-attention-status-sync-through-phase248/phase249-acceptance.md
+
+prohibited_files:
+  - run_agent.py
+  - cli.py
+  - gateway/run.py
+  - "gateway/**"
+  - "src/**"
+  - "plugins/**"
+  - "build/**"
+  - README.md
+  - design/HERMES_TAVERN_DESIGN.md
+  - "design/codestable/architecture/**"
+  - "design/codestable/reference/**"
+  - "design/codestable/roadmap/**"
+  - "design/codestable/requirements/**"
+  - "design/codestable/compound/**"
+  - "design/codestable/features/2026-06-14-hermes-tavern-phase248-attention-status-sync-through-phase247/**"
+  - any older accepted feature artifact outside the Phase 249 feature directory
+
+prohibited_change_categories:
+  - runtime
+  - source
+  - plugin
+  - provider
+  - prompt
+  - import
+  - export
+  - schema
+  - root-design
+  - architecture
+  - README
+  - roadmap
+  - requirements
+  - compound
+  - build
+  - Hermes-core
+
+expected_status_prefix: "Current status (2026-06-14): All phases 1-248 accepted"
+stale_status_prefix: "Current status (2026-06-14): All phases 1-247 accepted"
+stale_phase_markers:
+  - "1-247"
+  - "1–247"
+valid_internal_range: "Phase 121-167"
+append_exact_label: "Phase 248 attention status sync through Phase 247"
+final_status_suffix: "Phase 246 attention status sync through Phase 245, Phase 247 attention status sync through Phase 246, and Phase 248 attention status sync through Phase 247."
+phase_range_assertion: "range(168, 249)"
+stale_phase_range_assertion: "range(168, 248)"
+current_status_prefix_assignment_count: 1
+static_regression_forbidden_discovery:
+  - glob
+  - rglob
+  - iterdir
+  - os.walk
+
+exact_scope:
+  - Replace only the existing "- Current status ..." bullet in design/codestable/attention.md.
+  - Keep the attention status as exactly one bullet.
+  - Advance only the terminal range to All phases 1-248 accepted.
+  - Append exactly Phase 248 attention status sync through Phase 247 after Phase 247.
+  - Preserve all required Phase 168 through Phase 247 labels already present.
+  - After implementation, require Phase 168 through Phase 248 labels.
+  - Preserve the valid internal Phase 121-167 range.
+  - Update only tests/test_hermes_tavern_codestable_status.py for the focused static status regression.
+  - "Assert the status bullet starts with Current status (2026-06-14): All phases 1-248 accepted."
+  - Assert stale Current status prefix 1-247, standalone terminal 1-247, and standalone terminal 1–247 markers are absent from the current-status bullet while preserving the valid Phase 121-167 internal range.
+  - Assert final-list punctuation ends with Phase 246 attention status sync through Phase 245, Phase 247 attention status sync through Phase 246, and Phase 248 attention status sync through Phase 247.
+  - Assert aggregate phase coverage with range(168, 249).
+  - Assert stale aggregate coverage range(168, 248) is rejected.
+  - Assert exactly one CURRENT_STATUS_PREFIX assignment.
+  - Keep the focused test static and explicit, with no glob, rglob, iterdir, os.walk, or generated discovery usage.
+  - Do not edit Phase 248 artifacts or any older accepted phase artifacts during S1 or S2 except the new Phase 249 feature directory.
+  - S2 acceptance closeout is controller-only and may edit only the new Phase 249 design, checklist, and phase249-acceptance.md.
+  - Executor S1 must not create phase249-acceptance.md.
+  - Executor S1 must not mark final accepted statuses.
+  - Do not run service lifecycle commands.
+
+steps:
+  - id: S1
+    name: "S1: Sync CodeStable attention status and regression"
+    status: done
+    owner_mode: executor
+    controller_only: false
+    description: "Update the mandatory CodeStable attention current-status bullet through accepted Phase 248 and update the existing static docs regression to guard that status line."
+    allowed_files:
+      - design/codestable/attention.md
+      - tests/test_hermes_tavern_codestable_status.py
+    acceptance_criteria:
+      - design/codestable/attention.md has exactly one current-status bullet.
+      - "The current-status bullet starts with Current status (2026-06-14): All phases 1-248 accepted."
+      - The current-status bullet contains Phase 168 through Phase 248 short labels.
+      - The current-status bullet preserves the valid internal Phase 121-167 range.
+      - The current-status bullet rejects stale standalone 1-247 and 1–247 terminal markers.
+      - The current-status bullet ends with the final suffix through Phase 248.
+      - tests/test_hermes_tavern_codestable_status.py has CURRENT_STATUS_PREFIX advanced to 1-248.
+      - tests/test_hermes_tavern_codestable_status.py has STALE_STATUS_PREFIX and stale standalone markers advanced to 1-247.
+      - tests/test_hermes_tavern_codestable_status.py includes Phase 168 through Phase 248 labels explicitly.
+      - tests/test_hermes_tavern_codestable_status.py asserts range(168, 249).
+      - tests/test_hermes_tavern_codestable_status.py rejects stale range(168, 248).
+      - tests/test_hermes_tavern_codestable_status.py has exactly one CURRENT_STATUS_PREFIX assignment.
+      - tests/test_hermes_tavern_codestable_status.py remains static and explicit, with no glob/rglob/iterdir/os.walk generated discovery.
+      - S1 changed paths are limited to design/codestable/attention.md and tests/test_hermes_tavern_codestable_status.py.
+      - S1 does not create phase249-acceptance.md and does not mark final accepted statuses.
+    verification_commands:
+      - "PYTHONDONTWRITEBYTECODE=1 python -m py_compile tests/test_hermes_tavern_codestable_status.py"
+      - "PYTHONDONTWRITEBYTECODE=1 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python -m pytest tests/test_hermes_tavern_codestable_status.py -q -o 'addopts=' -p no:cacheprovider -s"
+      - "Static marker guard defined in checks.static-marker-guard."
+      - "S1 changed-path guard defined in checks.changed-path-guard-s1."
+      - "Protected-path guard defined in checks.protected-path-guard."
+      - "Allowed/prohibited overlap guard defined in checks.overlap-guard."
+      - "git diff --check"
+    completed_at: "2026-06-14"
+    controller_evidence: "Codex executor updated only design/codestable/attention.md and tests/test_hermes_tavern_codestable_status.py. Controller inspection confirmed exactly one current-status bullet, terminal range 1-248, explicit Phase 168-248 labels, stale 1-247 rejection, valid Phase 121-167 preservation, final suffix through Phase 248, exactly one CURRENT_STATUS_PREFIX assignment, range(168, 249), stale range(168, 248) rejection, no generated discovery calls, no prohibited path edits, and no semantic Codex rate-limit blocker. Executor JSONL had no failed command executions; controller reran focused gates from scratch."
+    verification:
+      - status: passed
+        command: "PYTHONDONTWRITEBYTECODE=1 python -m py_compile tests/test_hermes_tavern_codestable_status.py"
+      - status: passed
+        command: "PYTHONDONTWRITEBYTECODE=1 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python -m pytest tests/test_hermes_tavern_codestable_status.py -q -o 'addopts=' -p no:cacheprovider -s"
+        result: "1 passed in 0.01s"
+      - status: passed
+        command: "Static marker guard defined in checks.static-marker-guard."
+      - status: passed
+        command: "S1 changed-path guard defined in checks.changed-path-guard-s1."
+      - status: passed
+        command: "Protected-path guard defined in checks.protected-path-guard."
+      - status: passed
+        command: "Allowed/prohibited overlap guard defined in checks.overlap-guard."
+      - status: passed
+        command: "git diff --check"
+
+  - id: S2
+    name: "S2: Controller-only Phase 249 acceptance closeout"
+    status: completed
+    owner_mode: controller
+    controller_only: true
+    depends_on:
+      - S1
+    description: "Record acceptance evidence and finalize only the new Phase 249 CodeStable artifacts after S1 verification passes and controller reruns validators, tests, and guards."
+    allowed_files:
+      - design/codestable/features/2026-06-14-hermes-tavern-phase249-attention-status-sync-through-phase248/design.md
+      - design/codestable/features/2026-06-14-hermes-tavern-phase249-attention-status-sync-through-phase248/checklist.yaml
+      - design/codestable/features/2026-06-14-hermes-tavern-phase249-attention-status-sync-through-phase248/phase249-acceptance.md
+    acceptance_criteria:
+      - phase249-acceptance.md is created only by the controller.
+      - checklist.yaml is updated only for closeout status/evidence.
+      - design.md is updated only for closeout metadata if needed.
+      - Changed paths are limited to the five allowed files across S1 and S2.
+      - No Phase 248 artifact is edited during this phase.
+      - No older accepted feature artifact is edited.
+    verification_commands:
+      - "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-14-hermes-tavern-phase249-attention-status-sync-through-phase248/design.md --require doc_type --require status --require feature --require implementation_ready"
+      - "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-14-hermes-tavern-phase249-attention-status-sync-through-phase248/checklist.yaml --yaml-only --require doc_type --require status --require feature --require implementation_ready"
+      - "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-14-hermes-tavern-phase249-attention-status-sync-through-phase248/phase249-acceptance.md --require doc_type --require status --require feature"
+      - "PYTHONDONTWRITEBYTECODE=1 python -m py_compile tests/test_hermes_tavern_codestable_status.py"
+      - "PYTHONDONTWRITEBYTECODE=1 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python -m pytest tests/test_hermes_tavern_codestable_status.py -q -o 'addopts=' -p no:cacheprovider -s"
+      - "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts=' -p no:cacheprovider"
+      - "Static marker guard defined in checks.static-marker-guard."
+      - "Final changed-path guard defined in checks.changed-path-guard-final."
+      - "Protected-path guard defined in checks.protected-path-guard."
+      - "Allowed/prohibited overlap guard defined in checks.overlap-guard."
+      - "git diff --check"
+      - "git diff --cached --check"
+    completed_at: "2026-06-14"
+    controller_evidence: "Controller created phase249-acceptance.md, finalized checklist status/evidence only, validated design/checklist/acceptance frontmatter, reran focused and full tests, static marker guard, changed-path/protected-path/overlap guards, git diff --check, and git diff --cached --check before commit."
+    verification:
+      - status: passed
+        command: "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-14-hermes-tavern-phase249-attention-status-sync-through-phase248/design.md --require doc_type --require status --require feature --require implementation_ready"
+      - status: passed
+        command: "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-14-hermes-tavern-phase249-attention-status-sync-through-phase248/checklist.yaml --yaml-only --require doc_type --require status --require feature --require implementation_ready"
+      - status: passed
+        command: "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-14-hermes-tavern-phase249-attention-status-sync-through-phase248/phase249-acceptance.md --require doc_type --require status --require feature"
+      - status: passed
+        command: "PYTHONDONTWRITEBYTECODE=1 python -m py_compile tests/test_hermes_tavern_codestable_status.py"
+      - status: passed
+        command: "PYTHONDONTWRITEBYTECODE=1 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python -m pytest tests/test_hermes_tavern_codestable_status.py -q -o 'addopts=' -p no:cacheprovider -s"
+        result: "1 passed in 0.01s"
+      - status: passed
+        command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts=' -p no:cacheprovider"
+        result: "1215 passed"
+      - status: passed
+        command: "Static marker guard defined in checks.static-marker-guard."
+      - status: passed
+        command: "Final changed-path guard defined in checks.changed-path-guard-final."
+      - status: passed
+        command: "Protected-path guard defined in checks.protected-path-guard."
+      - status: passed
+        command: "Allowed/prohibited overlap guard defined in checks.overlap-guard."
+      - status: passed
+        command: "git diff --check"
+      - status: passed
+        command: "git diff --cached --check"
+
+checks:
+  - id: validate-design
+    status: passed
+    owner_mode: controller
+    command: "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-14-hermes-tavern-phase249-attention-status-sync-through-phase248/design.md --require doc_type --require status --require feature --require implementation_ready"
+
+  - id: validate-checklist
+    status: passed
+    owner_mode: controller
+    command: "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-14-hermes-tavern-phase249-attention-status-sync-through-phase248/checklist.yaml --yaml-only --require doc_type --require status --require feature --require implementation_ready"
+
+  - id: validate-acceptance
+    status: passed
+    owner_mode: controller
+    command: "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-14-hermes-tavern-phase249-attention-status-sync-through-phase248/phase249-acceptance.md --require doc_type --require status --require feature"
+
+  - id: py-compile-focused-status-test
+    status: passed
+    owner_mode: executor
+    command: "PYTHONDONTWRITEBYTECODE=1 python -m py_compile tests/test_hermes_tavern_codestable_status.py"
+
+  - id: focused-status-pytest
+    status: passed
+    owner_mode: executor
+    command: "PYTHONDONTWRITEBYTECODE=1 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python -m pytest tests/test_hermes_tavern_codestable_status.py -q -o 'addopts=' -p no:cacheprovider -s"
+
+  - id: full-pytest
+    status: passed
+    owner_mode: controller
+    command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts=' -p no:cacheprovider"
+
+  - id: static-marker-guard
+    status: passed
+    owner_mode: controller
+    command: |
+      PYTHONDONTWRITEBYTECODE=1 python - <<'PY'
+      import re
+      from pathlib import Path
+
+      attention = Path("design/codestable/attention.md").read_text(encoding="utf-8")
+      test_path = Path("tests/test_hermes_tavern_codestable_status.py")
+      test = test_path.read_text(encoding="utf-8")
+
+      expected = "Current status (2026-06-14): All phases 1-248 accepted"
+      stale = "Current status (2026-06-14): All phases 1-247 accepted"
+      append_label = "Phase 248 attention status sync through Phase 247"
+      suffix = "Phase 246 attention status sync through Phase 245, Phase 247 attention status sync through Phase 246, and Phase 248 attention status sync through Phase 247."
+
+      status_lines = [line for line in attention.splitlines() if re.match(r"^\s*-\s*Current status ", line)]
+      assert len(status_lines) == 1, status_lines
+      status = status_lines[0]
+
+      assert status.startswith(f"- {expected}")
+      assert stale not in status
+      assert re.search(r"(?<!\d)1\-247(?!\d)", status) is None
+      assert re.search(r"(?<!\d)1–247(?!\d)", status) is None
+      assert re.search(r"(?<!\d)Phase 121-167(?!\d)", status) is not None
+      assert append_label in status
+      assert status.endswith(suffix)
+      assert all(f"Phase {phase} " in status for phase in range(168, 249))
+
+      assert re.findall(r"^CURRENT_STATUS_PREFIX\s*=", test, re.M) == ["CURRENT_STATUS_PREFIX ="]
+      assert expected in test
+      assert stale in test
+      assert append_label in test
+      assert suffix in test
+      assert "range(168, 249)" in test
+      assert "range(168, 248)" in test
+      assert all(f"Phase {phase} " in test for phase in range(168, 249))
+      for forbidden in [".glob(", ".rglob(", "iterdir(", "os.walk"]:
+          assert forbidden not in test, forbidden
+      PY
+
+  - id: changed-path-guard-s1
+    status: passed
+    owner_mode: executor
+    command: |
+      PYTHONDONTWRITEBYTECODE=1 python - <<'PY'
+      import subprocess
+
+      allowed = {
+          "design/codestable/attention.md",
+          "tests/test_hermes_tavern_codestable_status.py",
+      }
+
+      def lines(cmd):
+          return set(filter(None, subprocess.check_output(cmd, text=True).splitlines()))
+
+      changed = set()
+      changed |= lines(["git", "diff", "--name-only"])
+      changed |= lines(["git", "diff", "--name-only", "--cached"])
+      changed |= lines(["git", "ls-files", "--others", "--exclude-standard"])
+
+      unexpected = changed - allowed
+      assert not unexpected, sorted(unexpected)
+      PY
+
+  - id: changed-path-guard-final
+    status: passed
+    owner_mode: controller
+    command: |
+      PYTHONDONTWRITEBYTECODE=1 python - <<'PY'
+      import subprocess
+
+      allowed = {
+          "design/codestable/attention.md",
+          "tests/test_hermes_tavern_codestable_status.py",
+          "design/codestable/features/2026-06-14-hermes-tavern-phase249-attention-status-sync-through-phase248/design.md",
+          "design/codestable/features/2026-06-14-hermes-tavern-phase249-attention-status-sync-through-phase248/checklist.yaml",
+          "design/codestable/features/2026-06-14-hermes-tavern-phase249-attention-status-sync-through-phase248/phase249-acceptance.md",
+      }
+
+      def lines(cmd):
+          return set(filter(None, subprocess.check_output(cmd, text=True).splitlines()))
+
+      changed = set()
+      changed |= lines(["git", "diff", "--name-only"])
+      changed |= lines(["git", "diff", "--name-only", "--cached"])
+      changed |= lines(["git", "ls-files", "--others", "--exclude-standard"])
+
+      unexpected = changed - allowed
+      assert not unexpected, sorted(unexpected)
+      PY
+
+  - id: protected-path-guard
+    status: passed
+    owner_mode: controller
+    command: |
+      PYTHONDONTWRITEBYTECODE=1 python - <<'PY'
+      import fnmatch
+      import subprocess
+
+      protected = [
+          "run_agent.py",
+          "cli.py",
+          "gateway/run.py",
+          "gateway/**",
+          "src/**",
+          "plugins/**",
+          "build/**",
+          "README.md",
+          "design/HERMES_TAVERN_DESIGN.md",
+          "design/codestable/architecture/**",
+          "design/codestable/reference/**",
+          "design/codestable/roadmap/**",
+          "design/codestable/requirements/**",
+          "design/codestable/compound/**",
+          "design/codestable/features/2026-06-14-hermes-tavern-phase248-attention-status-sync-through-phase247/**",
+      ]
+      allowed_phase249 = "design/codestable/features/2026-06-14-hermes-tavern-phase249-attention-status-sync-through-phase248/"
+
+      def lines(cmd):
+          return set(filter(None, subprocess.check_output(cmd, text=True).splitlines()))
+
+      changed = set()
+      changed |= lines(["git", "diff", "--name-only"])
+      changed |= lines(["git", "diff", "--name-only", "--cached"])
+      changed |= lines(["git", "ls-files", "--others", "--exclude-standard"])
+
+      violations = []
+      for path in changed:
+          if path.startswith("design/codestable/features/") and not path.startswith(allowed_phase249):
+              violations.append(path)
+          for pattern in protected:
+              if fnmatch.fnmatch(path, pattern):
+                  violations.append(path)
+      assert not violations, sorted(set(violations))
+      PY
+
+  - id: overlap-guard
+    status: passed
+    owner_mode: controller
+    command: |
+      PYTHONDONTWRITEBYTECODE=1 python - <<'PY'
+      allowed = {
+          "design/codestable/attention.md",
+          "tests/test_hermes_tavern_codestable_status.py",
+          "design/codestable/features/2026-06-14-hermes-tavern-phase249-attention-status-sync-through-phase248/design.md",
+          "design/codestable/features/2026-06-14-hermes-tavern-phase249-attention-status-sync-through-phase248/checklist.yaml",
+          "design/codestable/features/2026-06-14-hermes-tavern-phase249-attention-status-sync-through-phase248/phase249-acceptance.md",
+      }
+      prohibited_exact = {
+          "run_agent.py",
+          "cli.py",
+          "gateway/run.py",
+          "README.md",
+          "design/HERMES_TAVERN_DESIGN.md",
+      }
+      overlap = allowed.intersection(prohibited_exact)
+      assert not overlap, sorted(overlap)
+      PY
+
+  - id: diff-check
+    status: passed
+    owner_mode: controller
+    command: "git diff --check"
+
+  - id: cached-diff-check
+    status: passed
+    owner_mode: controller
+    command: "git diff --cached --check"
