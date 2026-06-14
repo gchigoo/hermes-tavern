@@ -4,10 +4,10 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 ATTENTION_DOC = REPO_ROOT / "design" / "codestable" / "attention.md"
-CURRENT_STATUS_PREFIX = "Current status (2026-06-15): All phases 1-256 accepted"
-STALE_STATUS_PREFIX = "Current status (2026-06-15): All phases 1-255 accepted"
-STALE_PHASE_MARKER = "1-255"
-STALE_PHASE_MARKER_EN_DASH = "1–255"
+CURRENT_STATUS_PREFIX = "Current status (2026-06-15): All phases 1-257 accepted"
+STALE_STATUS_PREFIX = "Current status (2026-06-15): All phases 1-256 accepted"
+STALE_PHASE_MARKER = "1-256"
+STALE_PHASE_MARKER_EN_DASH = "1–256"
 REQUIRED_PHASE_LABELS = [
     "Phase 168 image settings JSON export",
     "Phase 169 project JSON export surface parity",
@@ -98,8 +98,9 @@ REQUIRED_PHASE_LABELS = [
     "Phase 254 attention status sync through Phase 253",
     "Phase 255 attention status sync through Phase 254",
     "Phase 256 attention status sync through Phase 255",
+    "Phase 257 attention status sync through Phase 256",
 ]
-FINAL_STATUS_SUFFIX = "Phase 254 attention status sync through Phase 253, Phase 255 attention status sync through Phase 254, and Phase 256 attention status sync through Phase 255."
+FINAL_STATUS_SUFFIX = "Phase 255 attention status sync through Phase 254, Phase 256 attention status sync through Phase 255, and Phase 257 attention status sync through Phase 256."
 
 
 def test_attention_current_status_line_is_current():
@@ -118,19 +119,19 @@ def test_attention_current_status_line_is_current():
     assert re.search(rf"(?<!\d){re.escape(STALE_PHASE_MARKER)}(?!\d)", status) is None
     assert re.search(rf"(?<!\d){re.escape(STALE_PHASE_MARKER_EN_DASH)}(?!\d)", status) is None
     assert status.endswith(FINAL_STATUS_SUFFIX)
-    phase_range = range(168, 257)
+    phase_range = range(168, 258)
     assert all(f"Phase {phase} " in status for phase in phase_range)
     assert re.search(r"(?<!\d)Phase 121-167(?!\d)", status) is not None
     test = Path(__file__).read_text(encoding="utf-8")
     assert re.findall(r"^CURRENT_STATUS_PREFIX\s*=", test, re.M) == ["CURRENT_STATUS_PREFIX ="]
     assert CURRENT_STATUS_PREFIX in test
     assert all(label in test for label in REQUIRED_PHASE_LABELS)
-    stale_aggregate_range_not_literal = "".join(["range(168, ", "25", "6", ")"])
+    stale_aggregate_range_not_literal = "".join(["range(168, ", "25", "7", ")"])
     assert stale_aggregate_range_not_literal not in test
-    aggregate_range = "".join(["range(168, ", "257", ")"])
+    aggregate_range = "range(168, 258)"
     assert aggregate_range in test
-    stale_phase_range = "".join(["range(168, ", "25", "6", ")"])
-    assert stale_phase_range not in test
+    stale_aggregate_range = "".join(["range(168, ", "25", "7", ")"])
+    assert stale_aggregate_range not in test
     forbidden_glob = "." + "gl" + "ob("
     forbidden_rglob = "." + "rg" + "lob("
     assert forbidden_glob not in test
