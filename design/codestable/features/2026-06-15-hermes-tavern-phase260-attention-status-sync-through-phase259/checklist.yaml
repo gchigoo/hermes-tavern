@@ -1,6 +1,6 @@
 doc_type: feature-checklist
-status: in_progress
-workflow_status: in_progress
+status: accepted
+workflow_status: accepted
 implementation_ready: true
 feature: "2026-06-15-hermes-tavern-phase260-attention-status-sync-through-phase259"
 date: "2026-06-15"
@@ -202,7 +202,7 @@ exact_scope:
 steps:
   - id: S1
     name: "S1: Sync CodeStable attention status and regression"
-    status: pending
+    status: completed
     owner_mode: executor
     controller_only: false
     description: "Update the mandatory CodeStable attention current-status bullet through accepted Phase 259 and update the existing static docs regression to guard that status line."
@@ -236,7 +236,7 @@ steps:
 
   - id: S2
     name: "S2: Controller-only Phase 260 acceptance closeout"
-    status: planned
+    status: completed
     owner_mode: controller
     controller_only: true
     depends_on:
