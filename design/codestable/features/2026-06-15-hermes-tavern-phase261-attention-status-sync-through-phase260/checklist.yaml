@@ -1,0 +1,199 @@
+doc_type: feature-checklist
+status: accepted
+workflow_status: accepted
+implementation_ready: true
+feature: "2026-06-15-hermes-tavern-phase261-attention-status-sync-through-phase260"
+date: "2026-06-15"
+created: "2026-06-15"
+updated: "2026-06-15"
+owner: codestable-cron
+summary: "Sync the mandatory CodeStable attention current-status line and focused static regression through accepted Phase 260."
+tags:
+  - hermes-tavern
+  - codestable
+  - attention
+  - status-sync
+  - docs
+  - tests
+
+controller_supplied_precheck:
+  status: observed
+  implementation_ready: true
+  evidence:
+    - "Controller supplied branch/head main at 4b3a7e5 with clean worktree before edits."
+    - "Phase 260 design/checklist/acceptance are accepted/complete."
+    - "design/codestable/attention.md currently reports accepted phases through Phase 259."
+    - "tests/test_hermes_tavern_codestable_status.py currently guards Phase 168 through Phase 259 labels, stale terminal 1-258 markers, final suffix through Phase 259, and range(168, 260)."
+    - "No Phase 261 feature directory was present before controller materialization."
+    - "This is a docs/test/status-only phase with no service lifecycle command requirement."
+    - "Architect plan: /tmp/hermes-tavern-architect-phase261-status-sync.jsonl."
+
+allowed_files:
+  - design/codestable/attention.md
+  - tests/test_hermes_tavern_codestable_status.py
+  - design/codestable/features/2026-06-15-hermes-tavern-phase261-attention-status-sync-through-phase260/design.md
+  - design/codestable/features/2026-06-15-hermes-tavern-phase261-attention-status-sync-through-phase260/checklist.yaml
+  - design/codestable/features/2026-06-15-hermes-tavern-phase261-attention-status-sync-through-phase260/phase261-acceptance.md
+
+allowed_s1_files:
+  - design/codestable/attention.md
+  - tests/test_hermes_tavern_codestable_status.py
+
+allowed_s2_files:
+  - design/codestable/features/2026-06-15-hermes-tavern-phase261-attention-status-sync-through-phase260/design.md
+  - design/codestable/features/2026-06-15-hermes-tavern-phase261-attention-status-sync-through-phase260/checklist.yaml
+  - design/codestable/features/2026-06-15-hermes-tavern-phase261-attention-status-sync-through-phase260/phase261-acceptance.md
+
+protected_change_categories:
+  - runtime
+  - source
+  - plugin
+  - provider
+  - prompt
+  - import
+  - export
+  - schema
+  - root-design
+  - architecture
+  - README
+  - roadmap
+  - requirements
+  - compound
+  - build
+  - SillyTavern-assets
+  - adult-fiction-rp-policy
+  - minors-underage-handling
+  - provider-safety-behavior
+
+expected_status_prefix: "Current status (2026-06-15): All phases 1-260 accepted"
+stale_status_prefix: "Current status (2026-06-15): All phases 1-259 accepted"
+stale_phase_markers:
+  - "1-259"
+  - "1–259"
+valid_internal_range: "Phase 121-167"
+append_exact_label: "Phase 260 attention status sync through Phase 259"
+final_status_suffix: "Phase 258 attention status sync through Phase 257, Phase 259 attention status sync through Phase 258, and Phase 260 attention status sync through Phase 259."
+phase_range_assertion: "range(168, 261)"
+stale_phase_range_assertion: "range(168, 260)"
+current_status_prefix_assignment_count: 1
+static_regression_forbidden_discovery:
+  - glob
+  - rglob
+  - iterdir
+  - os.walk
+
+exact_scope:
+  - "Replace only the existing '- Current status ...' bullet in design/codestable/attention.md."
+  - "Keep the attention status as exactly one bullet."
+  - "Advance the terminal range to All phases 1-260 accepted while preserving the status date 2026-06-15."
+  - "Append exactly Phase 260 attention status sync through Phase 259 after Phase 259."
+  - "Preserve all required Phase 168 through Phase 259 labels already present."
+  - "After implementation, require Phase 168 through Phase 260 labels."
+  - "Preserve the valid internal Phase 121-167 range."
+  - "Update only tests/test_hermes_tavern_codestable_status.py for the focused static status regression."
+  - "Assert the status bullet starts with Current status (2026-06-15): All phases 1-260 accepted."
+  - "Assert stale Current status prefix 1-259, standalone terminal 1-259, and standalone terminal 1–259 markers are absent from the current-status bullet while preserving the valid Phase 121-167 internal range."
+  - "Assert final-list punctuation ends with Phase 258 attention status sync through Phase 257, Phase 259 attention status sync through Phase 258, and Phase 260 attention status sync through Phase 259."
+  - "Assert aggregate phase coverage with range(168, 261)."
+  - "Assert stale aggregate coverage range(168, 260) is rejected without embedding it as a direct literal."
+  - "Assert exactly one CURRENT_STATUS_PREFIX assignment."
+  - "Keep the focused test static and explicit, with no glob/rglob/iterdir/os.walk generated discovery."
+  - "Do not edit Phase 260 artifacts or any older accepted phase artifacts during S1."
+  - "S2 acceptance closeout is controller/parent-only and may change only the new Phase 261 design, checklist, and phase261-acceptance.md."
+  - "Executor S1 must not create phase261-acceptance.md."
+  - "Executor S1 must not mark final accepted statuses."
+  - "Do not run service lifecycle commands."
+
+steps:
+  - id: S1
+    name: "S1: Sync CodeStable attention status and regression"
+    status: completed
+    owner_mode: executor
+    controller_only: false
+    description: "Update the mandatory CodeStable attention current-status bullet through accepted Phase 260 and update the existing static docs regression to guard that status line."
+    allowed_files:
+      - design/codestable/attention.md
+      - tests/test_hermes_tavern_codestable_status.py
+    acceptance_criteria:
+      - "design/codestable/attention.md has exactly one current-status bullet."
+      - "The current-status bullet starts with Current status (2026-06-15): All phases 1-260 accepted."
+      - "The current-status bullet contains Phase 168 through Phase 260 short labels."
+      - "The current-status bullet preserves the valid internal Phase 121-167 range."
+      - "The current-status bullet rejects stale standalone 1-259 and 1–259 terminal markers."
+      - "The current-status bullet ends with the final suffix through Phase 260."
+      - "tests/test_hermes_tavern_codestable_status.py has CURRENT_STATUS_PREFIX advanced to 2026-06-15 and 1-260."
+      - "tests/test_hermes_tavern_codestable_status.py has STALE_STATUS_PREFIX and stale standalone markers advanced to 2026-06-15 and 1-259."
+      - "tests/test_hermes_tavern_codestable_status.py includes Phase 168 through Phase 260 labels explicitly."
+      - "tests/test_hermes_tavern_codestable_status.py asserts range(168, 261)."
+      - "tests/test_hermes_tavern_codestable_status.py rejects stale range(168, 260) without embedding that stale range as a direct literal."
+      - "tests/test_hermes_tavern_codestable_status.py has exactly one CURRENT_STATUS_PREFIX assignment."
+      - "tests/test_hermes_tavern_codestable_status.py remains static and explicit, with no glob/rglob/iterdir/os.walk generated discovery."
+      - "S1 changed paths are limited to design/codestable/attention.md and tests/test_hermes_tavern_codestable_status.py."
+      - "S1 does not create phase261-acceptance.md and does not mark final accepted statuses."
+    verification_commands:
+      - "PYTHONDONTWRITEBYTECODE=1 python -m py_compile tests/test_hermes_tavern_codestable_status.py"
+      - "PYTHONDONTWRITEBYTECODE=1 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python -m pytest tests/test_hermes_tavern_codestable_status.py -q -o 'addopts=' -p no:cacheprovider -s"
+      - "Static marker guard defined in checks.static_marker_guard."
+      - "S1 changed-path guard defined in checks.changed_path_guard_s1."
+      - "Protected-path guard defined in checks.protected_path_guard."
+      - "Allowed/prohibited overlap guard defined in checks.overlap_guard."
+      - "git diff --check"
+
+  - id: S2
+    name: "S2: Controller/parent-only Phase 261 acceptance closeout"
+    status: completed
+    owner_mode: controller
+    controller_only: true
+    depends_on:
+      - S1
+    description: "Record acceptance evidence and finalize only the new Phase 261 CodeStable artifacts after S1 verification passes and parent/controller reruns validators, tests, and guards."
+    allowed_files:
+      - design/codestable/features/2026-06-15-hermes-tavern-phase261-attention-status-sync-through-phase260/design.md
+      - design/codestable/features/2026-06-15-hermes-tavern-phase261-attention-status-sync-through-phase260/checklist.yaml
+      - design/codestable/features/2026-06-15-hermes-tavern-phase261-attention-status-sync-through-phase260/phase261-acceptance.md
+    acceptance_criteria:
+      - "phase261-acceptance.md is created only by the controller/parent."
+      - "checklist.yaml is updated only for closeout status/evidence."
+      - "design.md is updated only for closeout metadata if needed."
+      - "S2 changed paths are limited to the three new Phase 261 feature artifacts."
+      - "Changed paths are limited to the five allowed files across S1 and S2."
+      - "No Phase 260 artifact is edited during this phase."
+      - "No older accepted feature artifact is edited."
+
+checks:
+  - id: C1
+    name: "Phase 261 design frontmatter validator"
+    command: "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-15-hermes-tavern-phase261-attention-status-sync-through-phase260/design.md --require doc_type --require status --require feature --require implementation_ready"
+    status: passed
+  - id: C2
+    name: "Phase 261 checklist YAML validator"
+    command: "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-15-hermes-tavern-phase261-attention-status-sync-through-phase260/checklist.yaml --yaml-only --require doc_type --require status --require feature --require implementation_ready"
+    status: passed
+  - id: C3
+    name: "Focused status regression py_compile"
+    command: "PYTHONDONTWRITEBYTECODE=1 python -m py_compile tests/test_hermes_tavern_codestable_status.py"
+    status: passed
+  - id: C4
+    name: "Focused status regression pytest"
+    command: "PYTHONDONTWRITEBYTECODE=1 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python -m pytest tests/test_hermes_tavern_codestable_status.py -q -o 'addopts=' -p no:cacheprovider -s"
+    status: passed
+  - id: C5
+    name: "Static marker/stale guard"
+    command: "PYTHONDONTWRITEBYTECODE=1 python -c \"from pathlib import Path; import re; line=[l for l in Path('design/codestable/attention.md').read_text(encoding='utf-8').splitlines() if re.match(r'^\\s*-\\s*Current status ', l)]; assert len(line)==1; status=line[0]; test=Path('tests/test_hermes_tavern_codestable_status.py').read_text(encoding='utf-8'); assert status.startswith('- Current status (2026-06-15): All phases 1-260 accepted'); assert 'Current status (2026-06-15): All phases 1-259 accepted' not in status; assert re.search(r'(?<!\\d)1-259(?!\\d)', status) is None; assert re.search(r'(?<!\\d)1–259(?!\\d)', status) is None; assert re.search(r'(?<!\\d)Phase 121-167(?!\\d)', status) is not None; assert status.endswith('Phase 258 attention status sync through Phase 257, Phase 259 attention status sync through Phase 258, and Phase 260 attention status sync through Phase 259.'); assert all(f'Phase {phase} ' in status for phase in range(168, 261)); assert 'Phase 260 attention status sync through Phase 259' in status and 'Phase 260 attention status sync through Phase 259' in test; assert re.findall(r'^CURRENT_STATUS_PREFIX\\s*=', test, re.M) == ['CURRENT_STATUS_PREFIX =']; assert 'range(168, 261)' in test; stale=''.join(['range(168, ', '26', '0', ')']); assert stale not in test; assert '.glob(' not in test and '.rglob(' not in test and 'iterdir(' not in test and 'os.walk' not in test\""
+    status: passed
+  - id: C6
+    name: "S1 changed-path guard"
+    command: "git diff --name-only -- design/codestable/attention.md tests/test_hermes_tavern_codestable_status.py"
+    status: passed
+  - id: C7
+    name: "Protected-path guard"
+    command: "git diff --name-only -- run_agent.py cli.py gateway src plugins README.md design/HERMES_TAVERN_DESIGN.md design/codestable/architecture design/codestable/roadmap design/codestable/requirements design/codestable/compound build/lib"
+    status: passed
+  - id: C8
+    name: "Whitespace diff guard"
+    command: "git diff --check"
+    status: passed
+  - id: C9
+    name: "Full registry pytest"
+    command: "python -m pytest -q"
+    status: passed
