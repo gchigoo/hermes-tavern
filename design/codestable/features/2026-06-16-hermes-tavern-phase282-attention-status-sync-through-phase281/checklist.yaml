@@ -1,0 +1,89 @@
+doc_type: feature-checklist
+status: accepted
+workflow_status: completed
+implementation_ready: true
+feature: "2026-06-16-hermes-tavern-phase282-attention-status-sync-through-phase281"
+date: "2026-06-16"
+created: "2026-06-16"
+updated: "2026-06-16"
+owner: codestable-cron
+summary: "Sync the mandatory CodeStable attention current-status line and focused static regression through accepted Phase 281."
+tags:
+  - hermes-tavern
+  - codestable
+  - attention
+  - status-sync
+  - docs
+  - tests
+
+allowed_files:
+  - design/codestable/attention.md
+  - tests/test_hermes_tavern_codestable_status.py
+  - design/codestable/features/2026-06-16-hermes-tavern-phase282-attention-status-sync-through-phase281/design.md
+  - design/codestable/features/2026-06-16-hermes-tavern-phase282-attention-status-sync-through-phase281/checklist.yaml
+
+s1_forbidden_files:
+  - design/codestable/features/2026-06-16-hermes-tavern-phase282-attention-status-sync-through-phase281/acceptance.md
+
+expected_status_prefix: "Current status (2026-06-16): All phases 1-281 accepted"
+stale_status_prefix: "Current status (2026-06-16): All phases 1-280 accepted"
+stale_phase_markers:
+  - "1-280"
+  - "1–280"
+valid_internal_range: "Phase 121-167"
+append_exact_label: "Phase 281 attention status sync through Phase 280"
+final_status_suffix: "Phase 279 attention status sync through Phase 278, Phase 280 attention status sync through Phase 279, and Phase 281 attention status sync through Phase 280."
+phase_range_assertion: "range(168, 282)"
+stale_phase_range_assertions:
+  - "range(168, 280)"
+  - "range(168, 281)"
+current_status_prefix_assignment_count: 1
+static_regression_forbidden_discovery:
+  - ".glob("
+  - ".rglob("
+  - "iterdir("
+  - "os.walk"
+
+steps:
+  - id: S1
+    name: "S1: Sync CodeStable attention status and regression"
+    status: done
+    owner_mode: executor
+    controller_only: false
+    no_commit: true
+    description: >
+      Update the mandatory CodeStable attention current-status bullet and focused static
+      docs regression to pass through accepted Phase 281.
+    allowed_files:
+      - design/codestable/attention.md
+      - tests/test_hermes_tavern_codestable_status.py
+      - design/codestable/features/2026-06-16-hermes-tavern-phase282-attention-status-sync-through-phase281/design.md
+      - design/codestable/features/2026-06-16-hermes-tavern-phase282-attention-status-sync-through-phase281/checklist.yaml
+    prohibited_actions:
+      - "Do not create or edit acceptance.md."
+      - "Do not perform final S2 closeout."
+      - "Do not mark checklist workflow_status completed."
+      - "Do not commit or push."
+      - "Do not modify runtime/source/provider/plugin behavior or protected Hermes core files."
+    acceptance_criteria:
+      - "design/codestable/attention.md has exactly one current-status bullet."
+      - "The current-status bullet starts with Current status (2026-06-16): All phases 1-281 accepted."
+      - "The current-status bullet preserves Phase 121-167."
+      - "The current-status bullet preserves all existing Phase 168 through Phase 280 labels."
+      - "The current-status bullet appends exactly Phase 281 attention status sync through Phase 280."
+      - "The current-status bullet ends with Phase 279 attention status sync through Phase 278, Phase 280 attention status sync through Phase 279, and Phase 281 attention status sync through Phase 280."
+      - "The current-status bullet rejects stale standalone markers 1-280 and 1–280."
+      - "tests/test_hermes_tavern_codestable_status.py has CURRENT_STATUS_PREFIX advanced to 1-281."
+      - "tests/test_hermes_tavern_codestable_status.py has STALE_STATUS_PREFIX advanced to 1-280 and stale markers 1-280 / 1–280."
+      - "tests/test_hermes_tavern_codestable_status.py includes all labels through Phase 281 attention status sync through Phase 280."
+      - "tests/test_hermes_tavern_codestable_status.py uses phase_range = range(168, 282)."
+      - "tests/test_hermes_tavern_codestable_status.py contains literal range(168, 282)."
+      - "tests/test_hermes_tavern_codestable_status.py rejects stale direct range(168, 280) and range(168, 281) via split-string construction."
+      - "tests/test_hermes_tavern_codestable_status.py has exactly one CURRENT_STATUS_PREFIX assignment."
+  - id: S2
+    name: "S2: Parent/controller acceptance closeout"
+    status: completed
+    owner_mode: parent-controller
+    controller_only: true
+    no_commit: false
+    description: "Controller-owned acceptance closeout after S1 verification: creates acceptance.md, finalizes checklist/status evidence, and reruns validators/focused/full gates."
