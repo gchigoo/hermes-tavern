@@ -1,6 +1,6 @@
 doc_type: feature-checklist
-status: implemented
-workflow_status: implemented
+status: accepted
+workflow_status: completed
 implementation_ready: true
 feature: "2026-06-16-hermes-tavern-phase276-attention-status-sync-through-phase275"
 date: "2026-06-16"
@@ -90,11 +90,11 @@ steps:
       - "git diff --check"
   - id: S2
     name: "S2: Parent/controller acceptance closeout"
-    status: planned
+    status: completed
     owner_mode: parent-controller
     controller_only: true
     no_commit: true
-    description: "A later parent/controller closeout may create acceptance.md and finalize accepted status after rerunning verification. Not part of this S1 company-boost slice."
+    description: "Controller-owned acceptance closeout: verified all gates, created acceptance.md, finalized checklist to accepted."
 
 controller_s1_verification:
   status: passed
@@ -102,6 +102,15 @@ controller_s1_verification:
   notes:
     - "Parent/controller reran the Phase 276 artifact validator, py_compile, focused status pytest, exact static marker guard, full pytest suite (1215 passed), and git diff --check."
     - "S1 is implemented; S2 acceptance/writeback remains planned by artifact boundary."
+
+controller_s2_verification:
+  status: passed
+  verified_at: "2026-06-16"
+  notes:
+    - "Parent/controller reran all S1 gates (YAML validator 2/2, py_compile, focused status pytest 1/1, full pytest 1215/1215, static marker guard, git diff --check)."
+    - "Created acceptance.md with full controller-verified evidence."
+    - "Finalized checklist root to accepted/workflow_status=completed, S2 to completed."
+    - "No architecture/root-design writeback needed (pure docs/test/status sync)."
 
 checks:
   - id: C1
