@@ -1,0 +1,94 @@
+doc_type: feature-checklist
+status: in_progress
+workflow_status: in_progress
+implementation_ready: true
+feature: "2026-06-16-hermes-tavern-phase283-attention-status-sync-through-phase282"
+date: "2026-06-16"
+created: "2026-06-16"
+updated: "2026-06-16"
+owner: codestable-cron
+summary: "Sync the mandatory CodeStable attention current-status line and focused static regression through accepted Phase 282."
+tags:
+  - hermes-tavern
+  - codestable
+  - attention
+  - status-sync
+  - docs
+  - tests
+
+allowed_files:
+  - design/codestable/attention.md
+  - tests/test_hermes_tavern_codestable_status.py
+  - design/codestable/features/2026-06-16-hermes-tavern-phase283-attention-status-sync-through-phase282/design.md
+  - design/codestable/features/2026-06-16-hermes-tavern-phase283-attention-status-sync-through-phase282/checklist.yaml
+
+s1_forbidden_files:
+  - design/codestable/features/2026-06-16-hermes-tavern-phase283-attention-status-sync-through-phase282/acceptance.md
+
+expected_status_prefix: "Current status (2026-06-16): All phases 1-282 accepted"
+stale_status_prefix: "Current status (2026-06-16): All phases 1-281 accepted"
+stale_phase_markers:
+  - "1-281"
+  - "1–281"
+valid_internal_range: "Phase 121-167"
+append_exact_label: "Phase 282 attention status sync through Phase 281"
+final_status_suffix: "Phase 280 attention status sync through Phase 279, Phase 281 attention status sync through Phase 280, and Phase 282 attention status sync through Phase 281."
+phase_range_assertion: "range(168, 283)"
+stale_phase_range_assertions:
+  - "range(168, 281)"
+  - "range(168, 282)"
+current_status_prefix_assignment_count: 1
+static_regression_forbidden_discovery:
+  - ".glob("
+  - ".rglob("
+  - "iterdir("
+  - "os.walk"
+
+steps:
+  - id: S1
+    name: "S1: Sync CodeStable attention status and regression"
+    status: pending
+    owner_mode: executor
+    controller_only: false
+    no_commit: true
+    description: >
+      Advance the attention.md current-status bullet from 1-281 to 1-282,
+      update focused static regression CURRENT_STATUS_PREFIX / STALE_STATUS_PREFIX,
+      append Phase 282 short label, and advance phase_range(168, 283).
+      Do not finalize acceptance.md.
+    checks:
+      - id: C1
+        name: "attention.md current-status bullet starts with expected prefix"
+        status: pending
+      - id: C2
+        name: "Stale terminal phase markers absent from current-status line"
+        status: pending
+      - id: C3
+        name: "Phase 282 label appended to attention.md status list"
+        status: pending
+      - id: C4
+        name: "Focused static regression CURRENT_STATUS_PREFIX updated"
+        status: pending
+      - id: C5
+        name: "Stale phase_range assertions absent from focused test"
+        status: pending
+      - id: C6
+        name: "No duplicate CURRENT_STATUS_PREFIX"
+        status: pending
+      - id: C7
+        name: "Focused status test passes"
+        status: pending
+    allowed_files:
+      - design/codestable/attention.md
+      - tests/test_hermes_tavern_codestable_status.py
+    prohibited_files:
+      - design/codestable/features/2026-06-16-hermes-tavern-phase283-attention-status-sync-through-phase282/acceptance.md
+
+  - id: S2
+    name: "S2: Acceptance/writeback (controller-owned closeout)"
+    status: planned
+    owner_mode: controller
+    controller_only: true
+    description: >
+      Controller creates acceptance.md, reruns focused test + full pytest,
+      validates frontmatter, finalizes checklist statuses, and commits.
