@@ -1,0 +1,60 @@
+---
+doc_type: feature-design
+status: approved
+implementation_ready: true
+feature: "2026-06-17-hermes-tavern-phase291-attention-status-sync-through-phase290"
+date: "2026-06-17"
+created: "2026-06-17"
+updated: "2026-06-17"
+owner: codestable-cron
+summary: >
+  Sync the mandatory CodeStable attention current-status line and focused static
+  regression through accepted Phase 290 only, without changing runtime behavior,
+  plugin/provider/gateway internals, root design, architecture, roadmap,
+  requirements, compound docs, credentials, or build assets.
+tags: [hermes-tavern, codestable, attention, status-sync, docs, tests]
+---
+
+# Phase 291: CodeStable Attention Status Sync Through Phase 290
+
+## Exact S1 Contract
+
+- `design/codestable/attention.md` current status must start with:
+  `Current status (2026-06-17): All phases 1-290 accepted`.
+- Add exactly one new short label to the same status line:
+  `Phase 290 attention status sync through Phase 289`.
+- Preserve `2026-06-17` exactly in the current-status prefix.
+- Preserve `Phase 121-167`.
+- Preserve all explicit `Phase 168` through `Phase 290` labels.
+- Append only `Phase 290 attention status sync through Phase 289`.
+- Do not add any `Phase 291` label to `attention.md`.
+- Phase 291 syncs only through accepted Phase 290.
+- Do not change runtime/product/source/plugin/provider/gateway behavior.
+
+## Scope
+
+Allowed files only:
+
+- `design/codestable/attention.md`
+- `tests/test_hermes_tavern_codestable_status.py`
+- `design/codestable/features/2026-06-17-hermes-tavern-phase291-attention-status-sync-through-phase290/design.md`
+- `design/codestable/features/2026-06-17-hermes-tavern-phase291-attention-status-sync-through-phase290/checklist.yaml`
+- `design/codestable/features/2026-06-17-hermes-tavern-phase291-attention-status-sync-through-phase290/acceptance.md`
+
+## Prohibited Files/Actions
+
+No changes to runtime, source, provider, plugin, gateway, root design, README,
+architecture, roadmap, requirements, compound docs, build outputs, assets,
+schemas, credential files, service lifecycle, or provider configuration. Do not
+commit or push.
+
+## Acceptance Criteria
+
+- `attention.md` status advances from accepted phase 289 to accepted phase 290.
+- The current status line contains `Phase 290 attention status sync through Phase 289` as
+  the only new phase label.
+- No `Phase 291` label is added to `attention.md`.
+- `tests/test_hermes_tavern_codestable_status.py` validates stale-prefix and stale-range guards,
+  required phase labels through 290, and discovery-token split guards.
+- `Phase 121-167` remains present.
+- Parent verification completed before upstream gate handoff.

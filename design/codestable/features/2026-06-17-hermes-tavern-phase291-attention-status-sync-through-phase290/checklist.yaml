@@ -1,0 +1,109 @@
+doc_type: feature-checklist
+status: accepted
+workflow_status: completed
+implementation_ready: true
+feature: "2026-06-17-hermes-tavern-phase291-attention-status-sync-through-phase290"
+date: "2026-06-17"
+created: "2026-06-17"
+updated: "2026-06-17"
+owner: codestable-cron
+summary: "Sync CodeStable attention current-status and focused static regression through accepted Phase 290 only."
+tags:
+  - hermes-tavern
+  - codestable
+  - attention
+  - status-sync
+  - docs
+  - tests
+parent_verification_required: false
+no_commit_or_push_performed: false
+
+allowed_files:
+  - design/codestable/attention.md
+  - tests/test_hermes_tavern_codestable_status.py
+  - design/codestable/features/2026-06-17-hermes-tavern-phase291-attention-status-sync-through-phase290/design.md
+  - design/codestable/features/2026-06-17-hermes-tavern-phase291-attention-status-sync-through-phase290/checklist.yaml
+  - design/codestable/features/2026-06-17-hermes-tavern-phase291-attention-status-sync-through-phase290/acceptance.md
+
+expected_status_prefix: "Current status (2026-06-17): All phases 1-290 accepted"
+stale_status_prefix: "Current status (2026-06-17): All phases 1-289 accepted"
+stale_phase_markers:
+  - "1-289"
+  - "1–289"
+valid_internal_range: "Phase 121-167"
+append_exact_label: "Phase 290 attention status sync through Phase 289"
+final_status_suffix: "Phase 288 attention status sync through Phase 287, Phase 289 attention status sync through Phase 288, and Phase 290 attention status sync through Phase 289."
+phase_range_assertion: "range(168, 291)"
+current_status_prefix_assignment_count: 1
+
+steps:
+  - id: S1
+    name: "S1: Sync attention status and focused static regression through Phase 290"
+    status: passed
+    owner_mode: executor
+    controller_only: false
+    description: >
+      Update the attention current-status prefix/final suffix and focused regression
+      constants for accepted Phase 290 and stale aggregate-guard coverage.
+    checks:
+      - id: C1
+        name: "attention.md current-status bullet uses 1-290 prefix"
+        status: passed
+      - id: C2
+        name: "Stale 1-289 and 1–289 terminal markers are rejected"
+        status: passed
+      - id: C3
+        name: "Phase 121-167 and all prior phase labels preserved through 290"
+        status: passed
+      - id: C4
+        name: "Phase 290 short label appended exactly once"
+        status: passed
+      - id: C5
+        name: "Final suffix and range(168, 291) assertions updated"
+        status: passed
+      - id: C6
+        name: "Discovery-token literals are split in test source"
+        status: passed
+      - id: C7
+        name: "Focused status pytest executes in executor scope"
+        status: passed
+    allowed_files:
+      - design/codestable/attention.md
+      - tests/test_hermes_tavern_codestable_status.py
+
+  - id: S2
+    name: "S2: Worker-controller verification and parent handoff"
+    status: completed
+    owner_mode: worker-controller
+    controller_only: true
+    description: >
+      Worker-controller and parent-controller reran YAML validation, py_compile,
+      focused status pytest, static status/protected-path guards, full pytest,
+      and git diff --check before commit/push and state handoff.
+    checks:
+      - id: C8
+        name: "CodeStable YAML validation passed for phase artifacts"
+        status: passed
+      - id: C9
+        name: "py_compile passed for focused status test"
+        status: passed
+      - id: C10
+        name: "Focused status pytest passed"
+        status: passed
+      - id: C11
+        name: "Static status/protected-path guard passed"
+        status: passed
+      - id: C12
+        name: "Full pytest passed in worker-controller rerun"
+        status: passed
+        evidence:
+          "Worker-controller rerun passed: `1215 passed in 55.97s`. Earlier executor full-suite attempt failed transiently in image-provider tests (`8 failed, 1207 passed`) before this rerun."
+      - id: C13
+        name: "git diff --check passed"
+        status: passed
+    result: >
+      Worker-controller verification passed for YAML validation, py_compile,
+      focused status pytest, static status/protected-path guard, full pytest
+      (`1215 passed in 55.97s`), and git diff --check. Parent-controller
+      authoritative final gates also passed: focused status pytest, static guard,
+      full pytest (`1215 passed in 60.21s`), validator, and whitespace checks.
