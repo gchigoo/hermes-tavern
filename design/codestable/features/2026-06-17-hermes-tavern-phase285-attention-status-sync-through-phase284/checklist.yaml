@@ -1,0 +1,133 @@
+doc_type: feature-checklist
+status: accepted
+workflow_status: completed
+implementation_ready: true
+feature: "2026-06-17-hermes-tavern-phase285-attention-status-sync-through-phase284"
+date: "2026-06-17"
+created: "2026-06-17"
+updated: "2026-06-17"
+owner: codestable-cron
+summary: "Sync the mandatory CodeStable attention current-status line and focused static regression through accepted Phase 284 only."
+tags:
+  - hermes-tavern
+  - codestable
+  - attention
+  - status-sync
+  - docs
+  - tests
+
+architect_jsonl: "/tmp/hermes-tavern-architect-phase285-20260617.jsonl"
+executor_jsonl: "/tmp/hermes-tavern-executor-phase285-20260617.jsonl"
+
+allowed_files:
+  - design/codestable/attention.md
+  - tests/test_hermes_tavern_codestable_status.py
+  - design/codestable/features/2026-06-17-hermes-tavern-phase285-attention-status-sync-through-phase284/design.md
+  - design/codestable/features/2026-06-17-hermes-tavern-phase285-attention-status-sync-through-phase284/checklist.yaml
+  - design/codestable/features/2026-06-17-hermes-tavern-phase285-attention-status-sync-through-phase284/acceptance.md
+
+expected_status_prefix: "Current status (2026-06-17): All phases 1-284 accepted"
+stale_status_prefix: "Current status (2026-06-16): All phases 1-283 accepted"
+stale_phase_markers:
+  - "1-283"
+  - "1–283"
+valid_internal_range: "Phase 121-167"
+append_exact_label: "Phase 284 attention status sync through Phase 283"
+final_status_suffix: "Phase 282 attention status sync through Phase 281, Phase 283 attention status sync through Phase 282, and Phase 284 attention status sync through Phase 283."
+phase_range_assertion: "range(168, 285)"
+stale_phase_range_assertions:
+  - "range(168, 284)"
+  - "range(168, 283)"
+  - "range(168, 282)"
+  - "range(168, 281)"
+current_status_prefix_assignment_count: 1
+static_regression_forbidden_discovery:
+  - ".glob("
+  - ".rglob("
+  - "iterdir("
+  - "os.walk"
+
+prohibited_files_actions:
+  - "Do not modify runtime/source/provider/plugin/gateway/root-design files."
+  - "Do not modify plugins/, provider code/config, gateway/run.py, cli.py, run_agent.py, HERMES_TAVERN_DESIGN.md, schemas, credentials, fixtures/assets, or service configuration."
+  - "Do not change Hermes-native plugin architecture."
+  - "Do not change SillyTavern asset compatibility."
+  - "Do not weaken adult-fiction/RP-compatible boundaries; no minors/CSAM work and no provider-safety bypass."
+  - "Do not run service lifecycle commands or start/stop/restart gateway services."
+  - "Do not perform broad rewrites."
+  - "Do not commit or push from executor."
+
+steps:
+  - id: S1
+    name: "S1: Sync CodeStable attention status and regression"
+    status: done
+    owner_mode: executor
+    controller_only: false
+    no_commit: true
+    description: >
+      Advance attention.md current-status from 1-283 to 1-284, update the
+      focused static regression literals, append Phase 284 short label, and set
+      phase_range to range(168, 285). Do not append Phase 285 to attention.md.
+    checks:
+      - id: C1
+        name: "attention.md current-status bullet starts with expected Phase 284 prefix"
+        status: passed
+      - id: C2
+        name: "Stale 1-283 and 1–283 terminal markers absent from current-status line"
+        status: passed
+      - id: C3
+        name: "Phase 121-167 and all prior short labels preserved"
+        status: passed
+      - id: C4
+        name: "Phase 284 label appended exactly once"
+        status: passed
+      - id: C5
+        name: "Final suffix matches required three-phase terminal suffix"
+        status: passed
+      - id: C6
+        name: "Focused regression uses range(168, 285) and rejects stale terminal ranges"
+        status: passed
+      - id: C7
+        name: "Exactly one CURRENT_STATUS_PREFIX assignment and no discovery tokens"
+        status: passed
+      - id: C8
+        name: "Focused status test passes"
+        status: passed
+    allowed_files:
+      - design/codestable/attention.md
+      - tests/test_hermes_tavern_codestable_status.py
+      - design/codestable/features/2026-06-17-hermes-tavern-phase285-attention-status-sync-through-phase284/design.md
+      - design/codestable/features/2026-06-17-hermes-tavern-phase285-attention-status-sync-through-phase284/checklist.yaml
+  - id: S2
+    name: "S2: Acceptance/writeback draft for parent verification"
+    status: completed
+    owner_mode: worker-controller
+    controller_only: true
+    no_commit: true
+    completed_at: "2026-06-17"
+    description: >
+      Parent controller finalized the docs/test/status-only acceptance report after
+      rerunning validators, focused status regression, static status guard,
+      whitespace/protected-path guards, and full pytest.
+    checks:
+      - id: C9
+        name: "acceptance.md frontmatter/status valid"
+        status: passed
+      - id: C10
+        name: "Full pytest or closest feasible registry command rerun by controller"
+        status: passed
+      - id: C11
+        name: "Whitespace/protected-path/status guards clean"
+        status: passed
+    result: >
+      Finalized acceptance.md with real parent-controller evidence: YAML/frontmatter
+      validation 3/3 passed, py_compile passed, focused status pytest 1 passed,
+      static status guard passed, git diff --check clean, protected-path diff empty,
+      untracked whitespace guard passed, and full pytest passed with 1215 tests.
+
+verification_commands:
+  - PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --dir design/codestable/features/2026-06-17-hermes-tavern-phase285-attention-status-sync-through-phase284 --require doc_type --require status --require feature
+  - PYTHONDONTWRITEBYTECODE=1 python -m py_compile tests/test_hermes_tavern_codestable_status.py
+  - PYTHONDONTWRITEBYTECODE=1 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python -m pytest tests/test_hermes_tavern_codestable_status.py -q -o 'addopts=' -p no:cacheprovider
+  - PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts='
+  - git diff --check
