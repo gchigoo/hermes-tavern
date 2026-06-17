@@ -1,0 +1,121 @@
+doc_type: feature-checklist
+status: accepted
+workflow_status: accepted
+implementation_ready: true
+feature: "2026-06-17-hermes-tavern-phase294-attention-status-sync-through-phase293"
+date: "2026-06-17"
+created: "2026-06-17"
+updated: "2026-06-17"
+owner: codestable-cron
+summary: "Sync CodeStable attention current-status and focused static regression through accepted Phase 293 only."
+tags:
+  - hermes-tavern
+  - codestable
+  - attention
+  - status-sync
+  - docs
+  - tests
+parent_verification_required: true
+no_commit_or_push_performed: true
+
+allowed_files:
+  - design/codestable/attention.md
+  - tests/test_hermes_tavern_codestable_status.py
+  - design/codestable/features/2026-06-17-hermes-tavern-phase294-attention-status-sync-through-phase293/design.md
+  - design/codestable/features/2026-06-17-hermes-tavern-phase294-attention-status-sync-through-phase293/checklist.yaml
+  - design/codestable/features/2026-06-17-hermes-tavern-phase294-attention-status-sync-through-phase293/acceptance.md
+
+expected_status_prefix: "Current status (2026-06-17): All phases 1-293 accepted"
+stale_status_prefix: "Current status (2026-06-17): All phases 1-292 accepted"
+stale_phase_markers:
+  - "1-292"
+  - "1–292"
+valid_internal_range: "Phase 121-167"
+append_exact_label: "Phase 293 attention status sync through Phase 292"
+forbidden_attention_label: "Phase 294 attention status sync"
+final_status_suffix: "Phase 291 attention status sync through Phase 290, Phase 292 attention status sync through Phase 291, and Phase 293 attention status sync through Phase 292."
+phase_range_assertion: "range(168, 294)"
+stale_phase_range_assertion: "range(168, 293)"
+current_status_prefix_assignment_count: 1
+
+steps:
+  - id: S1
+    name: "S1: Sync attention status and focused static regression through Phase 293"
+    status: passed
+    result: "Executor synced attention.md to 1-293 accepted and aligned test regression constants/guards through Phase 293."
+    owner_mode: executor
+    controller_only: false
+    description: >
+      Update the attention current-status prefix/final suffix and focused regression
+      constants for accepted Phase 293 and stale aggregate-guard coverage.
+    checks:
+      - id: C1
+        name: "attention.md current-status bullet uses 1-293 prefix"
+        status: passed
+        result: "Updated current-status prefix to 1-293 accepted."
+      - id: C2
+        name: "Stale 1-292 and 1–292 terminal markers are rejected"
+        status: passed
+        result: "STALE markers now assert 1-292 and 1–292 are not present."
+      - id: C3
+        name: "Phase 121-167 and all prior phase labels preserved through 293"
+        status: passed
+        result: "Preserved 121-167 and explicit phase labels through 292 while appending 293 label."
+      - id: C4
+        name: "Phase 293 short label appended exactly once"
+        status: passed
+        result: "Added exactly one 'Phase 293 attention status sync through Phase 292'."
+      - id: C5
+        name: "Final suffix and range(168, 294) assertions updated"
+        status: passed
+        result: "Updated FINAL_STATUS_SUFFIX and range assertions to 294."
+      - id: C6
+        name: "Discovery-token literals are split in test source"
+        status: passed
+        result: "Retained split-string discovery token guards."
+      - id: C7
+        name: "Focused status pytest executes in executor scope"
+        status: passed
+        result: "Focused pytest invocation completed and is recorded in acceptance evidence."
+    allowed_files:
+      - design/codestable/attention.md
+      - tests/test_hermes_tavern_codestable_status.py
+
+  - id: S2
+    name: "S2: Parent-controller verification and closeout"
+    status: completed
+    owner_mode: parent-controller
+    controller_only: true
+    description: >
+      Parent-controller reruns YAML validation, py_compile, focused status pytest,
+      static status/protected-path guards, full pytest if feasible, and git diff
+      --check before final acceptance. S2 must not be closed before those gates run.
+    checks:
+      - id: C8
+        name: "CodeStable YAML validation passed for phase artifacts"
+        status: passed
+        result: "Controller: 3/3 files passed (design, checklist, acceptance)."
+      - id: C9
+        name: "py_compile passed for focused status test"
+        status: passed
+        result: "Controller: py_compile clean, no syntax errors."
+      - id: C10
+        name: "Focused status pytest passed"
+        status: passed
+        result: "Controller: 1/1 passed in 0.01s."
+      - id: C11
+        name: "Static status/protected-path guard passed"
+        status: passed
+        result: "Controller: 5 allowed files only, no runtime/plugin/provider changes, git diff --check clean."
+      - id: C12
+        name: "Full pytest passed or infeasibility documented"
+        status: passed
+        result: "Controller: 1215/1215 passed in 56.50s."
+      - id: C13
+        name: "git diff --check passed"
+        status: passed
+        result: "Controller: git diff --check clean (no whitespace errors)."
+    result: >
+      Controller verified all gates: YAML validators (3/3), py_compile clean,
+      focused status pytest (1/1), full pytest (1215/1215), allowed-file scope
+      confirmed, git diff --check passed. Phase 294 accepted.
