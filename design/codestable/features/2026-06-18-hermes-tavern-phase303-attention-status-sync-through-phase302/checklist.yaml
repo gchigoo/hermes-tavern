@@ -1,0 +1,134 @@
+doc_type: feature-checklist
+status: accepted
+workflow_status: accepted
+implementation_ready: true
+feature: "2026-06-18-hermes-tavern-phase303-attention-status-sync-through-phase302"
+date: "2026-06-18"
+created: "2026-06-18"
+updated: "2026-06-18"
+accepted_at: "2026-06-18"
+owner: company-boost
+summary: "Sync CodeStable attention current-status and focused static regression through accepted Phase 302 only."
+tags: [hermes-tavern, codestable, attention, status-sync, docs, tests, phase303]
+
+selected_phase_slug: "2026-06-18-hermes-tavern-phase303-attention-status-sync-through-phase302"
+acceptance_state: "accepted"
+
+phase_selection_gate:
+  prior_phase: 302
+  prior_phase_feature: "2026-06-18-hermes-tavern-phase302-attention-status-sync-through-phase301"
+  prior_phase_acceptance_path: "design/codestable/features/2026-06-18-hermes-tavern-phase302-attention-status-sync-through-phase301/acceptance.md"
+  prior_phase_required_status: "accepted"
+  prior_phase_confirmed_accepted: true
+  selected_slice: "Phase 303 attention/status sync through Phase 302"
+  completed_slice: "Phase 303 attention/status sync through Phase 302"
+
+allowed_files:
+  - design/codestable/attention.md
+  - tests/test_hermes_tavern_codestable_status.py
+  - design/codestable/features/2026-06-18-hermes-tavern-phase303-attention-status-sync-through-phase302/design.md
+  - design/codestable/features/2026-06-18-hermes-tavern-phase303-attention-status-sync-through-phase302/checklist.yaml
+  - design/codestable/features/2026-06-18-hermes-tavern-phase303-attention-status-sync-through-phase302/acceptance.md
+
+prohibited_files_actions:
+  - "runtime/source/plugin/provider/gateway/CLI files"
+  - "run_agent.py"
+  - "cli.py"
+  - "gateway/run.py"
+  - "plugin runtime files"
+  - "credentials"
+  - "root design"
+  - "README"
+  - "architecture"
+  - "roadmap"
+  - "requirements"
+  - "compound docs"
+  - "build outputs"
+  - "assets/fixtures/schemas"
+  - "service lifecycle commands"
+  - "commit/push/staging by child lane"
+  - "~/.hermes/project-progress/state.json"
+
+expected_status_line_change:
+  from_prefix: "Current status (2026-06-18): All phases 1-301 accepted"
+  to_prefix: "Current status (2026-06-18): All phases 1-302 accepted"
+  appended_exact_label: "Phase 302 attention status sync through Phase 301"
+  forbidden_attention_label: "Phase 303 attention/status sync"
+  preserve_internal_range_label: "Phase 121-167"
+  preserve_explicit_phase_labels: "Phase 168 through Phase 301"
+  final_status_suffix: "Phase 300 attention status sync through Phase 299, Phase 301 attention status sync through Phase 300, and Phase 302 attention status sync through Phase 301."
+
+focused_status_test_contract:
+  current_status_prefix: "Current status (2026-06-18): All phases 1-302 accepted"
+  stale_status_prefix: "Current status (2026-06-18): All phases 1-301 accepted"
+  stale_phase_marker: "1-301"
+  stale_phase_marker_en_dash: "1–301"
+  appended_required_label: "Phase 302 attention status sync through Phase 301"
+  required_phase_labels_policy: "Preserve Phase 121-167 and every explicit Phase 168 through Phase 301 label; append Phase 302 exactly once."
+  phase_range_assertion: "range(168, 303)"
+  source_self_check_aggregate_range: 'aggregate_range = "range(168, 303)"'
+  stale_aggregate_range_to_add: "range(168, 302)"
+  stale_aggregate_guard_policy: "Reject split-string constructed range(168, 302) and retain older split stale ranges including 301, 300, 299, 298, 297, and existing earlier guards."
+  current_status_prefix_assignment_guard: 're.findall(r"^CURRENT_STATUS_PREFIX\\s*=", test, re.M) == ["CURRENT_STATUS_PREFIX ="]'
+  discovery_token_guard_policy: "Keep .glob(, .rglob(, iterdir(, and os.walk split inside strings."
+
+verification_commands:
+  - "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --dir design/codestable/features/2026-06-18-hermes-tavern-phase303-attention-status-sync-through-phase302 --require doc_type --require status --require feature"
+  - "PYTHONDONTWRITEBYTECODE=1 python -m py_compile tests/test_hermes_tavern_codestable_status.py"
+  - "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_codestable_status.py -q -o 'addopts='"
+  - "Python static status/protected-path guard"
+  - "git diff --check"
+  - "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts='"
+
+steps:
+  - id: S1
+    name: "Sync attention status and focused static regression through Phase 302"
+    status: completed
+    owner_mode: executor
+    checks:
+      - id: C1
+        name: "attention.md current-status bullet uses 1-302 prefix"
+        status: passed
+      - id: C2
+        name: "Phase 302 label appended exactly once"
+        status: passed
+      - id: C3
+        name: "No Phase 303 attention/status label added"
+        status: passed
+      - id: C4
+        name: "Phase 121-167 and Phase 168 through Phase 301 labels preserved"
+        status: passed
+      - id: C5
+        name: "Focused test constants, suffix, range, aggregate range, stale markers, split stale guards, assignment guard, and discovery guards updated"
+        status: passed
+  - id: S2
+    name: "Verification and parent-controller closeout"
+    status: completed
+    owner_mode: parent_controller
+    checks:
+      - id: C6
+        name: "YAML validation passed"
+        status: passed
+      - id: C7
+        name: "py_compile passed"
+        status: passed
+      - id: C8
+        name: "Focused status pytest passed"
+        status: passed
+      - id: C9
+        name: "Python static status/protected-path guard passed"
+        status: passed
+      - id: C10
+        name: "git diff --check passed"
+        status: passed
+      - id: C11
+        name: "Full pytest passed"
+        status: passed
+      - id: C12
+        name: "Acceptance report finalized after controller verification"
+        status: passed
+
+controller_evidence:
+  - Parent-controller reran validators, py_compile, focused status pytest, protected-path/static status guard, full pytest, and whitespace checks before final commit.
+  - The final diff is docs/static-test/status-only and does not touch runtime/plugin/provider/gateway files.
+  - Child lane left the repo uncommitted; parent-controller owns commit, push, CI watch, and progress-state update.
