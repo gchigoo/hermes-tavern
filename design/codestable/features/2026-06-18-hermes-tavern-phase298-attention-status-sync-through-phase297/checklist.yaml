@@ -1,0 +1,254 @@
+doc_type: feature-checklist
+status: accepted
+workflow_status: accepted
+implementation_ready: true
+feature: "2026-06-18-hermes-tavern-phase298-attention-status-sync-through-phase297"
+date: "2026-06-18"
+created: "2026-06-18"
+updated: "2026-06-18"
+owner: codestable-cron
+summary: "Sync CodeStable attention current-status and focused static regression through accepted Phase 297 only."
+tags:
+  - hermes-tavern
+  - codestable
+  - attention
+  - status-sync
+  - docs
+  - tests
+parent_verification_required: false
+no_commit_or_push_performed: false
+
+allowed_files:
+  - design/codestable/attention.md
+  - tests/test_hermes_tavern_codestable_status.py
+  - design/codestable/features/2026-06-18-hermes-tavern-phase298-attention-status-sync-through-phase297/design.md
+  - design/codestable/features/2026-06-18-hermes-tavern-phase298-attention-status-sync-through-phase297/checklist.yaml
+  - design/codestable/features/2026-06-18-hermes-tavern-phase298-attention-status-sync-through-phase297/acceptance.md
+
+expected_status_prefix: "Current status (2026-06-18): All phases 1-297 accepted"
+stale_status_prefix: "Current status (2026-06-18): All phases 1-296 accepted"
+stale_phase_markers:
+  - "1-296"
+  - "1–296"
+valid_internal_range: "Phase 121-167"
+append_exact_label: "Phase 297 attention status sync through Phase 296"
+forbidden_attention_label: "Phase 298 attention status sync"
+final_status_suffix: "Phase 295 attention status sync through Phase 294, Phase 296 attention status sync through Phase 295, and Phase 297 attention status sync through Phase 296."
+phase_range_assertion: "range(168, 298)"
+stale_phase_range_assertion: "range(168, 297)"
+current_status_prefix_assignment_count: 1
+
+required_phase_labels:
+  - "Phase 168 image settings JSON export"
+  - "Phase 169 project JSON export surface parity"
+  - "Phase 170 export command-surface regression"
+  - "Phase 171 root-design export parity"
+  - "Phase 172 attention status sync through Phase 171"
+  - "Phase 173 root-design section 17 import/export summary parity"
+  - "Phase 174 attention status sync through Phase 173"
+  - "Phase 175 attention status sync through Phase 174"
+  - "Phase 176 attention status sync through Phase 175"
+  - "Phase 177 attention status sync through Phase 176"
+  - "Phase 178 attention status sync through Phase 177"
+  - "Phase 179 attention status sync through Phase 178"
+  - "Phase 180 attention status sync through Phase 179"
+  - "Phase 181 attention status sync through Phase 180"
+  - "Phase 182 attention status sync through Phase 181"
+  - "Phase 183 attention status sync through Phase 182"
+  - "Phase 184 attention status sync through Phase 183"
+  - "Phase 185 attention status sync through Phase 184"
+  - "Phase 186 attention status sync through Phase 185"
+  - "Phase 187 attention status sync through Phase 186"
+  - "Phase 188 attention status sync through Phase 187"
+  - "Phase 189 attention status sync through Phase 188"
+  - "Phase 190 attention status sync through Phase 189"
+  - "Phase 191 attention status sync through Phase 190"
+  - "Phase 192 attention status sync through Phase 191"
+  - "Phase 193 attention status sync through Phase 192"
+  - "Phase 194 attention status sync through Phase 193"
+  - "Phase 195 attention status sync through Phase 194"
+  - "Phase 196 attention status sync through Phase 195"
+  - "Phase 197 attention status sync through Phase 196"
+  - "Phase 198 attention status sync through Phase 197"
+  - "Phase 199 attention status sync through Phase 198"
+  - "Phase 200 attention status sync through Phase 199"
+  - "Phase 201 attention status sync through Phase 200"
+  - "Phase 202 attention status sync through Phase 201"
+  - "Phase 203 attention status sync through Phase 202"
+  - "Phase 204 attention status sync through Phase 203"
+  - "Phase 205 attention status sync through Phase 204"
+  - "Phase 206 attention status sync through Phase 205"
+  - "Phase 207 attention status sync through Phase 206"
+  - "Phase 208 attention status sync through Phase 207"
+  - "Phase 209 attention status sync through Phase 208"
+  - "Phase 210 attention status sync through Phase 209"
+  - "Phase 211 attention status sync through Phase 210"
+  - "Phase 212 attention status sync through Phase 211"
+  - "Phase 213 attention status sync through Phase 212"
+  - "Phase 214 attention status sync through Phase 213"
+  - "Phase 215 attention status sync through Phase 214"
+  - "Phase 216 attention status sync through Phase 215"
+  - "Phase 217 attention status sync through Phase 216"
+  - "Phase 218 attention status sync through Phase 217"
+  - "Phase 219 attention status sync through Phase 218"
+  - "Phase 220 attention status sync through Phase 219"
+  - "Phase 221 attention status sync through Phase 220"
+  - "Phase 222 attention status sync through Phase 221"
+  - "Phase 223 attention status sync through Phase 222"
+  - "Phase 224 attention status sync through Phase 223"
+  - "Phase 225 attention status sync through Phase 224"
+  - "Phase 226 attention status sync through Phase 225"
+  - "Phase 227 attention status sync through Phase 226"
+  - "Phase 228 attention status sync through Phase 227"
+  - "Phase 229 attention status sync through Phase 228"
+  - "Phase 230 attention status sync through Phase 229"
+  - "Phase 231 attention status sync through Phase 230"
+  - "Phase 232 attention status sync through Phase 231"
+  - "Phase 233 attention status sync through Phase 232"
+  - "Phase 234 attention status sync through Phase 233"
+  - "Phase 235 attention status sync through Phase 234"
+  - "Phase 236 attention status sync through Phase 235"
+  - "Phase 237 attention status sync through Phase 236"
+  - "Phase 238 attention status sync through Phase 237"
+  - "Phase 239 attention status sync through Phase 238"
+  - "Phase 240 attention status sync through Phase 239"
+  - "Phase 241 attention status sync through Phase 240"
+  - "Phase 242 attention status sync through Phase 241"
+  - "Phase 243 attention status sync through Phase 242"
+  - "Phase 244 attention status sync through Phase 243"
+  - "Phase 245 attention status sync through Phase 244"
+  - "Phase 246 attention status sync through Phase 245"
+  - "Phase 247 attention status sync through Phase 246"
+  - "Phase 248 attention status sync through Phase 247"
+  - "Phase 249 attention status sync through Phase 248"
+  - "Phase 250 attention status sync through Phase 249"
+  - "Phase 251 attention status sync through Phase 250"
+  - "Phase 252 attention status sync through Phase 251"
+  - "Phase 253 attention status sync through Phase 252"
+  - "Phase 254 attention status sync through Phase 253"
+  - "Phase 255 attention status sync through Phase 254"
+  - "Phase 256 attention status sync through Phase 255"
+  - "Phase 257 attention status sync through Phase 256"
+  - "Phase 258 attention status sync through Phase 257"
+  - "Phase 259 attention status sync through Phase 258"
+  - "Phase 260 attention status sync through Phase 259"
+  - "Phase 261 attention status sync through Phase 260"
+  - "Phase 262 attention status sync through Phase 261"
+  - "Phase 263 attention status sync through Phase 262"
+  - "Phase 264 attention status sync through Phase 263"
+  - "Phase 265 attention status sync through Phase 264"
+  - "Phase 266 attention status sync through Phase 265"
+  - "Phase 267 attention status sync through Phase 266"
+  - "Phase 268 attention status sync through Phase 267"
+  - "Phase 269 attention status sync through Phase 268"
+  - "Phase 270 attention status sync through Phase 269"
+  - "Phase 271 attention status sync through Phase 270"
+  - "Phase 272 attention status sync through Phase 271"
+  - "Phase 273 attention status sync through Phase 272"
+  - "Phase 274 attention status sync through Phase 273"
+  - "Phase 275 attention status sync through Phase 274"
+  - "Phase 276 attention status sync through Phase 275"
+  - "Phase 277 attention status sync through Phase 276"
+  - "Phase 278 attention status sync through Phase 277"
+  - "Phase 279 attention status sync through Phase 278"
+  - "Phase 280 attention status sync through Phase 279"
+  - "Phase 281 attention status sync through Phase 280"
+  - "Phase 282 attention status sync through Phase 281"
+  - "Phase 283 attention status sync through Phase 282"
+  - "Phase 284 attention status sync through Phase 283"
+  - "Phase 285 attention status sync through Phase 284"
+  - "Phase 286 attention status sync through Phase 285"
+  - "Phase 287 attention status sync through Phase 286"
+  - "Phase 288 attention status sync through Phase 287"
+  - "Phase 289 attention status sync through Phase 288"
+  - "Phase 290 attention status sync through Phase 289"
+  - "Phase 291 attention status sync through Phase 290"
+  - "Phase 292 attention status sync through Phase 291"
+  - "Phase 293 attention status sync through Phase 292"
+  - "Phase 294 attention status sync through Phase 293"
+  - "Phase 295 attention status sync through Phase 294"
+  - "Phase 296 attention status sync through Phase 295"
+  - "Phase 297 attention status sync through Phase 296"
+
+steps:
+  - id: S1
+    name: "S1: Sync attention status and focused static regression through Phase 297"
+    status: done
+    owner_mode: executor
+    controller_only: false
+    description: >
+      Update the attention current-status prefix/final suffix and focused regression
+      constants for accepted Phase 297 and stale aggregate-guard coverage.
+    checks:
+      - id: C1
+        name: "attention.md current-status bullet uses 1-297 prefix"
+        status: done
+      - id: C2
+        name: "Stale 1-296 and 1–296 terminal markers are rejected"
+        status: done
+      - id: C3
+        name: "Phase 121-167 and all prior phase labels preserved through 297"
+        status: done
+      - id: C4
+        name: "Phase 297 short label appended exactly once and no Phase 298 label added"
+        status: done
+      - id: C5
+        name: "Final suffix and range(168, 298) assertions updated"
+        status: done
+      - id: C6
+        name: "Discovery-token literals remain split in test source"
+        status: done
+      - id: C7
+        name: "Focused status pytest executes in worker/controller scope"
+        status: done
+    executor_evidence:
+      - "Controller materialized Phase 298 artifacts from read-only architect output: /tmp/hermes-tavern-architect-design-companyboost-1781748054.jsonl."
+      - "Executor implemented only attention.md and the focused status test after artifact materialization: /tmp/hermes-tavern-executor-impl-companyboost-1781748054.jsonl."
+      - "Read-only architect review returned PASS: /tmp/hermes-tavern-architect-review-companyboost-1781748054.jsonl."
+      - "Worker/controller YAML validation passed: 3 passed, 0 failed."
+      - "Worker/controller py_compile passed for tests/test_hermes_tavern_codestable_status.py."
+      - "Worker/controller focused status pytest passed: 1 passed."
+      - "Worker/controller static status/protected-path guard passed for the five allowed files."
+      - "Worker/controller git diff --check passed."
+      - "Worker/controller full pytest passed: 1215 passed in 55.93s."
+      - "Worker left changes uncommitted and did not update .hermes/project-progress/state.json."
+    allowed_files:
+      - design/codestable/attention.md
+      - tests/test_hermes_tavern_codestable_status.py
+
+  - id: S2
+    name: "S2: Parent-controller verification and closeout"
+    status: completed
+    owner_mode: parent-controller
+    controller_only: true
+    description: >
+      Parent-controller reruns YAML validation, py_compile, focused status pytest,
+      static status/protected-path guards, full pytest, and git diff --check before
+      final acceptance, commit, push, or state update.
+    checks:
+      - id: C8
+        name: "CodeStable YAML validation rerun for phase artifacts"
+        status: passed
+      - id: C9
+        name: "py_compile rerun for focused status test"
+        status: passed
+      - id: C10
+        name: "Focused status pytest rerun"
+        status: passed
+      - id: C11
+        name: "Static status/protected-path guard rerun"
+        status: passed
+      - id: C12
+        name: "Full pytest passed or infeasibility documented"
+        status: passed
+      - id: C13
+        name: "git diff --check rerun"
+        status: passed
+    result: "Parent-controller verified all gates after final status writeback. Phase 298 accepted."
+    parent_controller_evidence:
+      - "YAML/frontmatter validation rerun for Phase 298 artifacts passed."
+      - "py_compile rerun for tests/test_hermes_tavern_codestable_status.py passed."
+      - "Focused status pytest rerun passed."
+      - "Static status/protected-path guard rerun passed."
+      - "Full pytest rerun passed."
+      - "git diff --check passed."
