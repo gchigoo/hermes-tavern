@@ -1,0 +1,332 @@
+doc_type: feature-checklist
+status: accepted
+workflow_status: accepted
+implementation_ready: true
+parent_verification_required: false
+feature: "2026-06-18-hermes-tavern-phase300-attention-status-sync-through-phase299"
+date: "2026-06-18"
+created: "2026-06-18"
+updated: "2026-06-18"
+owner: company-boost
+summary: "Sync CodeStable attention current-status and focused static regression through accepted Phase 299 only."
+tags:
+  - hermes-tavern
+  - codestable
+  - attention
+  - status-sync
+  - docs
+  - tests
+
+selected_phase_slug: "2026-06-18-hermes-tavern-phase300-attention-status-sync-through-phase299"
+phase_selection_gate:
+  prior_phase: 299
+  prior_phase_feature: "2026-06-18-hermes-tavern-phase299-attention-status-sync-through-phase298"
+  prior_phase_acceptance_path: "design/codestable/features/2026-06-18-hermes-tavern-phase299-attention-status-sync-through-phase298/acceptance.md"
+  prior_phase_required_status: "accepted"
+  prior_phase_confirmed_accepted: true
+  next_slice: "Phase 300 attention/status sync through Phase 299"
+
+allowed_files:
+  - design/codestable/attention.md
+  - tests/test_hermes_tavern_codestable_status.py
+  - design/codestable/features/2026-06-18-hermes-tavern-phase300-attention-status-sync-through-phase299/design.md
+  - design/codestable/features/2026-06-18-hermes-tavern-phase300-attention-status-sync-through-phase299/checklist.yaml
+  - design/codestable/features/2026-06-18-hermes-tavern-phase300-attention-status-sync-through-phase299/acceptance.md
+
+prohibited_files_actions:
+  - "runtime files"
+  - "source files outside the focused status test"
+  - "plugin files"
+  - "provider files"
+  - "gateway files"
+  - "CLI files"
+  - "run_agent.py"
+  - "cli.py"
+  - "gateway/run.py"
+  - "root design files"
+  - "README files"
+  - "architecture docs"
+  - "roadmap docs"
+  - "requirements docs"
+  - "compound docs"
+  - "build outputs"
+  - "assets or fixtures"
+  - "credentials"
+  - "service lifecycle files or commands"
+  - "staging"
+  - "commit"
+  - "push"
+  - "~/.hermes/project-progress/state.json"
+
+expected_status_line_change:
+  from_prefix: "Current status (2026-06-18): All phases 1-298 accepted"
+  to_prefix: "Current status (2026-06-18): All phases 1-299 accepted"
+  append_exact_label: "Phase 299 attention status sync through Phase 298"
+  forbidden_attention_label: "Phase 300 attention status sync"
+  preserve_internal_range_label: "Phase 121-167"
+  final_status_suffix: "Phase 297 attention status sync through Phase 296, Phase 298 attention status sync through Phase 297, and Phase 299 attention status sync through Phase 298."
+
+focused_status_test_contract:
+  current_status_prefix: "Current status (2026-06-18): All phases 1-299 accepted"
+  stale_status_prefix: "Current status (2026-06-18): All phases 1-298 accepted"
+  stale_phase_marker: "1-298"
+  stale_phase_marker_en_dash: "1–298"
+  phase_range_assertion: "range(168, 300)"
+  source_self_check_aggregate_range: 'aggregate_range = "range(168, 300)"'
+  stale_phase_range_assertion: "range(168, 299)"
+  current_status_prefix_assignment_guard: 're.findall(r"^CURRENT_STATUS_PREFIX\s*=", test, re.M) == ["CURRENT_STATUS_PREFIX ="]'
+  stale_aggregate_guard_policy: >
+    In test source, reject split-string constructed range(168, 299) and retain
+    older stale ranges. Avoid direct stale aggregate literals where self-source
+    guards would count assertion literals incorrectly.
+  discovery_token_guard_policy: >
+    Keep discovery-token guards split inside strings for .glob(, .rglob(,
+    iterdir(, and os.walk.
+
+required_phase_labels:
+  - "Phase 168 image settings JSON export"
+  - "Phase 169 project JSON export surface parity"
+  - "Phase 170 export command-surface regression"
+  - "Phase 171 root-design export parity"
+  - "Phase 172 attention status sync through Phase 171"
+  - "Phase 173 root-design section 17 import/export summary parity"
+  - "Phase 174 attention status sync through Phase 173"
+  - "Phase 175 attention status sync through Phase 174"
+  - "Phase 176 attention status sync through Phase 175"
+  - "Phase 177 attention status sync through Phase 176"
+  - "Phase 178 attention status sync through Phase 177"
+  - "Phase 179 attention status sync through Phase 178"
+  - "Phase 180 attention status sync through Phase 179"
+  - "Phase 181 attention status sync through Phase 180"
+  - "Phase 182 attention status sync through Phase 181"
+  - "Phase 183 attention status sync through Phase 182"
+  - "Phase 184 attention status sync through Phase 183"
+  - "Phase 185 attention status sync through Phase 184"
+  - "Phase 186 attention status sync through Phase 185"
+  - "Phase 187 attention status sync through Phase 186"
+  - "Phase 188 attention status sync through Phase 187"
+  - "Phase 189 attention status sync through Phase 188"
+  - "Phase 190 attention status sync through Phase 189"
+  - "Phase 191 attention status sync through Phase 190"
+  - "Phase 192 attention status sync through Phase 191"
+  - "Phase 193 attention status sync through Phase 192"
+  - "Phase 194 attention status sync through Phase 193"
+  - "Phase 195 attention status sync through Phase 194"
+  - "Phase 196 attention status sync through Phase 195"
+  - "Phase 197 attention status sync through Phase 196"
+  - "Phase 198 attention status sync through Phase 197"
+  - "Phase 199 attention status sync through Phase 198"
+  - "Phase 200 attention status sync through Phase 199"
+  - "Phase 201 attention status sync through Phase 200"
+  - "Phase 202 attention status sync through Phase 201"
+  - "Phase 203 attention status sync through Phase 202"
+  - "Phase 204 attention status sync through Phase 203"
+  - "Phase 205 attention status sync through Phase 204"
+  - "Phase 206 attention status sync through Phase 205"
+  - "Phase 207 attention status sync through Phase 206"
+  - "Phase 208 attention status sync through Phase 207"
+  - "Phase 209 attention status sync through Phase 208"
+  - "Phase 210 attention status sync through Phase 209"
+  - "Phase 211 attention status sync through Phase 210"
+  - "Phase 212 attention status sync through Phase 211"
+  - "Phase 213 attention status sync through Phase 212"
+  - "Phase 214 attention status sync through Phase 213"
+  - "Phase 215 attention status sync through Phase 214"
+  - "Phase 216 attention status sync through Phase 215"
+  - "Phase 217 attention status sync through Phase 216"
+  - "Phase 218 attention status sync through Phase 217"
+  - "Phase 219 attention status sync through Phase 218"
+  - "Phase 220 attention status sync through Phase 219"
+  - "Phase 221 attention status sync through Phase 220"
+  - "Phase 222 attention status sync through Phase 221"
+  - "Phase 223 attention status sync through Phase 222"
+  - "Phase 224 attention status sync through Phase 223"
+  - "Phase 225 attention status sync through Phase 224"
+  - "Phase 226 attention status sync through Phase 225"
+  - "Phase 227 attention status sync through Phase 226"
+  - "Phase 228 attention status sync through Phase 227"
+  - "Phase 229 attention status sync through Phase 228"
+  - "Phase 230 attention status sync through Phase 229"
+  - "Phase 231 attention status sync through Phase 230"
+  - "Phase 232 attention status sync through Phase 231"
+  - "Phase 233 attention status sync through Phase 232"
+  - "Phase 234 attention status sync through Phase 233"
+  - "Phase 235 attention status sync through Phase 234"
+  - "Phase 236 attention status sync through Phase 235"
+  - "Phase 237 attention status sync through Phase 236"
+  - "Phase 238 attention status sync through Phase 237"
+  - "Phase 239 attention status sync through Phase 238"
+  - "Phase 240 attention status sync through Phase 239"
+  - "Phase 241 attention status sync through Phase 240"
+  - "Phase 242 attention status sync through Phase 241"
+  - "Phase 243 attention status sync through Phase 242"
+  - "Phase 244 attention status sync through Phase 243"
+  - "Phase 245 attention status sync through Phase 244"
+  - "Phase 246 attention status sync through Phase 245"
+  - "Phase 247 attention status sync through Phase 246"
+  - "Phase 248 attention status sync through Phase 247"
+  - "Phase 249 attention status sync through Phase 248"
+  - "Phase 250 attention status sync through Phase 249"
+  - "Phase 251 attention status sync through Phase 250"
+  - "Phase 252 attention status sync through Phase 251"
+  - "Phase 253 attention status sync through Phase 252"
+  - "Phase 254 attention status sync through Phase 253"
+  - "Phase 255 attention status sync through Phase 254"
+  - "Phase 256 attention status sync through Phase 255"
+  - "Phase 257 attention status sync through Phase 256"
+  - "Phase 258 attention status sync through Phase 257"
+  - "Phase 259 attention status sync through Phase 258"
+  - "Phase 260 attention status sync through Phase 259"
+  - "Phase 261 attention status sync through Phase 260"
+  - "Phase 262 attention status sync through Phase 261"
+  - "Phase 263 attention status sync through Phase 262"
+  - "Phase 264 attention status sync through Phase 263"
+  - "Phase 265 attention status sync through Phase 264"
+  - "Phase 266 attention status sync through Phase 265"
+  - "Phase 267 attention status sync through Phase 266"
+  - "Phase 268 attention status sync through Phase 267"
+  - "Phase 269 attention status sync through Phase 268"
+  - "Phase 270 attention status sync through Phase 269"
+  - "Phase 271 attention status sync through Phase 270"
+  - "Phase 272 attention status sync through Phase 271"
+  - "Phase 273 attention status sync through Phase 272"
+  - "Phase 274 attention status sync through Phase 273"
+  - "Phase 275 attention status sync through Phase 274"
+  - "Phase 276 attention status sync through Phase 275"
+  - "Phase 277 attention status sync through Phase 276"
+  - "Phase 278 attention status sync through Phase 277"
+  - "Phase 279 attention status sync through Phase 278"
+  - "Phase 280 attention status sync through Phase 279"
+  - "Phase 281 attention status sync through Phase 280"
+  - "Phase 282 attention status sync through Phase 281"
+  - "Phase 283 attention status sync through Phase 282"
+  - "Phase 284 attention status sync through Phase 283"
+  - "Phase 285 attention status sync through Phase 284"
+  - "Phase 286 attention status sync through Phase 285"
+  - "Phase 287 attention status sync through Phase 286"
+  - "Phase 288 attention status sync through Phase 287"
+  - "Phase 289 attention status sync through Phase 288"
+  - "Phase 290 attention status sync through Phase 289"
+  - "Phase 291 attention status sync through Phase 290"
+  - "Phase 292 attention status sync through Phase 291"
+  - "Phase 293 attention status sync through Phase 292"
+  - "Phase 294 attention status sync through Phase 293"
+  - "Phase 295 attention status sync through Phase 294"
+  - "Phase 296 attention status sync through Phase 295"
+  - "Phase 297 attention status sync through Phase 296"
+  - "Phase 298 attention status sync through Phase 297"
+  - "Phase 299 attention status sync through Phase 298"
+
+verification_commands:
+  - "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --dir design/codestable/features/2026-06-18-hermes-tavern-phase300-attention-status-sync-through-phase299 --require doc_type --require status --require feature"
+  - "PYTHONDONTWRITEBYTECODE=1 python -m py_compile tests/test_hermes_tavern_codestable_status.py"
+  - "PYTHONDONTWRITEBYTECODE=1 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python -m pytest tests/test_hermes_tavern_codestable_status.py -q -o 'addopts=' -p no:cacheprovider"
+  - "static status/protected-path guard"
+  - "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts=' if feasible, without PYTEST_DISABLE_PLUGIN_AUTOLOAD"
+  - "git diff --check"
+
+executor_prompt: >
+  Implement only Phase 300 status sync. Edit only design/codestable/attention.md,
+  tests/test_hermes_tavern_codestable_status.py, the Phase 300 design.md, and
+  the Phase 300 checklist.yaml. Advance current status to All phases 1-299
+  accepted, preserve Phase 121-167 and all existing explicit labels through
+  Phase 298, append only Phase 299 attention status sync through Phase 298, and
+  do not add any Phase 300 attention/status label to attention.md. Update the
+  focused test constants, required labels, suffix, stale markers, runtime range,
+  source self-check aggregate range, stale aggregate split guards, anchored
+  assignment-count regex, and discovery-token guards exactly as specified. Keep
+  final checklist/root status pending or in progress for parent verification.
+  Do not stage, commit, push, update ~/.hermes/project-progress/state.json,
+  touch runtime/source/plugin/provider/gateway/CLI/root-design/README/
+  architecture/roadmap/requirements/compound/build/credential/service-lifecycle
+  files, or change provider safety behavior.
+
+steps:
+  - id: S1
+    name: "S1: Sync attention status and focused static regression through Phase 299"
+    status: completed
+    owner_mode: executor
+    controller_only: false
+    description: >
+      Update the attention current-status prefix/final suffix and focused
+      regression constants for accepted Phase 299, preserving all prior short
+      labels and stale aggregate-guard coverage.
+    checks:
+      - id: C1
+        name: "attention.md current-status bullet uses 1-299 prefix"
+        status: completed
+      - id: C2
+        name: "Stale 1-298 and 1–298 terminal markers are rejected"
+        status: completed
+      - id: C3
+        name: "Phase 121-167 and all prior phase labels preserved through 299"
+        status: completed
+      - id: C4
+        name: "Phase 299 short label appended exactly once and no Phase 300 label added"
+        status: completed
+      - id: C5
+        name: "Final suffix and range(168, 300) assertions updated"
+        status: completed
+      - id: C6
+        name: "Source self-check aggregate range is range(168, 300)"
+        status: completed
+      - id: C7
+        name: "Stale aggregate guards reject split range(168, 299) and retain older stale ranges"
+        status: completed
+      - id: C8
+        name: "Anchored CURRENT_STATUS_PREFIX assignment-count regex is used"
+        status: completed
+      - id: C9
+        name: "Discovery-token literals remain split in test source"
+        status: completed
+
+  - id: S2
+    name: "S2: Worker verification and parent-controller handoff"
+    status: completed
+    owner_mode: worker-controller
+    controller_only: true
+    description: >
+      Worker/controller reruns YAML validation, py_compile, focused status
+      pytest, static status/protected-path guards, full pytest if feasible, and
+      git diff --check before parent finalization. Parent-controller reran final
+      verification, created the acceptance report, finalized checklist status,
+      and owns commit/push/state handoff.
+    checks:
+      - id: C10
+        name: "CodeStable YAML validation rerun for Phase 300 artifacts"
+        status: passed
+      - id: C11
+        name: "py_compile rerun for focused status test"
+        status: passed
+      - id: C12
+        name: "Focused status pytest rerun"
+        status: passed
+      - id: C13
+        name: "Static status/protected-path guard rerun"
+        status: passed
+      - id: C14
+        name: "Full pytest passed or infeasibility documented"
+        status: passed
+      - id: C15
+        name: "git diff --check rerun"
+        status: passed
+      - id: C16
+        name: "No staged files, commits, pushes, or progress-state updates performed before parent closeout"
+        status: passed
+
+review_checklist:
+  - "Exact phase range is Phase 168 through Phase 299 with runtime range(168, 300)."
+  - "Phase 121-167 and every prior explicit label through Phase 298 are preserved exactly."
+  - "Only new attention label is Phase 299 attention status sync through Phase 298."
+  - "No Phase 300 attention/status label appears in attention.md."
+  - "Stale terminal markers for All phases 1-298 accepted, 1-298, and 1–298 are rejected."
+  - "Final suffix is exactly the Phase 297, Phase 298, and Phase 299 suffix."
+  - "Focused test source self-check aggregate range is range(168, 300)."
+  - "Stale aggregate guards reject split range(168, 299) and retain older stale ranges."
+  - "Protected path scope is limited to the four allowed files."
+  - "No runtime, source, plugin, provider, gateway, or CLI files are changed."
+  - "No root design, README, architecture, roadmap, requirements, compound, build, fixture, asset, credential, or service lifecycle files are changed."
+  - "Hermes-native plugin architecture and SillyTavern asset compatibility remain untouched."
+  - "Adult-fiction/RP compatibility remains unchanged; no minors/CSAM work and no provider-safety bypass."
+  - "YAML validation, py_compile, focused status pytest, static guard, full pytest if feasible, and git diff --check are accounted for."
+  - "Checklist/root workflow status remains non-final for parent verification."
