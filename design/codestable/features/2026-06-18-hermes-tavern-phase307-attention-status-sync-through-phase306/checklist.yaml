@@ -1,0 +1,126 @@
+doc_type: feature-checklist
+status: accepted
+workflow_status: accepted
+implementation_ready: true
+feature: "2026-06-18-hermes-tavern-phase307-attention-status-sync-through-phase306"
+date: "2026-06-18"
+created: "2026-06-18"
+updated: "2026-06-18"
+owner: company-boost
+summary: "Sync CodeStable attention current-status and focused static regression through accepted Phase 306 only."
+tags: [hermes-tavern, codestable, attention, status-sync, docs, tests, phase307]
+
+selected_phase_slug: "2026-06-18-hermes-tavern-phase307-attention-status-sync-through-phase306"
+acceptance_state: "planned"
+
+phase_selection_gate:
+  prior_phase: 306
+  prior_phase_feature: "2026-06-18-hermes-tavern-phase306-attention-status-sync-through-phase305"
+  prior_phase_acceptance_path: "design/codestable/features/2026-06-18-hermes-tavern-phase306-attention-status-sync-through-phase305/acceptance.md"
+  prior_phase_required_status: "accepted"
+  prior_phase_confirmed_accepted: true
+  selected_slice: "Phase 307 attention/status sync through Phase 306"
+  completed_slice: "to be filled after implementation"
+
+allowed_files:
+  - design/codestable/attention.md
+  - tests/test_hermes_tavern_codestable_status.py
+  - design/codestable/features/2026-06-18-hermes-tavern-phase307-attention-status-sync-through-phase306/design.md
+  - design/codestable/features/2026-06-18-hermes-tavern-phase307-attention-status-sync-through-phase306/checklist.yaml
+  - design/codestable/features/2026-06-18-hermes-tavern-phase307-attention-status-sync-through-phase306/acceptance.md
+
+prohibited_files:
+  - plugins/
+  - gateway/
+  - run_agent.py
+  - cli.py
+  - gateway/run.py
+  - HERMES_TAVERN_DESIGN.md
+  - README.md
+  - ARCHITECTURE.md
+  - design/codestable/roadmap/
+  - design/codestable/requirements/
+  - design/codestable/compound/
+  - design/codestable/architecture/
+  - tests/fixtures/
+  - tests/plugins/
+  - .github/
+  - scripts/
+  - requirements.txt
+  - pyproject.toml
+
+steps:
+  - id: S1
+    title: "Sync attention.md and status test for Phase 306 acceptance"
+    description: >
+      Implement only Phase 307 attention/status sync through accepted Phase 306.
+      Edit only design/codestable/attention.md, tests/test_hermes_tavern_codestable_status.py,
+      and files inside the Phase 307 feature directory.
+      Advance current status to All phases 1-306 accepted, append Phase 306 label,
+      update focused test constants, suffix, required labels, range(168, 307),
+      stale markers, and split stale aggregate guard.
+    status: planned
+    allowed_files:
+      - design/codestable/attention.md
+      - tests/test_hermes_tavern_codestable_status.py
+      - design/codestable/features/2026-06-18-hermes-tavern-phase307-attention-status-sync-through-phase306/design.md
+      - design/codestable/features/2026-06-18-hermes-tavern-phase307-attention-status-sync-through-phase306/checklist.yaml
+      - design/codestable/features/2026-06-18-hermes-tavern-phase307-attention-status-sync-through-phase306/acceptance.md
+    prohibited_files:
+      - plugins/
+      - gateway/
+      - run_agent.py
+      - cli.py
+      - gateway/run.py
+      - HERMES_TAVERN_DESIGN.md
+      - README.md
+      - ARCHITECTURE.md
+    checks:
+      - id: C1
+        description: "attention.md status prefix advanced to All phases 1-306 accepted"
+        status: pending
+      - id: C2
+        description: "Phase 306 label appended exactly once to attention.md"
+        status: pending
+      - id: C3
+        description: "Focused test constants updated: CURRENT_STATUS_PREFIX, STALE_STATUS_PREFIX, STALE_PHASE_MARKER, STALE_PHASE_MARKER_EN_DASH"
+        status: pending
+      - id: C4
+        description: "Focused test REQUIRED_PHASE_LABELS includes Phase 306 label"
+        status: pending
+      - id: C5
+        description: "Focused test FINAL_STATUS_SUFFIX includes Phase 306 suffix"
+        status: pending
+      - id: C6
+        description: "Focused test phase_range updated to range(168, 307)"
+        status: pending
+      - id: C7
+        description: "Focused test aggregate_range literal updated and split stale guard for range(168, 306) added"
+        status: pending
+    verification:
+      - "python -m py_compile tests/test_hermes_tavern_codestable_status.py"
+      - "python -m pytest tests/test_hermes_tavern_codestable_status.py -q -o addopts="
+
+  - id: S2
+    title: "Verify and finalize Phase 307 feature artifacts"
+    description: >
+      Run validation commands, confirm scope, update checklist/acceptance statuses.
+      Only parent controller finalizes accepted/completed/passed statuses.
+    status: planned
+    allowed_files:
+      - design/codestable/features/2026-06-18-hermes-tavern-phase307-attention-status-sync-through-phase306/design.md
+      - design/codestable/features/2026-06-18-hermes-tavern-phase307-attention-status-sync-through-phase306/checklist.yaml
+      - design/codestable/features/2026-06-18-hermes-tavern-phase307-attention-status-sync-through-phase306/acceptance.md
+    checks:
+      - id: C8
+        description: "Validators pass for Phase 307 feature directory"
+        status: pending
+      - id: C9
+        description: "Full pytest suite passes"
+        status: pending
+      - id: C10
+        description: "git diff --check and git diff --cached --check pass"
+        status: pending
+    verification:
+      - "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --dir design/codestable/features/2026-06-18-hermes-tavern-phase307-attention-status-sync-through-phase306 --require doc_type --require status --require feature"
+      - "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o addopts="
