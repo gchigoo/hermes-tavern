@@ -1,6 +1,6 @@
 ---
 doc_type: feature-design
-status: draft
+status: approved
 feature: "2026-06-22-hermes-tavern-phase310-attention-status-sync-through-phase309"
 date: "2026-06-22"
 owner: standard-lane
