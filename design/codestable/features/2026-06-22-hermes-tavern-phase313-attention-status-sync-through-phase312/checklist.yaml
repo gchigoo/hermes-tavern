@@ -1,0 +1,143 @@
+doc_type: feature-checklist
+status: in_progress
+workflow_status: in_progress
+implementation_ready: true
+feature: "2026-06-22-hermes-tavern-phase313-attention-status-sync-through-phase312"
+date: "2026-06-22"
+created: "2026-06-22"
+updated: "2026-06-22"
+owner: standard-lane
+summary: "Sync CodeStable attention current-status and focused static regression through accepted Phase 312 only."
+tags: [hermes-tavern, codestable, attention, status-sync, docs, tests, phase313]
+parent_verification_required: true
+
+selected_phase_slug: "2026-06-22-hermes-tavern-phase313-attention-status-sync-through-phase312"
+acceptance_state: "pending"
+
+phase_selection_gate:
+  prior_phase: 312
+  prior_phase_feature: "2026-06-22-hermes-tavern-phase312-attention-status-sync-through-phase311"
+  prior_phase_acceptance_path: "design/codestable/features/2026-06-22-hermes-tavern-phase312-attention-status-sync-through-phase311/acceptance.md"
+  prior_phase_required_status: "accepted"
+  prior_phase_confirmed_accepted: true
+  selected_slice: "Phase 313 attention/status sync through Phase 312"
+  completed_slice: "Phase 313 attention/status sync through Phase 312"
+
+allowed_files:
+  - design/codestable/attention.md
+  - tests/test_hermes_tavern_codestable_status.py
+  - design/codestable/features/2026-06-22-hermes-tavern-phase313-attention-status-sync-through-phase312/design.md
+  - design/codestable/features/2026-06-22-hermes-tavern-phase313-attention-status-sync-through-phase312/checklist.yaml
+  - design/codestable/features/2026-06-22-hermes-tavern-phase313-attention-status-sync-through-phase312/acceptance.md
+
+prohibited_files_actions:
+  - "runtime/source/plugin/provider/gateway/CLI files"
+  - "plugins/"
+  - "provider files"
+  - "gateway/"
+  - "run_agent.py"
+  - "cli.py"
+  - "gateway/run.py"
+  - "plugin runtime files"
+  - "credentials"
+  - "root design"
+  - "README"
+  - "architecture"
+  - "roadmap"
+  - "requirements"
+  - "compound docs"
+  - "build outputs"
+  - "assets/fixtures/schemas"
+  - "service lifecycle commands"
+  - "dependency changes"
+  - "configuration changes"
+  - "network/provider/model changes"
+  - "adult-fiction/RP safety-boundary changes or minors"
+  - "broad rewrites"
+  - "edits to existing prior phase feature directories"
+  - "commit/push/staging by child lane"
+  - "force-push"
+  - "progress-state updates"
+  - "messages"
+
+expected_status_line_change:
+  from_prefix: "Current status (2026-06-18): All phases 1-312 accepted"
+  to_prefix: "Current status (2026-06-18): All phases 1-313 accepted"
+  appended_exact_label: "Phase 313 attention status sync through Phase 312"
+  forbidden_attention_label: "Phase 314 attention/status sync"
+  preserve_internal_range_label: "Phase 121-167"
+  preserve_explicit_phase_labels: "Phase 168 through Phase 312"
+  final_status_suffix: "Phase 303 attention status sync through Phase 302, Phase 304 attention status sync through Phase 303, Phase 305 attention status sync through Phase 304, Phase 306 attention status sync through Phase 305, Phase 307 attention status sync through Phase 306, Phase 308 attention status sync through Phase 307, Phase 309 attention status sync through Phase 308, Phase 310 attention status sync through Phase 309, Phase 311 attention status sync through Phase 310, Phase 312 attention status sync through Phase 311, and Phase 313 attention status sync through Phase 312."
+
+focused_status_test_contract:
+  current_status_prefix: "Current status (2026-06-18): All phases 1-313 accepted"
+  stale_status_prefix: "Current status (2026-06-18): All phases 1-312 accepted"
+  stale_phase_marker: "1-312"
+  stale_phase_marker_en_dash: "1–312"
+  appended_required_label: "Phase 313 attention status sync through Phase 312"
+  required_phase_labels_policy: "Preserve Phase 121-167 and every explicit Phase 168 through Phase 312 label; append Phase 313 exactly once."
+  phase_range_assertion: "range(168, 314)"
+  source_self_check_aggregate_range: 'aggregate_range = "range(168, 314)"'
+  stale_aggregate_range_to_add: "range(168, 313)"
+  stale_aggregate_guard_policy: "Reject split-string constructed range(168, 313) and retain older split stale ranges including 312, 311, 310, 309, 308, 307, 306, 305, 304, 303, 302, 301, 300, 299, 298, 297, 296, and earlier existing guards."
+  current_status_prefix_assignment_guard: 're.findall(r"^CURRENT_STATUS_PREFIX\\s*=", test, re.M) == ["CURRENT_STATUS_PREFIX ="]'
+  discovery_token_guard_policy: "Keep .glob(, .rglob(, iterdir(, and os.walk split inside strings without contiguous discovery calls."
+
+verification_commands:
+  - "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --dir design/codestable/features/2026-06-22-hermes-tavern-phase313-attention-status-sync-through-phase312 --require doc_type --require status --require feature"
+  - "PYTHONDONTWRITEBYTECODE=1 python -m py_compile tests/test_hermes_tavern_codestable_status.py"
+  - "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_codestable_status.py -q -o addopts="
+  - "PYTHONDONTWRITEBYTECODE=1 python /tmp/hermes-tavern-phase313-static-guard.py"
+  - "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o addopts="
+  - "git diff --check"
+
+steps:
+  - id: S1
+    name: "Sync attention status and focused static regression through Phase 312"
+    status: pending
+    owner_mode: controller_patch
+    checks:
+      - id: C1
+        name: "attention.md current-status bullet uses 1-313 prefix"
+        status: pending
+      - id: C2
+        name: "Phase 313 label appended exactly once"
+        status: pending
+      - id: C3
+        name: "No Phase 314 attention/status label added"
+        status: pending
+      - id: C4
+        name: "Phase 121-167 and Phase 168 through Phase 312 labels preserved"
+        status: pending
+      - id: C5
+        name: "Focused test constants, suffix, range, aggregate range, stale markers, split stale guards, assignment guard, and discovery guards updated"
+        status: pending
+  - id: S2
+    name: "Parent-controller verification and acceptance closeout"
+    status: planned
+    owner_mode: parent_controller
+    parent_verification_required: true
+    checks:
+      - id: C6
+        name: "YAML validation passed"
+        status: pending
+      - id: C7
+        name: "py_compile passed"
+        status: pending
+      - id: C8
+        name: "Focused status pytest passed"
+        status: pending
+      - id: C9
+        name: "Python static status/protected-path guard passed"
+        status: pending
+      - id: C10
+        name: "Full pytest passed"
+        status: pending
+      - id: C11
+        name: "git diff --check passed"
+        status: pending
+      - id: C12
+        name: "Acceptance report finalized by parent controller"
+        status: pending
+
+controller_evidence: []
