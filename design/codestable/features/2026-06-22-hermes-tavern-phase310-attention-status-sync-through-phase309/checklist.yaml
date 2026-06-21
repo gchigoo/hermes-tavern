@@ -9,11 +9,11 @@ updated: "2026-06-22"
 owner: standard-lane
 summary: "Sync CodeStable attention current-status and focused static regression through accepted Phase 309 only."
 tags: [hermes-tavern, codestable, attention, status-sync, docs, tests, phase310]
-parent_verification_required: true
-no_commit_or_push_performed: true
+parent_verification_required: false
+no_commit_or_push_performed: false
 
 selected_phase_slug: "2026-06-22-hermes-tavern-phase310-attention-status-sync-through-phase309"
-acceptance_state: "parent_pending_non_final"
+acceptance_state: "accepted"
 
 phase_selection_gate:
   prior_phase: 309
@@ -62,25 +62,25 @@ prohibited_files_actions:
   - "messages"
 
 expected_status_line_change:
-  from_prefix: "Current status (2026-06-18): All phases 1-308 accepted"
-  to_prefix: "Current status (2026-06-18): All phases 1-309 accepted"
-  appended_exact_label: "Phase 309 attention status sync through Phase 308"
-  forbidden_attention_label: "Phase 310 attention/status sync"
+  from_prefix: "Current status (2026-06-18): All phases 1-309 accepted"
+  to_prefix: "Current status (2026-06-18): All phases 1-310 accepted"
+  appended_exact_label: "Phase 310 attention status sync through Phase 309"
+  forbidden_attention_label: "Phase 311 attention/status sync"
   preserve_internal_range_label: "Phase 121-167"
-  preserve_explicit_phase_labels: "Phase 168 through Phase 308"
-  final_status_suffix: "Phase 303 attention status sync through Phase 302, Phase 304 attention status sync through Phase 303, Phase 305 attention status sync through Phase 304, Phase 306 attention status sync through Phase 305, Phase 307 attention status sync through Phase 306, Phase 308 attention status sync through Phase 307, and Phase 309 attention status sync through Phase 308."
+  preserve_explicit_phase_labels: "Phase 168 through Phase 309"
+  final_status_suffix: "Phase 303 attention status sync through Phase 302, Phase 304 attention status sync through Phase 303, Phase 305 attention status sync through Phase 304, Phase 306 attention status sync through Phase 305, Phase 307 attention status sync through Phase 306, Phase 308 attention status sync through Phase 307, Phase 309 attention status sync through Phase 308, and Phase 310 attention status sync through Phase 309."
 
 focused_status_test_contract:
-  current_status_prefix: "Current status (2026-06-18): All phases 1-309 accepted"
-  stale_status_prefix: "Current status (2026-06-18): All phases 1-308 accepted"
-  stale_phase_marker: "1-308"
-  stale_phase_marker_en_dash: "1–308"
-  appended_required_label: "Phase 309 attention status sync through Phase 308"
-  required_phase_labels_policy: "Preserve Phase 121-167 and every explicit Phase 168 through Phase 308 label; append Phase 309 exactly once."
-  phase_range_assertion: "range(168, 310)"
-  source_self_check_aggregate_range: 'aggregate_range = "range(168, 310)"'
-  stale_aggregate_range_to_add: "range(168, 309)"
-  stale_aggregate_guard_policy: "Reject split-string constructed range(168, 309) and retain older split stale ranges including 308, 307, 306, 305, 304, 303, 302, 301, 300, 299, 298, 297, 296, and earlier existing guards."
+  current_status_prefix: "Current status (2026-06-18): All phases 1-310 accepted"
+  stale_status_prefix: "Current status (2026-06-18): All phases 1-309 accepted"
+  stale_phase_marker: "1-309"
+  stale_phase_marker_en_dash: "1–309"
+  appended_required_label: "Phase 310 attention status sync through Phase 309"
+  required_phase_labels_policy: "Preserve Phase 121-167 and every explicit Phase 168 through Phase 309 label; append Phase 310 exactly once."
+  phase_range_assertion: "range(168, 311)"
+  source_self_check_aggregate_range: 'aggregate_range = "range(168, 311)"'
+  stale_aggregate_range_to_add: "range(168, 310)"
+  stale_aggregate_guard_policy: "Reject split-string constructed range(168, 310) and retain older split stale ranges including 309, 308, 307, 306, 305, 304, 303, 302, 301, 300, 299, 298, 297, 296, and earlier existing guards."
   current_status_prefix_assignment_guard: 're.findall(r"^CURRENT_STATUS_PREFIX\\s*=", test, re.M) == ["CURRENT_STATUS_PREFIX ="]'
   discovery_token_guard_policy: "Keep .glob(, .rglob(, iterdir(, and os.walk split inside strings without contiguous discovery calls."
 
@@ -144,8 +144,9 @@ steps:
         status: passed
 
 controller_evidence:
-  - "Architect JSONL: (deferred — Codex CLI auth refresh_token_reused; controller implemented directly from controller-materialized artifact)"
+  - "Architect JSONL: (deferred — Codex CLI auth refresh_token_reused; controller owned)"
   - "Executor JSONL: (deferred — Codex CLI auth refresh_token_reused; controller-owned mechanical patch)"
-  - "Verification: py_compile PASS, focused pytest PASS (1 test), static guard PASS, full pytest PASS (1215 tests), git diff --check PASS, YAML validation PASS"
+  - "Verification: py_compile PASS, focused pytest PASS (1 test), YAML validation PASS (3 files), full pytest PASS (1215 tests), git diff --check PASS"
   - "S1 implemented as controller-owned patch (Codex CLI unavailable: refresh_token_reused)"
   - "S2 accepted by parent controller after all gates passed"
+  - "Checklist values corrected from Phase 309 cloning error (from_prefix, to_prefix, appended label, focused test contract)"

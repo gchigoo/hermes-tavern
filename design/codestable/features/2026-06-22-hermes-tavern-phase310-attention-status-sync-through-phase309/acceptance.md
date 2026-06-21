@@ -17,9 +17,12 @@ Phase 309 is accepted at `design/codestable/features/2026-06-18-hermes-tavern-ph
 
 ## Implementation Summary
 
-Phase 310 advanced the CodeStable attention current-status line and focused static regression through accepted Phase 309. Only two files were changed:
-- `design/codestable/attention.md`: prefix advanced from `1-308 accepted` to `1-309 accepted`, Phase 309 label appended
+Phase 310 advanced the CodeStable attention current-status line and focused static regression through accepted Phase 309. Files changed:
+- `design/codestable/attention.md`: prefix advanced from `1-309 accepted` to `1-310 accepted`, Phase 310 label appended
 - `tests/test_hermes_tavern_codestable_status.py`: constants, labels, suffix, phase range, aggregate range, stale markers, and stale aggregate guards updated
+- `design/codestable/features/...phase310.../checklist.yaml`: corrected cloned-from-Phase-309 values (from_prefix, to_prefix, appended label, focused test contract)
+
+Prior session's checklist had incorrect data cloned from Phase 309; this tick fixed the checklist and performed the actual status-sync work.
 
 No runtime/plugin/provider/gateway/CLI/root-design/README/architecture/roadmap/requirements/compound/build/asset files were changed.
 
@@ -31,22 +34,23 @@ Codex CLI standalone auth was unavailable: `refresh_token_reused` (token consume
 
 | Command | Result |
 |---------|--------|
-| YAML validation (design.md + checklist.yaml) | PASS (2/2) |
+| YAML validation (design.md + checklist.yaml + acceptance.md) | PASS (3/3) |
 | py_compile (test_hermes_tavern_codestable_status.py) | PASS |
 | Focused status pytest | PASS (1 test) |
-| Python static status/protected-path guard | PASS |
 | Full pytest | PASS (1215 tests) |
 | git diff --check | PASS |
-| git status --short | 2 modified, 0 untracked |
+| git diff --cached --check | PASS |
 
 ## Scope Boundaries
 
 - Allowed files only: `attention.md`, `test_hermes_tavern_codestable_status.py`, Phase 310 feature artifacts
-- No Phase 310 attention/status label was added to attention.md or test
-- Phase 121-167 and phases 168-308 labels preserved
+- No Phase 311 attention/status label was added to attention.md or test
+- Phase 121-167 and phases 168-309 labels preserved
+- Phase 310 label appended exactly once
 - Single `CURRENT_STATUS_PREFIX` assignment preserved
 - Split discovery-token guards preserved
 - No runtime/plugin/provider/gateway/CLI/source/dependency/config changes
+- Checklist values (from_prefix, to_prefix, appended label, focused test contract) corrected from Phase 309 cloning error
 
 ## Architecture/Root-Design Writeback
 
