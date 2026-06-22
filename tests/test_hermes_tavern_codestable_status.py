@@ -4,10 +4,10 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 ATTENTION_DOC = REPO_ROOT / "design" / "codestable" / "attention.md"
-CURRENT_STATUS_PREFIX = "Current status (2026-06-18): All phases 1-319 accepted"
-STALE_STATUS_PREFIX = "Current status (2026-06-18): All phases 1-318 accepted"
-STALE_PHASE_MARKER = "1-318"
-STALE_PHASE_MARKER_EN_DASH = "1–318"
+CURRENT_STATUS_PREFIX = "Current status (2026-06-18): All phases 1-320 accepted"
+STALE_STATUS_PREFIX = "Current status (2026-06-18): All phases 1-319 accepted"
+STALE_PHASE_MARKER = "1-319"
+STALE_PHASE_MARKER_EN_DASH = "1–319"
 REQUIRED_PHASE_LABELS = [
     "Phase 168 image settings JSON export",
     "Phase 169 project JSON export surface parity",
@@ -161,8 +161,9 @@ REQUIRED_PHASE_LABELS = [
     "Phase 317 attention status sync through Phase 316",
     "Phase 318 attention status sync through Phase 317",
     "Phase 319 attention status sync through Phase 318",
+    "Phase 320 attention status sync through Phase 319",
 ]
-FINAL_STATUS_SUFFIX = "Phase 303 attention status sync through Phase 302, Phase 304 attention status sync through Phase 303, Phase 305 attention status sync through Phase 304, Phase 306 attention status sync through Phase 305, Phase 307 attention status sync through Phase 306, Phase 308 attention status sync through Phase 307, Phase 309 attention status sync through Phase 308, Phase 310 attention status sync through Phase 309, Phase 311 attention status sync through Phase 310, Phase 312 attention status sync through Phase 311, Phase 313 attention status sync through Phase 312, Phase 314 attention status sync through Phase 313, Phase 315 attention status sync through Phase 314, Phase 316 attention status sync through Phase 315, Phase 317 attention status sync through Phase 316, Phase 318 attention status sync through Phase 317, and Phase 319 attention status sync through Phase 318."
+FINAL_STATUS_SUFFIX = "Phase 303 attention status sync through Phase 302, Phase 304 attention status sync through Phase 303, Phase 305 attention status sync through Phase 304, Phase 306 attention status sync through Phase 305, Phase 307 attention status sync through Phase 306, Phase 308 attention status sync through Phase 307, Phase 309 attention status sync through Phase 308, Phase 310 attention status sync through Phase 309, Phase 311 attention status sync through Phase 310, Phase 312 attention status sync through Phase 311, Phase 313 attention status sync through Phase 312, Phase 314 attention status sync through Phase 313, Phase 315 attention status sync through Phase 314, Phase 316 attention status sync through Phase 315, Phase 317 attention status sync through Phase 316, Phase 318 attention status sync through Phase 317, Phase 319 attention status sync through Phase 318, and Phase 320 attention status sync through Phase 319."
 
 
 def test_attention_current_status_line_is_current():
@@ -181,7 +182,7 @@ def test_attention_current_status_line_is_current():
     assert re.search(rf"(?<!\d){re.escape(STALE_PHASE_MARKER)}(?!\d)", status) is None
     assert re.search(rf"(?<!\d){re.escape(STALE_PHASE_MARKER_EN_DASH)}(?!\d)", status) is None
     assert status.endswith(FINAL_STATUS_SUFFIX)
-    phase_range = range(168, 320)
+    phase_range = range(168, 321)
     assert all(f"Phase {phase} " in status for phase in phase_range)
     assert re.search(r"(?<!\d)Phase 121-167(?!\d)", status) is not None
     test = Path(__file__).read_text(encoding="utf-8")
@@ -190,6 +191,7 @@ def test_attention_current_status_line_is_current():
     assert all(label in test for label in REQUIRED_PHASE_LABELS)
     stale_aggregate_range_311 = "".join(["range(168, ", "31", "1", ")"])
     stale_aggregate_range_313 = "".join(["range(168, ", "31", "3", ")"])
+    stale_aggregate_range_320 = "".join(["range(168, ", "32", "0", ")"])
     stale_aggregate_range_318 = "".join(["range(168, ", "31", "8", ")"])
     stale_aggregate_range_319 = "".join(["range(168, ", "31", "9", ")"])
     stale_aggregate_range_317 = "".join(["range(168, ", "31", "7", ")"])
@@ -228,6 +230,7 @@ def test_attention_current_status_line_is_current():
     stale_aggregate_range_282 = "".join(["range(168, ", "28", "2", ")"])
     stale_aggregate_range_281 = "".join(["range(168, ", "28", "1", ")"])
     for stale_range in (
+        stale_aggregate_range_320,
         stale_aggregate_range_318,
         stale_aggregate_range_317,
         stale_aggregate_range_319,
@@ -269,7 +272,7 @@ def test_attention_current_status_line_is_current():
         stale_aggregate_range_281,
     ):
         assert stale_range not in test
-    aggregate_range = "range(168, 320)"
+    aggregate_range = "range(168, 321)"
     assert aggregate_range in test
     forbidden_glob = "." + "glob" + "("
     forbidden_rglob = "." + "rgl" + "ob" + "("
