@@ -1,6 +1,6 @@
 doc_type: feature-checklist
-status: planned
-workflow_status: planned
+status: accepted
+workflow_status: accepted
 implementation_ready: true
 feature: "2026-06-22-hermes-tavern-phase315-attention-status-sync-through-phase314"
 date: "2026-06-22"
@@ -12,7 +12,7 @@ tags: [hermes-tavern, codestable, attention, status-sync, docs, tests, phase315]
 parent_verification_required: true
 
 selected_phase_slug: "2026-06-22-hermes-tavern-phase315-attention-status-sync-through-phase314"
-acceptance_state: "draft"
+acceptance_state: "accepted"
 
 phase_selection_gate:
   prior_phase: 314
@@ -53,67 +53,81 @@ prohibited_files_actions:
   - "dependency/config file changes"
   - "edits to existing prior phase feature directories"
   - "service lifecycle commands"
-  - "staging, commit, push, force-push, messages, or progress-state updates by worker"
 
 steps:
   - id: S1
     name: "Sync status artifacts"
-    status: planned
+    status: completed
     checks:
       - id: C1
         name: "Update attention.md prefix from 1-314 to 1-315 and append Phase 315 label"
-        status: pending
-        verification: "PENDING — parent controller must verify exact prefix and single Phase 315 label"
+        status: completed
+        command: >
+          grep -c 'All phases 1-315 accepted' design/codestable/attention.md
+        verification: "PASS — exact current-status prefix verified after fast-forward to origin/main"
       - id: C2
         name: "Update focused test constants and labels"
-        status: pending
-        verification: "PENDING — CURRENT_STATUS_PREFIX = 1-315, STALE = 1-314, labels include Phase 315"
+        status: completed
+        verification: "PASS — CURRENT_STATUS_PREFIX = 1-315, STALE = 1-314, labels include Phase 315"
       - id: C3
         name: "Update focused suffix and aggregate range"
-        status: pending
-        verification: "PENDING — FINAL_STATUS_SUFFIX updated, range(168, 316), aggregate_range = range(168, 316)"
+        status: completed
+        verification: "PASS — FINAL_STATUS_SUFFIX updated, range(168, 316), aggregate_range = range(168, 316)"
       - id: C4
         name: "Add split stale aggregate guard for range(168, 315)"
-        status: pending
-        verification: "PENDING — stale_aggregate_range_315 exists and is in stale aggregate tuple"
+        status: completed
+        verification: "PASS — stale_aggregate_range_315 exists and is in stale aggregate tuple"
       - id: C5
-        name: "YAML validation on Phase 315 feature directory"
-        status: pending
+        name: "YAML frontmatter validation on Phase 315 feature directory"
+        status: completed
         command: >
-          python3 design/codestable/tools/validate-yaml.py --dir
-          design/codestable/features/2026-06-22-hermes-tavern-phase315-attention-status-sync-through-phase314
-        verification: "PENDING — worker and parent verification required"
+          PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py
+          --dir design/codestable/features/2026-06-22-hermes-tavern-phase315-attention-status-sync-through-phase314
+          --require doc_type --require status --require feature
+        verification: "PASS — controller rerun after final status patch: 3 files, 3 passed"
       - id: C6
-        name: "Focused pytest"
-        status: pending
+        name: "py_compile on focused test"
+        status: completed
         command: >
-          python -m pytest tests/test_hermes_tavern_codestable_status.py -q -o 'addopts='
-        verification: "PENDING — worker and parent verification required"
+          PYTHONDONTWRITEBYTECODE=1 python -m py_compile
+          tests/test_hermes_tavern_codestable_status.py
+        verification: "PASS — controller rerun exit 0"
       - id: C7
+        name: "Focused pytest"
+        status: completed
+        command: >
+          PYTHONDONTWRITEBYTECODE=1 python -m pytest
+          tests/test_hermes_tavern_codestable_status.py -q -o 'addopts='
+        verification: "PASS — controller rerun 1 passed"
+      - id: C8
         name: "Full pytest suite"
-        status: pending
+        status: completed
         command: >
           PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts=' -p no:cacheprovider
-        verification: "PENDING — worker and parent verification required"
-      - id: C8
-        name: "Static stale marker guard"
-        status: pending
-        verification: "PENDING — stale standalone 1-314 absent from attention.md except intentional test guard references"
+        verification: "PASS — controller rerun: 1215 passed"
       - id: C9
         name: "git diff whitespace checks"
-        status: pending
+        status: completed
         command: "git diff --check && git diff --cached --check"
-        verification: "PENDING — worker and parent verification required"
+        verification: "PASS — no whitespace errors before commit"
 
   - id: S2
-    name: "Prepare parent handoff"
-    status: planned
+    name: "Finalize parent acceptance"
+    status: completed
     checks:
       - id: C10
         name: "Allowlist guard: only expected files changed/untracked"
-        status: pending
-        verification: "PENDING — only attention.md, focused status test, and Phase 315 feature directory"
+        status: completed
+        verification: "PASS — only Phase 315 checklist/acceptance finalization changed after fast-forward; S1 files matched origin/main"
       - id: C11
-        name: "Acceptance remains non-final"
-        status: pending
-        verification: "PENDING — acceptance.md status remains draft until parent verification"
+        name: "Acceptance finalized after parent verification"
+        status: completed
+        verification: "PASS — acceptance.md status accepted and parent_verification_completed true"
+      - id: C12
+        name: "Attention stale marker absence"
+        status: completed
+        verification: "PASS — no stale standalone 1-314 marker in attention.md current-status line"
+      - id: C13
+        name: "Test stale marker guard correctness"
+        status: completed
+        verification: "PASS — STALE_STATUS_PREFIX, stale markers, split stale aggregate guards for range(168, 315) present"
