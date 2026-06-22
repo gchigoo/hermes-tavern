@@ -1,0 +1,190 @@
+doc_type: feature-checklist
+status: accepted
+workflow_status: accepted
+implementation_ready: true
+feature: "2026-06-22-hermes-tavern-phase316-attention-status-sync-through-phase315"
+date: "2026-06-22"
+created: "2026-06-22"
+updated: "2026-06-22"
+owner: standard_lane
+summary: "Sync CodeStable attention current-status and focused static regression through accepted Phase 315 only."
+tags: [hermes-tavern, codestable, attention, status-sync, docs, tests, phase316]
+parent_verification_required: true
+
+selected_phase_slug: "2026-06-22-hermes-tavern-phase316-attention-status-sync-through-phase315"
+acceptance_state: "accepted"
+controller_lane: "standard"
+bounded_phase: "docs/static-test/status-only"
+
+phase_selection_gate:
+  prior_phase: 315
+  prior_phase_feature: "2026-06-22-hermes-tavern-phase315-attention-status-sync-through-phase314"
+  prior_phase_acceptance_path: "design/codestable/features/2026-06-22-hermes-tavern-phase315-attention-status-sync-through-phase314/acceptance.md"
+  prior_phase_required_status: "accepted"
+  prior_phase_confirmed_accepted: true
+  phase316_feature_preexisting: false
+  selected_slice: "Phase 316 attention/status sync through Phase 315"
+  completed_slice: "Phase 316 attention/status sync through Phase 315"
+
+status_test_contract:
+  attention:
+    current_prefix_before: "Current status (2026-06-18): All phases 1-315 accepted"
+    current_prefix_after: "Current status (2026-06-18): All phases 1-316 accepted"
+    stale_prefix_after_update: "Current status (2026-06-18): All phases 1-315 accepted"
+    append_label: "Phase 316 attention status sync through Phase 315"
+    final_status_suffix: >-
+      Phase 303 attention status sync through Phase 302, Phase 304 attention status sync through Phase 303,
+      Phase 305 attention status sync through Phase 304, Phase 306 attention status sync through Phase 305,
+      Phase 307 attention status sync through Phase 306, Phase 308 attention status sync through Phase 307,
+      Phase 309 attention status sync through Phase 308, Phase 310 attention status sync through Phase 309,
+      Phase 311 attention status sync through Phase 310, Phase 312 attention status sync through Phase 311,
+      Phase 313 attention status sync through Phase 312, Phase 314 attention status sync through Phase 313,
+      Phase 315 attention status sync through Phase 314, and Phase 316 attention status sync through Phase 315.
+  focused_test:
+    current_status_prefix_value: "Current status (2026-06-18): All phases 1-316 accepted"
+    stale_status_prefix_value: "Current status (2026-06-18): All phases 1-315 accepted"
+    stale_phase_marker: "1-315"
+    stale_phase_marker_en_dash: "1–315"
+    required_label_to_append: "Phase 316 attention status sync through Phase 315"
+    phase_range: "range(168, 317)"
+    aggregate_range: "range(168, 317)"
+    stale_aggregate_guard_to_add: "range(168, 316)"
+    stale_aggregate_guards_retained: "existing split guards for range(168, 315) through range(168, 281)"
+
+allowed_files:
+  - design/codestable/attention.md
+  - tests/test_hermes_tavern_codestable_status.py
+  - design/codestable/features/2026-06-22-hermes-tavern-phase316-attention-status-sync-through-phase315/design.md
+  - design/codestable/features/2026-06-22-hermes-tavern-phase316-attention-status-sync-through-phase315/checklist.yaml
+  - design/codestable/features/2026-06-22-hermes-tavern-phase316-attention-status-sync-through-phase315/acceptance.md
+
+prohibited_files_actions:
+  - "runtime/source/plugin/provider/gateway/CLI files"
+  - "plugins/"
+  - "provider files"
+  - "gateway/"
+  - "run_agent.py"
+  - "cli.py"
+  - "gateway/run.py"
+  - "plugin runtime files"
+  - "credentials"
+  - "root design (HERMES_TAVERN_DESIGN.md)"
+  - "README.md"
+  - "architecture files"
+  - "design/codestable/roadmap/"
+  - "design/codestable/requirements/"
+  - "design/codestable/compound/"
+  - "docs/"
+  - "assets/"
+  - "fixtures/"
+  - "schemas/"
+  - "build outputs"
+  - "dependency/config file changes"
+  - "edits to existing prior phase feature directories"
+  - "service lifecycle commands"
+  - "staging by executor"
+  - "commit by executor"
+  - "push by executor"
+  - "progress-state updates by executor"
+
+steps:
+  - id: S1
+    name: "Sync attention and focused static test"
+    owner: "executor"
+    status: completed
+    completed_at: "2026-06-22"
+    allowed_files:
+      - design/codestable/attention.md
+      - tests/test_hermes_tavern_codestable_status.py
+    checks:
+      - id: C1
+        name: "Update attention.md prefix from 1-315 to 1-316 and append Phase 316 label"
+        status: completed
+        verification: "PASS — controller verified one current-status line starts with All phases 1-316 accepted and includes Phase 316 exactly once."
+      - id: C2
+        name: "Preserve final suffix grammar"
+        status: completed
+        verification: "PASS after controller reconciliation — executor initially omitted the final 'and'; controller applied a mechanical one-word suffix fix and focused pytest passed."
+      - id: C3
+        name: "Update focused test constants and labels"
+        status: completed
+        verification: "PASS — CURRENT_STATUS_PREFIX is 1-316, STALE values are 1-315, and REQUIRED_PHASE_LABELS includes Phase 316 exactly once."
+      - id: C4
+        name: "Update focused suffix and aggregate range"
+        status: completed
+        verification: "PASS — FINAL_STATUS_SUFFIX includes Phase 316, phase_range is range(168, 317), and aggregate_range literal is range(168, 317)."
+      - id: C5
+        name: "Add split stale aggregate guard for range(168, 316)"
+        status: completed
+        verification: "PASS — stale_aggregate_range_316 exists via split string and appears before older stale-range guards."
+      - id: C6
+        name: "Preserve discovery-token guards"
+        status: completed
+        verification: "PASS — controller static guard found no contiguous .glob(, .rglob(, iterdir(, or os.walk discovery tokens in the test source."
+
+  - id: S2
+    name: "Parent verification and acceptance finalization"
+    owner: "parent-controller"
+    status: completed
+    completed_at: "2026-06-22"
+    checks:
+      - id: C7
+        name: "YAML/frontmatter validation on Phase 316 feature directory"
+        status: completed
+        command: >
+          PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py
+          --dir design/codestable/features/2026-06-22-hermes-tavern-phase316-attention-status-sync-through-phase315
+          --require doc_type --require status --require feature
+        verification: "PASS — controller validation passed after final checklist and acceptance writeback."
+      - id: C8
+        name: "py_compile on focused test"
+        status: completed
+        command: >
+          PYTHONDONTWRITEBYTECODE=1 python -m py_compile
+          tests/test_hermes_tavern_codestable_status.py
+        verification: "PASS — controller rerun after executor and mechanical suffix correction."
+      - id: C9
+        name: "Focused pytest"
+        status: completed
+        command: >
+          PYTHONDONTWRITEBYTECODE=1 python -m pytest
+          tests/test_hermes_tavern_codestable_status.py -q -o 'addopts='
+        verification: "PASS — controller rerun: 1 passed."
+      - id: C10
+        name: "Full pytest suite"
+        status: completed
+        command: >
+          PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts=' -p no:cacheprovider
+        verification: "PASS — controller rerun after acceptance writeback: 1215 passed."
+      - id: C11
+        name: "Static stale-marker guard"
+        status: completed
+        verification: "PASS — no stale standalone 1-315 marker remains in the attention current-status line; test source keeps stale values only as intentional guards."
+      - id: C12
+        name: "Allowlist guard"
+        status: completed
+        verification: "PASS — changed/untracked paths are limited to attention.md, the focused status test, and the Phase 316 feature directory."
+      - id: C13
+        name: "git diff whitespace checks"
+        status: completed
+        command: "git diff --check && git diff --cached --check"
+        verification: "PASS — controller reran git diff --check before staging and git diff --cached --check after staging."
+      - id: C14
+        name: "Acceptance finalized after parent verification"
+        status: completed
+        verification: "PASS — parent controller created acceptance.md with status accepted after targeted validators, py_compile, focused pytest, static guard, and allowlist guard."
+
+verification_commands:
+  - >
+    PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py
+    --dir design/codestable/features/2026-06-22-hermes-tavern-phase316-attention-status-sync-through-phase315
+    --require doc_type --require status --require feature
+  - >
+    PYTHONDONTWRITEBYTECODE=1 python -m py_compile
+    tests/test_hermes_tavern_codestable_status.py
+  - >
+    PYTHONDONTWRITEBYTECODE=1 python -m pytest
+    tests/test_hermes_tavern_codestable_status.py -q -o 'addopts='
+  - >
+    PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts=' -p no:cacheprovider
+  - "git diff --check && git diff --cached --check"
