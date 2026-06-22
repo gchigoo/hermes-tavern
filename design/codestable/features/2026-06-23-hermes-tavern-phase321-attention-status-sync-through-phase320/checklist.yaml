@@ -1,0 +1,256 @@
+doc_type: feature-checklist
+status: accepted
+workflow_status: accepted
+implementation_ready: true
+feature: "2026-06-23-hermes-tavern-phase321-attention-status-sync-through-phase320"
+date: "2026-06-23"
+created: "2026-06-23"
+updated: "2026-06-23"
+owner: standard_lane
+lane: "standard/personal"
+summary: "Sync CodeStable attention current-status and focused static regression through accepted Phase 320 only."
+tags: [hermes-tavern, codestable, attention, status-sync, docs, tests, phase321]
+parent_verification_required: true
+
+selected_phase_slug: "2026-06-23-hermes-tavern-phase321-attention-status-sync-through-phase320"
+acceptance_state: "accepted"
+controller_lane: "standard/personal"
+bounded_phase: "docs/static-test/status-only"
+
+phase_selection_gate:
+  prior_phase: 320
+  prior_phase_feature: "2026-06-22-hermes-tavern-phase320-attention-status-sync-through-phase319"
+  prior_phase_acceptance_path: "design/codestable/features/2026-06-22-hermes-tavern-phase320-attention-status-sync-through-phase319/acceptance.md"
+  prior_phase_required_status: "accepted"
+  prior_phase_confirmed_accepted: true
+  phase321_feature_preexisting: false
+  no_higher_confidence_unfinished_bounded_artifact_present: true
+  selected_slice: "Phase 321 attention/status sync through Phase 320"
+  completed_slice: "Phase 321 attention/status sync through Phase 320"
+  executor_acceptance_finalization: "prohibited"
+
+status_test_contract:
+  attention:
+    current_prefix_before: "Current status (2026-06-18): All phases 1-320 accepted"
+    current_prefix_after: "Current status (2026-06-18): All phases 1-321 accepted"
+    stale_prefix_after_update: "Current status (2026-06-18): All phases 1-320 accepted"
+    append_label: "Phase 321 attention status sync through Phase 320"
+    append_after_label: "Phase 320 attention status sync through Phase 319"
+    forbidden_next_label: "Phase 322 attention/status"
+    final_status_suffix: >-
+      Phase 304 attention status sync through Phase 303, Phase 305 attention status sync through Phase 304,
+      Phase 306 attention status sync through Phase 305, Phase 307 attention status sync through Phase 306,
+      Phase 308 attention status sync through Phase 307, Phase 309 attention status sync through Phase 308,
+      Phase 310 attention status sync through Phase 309, Phase 311 attention status sync through Phase 310,
+      Phase 312 attention status sync through Phase 311, Phase 313 attention status sync through Phase 312,
+      Phase 314 attention status sync through Phase 313, Phase 315 attention status sync through Phase 314,
+      Phase 316 attention status sync through Phase 315, Phase 317 attention status sync through Phase 316,
+      Phase 318 attention status sync through Phase 317, Phase 319 attention status sync through Phase 318,
+      Phase 320 attention status sync through Phase 319, and Phase 321 attention status sync through Phase 320.
+    final_attention_suffix_must_end_with: "Phase 319 attention status sync through Phase 318, Phase 320 attention status sync through Phase 319, and Phase 321 attention status sync through Phase 320."
+  focused_test:
+    current_status_prefix_value: "Current status (2026-06-18): All phases 1-321 accepted"
+    stale_status_prefix_value: "Current status (2026-06-18): All phases 1-320 accepted"
+    stale_phase_marker: "1-320"
+    stale_phase_marker_en_dash: "1–320"
+    required_label_to_append: "Phase 321 attention status sync through Phase 320"
+    forbidden_next_label: "Phase 322 attention/status"
+    final_status_suffix_span: "Phase 304 through Phase 321"
+    phase_range: "range(168, 322)"
+    aggregate_range: "range(168, 322)"
+    stale_aggregate_guard_to_add: "range(168, 321)"
+    stale_aggregate_guards_retained: "existing split guards including range(168, 320), range(168, 319), range(168, 318), and earlier"
+    preserve_single_current_status_prefix_assignment_guard: true
+    single_current_status_prefix_assignment_guard: "re.findall(r\"^CURRENT_STATUS_PREFIX\\s*=\", test, re.M) == [\"CURRENT_STATUS_PREFIX =\"]"
+    preserve_no_discovery_token_guards: true
+    no_discovery_tokens_forbidden:
+      - ".glob("
+      - ".rglob("
+      - "iterdir("
+      - "os.walk"
+
+scope:
+  executor_allowed_files:
+    - "design/codestable/attention.md"
+    - "tests/test_hermes_tavern_codestable_status.py"
+  parent_feature_artifact_files:
+    - "design/codestable/features/2026-06-23-hermes-tavern-phase321-attention-status-sync-through-phase320/design.md"
+    - "design/codestable/features/2026-06-23-hermes-tavern-phase321-attention-status-sync-through-phase320/checklist.yaml"
+    - "design/codestable/features/2026-06-23-hermes-tavern-phase321-attention-status-sync-through-phase320/acceptance.md"
+
+prohibited_files_actions:
+  - "runtime/source/plugin/provider/gateway/CLI files"
+  - "plugins/"
+  - "provider files"
+  - "gateway/"
+  - "run_agent.py"
+  - "cli.py"
+  - "gateway/run.py"
+  - "plugin runtime files"
+  - "credentials"
+  - "root design (HERMES_TAVERN_DESIGN.md)"
+  - "README.md"
+  - "architecture files"
+  - "design/codestable/roadmap/"
+  - "design/codestable/requirements/"
+  - "design/codestable/compound/"
+  - "assets/"
+  - "fixtures/"
+  - "schemas/"
+  - "build outputs"
+  - "dependency/config file changes"
+  - "adult-fiction/RP compatibility changes"
+  - "provider safety bypasses"
+  - "service lifecycle commands"
+  - "edits to existing prior phase feature directories"
+  - "staging by executor"
+  - "commit by executor"
+  - "push by executor"
+  - "messages by executor"
+  - "progress-state updates by executor"
+  - "checklist or acceptance finalization by executor"
+
+steps:
+  - id: S1
+    name: "Executor status sync only"
+    owner: "executor"
+    status: completed
+    completed_at: "2026-06-23"
+    must_not_finalize_checklist_or_acceptance: true
+    allowed_files:
+      - "design/codestable/attention.md"
+      - "tests/test_hermes_tavern_codestable_status.py"
+    checks:
+      - id: C1
+        name: "Update attention.md prefix from 1-320 to 1-321 and append Phase 321 label exactly once"
+        source: "status_test_contract"
+        status: completed
+        evidence: "PASS — parent controller verified this check after Codex executor S1; see acceptance.md and verification_commands for command evidence."
+      - id: C2
+        name: "Preserve Phase 121-167 and every explicit Phase 168 through Phase 320 label"
+        source: "status_test_contract"
+        status: completed
+        evidence: "PASS — parent controller verified this check after Codex executor S1; see acceptance.md and verification_commands for command evidence."
+      - id: C3
+        name: "Do not add any Phase 322 attention/status label"
+        source: "scope guard"
+        status: completed
+        evidence: "PASS — parent controller verified this check after Codex executor S1; see acceptance.md and verification_commands for command evidence."
+      - id: C4
+        name: "Update focused test constants, required label, final suffix, phase_range, and aggregate_range"
+        source: "status_test_contract"
+        status: completed
+        evidence: "PASS — parent controller verified this check after Codex executor S1; see acceptance.md and verification_commands for command evidence."
+      - id: C5
+        name: "Add split stale aggregate guard for range(168, 321) and retain older split stale guards including 320, 319, and 318"
+        source: "status_test_contract"
+        status: completed
+        evidence: "PASS — parent controller verified this check after Codex executor S1; see acceptance.md and verification_commands for command evidence."
+      - id: C6
+        name: "Preserve no-discovery-token guards and single CURRENT_STATUS_PREFIX assignment guard"
+        source: "static guard expectations"
+        status: completed
+        evidence: "PASS — parent controller verified this check after Codex executor S1; see acceptance.md and verification_commands for command evidence."
+      - id: C7
+        name: "Touch only executor allowed files"
+        source: "allowed files"
+        status: completed
+        evidence: "PASS — parent controller verified this check after Codex executor S1; see acceptance.md and verification_commands for command evidence."
+      - id: C8
+        name: "Do not finalize checklist or acceptance"
+        source: "executor boundary"
+        status: completed
+        evidence: "PASS — parent controller verified this check after Codex executor S1; see acceptance.md and verification_commands for command evidence."
+
+  - id: S2
+    name: "Parent-controller verification and feature-artifact-only closeout"
+    owner: "parent-controller"
+    status: completed
+    completed_at: "2026-06-23"
+    allowed_files:
+      - "design/codestable/features/2026-06-23-hermes-tavern-phase321-attention-status-sync-through-phase320/design.md"
+      - "design/codestable/features/2026-06-23-hermes-tavern-phase321-attention-status-sync-through-phase320/checklist.yaml"
+      - "design/codestable/features/2026-06-23-hermes-tavern-phase321-attention-status-sync-through-phase320/acceptance.md"
+    checks:
+      - id: C9
+        name: "YAML/frontmatter validation on Phase 321 feature directory"
+        source: "verification"
+        status: completed
+        evidence: "PASS — parent controller verified this check after Codex executor S1; see acceptance.md and verification_commands for command evidence."
+      - id: C10
+        name: "py_compile on focused test"
+        source: "verification"
+        status: completed
+        evidence: "PASS — parent controller verified this check after Codex executor S1; see acceptance.md and verification_commands for command evidence."
+      - id: C11
+        name: "Focused pytest status test"
+        source: "verification"
+        status: completed
+        evidence: "PASS — parent controller verified this check after Codex executor S1; see acceptance.md and verification_commands for command evidence."
+      - id: C12
+        name: "Full pytest suite"
+        source: "verification"
+        status: completed
+        evidence: "PASS — parent controller verified this check after Codex executor S1; see acceptance.md and verification_commands for command evidence."
+      - id: C13
+        name: "Static stale-marker, suffix, no-discovery, and protected-path guards"
+        source: "verification"
+        status: completed
+        evidence: "PASS — parent controller verified this check after Codex executor S1; see acceptance.md and verification_commands for command evidence."
+      - id: C14
+        name: "Allowlist guard for changed/untracked paths"
+        source: "verification"
+        status: completed
+        evidence: "PASS — parent controller verified this check after Codex executor S1; see acceptance.md and verification_commands for command evidence."
+      - id: C15
+        name: "git diff whitespace checks"
+        source: "verification"
+        status: completed
+        evidence: "PASS — parent controller verified this check after Codex executor S1; see acceptance.md and verification_commands for command evidence."
+      - id: C16
+        name: "Checklist and acceptance remain non-final until parent verification passes"
+        source: "parent controller boundary"
+        status: completed
+        evidence: "PASS — parent controller verified this check after Codex executor S1; see acceptance.md and verification_commands for command evidence."
+
+verification_commands:
+  - id: V1
+    owner: "parent-controller"
+    status: passed
+    command: >-
+      PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py
+      --dir design/codestable/features/2026-06-23-hermes-tavern-phase321-attention-status-sync-through-phase320
+      --require doc_type --require status --require feature
+  - id: V2
+    owner: "executor-or-parent"
+    status: passed
+    command: >-
+      PYTHONDONTWRITEBYTECODE=1 python -m py_compile
+      tests/test_hermes_tavern_codestable_status.py
+  - id: V3
+    owner: "executor-or-parent"
+    status: passed
+    command: >-
+      PYTHONDONTWRITEBYTECODE=1 python -m pytest
+      tests/test_hermes_tavern_codestable_status.py -q -o 'addopts='
+  - id: V4
+    owner: "parent-controller"
+    status: passed
+    command: >-
+      PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts=' -p no:cacheprovider
+  - id: V5
+    owner: "parent-controller"
+    status: passed
+    command: "git diff --check"
+  - id: V6
+    owner: "parent-controller"
+    status: passed
+    command: "git diff --cached --check"
+
+static_verification_contract:
+  - "No stale standalone 1-320 patterns remain in the attention current-status bullet after update."
+  - "Focused test stale 1-320 markers are intentional only in STALE_STATUS_PREFIX, STALE_PHASE_MARKER, and STALE_PHASE_MARKER_EN_DASH."
+  - "No Phase 322 attention/status label exists in attention.md or the focused status label list."
+  - "Exactly one anchored CURRENT_STATUS_PREFIX assignment exists in the focused test."
+  - "No .glob(, .rglob(, iterdir(, or os.walk tokens exist in the focused test source."
+  - "Changed and untracked paths are limited to executor allowed files plus parent Phase 321 artifact files."
