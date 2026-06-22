@@ -1,0 +1,129 @@
+doc_type: feature-checklist
+status: accepted
+workflow_status: accepted
+implementation_ready: true
+feature: "2026-06-22-hermes-tavern-phase314-attention-status-sync-through-phase313"
+date: "2026-06-22"
+created: "2026-06-22"
+updated: "2026-06-22"
+owner: company-boost
+summary: "Sync CodeStable attention current-status and focused static regression through accepted Phase 313 only."
+tags: [hermes-tavern, codestable, attention, status-sync, docs, tests, phase314]
+parent_verification_required: true
+
+selected_phase_slug: "2026-06-22-hermes-tavern-phase314-attention-status-sync-through-phase313"
+acceptance_state: "accepted"
+
+phase_selection_gate:
+  prior_phase: 313
+  prior_phase_feature: "2026-06-22-hermes-tavern-phase313-attention-status-sync-through-phase312"
+  prior_phase_acceptance_path: "design/codestable/features/2026-06-22-hermes-tavern-phase313-attention-status-sync-through-phase312/acceptance.md"
+  prior_phase_required_status: "accepted"
+  prior_phase_confirmed_accepted: true
+  selected_slice: "Phase 314 attention/status sync through Phase 313"
+  completed_slice: "Phase 314 attention/status sync through Phase 313"
+
+allowed_files:
+  - design/codestable/attention.md
+  - tests/test_hermes_tavern_codestable_status.py
+  - design/codestable/features/2026-06-22-hermes-tavern-phase314-attention-status-sync-through-phase313/design.md
+  - design/codestable/features/2026-06-22-hermes-tavern-phase314-attention-status-sync-through-phase313/checklist.yaml
+  - design/codestable/features/2026-06-22-hermes-tavern-phase314-attention-status-sync-through-phase313/acceptance.md
+
+prohibited_files_actions:
+  - "runtime/source/plugin/provider/gateway/CLI files"
+  - "plugins/"
+  - "provider files"
+  - "gateway/"
+  - "run_agent.py"
+  - "cli.py"
+  - "gateway/run.py"
+  - "plugin runtime files"
+  - "credentials"
+  - "root design (HERMES_TAVERN_DESIGN.md)"
+  - "README.md"
+  - "architecture (docs/ARCHITECTURE.md)"
+  - "design/codestable/roadmap/"
+  - "design/codestable/requirements/"
+  - "design/codestable/compound/"
+  - "docs/"
+  - "assets/"
+  - "fixtures/"
+  - "build outputs"
+  - "dependency/config file changes"
+  - "edits to existing prior phase feature directories"
+  - "service lifecycle commands"
+
+steps:
+  - id: S1
+    name: "Sync status artifacts"
+    status: completed
+    checks:
+      - id: C1
+        name: "Update attention.md prefix from 1-313 to 1-314 and append Phase 314 label"
+        status: completed
+        command: >
+          grep -c 'All phases 1-314 accepted' design/codestable/attention.md
+        verification: "PASS — at least 1 line"
+      - id: C2
+        name: "Update focused test constants and labels"
+        status: completed
+        verification: "PASS — CURRENT_STATUS_PREFIX = 1-314, STALE = 1-313, labels include Phase 314"
+      - id: C3
+        name: "Update focusing suffix and aggregate range"
+        status: completed
+        verification: "PASS — FINAL_STATUS_SUFFIX updated, range(168, 315), aggregate_range = range(168, 315)"
+      - id: C4
+        name: "Add split stale aggregate guard for range(168, 314)"
+        status: completed
+        verification: "PASS — stale_aggregate_range_314 exists and in stale_aggregate tuple"
+      - id: C5
+        name: "YAML frontmatter validation on Phase 314 feature directory"
+        status: completed
+        command: >
+          PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py
+          --dir design/codestable/features/2026-06-22-hermes-tavern-phase314-attention-status-sync-through-phase313
+          --require doc_type --require status --require feature
+        verification: "PASS — 2 files, 2 passed"
+      - id: C6
+        name: "py_compile on focused test"
+        status: completed
+        command: >
+          PYTHONDONTWRITEBYTECODE=1 python -m py_compile
+          tests/test_hermes_tavern_codestable_status.py
+        verification: "PASS — exit 0"
+      - id: C7
+        name: "Focused pytest"
+        status: completed
+        command: >
+          PYTHONDONTWRITEBYTECODE=1 python -m pytest
+          tests/test_hermes_tavern_codestable_status.py -q -o 'addopts='
+        verification: "PASS — 1 passed"
+      - id: C8
+        name: "Full pytest suite"
+        status: completed
+        command: >
+          PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts='
+        verification: "PASS — 1215 passed"
+      - id: C9
+        name: "git diff --check"
+        status: completed
+        command: "git diff --check && git diff --cached --check"
+        verification: "PASS — no whitespace errors"
+
+  - id: S2
+    name: "Verify and prepare parent handoff"
+    status: completed
+    checks:
+      - id: C10
+        name: "Allowlist guard: only expected files changed/untracked"
+        status: completed
+        verification: "PASS — only design/codestable/attention.md, tests/..., and feature dir"
+      - id: C11
+        name: "Attention stale marker absence"
+        status: completed
+        verification: "PASS — no 'All phases 1-313 accepted' standalone marker in attention.md"
+      - id: C12
+        name: "Test stale marker guard correctness"
+        status: completed
+        verification: "PASS — STALE_STATUS_PREFIX, stale markers, split stale aggregate guards for range(168, 314) present"
