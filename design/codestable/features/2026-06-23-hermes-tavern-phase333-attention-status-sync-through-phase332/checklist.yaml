@@ -1,20 +1,25 @@
 doc_type: feature-checklist
-status: planned
-workflow_status: planned
-acceptance_state: not_started
+status: accepted
+workflow_status: accepted
+acceptance_state: accepted
 worker_commit_or_push_performed: false
+parent_commit_or_push_performed: true
+parent_closeout_verification: passed
 feature: 2026-06-23-hermes-tavern-phase333-attention-status-sync-through-phase332
 date: "2026-06-23"
 created: "2026-06-23"
 updated: "2026-06-23"
 owner: company_boost_lane
 lane: company-boost/parent-verified-artifact
+selected_scope: status-docs-tests-only
 bounded_phase: docs/static-test/status-only
 selected_phase_slug: 2026-06-23-hermes-tavern-phase333-attention-status-sync-through-phase332
 selected_title: "Phase 333: Attention Status Sync Through Phase 332"
 implementation_ready: true
-summary: "Artifact-only planning contract for Phase 333 status-sync through Phase 332."
-selected_slice: "Phase 333 future contract (artifact-only)"
+summary: "Phase 333 status/docs/test-only closeout advanced attention to phase 333, updated focused status guards, and created acceptance evidence."
+selected_slice: "Phase 333 status-sync and closeout"
+acceptance_artifact: design/codestable/features/2026-06-23-hermes-tavern-phase333-attention-status-sync-through-phase332/acceptance.md
+controller_lane: company-boost
 
 phase_selection_gate:
   prior_phase: 332
@@ -22,34 +27,36 @@ phase_selection_gate:
   prior_phase_acceptance_path: design/codestable/features/2026-06-23-hermes-tavern-phase332-attention-status-sync-through-phase331/acceptance.md
   prior_phase_required_status: accepted
   prior_phase_confirmed_accepted: true
-  attention_currently_synced_through_phase: 332
-  focused_test_currently_synced_through_phase: 332
-  selected_scope: artifact-only
-  status_change_in_slice: disallowed
+  attention_was_synced_through_phase_before_slice: 332
+  focused_test_was_synced_through_phase_before_slice: 332
+  attention_synced_through_phase_after_slice: 333
+  focused_test_synced_through_phase_after_slice: 333
+  selected_scope: status-docs-tests-only
+  status_change_in_slice: allowed_and_completed
 
 status_test_contract:
   current_live:
     attention:
-      current_prefix_must_be: "Current status (2026-06-18): All phases 1-332 accepted"
-      required_terminal_label_exactly_once: "Phase 332 attention status sync through Phase 331"
+      current_prefix_must_be: "Current status (2026-06-18): All phases 1-333 accepted"
+      required_terminal_label_exactly_once: "Phase 333 attention status sync through Phase 332"
+      previous_terminal_label_preserved: "Phase 332 attention status sync through Phase 331"
       stale_status_prefix: "Current status (2026-06-18): All phases 1-332 accepted"
       stale_phase_marker: "1-332"
       stale_phase_marker_en_dash: "1–332"
-  future_contract:
-    attention:
-      current_prefix_must_be: "Current status (2026-06-18): All phases 1-333 accepted"
-      required_label_exactly_once: "Phase 333 attention status sync through Phase 332"
+    focused_test:
       phase_range_must_be: "range(168, 334)"
       aggregate_range_must_be: "range(168, 334)"
       split_stale_guard_must_be: "range(168, 333)"
+      current_status_prefix_assignments: 1
 
 scope:
   executor_allowed_files:
-    - design/codestable/features/2026-06-23-hermes-tavern-phase333-attention-status-sync-through-phase332/design.md
-    - design/codestable/features/2026-06-23-hermes-tavern-phase333-attention-status-sync-through-phase332/checklist.yaml
-  future_status_sync_allowed_files:
     - design/codestable/attention.md
     - tests/test_hermes_tavern_codestable_status.py
+    - design/codestable/features/2026-06-23-hermes-tavern-phase333-attention-status-sync-through-phase332/checklist.yaml
+    - design/codestable/features/2026-06-23-hermes-tavern-phase333-attention-status-sync-through-phase332/acceptance.md
+  design_read_only_file:
+    - design/codestable/features/2026-06-23-hermes-tavern-phase333-attention-status-sync-through-phase332/design.md
   prohibited:
     - source
     - runtime
@@ -69,33 +76,77 @@ scope:
     - discovery_token_broadening
     - minor_work
 
+codex_jsonl:
+  architect_plan: /tmp/hermes_tavern_companyboost_architect_20260623_160504_phase333_s2.jsonl
+  executor_implementation: /tmp/hermes_tavern_companyboost_executor_20260623_160504_phase333_s2.jsonl
+  architect_review: /tmp/hermes_tavern_companyboost_architect_review_20260623_160504_phase333_s2.jsonl
+
 steps:
   - id: S1
-    name: Materialize planned Phase 333 artifact files
+    name: Execute status/docs/tests closeout updates for Phase 333
     owner: executor
-    status: passed
+    status: completed
     checks:
       - id: C1
-        name: "Create/update design.md for artifact-only future contract"
+        name: "Update attention.md with terminal Phase 333 label and 1-333 current status"
         status: passed
       - id: C2
-        name: "Create/update checklist.yaml with planned status and future-only contract"
+        name: "Update focused status test with Phase 333 label, stale 1-332 negatives, and range(168, 334) guards"
+        status: passed
+      - id: C3
+        name: "Create acceptance.md for closeout scope"
+        status: passed
+      - id: C4
+        name: "Update checklist.yaml from artifact-only planning to accepted closeout truth"
         status: passed
 
   - id: S2
-    name: Execute requested checks in this slice
-    owner: executor
-    status: passed
+    name: Worker/controller verification
+    owner: worker-controller
+    status: completed
     checks:
-      - id: C3
-        name: "Run validate-yaml on this feature directory"
-        status: passed
-      - id: C4
-        name: "Run py_compile on status test file"
-        status: passed
       - id: C5
-        name: "Run focused pytest for status test"
+        name: "validate-yaml on Phase 333 feature directory"
         status: passed
+        command: "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --dir design/codestable/features/2026-06-23-hermes-tavern-phase333-attention-status-sync-through-phase332 --require doc_type --require status --require feature"
+        observed: "Validated 3 file(s): 3 passed, 0 failed."
       - id: C6
-        name: "Run git diff --check"
+        name: "py_compile status test"
         status: passed
+        command: "PYTHONDONTWRITEBYTECODE=1 python -m py_compile tests/test_hermes_tavern_codestable_status.py"
+        observed: "exit 0"
+      - id: C7
+        name: "focused pytest for status test"
+        status: passed
+        command: "PYTHONDONTWRITEBYTECODE=1 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python -m pytest tests/test_hermes_tavern_codestable_status.py -q -o addopts= -p no:cacheprovider"
+        observed: "1 passed in 0.04s"
+      - id: C8
+        name: "static changed-file/status/protected-scope guard"
+        status: passed
+        command: "PYTHONDONTWRITEBYTECODE=1 python /tmp/hermes_tavern_phase333_static_guard.py"
+        observed: "STATIC_GUARD_OK for the four allowed files"
+      - id: C9
+        name: "git diff whitespace check"
+        status: passed
+        command: "git diff --check"
+        observed: "exit 0"
+      - id: C10
+        name: "full pytest baseline"
+        status: passed
+        command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o addopts= -p no:cacheprovider"
+        observed: "1215 passed in 68.79s (0:01:08)"
+
+  - id: S3
+    name: Architect review and parent closeout
+    owner: worker-controller,parent-controller
+    status: completed
+    checks:
+      - id: C11
+        name: "Read-only Codex architect review"
+        status: passed
+        command: "codex --profile architect exec --json --color never --disable image_generation --sandbox read-only --cd /Users/steven/Projects/hermes-tavern <review prompt>"
+        observed: "PASS in /tmp/hermes_tavern_companyboost_architect_review_20260623_160504_phase333_s2.jsonl"
+      - id: C12
+        name: "Parent-controller verification before commit/push"
+        status: passed
+        observed: "Parent reran validate-yaml, py_compile, focused status pytest, static guard, git diff --check, and full pytest (1215 passed)."
