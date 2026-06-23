@@ -1,0 +1,179 @@
+doc_type: feature-checklist
+status: accepted
+workflow_status: accepted
+implementation_ready: true
+feature: 2026-06-23-hermes-tavern-phase326-attention-status-sync-through-phase325
+date: "2026-06-23"
+created: "2026-06-23"
+updated: "2026-06-23"
+owner: standard_lane
+lane: standard/personal
+summary: "Sync CodeStable attention current-status and focused static regression through accepted Phase 325 only."
+tags:
+  - hermes-tavern
+  - codestable
+  - attention
+  - status-sync
+  - docs
+  - tests
+  - phase326
+parent_verification_required: true
+selected_phase_slug: 2026-06-23-hermes-tavern-phase326-attention-status-sync-through-phase325
+acceptance_state: pending
+controller_lane: standard/personal
+bounded_phase: docs/static-test/status-only
+
+phase_selection_gate:
+  prior_phase: 325
+  prior_phase_feature: 2026-06-23-hermes-tavern-phase325-attention-status-sync-through-phase324
+  prior_phase_acceptance_path: design/codestable/features/2026-06-23-hermes-tavern-phase325-attention-status-sync-through-phase324/acceptance.md
+  prior_phase_required_status: accepted
+  prior_phase_confirmed_accepted: true
+  attention_currently_synced_through_phase: 325
+  focused_test_currently_synced_through_phase: 325
+  phase326_feature_preexisting: false
+  no_higher_confidence_unfinished_bounded_artifact_present: true
+  selected_slice: "Phase 326 attention/status sync through Phase 325"
+  executor_acceptance_finalization: prohibited
+
+status_test_contract:
+  attention:
+    current_prefix_before: "Current status (2026-06-18): All phases 1-325 accepted"
+    current_prefix_after: "Current status (2026-06-18): All phases 1-326 accepted"
+    stale_prefix_after_update: "Current status (2026-06-18): All phases 1-325 accepted"
+    append_label: "Phase 326 attention status sync through Phase 325"
+    append_after_label: "Phase 325 attention status sync through Phase 324"
+    forbidden_next_label: "Phase 327 attention/status"
+    final_attention_suffix_must_end_with: "Phase 324 attention status sync through Phase 323, Phase 325 attention status sync through Phase 324, and Phase 326 attention status sync through Phase 325."
+  focused_test:
+    current_status_prefix_value: "Current status (2026-06-18): All phases 1-326 accepted"
+    stale_status_prefix_value: "Current status (2026-06-18): All phases 1-325 accepted"
+    stale_phase_marker: "1-325"
+    stale_phase_marker_en_dash: "1–325"
+    required_label_to_append: "Phase 326 attention status sync through Phase 325"
+    preserve_required_labels_through_phase: 325
+    forbidden_next_label: "Phase 327 attention/status"
+    final_status_suffix_span: "Phase 305 through Phase 326"
+    final_status_suffix_has_single_final_and_before_phase326: true
+    phase_range: "range(168, 327)"
+    aggregate_range: "range(168, 327)"
+    stale_aggregate_guard_to_add: "range(168, 326)"
+    stale_aggregate_guards_retained:
+      - "range(168, 325)"
+      - "range(168, 324)"
+      - "range(168, 323)"
+      - "range(168, 322)"
+      - "range(168, 321)"
+      - "range(168, 320)"
+      - "range(168, 319)"
+      - "range(168, 318)"
+      - "earlier split stale aggregate guards"
+    preserve_single_current_status_prefix_assignment_guard: true
+    preserve_no_discovery_token_guards: true
+
+scope:
+  executor_allowed_files:
+    - design/codestable/attention.md
+    - tests/test_hermes_tavern_codestable_status.py
+  parent_feature_artifact_files:
+    - design/codestable/features/2026-06-23-hermes-tavern-phase326-attention-status-sync-through-phase325/design.md
+    - design/codestable/features/2026-06-23-hermes-tavern-phase326-attention-status-sync-through-phase325/checklist.yaml
+    - design/codestable/features/2026-06-23-hermes-tavern-phase326-attention-status-sync-through-phase325/acceptance.md
+  protected_files:
+    - run_agent.py
+    - cli.py
+    - gateway/run.py
+  executor_forbidden_files:
+    - design/codestable/features/2026-06-23-hermes-tavern-phase326-attention-status-sync-through-phase325/design.md
+    - design/codestable/features/2026-06-23-hermes-tavern-phase326-attention-status-sync-through-phase325/checklist.yaml
+    - design/codestable/features/2026-06-23-hermes-tavern-phase326-attention-status-sync-through-phase325/acceptance.md
+    - runtime/source/plugin/provider/gateway/CLI files
+    - plugins/
+    - provider files
+    - gateway/
+    - run_agent.py
+    - cli.py
+    - gateway/run.py
+    - plugin runtime files
+    - credentials
+    - root design
+    - README.md
+    - architecture files
+    - design/codestable/requirements/
+    - design/codestable/compound/
+    - assets/
+    - fixtures/
+    - schemas/
+    - build outputs
+    - dependency/config file changes
+    - existing prior phase feature directories
+
+steps:
+  - id: S1
+    name: Executor status sync only
+    owner: executor
+    status: pending
+    must_not_finalize_checklist_or_acceptance: true
+    allowed_files:
+      - design/codestable/attention.md
+      - tests/test_hermes_tavern_codestable_status.py
+    checks:
+      - id: C1
+        name: "Update attention.md prefix from 1-325 to 1-326 and append Phase 326 label exactly once"
+        status: pending
+      - id: C2
+        name: "Preserve Phase 121-167 and every explicit Phase 168 through Phase 325 label"
+        status: pending
+      - id: C3
+        name: "Do not add any Phase 327 attention/status label"
+        status: pending
+      - id: C4
+        name: "Update focused test constants, required label, final suffix, phase_range, and aggregate_range"
+        status: pending
+      - id: C5
+        name: "Add split stale aggregate guard for range(168, 326) and retain older split stale guards including 325 through 318"
+        status: pending
+      - id: C6
+        name: "Preserve no-discovery-token guards and single CURRENT_STATUS_PREFIX assignment guard"
+        status: pending
+      - id: C7
+        name: "Touch only executor allowed files"
+        status: pending
+      - id: C8
+        name: "Do not finalize checklist or acceptance"
+        status: pending
+
+  - id: S2
+    name: Parent-controller verification and feature-artifact-only closeout
+    owner: parent-controller
+    status: pending
+    parent_verification_required: true
+    allowed_files:
+      - design/codestable/features/2026-06-23-hermes-tavern-phase326-attention-status-sync-through-phase325/design.md
+      - design/codestable/features/2026-06-23-hermes-tavern-phase326-attention-status-sync-through-phase325/checklist.yaml
+      - design/codestable/features/2026-06-23-hermes-tavern-phase326-attention-status-sync-through-phase325/acceptance.md
+    checks:
+      - id: C9
+        name: "YAML/frontmatter validation on Phase 326 feature directory"
+        status: pending
+      - id: C10
+        name: "py_compile on focused test"
+        status: pending
+      - id: C11
+        name: "Focused pytest status test"
+        status: pending
+      - id: C12
+        name: "Full pytest suite"
+        status: pending
+      - id: C13
+        name: "Static stale-marker, suffix, no-discovery, and protected-path guards"
+        status: pending
+      - id: C14
+        name: "Allowlist guard for changed/untracked paths"
+        status: pending
+      - id: C15
+        name: "git diff whitespace checks"
+        status: pending
+      - id: C16
+        name: "Checklist and acceptance remain non-final until parent verification passes"
+        status: pending
