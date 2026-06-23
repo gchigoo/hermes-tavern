@@ -1,0 +1,117 @@
+doc_type: feature-checklist
+status: planned
+workflow_status: planned
+acceptance_state: not_started
+implementation_ready: false
+worker_commit_or_push_performed: false
+parent_commit_or_push_performed: false
+parent_closeout_verification: not_started
+feature: 2026-06-23-hermes-tavern-phase334-attention-status-sync-through-phase333
+date: "2026-06-23"
+created: "2026-06-23"
+updated: "2026-06-23"
+owner: company_boost_lane
+lane: company-boost/parent-verified-artifact
+bounded_phase: docs/static-test/status-only
+result_type: planning_only
+selected_scope: artifact-only-planning
+selected_phase_slug: 2026-06-23-hermes-tavern-phase334-attention-status-sync-through-phase333
+selected_title: "Phase 334: Attention Status Sync Through Phase 333"
+summary: "Planning-only Phase 334 artifact contract; live attention/status test remain at Phase 333."
+acceptance_artifact: not_created_for_planning_only
+controller_lane: company-boost
+
+phase_selection_gate:
+  prior_phase: 333
+  prior_phase_feature: 2026-06-23-hermes-tavern-phase333-attention-status-sync-through-phase332
+  prior_phase_acceptance_path: design/codestable/features/2026-06-23-hermes-tavern-phase333-attention-status-sync-through-phase332/acceptance.md
+  prior_phase_required_status: accepted
+  prior_phase_confirmed_accepted: true
+  attention_currently_synced_through_phase: 333
+  focused_test_currently_synced_through_phase: 333
+  phase334_feature_preexisting: false
+  status_advancement_in_slice: forbidden
+  acceptance_creation_in_slice: forbidden
+
+status_test_contract:
+  current_live_must_remain:
+    attention_prefix: "Current status (2026-06-18): All phases 1-333 accepted"
+    terminal_label: "Phase 333 attention status sync through Phase 332"
+    focused_phase_range: "range(168, 334)"
+    focused_aggregate_range: "range(168, 334)"
+    focused_split_stale_guard: "range(168, 333)"
+  future_phase334_contract_not_to_apply_in_this_slice:
+    eventual_prefix: "Current status (2026-06-18): All phases 1-334 accepted"
+    eventual_label: "Phase 334 attention status sync through Phase 333"
+    stale_prefix: "Current status (2026-06-18): All phases 1-333 accepted"
+    stale_phase_marker: "1-333"
+    stale_phase_marker_en_dash: "1–333"
+    future_phase_range: "range(168, 335)"
+    future_aggregate_range: "range(168, 335)"
+    split_stale_guard: "range(168, 334)"
+
+scope:
+  executor_allowed_files:
+    - design/codestable/features/2026-06-23-hermes-tavern-phase334-attention-status-sync-through-phase333/design.md
+    - design/codestable/features/2026-06-23-hermes-tavern-phase334-attention-status-sync-through-phase333/checklist.yaml
+  prohibited:
+    - run_agent.py
+    - cli.py
+    - gateway/run.py
+    - runtime
+    - source
+    - plugin
+    - provider
+    - gateway
+    - config
+    - dependency
+    - root_README
+    - root_design
+    - architecture
+    - roadmap
+    - requirements
+    - compound
+    - build
+    - discovery_token_broadening
+    - service_lifecycle_commands
+    - commit
+    - push
+    - minors_related_work
+
+steps:
+  - id: S1
+    name: Materialize Phase 334 planning artifacts only
+    owner: worker-controller
+    status: planned
+    checks:
+      - id: C1
+        name: "Create design.md with planned/non-final Phase 334 contract"
+        status: planned
+      - id: C2
+        name: "Create checklist.yaml with planned workflow and not_started acceptance"
+        status: planned
+      - id: C3
+        name: "Do not create acceptance.md"
+        status: planned
+      - id: C4
+        name: "Do not edit attention.md or focused status test"
+        status: planned
+
+  - id: S2
+    name: Controller verification and parent handoff
+    owner: worker-controller,parent-controller
+    status: planned
+    checks:
+      - id: C5
+        name: "validate-yaml on Phase 334 feature directory"
+        status: planned
+        command: "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --dir design/codestable/features/2026-06-23-hermes-tavern-phase334-attention-status-sync-through-phase333 --require doc_type --require status --require feature"
+      - id: C6
+        name: "git status allowlist equals exactly two Phase 334 artifacts"
+        status: planned
+      - id: C7
+        name: "git diff --check"
+        status: planned
+      - id: C8
+        name: "Confirm no runtime/source/plugin/provider/gateway/config/dependency/root-doc changes"
+        status: planned
