@@ -1,16 +1,16 @@
 ---
 doc_type: feature-design
-status: planned
-workflow_status: planned
+status: approved
+workflow_status: in_progress
 feature: 2026-06-23-hermes-tavern-phase334-attention-status-sync-through-phase333
 date: "2026-06-23"
 owner: company_boost_lane
 lane: company-boost/parent-verified-artifact
 bounded_phase: "docs/static-test/status-only"
-implementation_ready: false
-result_type: planning_only
+implementation_ready: true
+result_type: status_sync_s1
 tags: [hermes-tavern, codestable, attention, status-sync, docs, tests, phase334]
-summary: "Artifact-only planning contract for Phase 334 status-sync work through Phase 333."
+summary: "S1 implements attention status sync through Phase 333 and leaves parent verification pending for Phase334 closeout."
 ---
 
 # Phase 334: Attention Status Sync Through Phase 333
@@ -18,69 +18,69 @@ summary: "Artifact-only planning contract for Phase 334 status-sync work through
 ## Gate
 
 - Prior phase acceptance exists at `design/codestable/features/2026-06-23-hermes-tavern-phase333-attention-status-sync-through-phase332/acceptance.md`.
-- Phase 333 checklist and acceptance are already accepted; live `attention.md` and the focused status test are synced through Phase 333.
-- No Phase 334 feature directory existed before this planning-only slice.
-- This slice is explicitly artifact-only and **does not** advance live status lines or focused tests.
+- Phase 333 checklist and acceptance are already accepted; S1 sync is now expected to advance live `attention.md` and focused status test through Phase 333.
+- A Phase 334 artifact directory already preexisted before this slice.
+- This slice is executor-focused and status-sync only, with no acceptance closeout in this phase.
 
 ## Goals
 
-- Define the future Phase 334 attention/status-sync contract.
-- Preserve current live status at Phase 333 during this slice.
-- Materialize only two planning artifacts:
+- Implement S1 status-sync contract execution alignment for Phase 334 through accepted Phase 333.
+- Apply and verify the non-final Phase 334 live contract while parent-verified closeout remains pending.
+- Materialize non-final status artifacts and checklist updates:
   - `design/codestable/features/2026-06-23-hermes-tavern-phase334-attention-status-sync-through-phase333/design.md`
   - `design/codestable/features/2026-06-23-hermes-tavern-phase334-attention-status-sync-through-phase333/checklist.yaml`
-- Keep the next executor/parent-controller handoff clear without claiming implementation, acceptance, commit, or push.
+- Keep the next executor/parent-controller handoff clear while pending parent verification.
 
 ## Non-Goals
 
 - No `acceptance.md` for Phase 334 in this slice.
-- No edits to `design/codestable/attention.md`.
-- No edits to `tests/test_hermes_tavern_codestable_status.py`.
+- No commit, staging, or push in this slice.
 - No runtime/source/plugin/provider/gateway/CLI/config/dependency/root-doc work.
 - No minors-related work and no provider-safety bypass.
 
-## Exact Future Status Contract
+## Exact S1 Status Contract
 
-When a later approved implementation/closeout slice advances Phase 334, it should apply these values:
+This S1 implementation applies these values to the live attention/status test contract while leaving acceptance closeout pending:
 
-- eventual attention prefix:
+- S1 attention prefix:
   - `Current status (2026-06-18): All phases 1-334 accepted`
-- eventual attention label:
+- S1 attention label:
   - `Phase 334 attention status sync through Phase 333`
-- future stale prefix/markers:
+- S1 stale prefix/markers:
   - `Current status (2026-06-18): All phases 1-333 accepted`
   - `1-333`
   - `1–333`
-- future `phase_range`:
+- S1 `phase_range`:
   - `range(168, 335)`
-- future `aggregate_range`:
+- S1 `aggregate_range`:
   - `range(168, 335)`
-- future split stale guard:
+- S1 split stale guard:
   - `range(168, 334)`
 
-## Current Live Status Must Remain
+## Current Live Status (S1)
 
-For this planning-only slice, live files must remain at the Phase 333 contract:
+S1 advances the live status-sync contract to Phase 334 through accepted Phase 333. Parent verification for final closeout remains pending.
 
-- `design/codestable/attention.md` prefix stays:
-  - `Current status (2026-06-18): All phases 1-333 accepted`
-- Terminal live label remains:
-  - `Phase 333 attention status sync through Phase 332`
-- `tests/test_hermes_tavern_codestable_status.py` remains at:
-  - `phase_range = range(168, 334)`
-  - `aggregate_range = "range(168, 334)"`
-  - split stale guard for `range(168, 333)`
+- `design/codestable/attention.md` should be at:
+  - `Current status (2026-06-18): All phases 1-334 accepted`
+  - terminal label: `Phase 334 attention status sync through Phase 333`
+- `tests/test_hermes_tavern_codestable_status.py` should be at:
+  - `phase_range = range(168, 335)`
+  - `aggregate_range = "range(168, 335)"`
+  - split stale guard for `range(168, 334)`
 
 ## Allowed Files For This Slice
 
-Exactly these new planning files are allowed:
+S1 and this executor fix allow these files:
 
 - `design/codestable/features/2026-06-23-hermes-tavern-phase334-attention-status-sync-through-phase333/design.md`
 - `design/codestable/features/2026-06-23-hermes-tavern-phase334-attention-status-sync-through-phase333/checklist.yaml`
+- `design/codestable/attention.md`
+- `tests/test_hermes_tavern_codestable_status.py`
 
-## Future Implementation Scope
+## Future Closeout Scope
 
-If a later separately approved slice implements Phase 334 closeout, it may update the live attention/status contract and focused test according to the future values above, then create acceptance evidence. That is intentionally out of scope here.
+If a later separately approved slice performs Phase 334 closeout, it may create acceptance evidence and finalize checklist status after parent verification. That is intentionally out of scope here.
 
 ## Prohibited Scope
 
@@ -100,11 +100,14 @@ This slice preserves Hermes-native plugin architecture and SillyTavern asset com
 ## Verification Criteria
 
 - `validate-yaml.py` passes for this feature directory with required `doc_type`, `status`, and `feature` metadata.
-- `git status --short --untracked-files=all` shows exactly the two Phase 334 planning artifacts as dirty/untracked.
+- `git status --short --untracked-files=all` is limited to the S1 allowed files and no forbidden-path edits, with acceptance closeout still pending.
 - `git diff --check` passes.
-- A static guard confirms no `acceptance.md`, no live status/test changes, no protected-scope changes, and no trailing whitespace/missing final newlines in the new files.
-- Full pytest may be left to the parent controller for this planning-only slice because no runtime or tests are changed.
+- A static guard confirms no `acceptance.md`, no forbidden-scope edits, and no trailing whitespace/missing final newlines in the modified files.
 
 ## Executor Instructions
 
-Executor may be skipped for this `planning_only` result. If policy requires an executor pass, it must be restricted to materializing only `design.md` and `checklist.yaml` from this approved contract. It must not create `acceptance.md`, advance `attention.md`, edit the focused status test, touch runtime/source/plugin/provider/gateway/CLI/config/dependency files, run service lifecycle commands, commit, or push.
+Executor should keep this slice non-final and in-progress:
+- Materialize/update `design.md` and `checklist.yaml` with status-sync S1 metadata/prose.
+- No `acceptance.md` in this phase.
+- No forbidden path edits (runtime/source/plugin/provider/gateway/CLI/config/dependency).
+- No commit, push, or staging.

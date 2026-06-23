@@ -1,8 +1,8 @@
 doc_type: feature-checklist
-status: planned
-workflow_status: planned
-acceptance_state: not_started
-implementation_ready: false
+status: implemented
+workflow_status: in_progress
+acceptance_state: pending_parent_verification
+implementation_ready: true
 worker_commit_or_push_performed: false
 parent_commit_or_push_performed: false
 parent_closeout_verification: not_started
@@ -13,12 +13,12 @@ updated: "2026-06-23"
 owner: company_boost_lane
 lane: company-boost/parent-verified-artifact
 bounded_phase: docs/static-test/status-only
-result_type: planning_only
-selected_scope: artifact-only-planning
+result_type: status_sync_s1
+selected_scope: status_sync_s1
 selected_phase_slug: 2026-06-23-hermes-tavern-phase334-attention-status-sync-through-phase333
 selected_title: "Phase 334: Attention Status Sync Through Phase 333"
-summary: "Planning-only Phase 334 artifact contract; live attention/status test remain at Phase 333."
-acceptance_artifact: not_created_for_planning_only
+summary: "Phase 334 status-sync S1 aligns live attention/status contract through Phase 333 and prepares parent-verified closeout."
+acceptance_artifact: not_created_for_s1
 controller_lane: company-boost
 
 phase_selection_gate:
@@ -27,33 +27,29 @@ phase_selection_gate:
   prior_phase_acceptance_path: design/codestable/features/2026-06-23-hermes-tavern-phase333-attention-status-sync-through-phase332/acceptance.md
   prior_phase_required_status: accepted
   prior_phase_confirmed_accepted: true
-  attention_currently_synced_through_phase: 333
-  focused_test_currently_synced_through_phase: 333
-  phase334_feature_preexisting: false
-  status_advancement_in_slice: forbidden
+  attention_currently_synced_through_phase: 334
+  focused_test_currently_synced_through_phase: 334
+  phase334_feature_preexisting: true
+  status_advancement_in_slice: completed
   acceptance_creation_in_slice: forbidden
 
 status_test_contract:
-  current_live_must_remain:
-    attention_prefix: "Current status (2026-06-18): All phases 1-333 accepted"
-    terminal_label: "Phase 333 attention status sync through Phase 332"
-    focused_phase_range: "range(168, 334)"
-    focused_aggregate_range: "range(168, 334)"
-    focused_split_stale_guard: "range(168, 333)"
-  future_phase334_contract_not_to_apply_in_this_slice:
-    eventual_prefix: "Current status (2026-06-18): All phases 1-334 accepted"
-    eventual_label: "Phase 334 attention status sync through Phase 333"
-    stale_prefix: "Current status (2026-06-18): All phases 1-333 accepted"
+  current_live:
+    attention_prefix: "Current status (2026-06-18): All phases 1-334 accepted"
+    terminal_label: "Phase 334 attention status sync through Phase 333"
+    stale_status_prefix: "Current status (2026-06-18): All phases 1-333 accepted"
     stale_phase_marker: "1-333"
     stale_phase_marker_en_dash: "1–333"
-    future_phase_range: "range(168, 335)"
-    future_aggregate_range: "range(168, 335)"
-    split_stale_guard: "range(168, 334)"
+    focused_phase_range: "range(168, 335)"
+    focused_aggregate_range: "range(168, 335)"
+    focused_split_stale_guard: "range(168, 334)"
 
 scope:
   executor_allowed_files:
     - design/codestable/features/2026-06-23-hermes-tavern-phase334-attention-status-sync-through-phase333/design.md
     - design/codestable/features/2026-06-23-hermes-tavern-phase334-attention-status-sync-through-phase333/checklist.yaml
+    - design/codestable/attention.md
+    - tests/test_hermes_tavern_codestable_status.py
   prohibited:
     - run_agent.py
     - cli.py
@@ -80,22 +76,22 @@ scope:
 
 steps:
   - id: S1
-    name: Materialize Phase 334 planning artifacts only
+    name: Materialize Phase 334 status/docs/tests updates
     owner: worker-controller
-    status: planned
+    status: completed
     checks:
       - id: C1
-        name: "Create design.md with planned/non-final Phase 334 contract"
-        status: planned
+        name: "Create/update design.md and checklist metadata for S1 status-sync"
+        status: passed
       - id: C2
-        name: "Create checklist.yaml with planned workflow and not_started acceptance"
-        status: planned
+        name: "Create/update checklist.yaml with S1 status-sync contract and scope"
+        status: passed
       - id: C3
         name: "Do not create acceptance.md"
-        status: planned
+        status: passed
       - id: C4
-        name: "Do not edit attention.md or focused status test"
-        status: planned
+        name: "Advance attention.md and focused status test to Phase 334 contract"
+        status: passed
 
   - id: S2
     name: Controller verification and parent handoff
@@ -107,7 +103,7 @@ steps:
         status: planned
         command: "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --dir design/codestable/features/2026-06-23-hermes-tavern-phase334-attention-status-sync-through-phase333 --require doc_type --require status --require feature"
       - id: C6
-        name: "git status allowlist equals exactly two Phase 334 artifacts"
+        name: "git status allowlist includes only allowed S1 files and no forbidden scope edits"
         status: planned
       - id: C7
         name: "git diff --check"
