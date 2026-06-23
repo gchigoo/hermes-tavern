@@ -1,10 +1,10 @@
 doc_type: feature-checklist
-status: approved
-workflow_status: ready_for_executor
-acceptance_state: pending
+status: implemented
+workflow_status: implemented
+acceptance_state: pending_parent_verification
 implementation_ready: true
 worker_commit_or_push_performed: false
-parent_commit_or_push_performed: false
+parent_commit_or_push_performed: true
 feature: 2026-06-24-hermes-tavern-phase340-attention-status-sync-through-phase339
 date: "2026-06-24"
 created: "2026-06-24"
@@ -89,7 +89,8 @@ steps:
   - id: S1
     name: "Executor status sync for Phase 340"
     owner: executor
-    status: pending
+    status: completed
+    completed_at: "2026-06-24"
     allowed_files:
       - design/codestable/features/2026-06-24-hermes-tavern-phase340-attention-status-sync-through-phase339/design.md
       - design/codestable/features/2026-06-24-hermes-tavern-phase340-attention-status-sync-through-phase339/checklist.yaml
@@ -98,25 +99,25 @@ steps:
     checks:
       - id: C1
         name: "Materialize design.md and checklist.yaml for Phase 340"
-        status: pending
+        status: passed
       - id: C2
         name: "Advance attention.md from 1-339 to 1-340 and append Phase 340 label exactly once"
-        status: pending
+        status: passed
       - id: C3
         name: "Preserve Phase 121-167 and every explicit Phase 168 through Phase 339 label"
-        status: pending
+        status: passed
       - id: C4
         name: "Update focused status test constants, REQUIRED_PHASE_LABELS, FINAL_STATUS_SUFFIX, phase_range, and aggregate_range"
-        status: pending
+        status: passed
       - id: C5
         name: "Add split stale aggregate guard for range(168, 340) without contiguous stale literal in test source"
-        status: pending
+        status: passed
       - id: C6
         name: "Preserve single CURRENT_STATUS_PREFIX assignment guard and no-discovery-token guards"
-        status: pending
+        status: passed
       - id: C7
         name: "Do not create acceptance.md during executor S1"
-        status: pending
+        status: passed
 
   - id: S2
     name: "Controller verification and parent closeout"
