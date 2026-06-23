@@ -1,0 +1,101 @@
+doc_type: feature-checklist
+status: planned
+workflow_status: planned
+acceptance_state: not_started
+worker_commit_or_push_performed: false
+feature: 2026-06-23-hermes-tavern-phase333-attention-status-sync-through-phase332
+date: "2026-06-23"
+created: "2026-06-23"
+updated: "2026-06-23"
+owner: company_boost_lane
+lane: company-boost/parent-verified-artifact
+bounded_phase: docs/static-test/status-only
+selected_phase_slug: 2026-06-23-hermes-tavern-phase333-attention-status-sync-through-phase332
+selected_title: "Phase 333: Attention Status Sync Through Phase 332"
+implementation_ready: true
+summary: "Artifact-only planning contract for Phase 333 status-sync through Phase 332."
+selected_slice: "Phase 333 future contract (artifact-only)"
+
+phase_selection_gate:
+  prior_phase: 332
+  prior_phase_feature: 2026-06-23-hermes-tavern-phase332-attention-status-sync-through-phase331
+  prior_phase_acceptance_path: design/codestable/features/2026-06-23-hermes-tavern-phase332-attention-status-sync-through-phase331/acceptance.md
+  prior_phase_required_status: accepted
+  prior_phase_confirmed_accepted: true
+  attention_currently_synced_through_phase: 332
+  focused_test_currently_synced_through_phase: 332
+  selected_scope: artifact-only
+  status_change_in_slice: disallowed
+
+status_test_contract:
+  current_live:
+    attention:
+      current_prefix_must_be: "Current status (2026-06-18): All phases 1-332 accepted"
+      required_terminal_label_exactly_once: "Phase 332 attention status sync through Phase 331"
+      stale_status_prefix: "Current status (2026-06-18): All phases 1-332 accepted"
+      stale_phase_marker: "1-332"
+      stale_phase_marker_en_dash: "1–332"
+  future_contract:
+    attention:
+      current_prefix_must_be: "Current status (2026-06-18): All phases 1-333 accepted"
+      required_label_exactly_once: "Phase 333 attention status sync through Phase 332"
+      phase_range_must_be: "range(168, 334)"
+      aggregate_range_must_be: "range(168, 334)"
+      split_stale_guard_must_be: "range(168, 333)"
+
+scope:
+  executor_allowed_files:
+    - design/codestable/features/2026-06-23-hermes-tavern-phase333-attention-status-sync-through-phase332/design.md
+    - design/codestable/features/2026-06-23-hermes-tavern-phase333-attention-status-sync-through-phase332/checklist.yaml
+  future_status_sync_allowed_files:
+    - design/codestable/attention.md
+    - tests/test_hermes_tavern_codestable_status.py
+  prohibited:
+    - source
+    - runtime
+    - plugin
+    - provider
+    - gateway
+    - config
+    - dependency
+    - root-doc
+    - root-design
+    - README
+    - architecture
+    - roadmap
+    - requirements
+    - compound
+    - build
+    - discovery_token_broadening
+    - minor_work
+
+steps:
+  - id: S1
+    name: Materialize planned Phase 333 artifact files
+    owner: executor
+    status: passed
+    checks:
+      - id: C1
+        name: "Create/update design.md for artifact-only future contract"
+        status: passed
+      - id: C2
+        name: "Create/update checklist.yaml with planned status and future-only contract"
+        status: passed
+
+  - id: S2
+    name: Execute requested checks in this slice
+    owner: executor
+    status: passed
+    checks:
+      - id: C3
+        name: "Run validate-yaml on this feature directory"
+        status: passed
+      - id: C4
+        name: "Run py_compile on status test file"
+        status: passed
+      - id: C5
+        name: "Run focused pytest for status test"
+        status: passed
+      - id: C6
+        name: "Run git diff --check"
+        status: passed
