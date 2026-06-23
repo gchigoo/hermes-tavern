@@ -1,11 +1,11 @@
 doc_type: feature-checklist
-status: implemented
-workflow_status: in_progress
-acceptance_state: pending_parent_verification
+status: accepted
+workflow_status: completed
+acceptance_state: accepted
 implementation_ready: true
 worker_commit_or_push_performed: false
 parent_commit_or_push_performed: false
-parent_closeout_verification: not_started
+parent_closeout_verification: verified
 feature: 2026-06-23-hermes-tavern-phase334-attention-status-sync-through-phase333
 date: "2026-06-23"
 created: "2026-06-23"
@@ -96,18 +96,18 @@ steps:
   - id: S2
     name: Controller verification and parent handoff
     owner: worker-controller,parent-controller
-    status: planned
+    status: completed
     checks:
       - id: C5
         name: "validate-yaml on Phase 334 feature directory"
-        status: planned
+        status: passed
         command: "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --dir design/codestable/features/2026-06-23-hermes-tavern-phase334-attention-status-sync-through-phase333 --require doc_type --require status --require feature"
       - id: C6
-        name: "git status allowlist includes only allowed S1 files and no forbidden scope edits"
-        status: planned
+        name: "git status allowlist includes only allowed S2 files and no forbidden scope edits"
+        status: passed
       - id: C7
         name: "git diff --check"
-        status: planned
+        status: passed
       - id: C8
         name: "Confirm no runtime/source/plugin/provider/gateway/config/dependency/root-doc changes"
-        status: planned
+        status: passed
