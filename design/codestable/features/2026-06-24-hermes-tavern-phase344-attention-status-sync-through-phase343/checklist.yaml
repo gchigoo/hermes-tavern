@@ -1,0 +1,182 @@
+doc_type: feature-checklist
+status: implemented
+workflow_status: pending_parent_verification
+acceptance_state: pending_parent_verification
+implementation_ready: true
+worker_commit_or_push_performed: false
+parent_commit_or_push_performed: false
+parent_verification_required: true
+feature: 2026-06-24-hermes-tavern-phase344-attention-status-sync-through-phase343
+date: "2026-06-24"
+created: "2026-06-24"
+updated: "2026-06-24"
+owner: company_boost_lane
+lane: company-boost
+bounded_phase: "docs/static-test/status-only"
+result_type: status_sync_s1
+selected_scope: status-docs-tests-only
+selected_phase_slug: 2026-06-24-hermes-tavern-phase344-attention-status-sync-through-phase343
+selected_title: "Phase 344: Attention Status Sync Through Phase 343"
+summary: "Sync CodeStable attention current-status and focused static regression through accepted Phase 343 only."
+controller_lane: company-boost
+acceptance_artifact: not_created_for_s1
+
+phase_selection_gate:
+  prior_phase: 343
+  prior_phase_feature: 2026-06-24-hermes-tavern-phase343-attention-status-sync-through-phase342
+  prior_phase_acceptance_path: design/codestable/features/2026-06-24-hermes-tavern-phase343-attention-status-sync-through-phase342/acceptance.md
+  prior_phase_required_status: accepted
+  prior_phase_confirmed_accepted: true
+  attention_currently_synced_through_phase: 343
+  focused_test_currently_synced_through_phase: 343
+  phase344_feature_preexisting: false
+  phase345_feature_preexisting: false
+  no_higher_confidence_unfinished_bounded_artifact_present: true
+  selected_slice: "Phase 344 attention/status sync through Phase 343"
+  executor_acceptance_finalization: prohibited
+  controller_acceptance_finalization: deferred_to_parent_controller
+
+status_test_contract:
+  current_live_before_s1:
+    attention_prefix: "Current status (2026-06-18): All phases 1-343 accepted"
+    terminal_label: "Phase 343 attention status sync through Phase 342"
+    stale_status_prefix: "Current status (2026-06-18): All phases 1-342 accepted"
+    phase_range: "range(168, 344)"
+    aggregate_range: "range(168, 344)"
+  expected_live_after_s1:
+    attention_prefix: "Current status (2026-06-18): All phases 1-344 accepted"
+    terminal_label: "Phase 344 attention status sync through Phase 343"
+    stale_status_prefix: "Current status (2026-06-18): All phases 1-343 accepted"
+    stale_status_marker_text: "All phases 1-343 accepted"
+    stale_phase_marker: "1-343"
+    stale_phase_marker_en_dash: "1–343"
+    final_status_suffix: "Phase 342 attention status sync through Phase 341, Phase 343 attention status sync through Phase 342, and Phase 344 attention status sync through Phase 343."
+    phase_range: "range(168, 345)"
+    aggregate_range: "range(168, 345)"
+    split_stale_aggregate_guard: "range(168, 344)"
+    contiguous_stale_aggregate_literal_forbidden_in_test_source: "range(168, 344)"
+
+scope:
+  executor_allowed_files:
+    - design/codestable/features/2026-06-24-hermes-tavern-phase344-attention-status-sync-through-phase343/design.md
+    - design/codestable/features/2026-06-24-hermes-tavern-phase344-attention-status-sync-through-phase343/checklist.yaml
+    - design/codestable/attention.md
+    - tests/test_hermes_tavern_codestable_status.py
+  prohibited:
+    - acceptance_md
+    - phase345
+    - runtime
+    - source
+    - plugin
+    - provider
+    - gateway
+    - CLI
+    - config
+    - dependency
+    - root_README
+    - root_design
+    - architecture
+    - roadmap
+    - requirements
+    - compound
+    - build
+    - discovery_token_broadening
+    - service_lifecycle_commands
+    - minors_related_work
+    - provider_safety_bypass
+    - commits
+    - staging
+    - pushes
+
+steps:
+  - id: S1
+    name: "Executor status sync for Phase 344"
+    owner: executor
+    status: completed
+    acceptance_creation: prohibited
+    allowed_files:
+      - design/codestable/features/2026-06-24-hermes-tavern-phase344-attention-status-sync-through-phase343/design.md
+      - design/codestable/features/2026-06-24-hermes-tavern-phase344-attention-status-sync-through-phase343/checklist.yaml
+      - design/codestable/attention.md
+      - tests/test_hermes_tavern_codestable_status.py
+    description: "Executor must update the live attention/status test contract through Phase 344 and leave this checklist non-final for parent verification."
+    checks:
+      - id: C1
+        name: "Materialize design.md and checklist.yaml for Phase 344"
+        status: completed
+      - id: C2
+        name: "Advance attention.md from 1-343 to 1-344 and append Phase 344 label exactly once"
+        status: completed
+      - id: C3
+        name: "Preserve Phase 121-167 and every explicit Phase 168 through Phase 343 label"
+        status: completed
+      - id: C4
+        name: "Update focused status test constants, REQUIRED_PHASE_LABELS, FINAL_STATUS_SUFFIX, phase_range, and aggregate_range"
+        status: completed
+      - id: C5
+        name: "Add split stale aggregate guard for range(168, 344) without contiguous stale literal in test source"
+        status: completed
+      - id: C6
+        name: "Preserve single CURRENT_STATUS_PREFIX assignment guard and no-discovery-token guards"
+        status: completed
+      - id: C7
+        name: "Do not create acceptance.md, Phase 345, commit, stage, or push during executor S1"
+        status: completed
+
+  - id: S2
+    name: "Parent controller verification and closeout"
+    owner: parent-controller
+    status: pending_parent_verification
+    parent_verification_required: true
+    acceptance_creation: deferred_to_parent_controller
+    checks:
+      - id: C8
+        name: "validate-yaml on Phase 344 feature directory"
+        status: pending_parent_verification
+      - id: C9
+        name: "py_compile focused status test"
+        status: pending_parent_verification
+      - id: C10
+        name: "focused pytest status test"
+        status: pending_parent_verification
+      - id: C11
+        name: "static guard for allowed files, protected paths, stale markers, no-discovery tokens, final newline, trailing whitespace"
+        status: pending_parent_verification
+      - id: C12
+        name: "git diff whitespace check"
+        status: pending_parent_verification
+      - id: C13
+        name: "full pytest suite when feasible"
+        status: pending_parent_verification
+
+checks:
+  - item: "Prior Phase 343 acceptance path is recorded and requires status accepted."
+    source: phase_selection_gate
+    status: passed
+  - item: "Expected live attention prefix is Current status (2026-06-18): All phases 1-344 accepted."
+    source: status_test_contract
+    status: pending
+  - item: "Expected terminal label is Phase 344 attention status sync through Phase 343."
+    source: status_test_contract
+    status: pending
+  - item: "Stale markers for 1-343, 1–343, and All phases 1-343 accepted are guarded after S1."
+    source: status_test_contract
+    status: pending
+  - item: "Focused test uses phase_range = range(168, 345) and aggregate_range = \"range(168, 345)\"."
+    source: status_test_contract
+    status: pending
+  - item: "Stale aggregate range(168, 344) is guarded only through split string construction."
+    source: status_test_contract
+    status: pending
+  - item: "S1 touches exactly the four executor-allowed files."
+    source: scope
+    status: pending
+  - item: "Runtime/source/plugin/provider/gateway/CLI/config/dependency/root docs/architecture/roadmap/requirements/compound files remain untouched."
+    source: scope
+    status: pending
+  - item: "Hermes-native plugin architecture and SillyTavern asset compatibility remain unchanged."
+    source: scope
+    status: pending
+  - item: "Adult-fiction/RP boundary remains unchanged, with no minors-related work and no provider safety bypass."
+    source: scope
+    status: pending
