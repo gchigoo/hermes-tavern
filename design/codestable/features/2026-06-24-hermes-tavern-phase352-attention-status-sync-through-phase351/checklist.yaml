@@ -1,0 +1,127 @@
+doc_type: feature-checklist
+status: accepted
+workflow_status: parent_verified
+acceptance_state: accepted
+implementation_ready: true
+worker_commit_or_push_performed: false
+parent_commit_or_push_performed: false
+parent_verification_required: false
+acceptance_artifact: acceptance.md
+
+feature: 2026-06-24-hermes-tavern-phase352-attention-status-sync-through-phase351
+date: "2026-06-24"
+owner: company_boost_lane
+lane: company-boost
+bounded_phase: "docs/static-test/status-only"
+result_type: status_sync_single_tick
+selected_scope: status-docs-tests-only
+selected_phase_slug: 2026-06-24-hermes-tavern-phase352-attention-status-sync-through-phase351
+selected_title: "Phase 352 attention/status sync through Phase 351"
+summary: "Phase 352 attention/status sync through accepted Phase 351 (S1 docs+tests only)."
+controller_lane: company-boost
+
+phase_selection_gate:
+  prior_phase: 351
+  prior_feature_path: design/codestable/features/2026-06-24-hermes-tavern-phase351-attention-status-sync-through-phase350
+  prior_feature_accepted: true
+  attention_currently_synced_through_phase: 351
+  focused_test_currently_synced_through_phase: 351
+  phase352_preexisting: false
+  phase353_preexisting: false
+  selected_slice: "Phase 352 attention/status sync through Phase 351"
+  executor_acceptance_finalization: prohibited
+  controller_acceptance_finalization: pending
+
+status_test_contract:
+  current_live_before_s1:
+    attention_prefix: "Current status (2026-06-18): All phases 1-351 accepted"
+    terminal_suffix: "Phase 349 attention status sync through Phase 348, Phase 350 attention status sync through Phase 349, and Phase 351 attention status sync through Phase 350."
+    stale_status_prefix: "Current status (2026-06-18): All phases 1-350 accepted"
+    stale_phase_marker: "1-350"
+    stale_phase_marker_en_dash: "1–350"
+    phase_range: "range(168, 352)"
+    aggregate_range: "range(168, 352)"
+    split_stale_aggregate_guard: "range(168, 351)"
+  expected_live_after_s1:
+    attention_prefix: "Current status (2026-06-18): All phases 1-352 accepted"
+    terminal_suffix: "Phase 350 attention status sync through Phase 349, Phase 351 attention status sync through Phase 350, and Phase 352 attention status sync through Phase 351."
+    stale_status_prefix: "Current status (2026-06-18): All phases 1-351 accepted"
+    stale_phase_marker: "1-351"
+    stale_phase_marker_en_dash: "1–351"
+    required_new_label: "Phase 352 attention status sync through Phase 351"
+    phase_range: "range(168, 353)"
+    aggregate_range: "range(168, 353)"
+    split_stale_aggregate_guard: "range(168, 352)"
+    contiguous_stale_aggregate_literal_forbidden_in_test_source: "range(168, 352)"
+
+scope:
+  executor_allowed_files:
+    - design/codestable/attention.md
+    - tests/test_hermes_tavern_codestable_status.py
+    - design/codestable/features/2026-06-24-hermes-tavern-phase352-attention-status-sync-through-phase351/design.md
+    - design/codestable/features/2026-06-24-hermes-tavern-phase352-attention-status-sync-through-phase351/checklist.yaml
+  prohibited:
+    - acceptance_md
+    - runtime
+    - source
+    - plugin
+    - provider
+    - gateway
+    - cli
+    - config
+    - dependency
+    - architecture
+    - roadmap
+    - requirements
+    - compound
+    - build
+    - service_lifecycle
+    - cache_artifacts
+    - commits_by_executor
+    - stages_by_executor
+    - pushes_by_executor
+    - phase353
+
+steps:
+  - id: S1
+    name: "Executor status sync for Phase 352"
+    owner: executor
+    status: completed
+    acceptance_creation: prohibited
+    checks:
+      - id: C1
+        description: "Advance attention.md from 1-351 to 1-352 and append Phase 352 label exactly once"
+        status: completed
+      - id: C2
+        description: "Preserve Phase 121-167 and all explicit Phase 168 through Phase 352 labels"
+        status: completed
+      - id: C3
+        description: "Update focused test CURRENT_STATUS_PREFIX/STALE_STATUS_PREFIX/STALE_PHASE_MARKER/STALE_PHASE_MARKER_EN_DASH"
+        status: completed
+      - id: C4
+        description: "Add Phase 352 to REQUIRED_PHASE_LABELS, update FINAL_STATUS_SUFFIX, advance phase_range/aggregate_range to range(168,353)"
+        status: completed
+      - id: C5
+        description: "Add split stale aggregate guard for range(168,352) without contiguous forbidden literal in test source"
+        status: completed
+      - id: C6
+        description: "Do not create acceptance.md, commit, stage, push, Phase 353, or prohibited files in executor S1"
+        status: completed
+      - id: C7
+        description: "Run git diff --check, py_compile, validate-yaml, focused pytest, and static guard in executor"
+        status: completed
+  - id: S2
+    name: "Controller acceptance and finalization"
+    owner: controller
+    status: completed
+    acceptance_creation: completed
+    checks:
+      - id: C8
+        description: "Worker/controller reruns YAML validation, py_compile, focused pytest, static guard, git diff --check"
+        status: completed
+      - id: C9
+        description: "Worker/controller runs full pytest"
+        status: completed
+      - id: C10
+        description: "Parent controller finalizes acceptance, commits/pushes, and closes out"
+        status: completed
