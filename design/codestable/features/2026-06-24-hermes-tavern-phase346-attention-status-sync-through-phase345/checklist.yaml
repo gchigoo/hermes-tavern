@@ -1,0 +1,132 @@
+doc_type: feature-checklist
+status: accepted
+workflow_status: implemented
+acceptance_state: accepted
+implementation_ready: true
+worker_commit_or_push_performed: false
+parent_commit_or_push_performed: true
+parent_verification_required: false
+feature: 2026-06-24-hermes-tavern-phase346-attention-status-sync-through-phase345
+date: "2026-06-24"
+created: "2026-06-24"
+updated: "2026-06-24"
+owner: company_boost_lane
+lane: company-boost
+bounded_phase: "docs/static-test/status-only"
+result_type: status_sync_single_tick
+selected_scope: status-docs-tests-only
+selected_phase_slug: 2026-06-24-hermes-tavern-phase346-attention-status-sync-through-phase345
+selected_title: "Phase 346: Attention Status Sync Through Phase 345"
+summary: "Sync CodeStable attention current-status and focused static regression through accepted Phase 345 only."
+controller_lane: company-boost
+acceptance_artifact: prohibited_in_s1
+
+phase_selection_gate:
+  prior_phase: 345
+  prior_phase_feature: 2026-06-24-hermes-tavern-phase345-attention-status-sync-through-phase344
+  prior_phase_acceptance_path: design/codestable/features/2026-06-24-hermes-tavern-phase345-attention-status-sync-through-phase344/acceptance.md
+  prior_phase_required_status: accepted
+  prior_phase_confirmed_accepted: true
+  attention_currently_synced_through_phase: 345
+  focused_test_currently_synced_through_phase: 345
+  phase346_feature_preexisting: false
+  phase347_feature_preexisting: false
+  selected_slice: "Phase 346 attention/status sync through Phase 345"
+  executor_acceptance_finalization: prohibited
+  controller_acceptance_finalization: not_in_this_slice
+
+status_test_contract:
+  current_live_before_s1:
+    attention_prefix: "Current status (2026-06-18): All phases 1-345 accepted"
+    terminal_label: "Phase 345 attention status sync through Phase 344"
+    stale_status_prefix: "Current status (2026-06-18): All phases 1-344 accepted"
+    phase_range: "range(168, 346)"
+    aggregate_range: "range(168, 346)"
+  expected_live_after_s1:
+    attention_prefix: "Current status (2026-06-18): All phases 1-346 accepted"
+    terminal_label: "Phase 346 attention status sync through Phase 345"
+    stale_status_prefix: "Current status (2026-06-18): All phases 1-345 accepted"
+    stale_status_marker_text: "All phases 1-345 accepted"
+    stale_phase_marker: "1-345"
+    stale_phase_marker_en_dash: "1–345"
+    final_status_suffix: "Phase 344 attention status sync through Phase 343, Phase 345 attention status sync through Phase 344, and Phase 346 attention status sync through Phase 345."
+    phase_range: "range(168, 347)"
+    aggregate_range: "range(168, 347)"
+    split_stale_aggregate_guard: "range(168, 346)"
+    contiguous_stale_aggregate_literal_forbidden_in_test_source: "range(168, 346)"
+
+scope:
+  executor_allowed_files:
+    - design/codestable/features/2026-06-24-hermes-tavern-phase346-attention-status-sync-through-phase345/design.md
+    - design/codestable/features/2026-06-24-hermes-tavern-phase346-attention-status-sync-through-phase345/checklist.yaml
+    - design/codestable/attention.md
+    - tests/test_hermes_tavern_codestable_status.py
+  prohibited:
+    - acceptance_md
+    - phase347
+    - runtime
+    - source
+    - plugin
+    - provider
+    - gateway
+    - CLI
+    - config
+    - dependency
+    - root_README
+    - root_design
+    - architecture
+    - roadmap
+    - requirements
+    - compound
+    - build
+    - discovery_token_broadening
+    - service_lifecycle_commands
+    - minors_related_work
+    - provider_safety_bypass
+    - commits
+    - staging
+    - pushes
+
+steps:
+  - id: S1
+    name: "Executor status sync for Phase 346"
+    owner: executor
+    status: passed
+    acceptance_creation: prohibited
+    allowed_files:
+      - design/codestable/features/2026-06-24-hermes-tavern-phase346-attention-status-sync-through-phase345/design.md
+      - design/codestable/features/2026-06-24-hermes-tavern-phase346-attention-status-sync-through-phase345/checklist.yaml
+      - design/codestable/attention.md
+      - tests/test_hermes_tavern_codestable_status.py
+    description: "Executor S1 performs only the Phase 346 status sync through accepted Phase 345; parent verification remains required."
+    checks:
+      - id: C1
+        name: "Materialize design.md and checklist.yaml for Phase 346"
+        status: passed
+      - id: C2
+        name: "Advance attention.md from 1-345 to 1-346 and append Phase 346 label exactly once"
+        status: passed
+      - id: C3
+        name: "Preserve Phase 121-167 and every explicit Phase 168 through Phase 345 label"
+        status: passed
+      - id: C4
+        name: "Move terminal conjunction from Phase 345 to Phase 346"
+        status: passed
+      - id: C5
+        name: "Update focused status test constants, REQUIRED_PHASE_LABELS, FINAL_STATUS_SUFFIX, phase_range, and aggregate_range"
+        status: passed
+      - id: C6
+        name: "Add split stale aggregate guard for range(168, 346) without contiguous stale literal in test source"
+        status: passed
+      - id: C7
+        name: "Preserve single CURRENT_STATUS_PREFIX assignment guard and no-discovery-token guards"
+        status: passed
+      - id: C8
+        name: "Do not create acceptance.md, Phase 347, commit, stage, or push during executor S1"
+        status: passed
+
+verification_commands:
+  - "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --dir design/codestable/features/2026-06-24-hermes-tavern-phase346-attention-status-sync-through-phase345 --require doc_type --require status --require feature"
+  - "PYTHONDONTWRITEBYTECODE=1 python -m py_compile tests/test_hermes_tavern_codestable_status.py"
+  - "PYTHONDONTWRITEBYTECODE=1 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python -m pytest tests/test_hermes_tavern_codestable_status.py -q -o addopts= -p no:cacheprovider"
+  - "git diff --check"
