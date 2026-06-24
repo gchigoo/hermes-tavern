@@ -1,0 +1,150 @@
+doc_type: feature-checklist
+status: accepted
+workflow_status: passed_parent_verification
+acceptance_state: accepted
+implementation_ready: true
+worker_commit_or_push_performed: false
+parent_commit_or_push_performed: true
+parent_verification_required: false
+acceptance_artifact: design/codestable/features/2026-06-24-hermes-tavern-phase349-attention-status-sync-through-phase348/acceptance.md
+
+feature: 2026-06-24-hermes-tavern-phase349-attention-status-sync-through-phase348
+date: "2026-06-24"
+owner: company_boost_lane
+lane: company-boost
+bounded_phase: "docs/static-test/status-only"
+result_type: status_sync_single_tick
+selected_scope: status-docs-tests-only
+selected_phase_slug: 2026-06-24-hermes-tavern-phase349-attention-status-sync-through-phase348
+selected_title: "Phase 349 attention/status sync through Phase 348"
+summary: "Phase 349 attention/status sync through accepted Phase 348 (S1 docs+tests only)."
+controller_lane: company-boost
+
+phase_selection_gate:
+  prior_phase: 348
+  prior_feature_path: design/codestable/features/2026-06-24-hermes-tavern-phase348-attention-status-sync-through-phase347
+  prior_feature_accepted: true
+  attention_focused_test_synced_through: 348
+  attention_currently_synced_through_phase: 348
+  focused_test_currently_synced_through_phase: 348
+  phase349_preexisting: false
+  phase350_preexisting: false
+  selected_slice: "Phase 349 attention/status sync through Phase 348"
+  executor_acceptance_finalization: prohibited
+  controller_acceptance_finalization: completed
+
+status_test_contract:
+  current_live_before_s1:
+    attention_prefix: "Current status (2026-06-18): All phases 1-348 accepted"
+    terminal_suffix: "Phase 346 attention status sync through Phase 345, Phase 347 attention status sync through Phase 346, and Phase 348 attention status sync through Phase 347."
+    stale_status_prefix: "Current status (2026-06-18): All phases 1-347 accepted"
+    stale_phase_marker: "1-347"
+    stale_phase_marker_en_dash: "1–347"
+    phase_range: "range(168, 349)"
+    aggregate_range: "range(168, 349)"
+    split_stale_aggregate_guard: "range(168, 348)"
+  expected_live_after_s1:
+    attention_prefix: "Current status (2026-06-18): All phases 1-349 accepted"
+    terminal_suffix: "Phase 347 attention status sync through Phase 346, Phase 348 attention status sync through Phase 347, and Phase 349 attention status sync through Phase 348."
+    stale_status_prefix: "Current status (2026-06-18): All phases 1-348 accepted"
+    stale_phase_marker: "1-348"
+    stale_phase_marker_en_dash: "1–348"
+    required_new_label: "Phase 349 attention status sync through Phase 348"
+    phase_range: "range(168, 350)"
+    aggregate_range: "range(168, 350)"
+    split_stale_aggregate_guard: "range(168, 349)"
+    contiguous_stale_aggregate_literal_forbidden_in_test_source: "range(168, 349)"
+
+scope:
+  executor_allowed_files:
+    - design/codestable/attention.md
+    - tests/test_hermes_tavern_codestable_status.py
+    - design/codestable/features/2026-06-24-hermes-tavern-phase349-attention-status-sync-through-phase348/design.md
+    - design/codestable/features/2026-06-24-hermes-tavern-phase349-attention-status-sync-through-phase348/checklist.yaml
+  prohibited:
+    - runtime
+    - source
+    - plugin
+    - provider
+    - gateway
+    - cli
+    - config
+    - dependency
+    - root_readme
+    - root_design
+    - architecture
+    - roadmap
+    - requirements
+    - compound
+    - build
+    - service_lifecycle
+    - cache_artifacts
+    - discovery_token_broadening
+    - acceptance_finalization
+    - acceptance_md
+    - commits
+    - stages
+    - pushes
+    - phase350
+
+steps:
+  - id: S1
+    name: "Executor status sync for Phase 349"
+    owner: executor
+    status: completed
+    acceptance_creation: prohibited
+    checks:
+      - id: C1
+        description: "Advance attention.md from 1-348 to 1-349 and append Phase 349 label exactly once"
+        status: passed
+      - id: C2
+        description: "Preserve Phase 121-167 and all explicit Phase 168 through Phase 349 labels"
+        status: passed
+      - id: C3
+        description: "Update focused test CURRENT_STATUS_PREFIX/STALE_STATUS_PREFIX/STALE_PHASE_MARKER/STALE_PHASE_MARKER_EN_DASH"
+        status: passed
+      - id: C4
+        description: "Update REQUIRED_PHASE_LABELS, FINAL_STATUS_SUFFIX, phase_range, and aggregate_range"
+        status: passed
+      - id: C5
+        description: "Add split stale aggregate guard for range(168, 349) and include stale tuple entry in loop"
+        status: passed
+      - id: C6
+        description: "Preserve anchored CURRENT_STATUS_PREFIX assignment guard and no-discovery-token guards"
+        status: passed
+      - id: C7
+        description: "Do not create acceptance.md, Phase 350, commit, stage, push, or touch prohibited files"
+        status: passed
+
+  - id: S2
+    name: "Parent-controller verification and acceptance finalization"
+    owner: parent_controller
+    status: passed
+    acceptance_creation: completed
+    checks:
+      - id: C8
+        description: "validate-yaml passes for Phase 349 design/checklist artifacts"
+        status: passed
+      - id: C9
+        description: "py_compile passes for focused status test"
+        status: passed
+      - id: C10
+        description: "focused pytest passes"
+        status: passed
+      - id: C11
+        description: "static guard expectations pass, including no contiguous stale range(168, 349) literal"
+        status: passed
+      - id: C12
+        description: "git diff --check is clean"
+        status: passed
+      - id: C13
+        description: "full pytest passes if feasible"
+        status: passed
+
+verification_commands:
+  - "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --dir design/codestable/features/2026-06-24-hermes-tavern-phase349-attention-status-sync-through-phase348 --require doc_type --require status --require feature"
+  - "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-24-hermes-tavern-phase349-attention-status-sync-through-phase348/checklist.yaml --yaml-only"
+  - "PYTHONDONTWRITEBYTECODE=1 python -m py_compile tests/test_hermes_tavern_codestable_status.py"
+  - "PYTHONDONTWRITEBYTECODE=1 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python -m pytest tests/test_hermes_tavern_codestable_status.py -q -o addopts= -p no:cacheprovider"
+  - "git diff --check"
+  - "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q"
