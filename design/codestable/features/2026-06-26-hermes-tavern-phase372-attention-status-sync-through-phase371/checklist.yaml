@@ -1,0 +1,171 @@
+doc_type: feature-checklist
+status: accepted
+workflow_status: parent_verified
+acceptance_state: accepted
+implementation_ready: true
+parent_verification_required: false
+worker_commit_or_push_performed: false
+parent_commit_or_push_performed: true
+acceptance_artifact: acceptance.md
+
+feature: 2026-06-26-hermes-tavern-phase372-attention-status-sync-through-phase371
+date: "2026-06-26"
+owner: company_boost_lane
+lane: company_boost_status_sync
+bounded_phase: "docs/static-test/status-only"
+result_type: status_sync_single_tick
+selected_scope: status-docs-tests-only
+selected_phase_slug: 2026-06-26-hermes-tavern-phase372-attention-status-sync-through-phase371
+selected_title: "Phase 372 attention status sync through Phase 371"
+summary: "Phase 372 attention status sync through accepted Phase 371; S1/S2 completed by company-boost controller."
+controller_lane: company_boost
+controller_run_id: "1782457238"
+
+phase_selection_gate:
+  branch: main
+  pre_run_tree_clean: true
+  prior_phase: 371
+  prior_feature_path: design/codestable/features/2026-06-26-hermes-tavern-phase371-attention-status-sync-through-phase370
+  prior_feature_accepted: true
+  attention_currently_synced_through_phase: 371
+  focused_test_currently_synced_through_phase: 371
+  selected_slice: "Phase 372 attention status sync through Phase 371"
+  executor_acceptance_finalization: prohibited_for_executor
+  controller_acceptance_finalization: completed
+  executor_stage_commit_push: prohibited
+
+status_test_contract:
+  current_live_before_s1:
+    attention_prefix: "Current status (2026-06-18): All phases 1-371 accepted"
+    terminal_suffix: "Phase 369 attention status sync through Phase 368, Phase 370 attention status sync through Phase 369, and Phase 371 attention status sync through Phase 370."
+    phase_range: "range(168, 372)"
+    aggregate_range: "range(168, 372)"
+  expected_live_after_s1:
+    attention_prefix: "Current status (2026-06-18): All phases 1-372 accepted"
+    terminal_suffix: "Phase 370 attention status sync through Phase 369, Phase 371 attention status sync through Phase 370, and Phase 372 attention status sync through Phase 371."
+    stale_status_prefix: "Current status (2026-06-18): All phases 1-371 accepted"
+    stale_phase_marker: "1-371"
+    stale_phase_marker_en_dash: "1–371"
+    required_new_label: "Phase 372 attention status sync through Phase 371"
+    preserve_required_labels: "Phase 121-167 plus every explicit Phase 168 through Phase 371 label."
+    phase_range: "range(168, 373)"
+    aggregate_range: "range(168, 373)"
+    split_stale_aggregate_guard_source: 'stale_aggregate_range_372 = "".join(["range(168, ", "37", "2", ")"])'
+    include_split_stale_guard_in_tuple: stale_aggregate_range_372
+    contiguous_stale_aggregate_literal_forbidden_in_test_source: "range(168, 372)"
+
+scope:
+  executor_allowed_files:
+    - design/codestable/attention.md
+    - tests/test_hermes_tavern_codestable_status.py
+    - design/codestable/features/2026-06-26-hermes-tavern-phase372-attention-status-sync-through-phase371/design.md
+    - design/codestable/features/2026-06-26-hermes-tavern-phase372-attention-status-sync-through-phase371/checklist.yaml
+  acceptance_md_during_s1: prohibited
+  acceptance_md_during_s2: created_by_parent_controller
+  prohibited_operations:
+    - stage
+    - commit
+    - push
+    - reset
+    - branch_changes
+    - package_install
+    - service_start
+  prohibited_behavior_changes:
+    - runtime
+    - source
+    - plugin
+    - provider
+    - gateway
+    - cli
+    - config
+    - network
+    - dependency
+    - service_lifecycle
+    - provider_safety_content_behavior
+    - adult_fiction_behavior
+    - minors_related_behavior
+    - hermes_native_plugin_architecture
+    - sillytavern_asset_compatibility
+
+steps:
+  - id: S1
+    name: "Executor status sync for Phase 372"
+    owner: executor
+    status: completed
+    acceptance_creation: prohibited_for_executor
+    checks:
+      - id: C1
+        description: "Materialize Phase 372 design.md and checklist.yaml only; do not create acceptance.md."
+        status: completed
+      - id: C2
+        description: "Advance attention.md from 1-371 to 1-372 and append Phase 372 label exactly once."
+        status: completed
+      - id: C3
+        description: "Set the final suffix to Phase 370, Phase 371, and Phase 372 exactly."
+        status: completed
+      - id: C4
+        description: "Preserve Phase 121-167 and all explicit Phase 168 through Phase 371 labels."
+        status: completed
+      - id: C5
+        description: "Update focused test current/stale constants to the Phase 372 contract."
+        status: completed
+      - id: C6
+        description: "Add Phase 372 to REQUIRED_PHASE_LABELS and update FINAL_STATUS_SUFFIX."
+        status: completed
+      - id: C7
+        description: "Advance phase_range and live aggregate string to range(168, 373)."
+        status: completed
+      - id: C8
+        description: "Add split stale aggregate guard for range(168, 372) and include it in the stale tuple."
+        status: completed
+      - id: C9
+        description: "Do not leave a contiguous range(168, 372) literal in test source."
+        status: completed
+      - id: C10
+        description: "Preserve anchored assignment guards and no-discovery-token guards."
+        status: completed
+      - id: C11
+        description: "Do not stage, commit, push, reset, touch acceptance.md, or edit prohibited files."
+        status: completed
+
+  - id: S2
+    name: "Parent/controller verification and acceptance finalization"
+    owner: parent_controller
+    status: completed
+    acceptance_creation: completed
+    checks:
+      - id: C12
+        description: "Validate Phase 372 design/checklist YAML."
+        status: passed
+      - id: C13
+        description: "Run py_compile for the focused status test."
+        status: passed
+      - id: C14
+        description: "Run focused status pytest."
+        status: passed
+      - id: C15
+        description: "Run static status/range/scope/whitespace guard."
+        status: passed
+      - id: C16
+        description: "Confirm changed/untracked paths are limited to the S1/S2 allowlist."
+        status: passed
+      - id: C17
+        description: "Confirm Phase 372 acceptance.md was absent after executor S1; parent created it during S2 closeout."
+        status: passed
+      - id: C18
+        description: "Run git diff --check before and after S2 finalization."
+        status: passed
+      - id: C19
+        description: "Run full local pytest after S2 finalization."
+        status: passed
+
+verification_commands:
+  required:
+    - "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-26-hermes-tavern-phase372-attention-status-sync-through-phase371/design.md --require doc_type --require feature --require title --require status --require implementation_ready --require date --require owner --require lane --require bounded_phase --require tags"
+    - "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-26-hermes-tavern-phase372-attention-status-sync-through-phase371/checklist.yaml --yaml-only"
+    - "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-26-hermes-tavern-phase372-attention-status-sync-through-phase371/acceptance.md --require doc_type --require feature --require status --require accepted_at --require summary --require tags"
+    - "PYTHONDONTWRITEBYTECODE=1 python -m py_compile tests/test_hermes_tavern_codestable_status.py"
+    - "PYTHONDONTWRITEBYTECODE=1 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python -m pytest tests/test_hermes_tavern_codestable_status.py -q -o 'addopts=' -p no:cacheprovider"
+    - "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts=' -p no:cacheprovider"
+    - "git diff --check"
+    - "git diff --cached --check"
