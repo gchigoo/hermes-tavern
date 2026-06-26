@@ -1,0 +1,262 @@
+doc_type: feature-checklist
+status: accepted
+workflow_status: parent_verified
+acceptance_state: accepted
+implementation_ready: true
+parent_verification_required: false
+worker_commit_or_push_performed: false
+parent_commit_or_push_performed: true
+acceptance_artifact: acceptance.md
+
+feature: 2026-06-26-hermes-tavern-phase369-attention-status-sync-through-phase368
+date: "2026-06-26"
+owner: company_boost_lane
+lane: company_boost_status_sync
+bounded_phase: "docs/static-test/status-only"
+result_type: status_sync_single_tick
+selected_scope: status-docs-tests-only
+selected_phase_slug: 2026-06-26-hermes-tavern-phase369-attention-status-sync-through-phase368
+selected_title: "Phase 369 attention/status sync through Phase 368"
+summary: "Phase 369 attention/status sync through accepted Phase 368 (S1 attention+focused-test only)."
+controller_lane: company_boost
+
+phase_selection_gate:
+  branch: main
+  pre_run_head: "52873c8"
+  pre_run_tree_clean: true
+  prior_phase: 368
+  prior_feature_path: design/codestable/features/2026-06-26-hermes-tavern-phase368-attention-status-sync-through-phase367
+  prior_feature_accepted: true
+  attention_currently_synced_through_phase: 368
+  focused_test_currently_synced_through_phase: 368
+  selected_slice: "Phase 369 attention/status sync through Phase 368"
+  executor_acceptance_finalization: prohibited_for_executor
+  controller_acceptance_finalization: completed
+  executor_stage_commit_push: prohibited
+  phase370_work: prohibited
+
+status_test_contract:
+  current_live_before_s1:
+    attention_prefix: "Current status (2026-06-18): All phases 1-368 accepted"
+    terminal_suffix: "Phase 366 attention status sync through Phase 365, Phase 367 attention status sync through Phase 366, and Phase 368 attention status sync through Phase 367."
+    stale_status_prefix: "Current status (2026-06-18): All phases 1-367 accepted"
+    stale_phase_marker: "1-367"
+    stale_phase_marker_en_dash: "1–367"
+    phase_range: "range(168, 369)"
+    aggregate_range: "range(168, 369)"
+    existing_split_stale_aggregate_guard: "range(168, 368)"
+  expected_live_after_s1:
+    attention_prefix: "Current status (2026-06-18): All phases 1-369 accepted"
+    status_transition: "All phases 1-368 accepted -> All phases 1-369 accepted"
+    terminal_suffix: "Phase 367 attention status sync through Phase 366, Phase 368 attention status sync through Phase 367, and Phase 369 attention status sync through Phase 368."
+    stale_status_prefix: "Current status (2026-06-18): All phases 1-368 accepted"
+    stale_phase_marker: "1-368"
+    stale_phase_marker_en_dash: "1–368"
+    required_new_label: "Phase 369 attention status sync through Phase 368"
+    required_new_label_exact_count: 1
+    preserve_required_labels: "Phase 121-167 plus every explicit Phase 168 through Phase 368 label; especially preserve Phase 368."
+    phase_range: "range(168, 370)"
+    aggregate_range: "range(168, 370)"
+    split_stale_aggregate_guard: "range(168, 369)"
+    split_stale_aggregate_guard_source: 'stale_aggregate_range_369 = "".join(["range(168, ", "36", "9", ")"])'
+    include_split_stale_guard_in_tuple: stale_aggregate_range_369
+    contiguous_stale_aggregate_literal_forbidden_in_test_source: "range(168, 369)"
+    live_aggregate_literal_required_in_test_source: "range(168, 370)"
+    direct_stale_literal_absence_scope: "tests/test_hermes_tavern_codestable_status.py only; split-string guard components may remain."
+    anchored_assignment_guards:
+      - CURRENT_STATUS_PREFIX
+      - FINAL_STATUS_SUFFIX
+    no_discovery_token_guards:
+      - ".glob("
+      - ".rglob("
+      - "iterdir("
+      - "os.walk"
+
+scope:
+  executor_allowed_files:
+    - design/codestable/attention.md
+    - tests/test_hermes_tavern_codestable_status.py
+    - design/codestable/features/2026-06-26-hermes-tavern-phase369-attention-status-sync-through-phase368/design.md
+    - design/codestable/features/2026-06-26-hermes-tavern-phase369-attention-status-sync-through-phase368/checklist.yaml
+  acceptance_md_during_s1: prohibited
+  prohibited:
+    - acceptance_md_by_executor_s1
+    - final_accepted_completed_passed_closeout_by_executor_s1
+    - phase370
+    - runtime
+    - source
+    - plugin
+    - provider
+    - gateway
+    - cli
+    - config
+    - network
+    - dependency
+    - build
+    - cache_artifacts
+    - service_lifecycle
+    - root_docs
+    - README
+    - architecture
+    - roadmap
+    - requirements
+    - compound
+    - run_agent.py
+    - cli.py
+    - gateway/run.py
+    - stage
+    - commit
+    - push
+    - reset
+    - branch_changes
+    - provider_safety_content_behavior
+    - adult_fiction_behavior
+    - rp_compatibility_behavior
+    - minors_related_behavior
+    - hermes_native_plugin_architecture
+    - sillytavern_asset_compatibility
+
+steps:
+  - id: S1
+    name: "Executor status sync for Phase 369"
+    owner: executor
+    status: completed
+    acceptance_creation: prohibited_for_executor
+    allowed_files:
+      - design/codestable/attention.md
+      - tests/test_hermes_tavern_codestable_status.py
+      - design/codestable/features/2026-06-26-hermes-tavern-phase369-attention-status-sync-through-phase368/design.md
+      - design/codestable/features/2026-06-26-hermes-tavern-phase369-attention-status-sync-through-phase368/checklist.yaml
+    checks:
+      - id: C1
+        description: "Create Phase 369 design.md and checklist.yaml only; do not create acceptance.md."
+        status: completed
+      - id: C2
+        description: "Advance attention.md from 1-368 to 1-369 and append Phase 369 label exactly once."
+        status: completed
+      - id: C3
+        description: "Move the terminal and so Phase 367, Phase 368, and Phase 369 form the final suffix."
+        status: completed
+      - id: C4
+        description: "Preserve Phase 121-167 and all explicit Phase 168 through Phase 368 labels."
+        status: completed
+      - id: C5
+        description: "Update focused test CURRENT_STATUS_PREFIX, STALE_STATUS_PREFIX, STALE_PHASE_MARKER, and STALE_PHASE_MARKER_EN_DASH."
+        status: completed
+      - id: C6
+        description: "Add Phase 369 to REQUIRED_PHASE_LABELS exactly once and update FINAL_STATUS_SUFFIX."
+        status: completed
+      - id: C7
+        description: "Advance phase_range and every live aggregate assertion to range(168, 370)."
+        status: completed
+      - id: C8
+        description: "Add split stale aggregate guard for range(168, 369) and include stale_aggregate_range_369 in the stale tuple."
+        status: completed
+      - id: C9
+        description: "Do not leave a contiguous range(168, 369) literal in test source; split guard components are allowed."
+        status: completed
+      - id: C10
+        description: "Do not stage, commit, push, reset, touch Phase 370, or edit prohibited files."
+        status: completed
+
+  - id: S2
+    name: "Parent/controller verification and acceptance finalization"
+    owner: parent_controller
+    status: completed
+    acceptance_creation: completed
+    checks:
+      - id: C11
+        description: "Rerun YAML/frontmatter validation for Phase 369 design/checklist artifacts."
+        status: passed
+      - id: C12
+        description: "Rerun cache-free py_compile for tests/test_hermes_tavern_codestable_status.py."
+        status: passed
+      - id: C13
+        description: "Rerun focused status pytest with plugin autoload disabled and addopts cleared."
+        status: passed
+      - id: C14
+        description: "Rerun static status/scope guard, including no contiguous stale range(168, 369) literal in test source."
+        status: passed
+      - id: C15
+        description: "Confirm changed/untracked paths are limited to the S1 allowlist."
+        status: passed
+      - id: C16
+        description: "Confirm no Phase 369 acceptance.md exists after executor S1; parent creates it during S2."
+        status: passed
+      - id: C17
+        description: "Run git diff --check and git diff --cached --check."
+        status: passed
+      - id: C18
+        description: "Run full pytest."
+        status: passed
+      - id: C19
+        description: "Create acceptance.md and final accepted checklist state after parent/controller verification."
+        status: completed
+
+verification_commands:
+  required:
+    - "export HERMES_HOME=/Users/steven/.hermes"
+    - "unset HERMES_SESSION_KEY HERMES_SESSION_ID"
+    - >-
+      PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-26-hermes-tavern-phase369-attention-status-sync-through-phase368/design.md --require doc_type --require feature --require title --require status --require implementation_ready --require date --require owner --require lane --require bounded_phase --require tags
+    - >-
+      PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-26-hermes-tavern-phase369-attention-status-sync-through-phase368/checklist.yaml --yaml-only
+    - "cache-free py_compile for tests/test_hermes_tavern_codestable_status.py"
+    - >-
+      PYTHONDONTWRITEBYTECODE=1 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python -m pytest tests/test_hermes_tavern_codestable_status.py -q -o 'addopts=' -p no:cacheprovider
+    - "static status/scope guard with assertions listed below"
+    - >-
+      test -e design/codestable/features/2026-06-26-hermes-tavern-phase369-attention-status-sync-through-phase368/acceptance.md
+    - "git diff --check"
+    - "git diff --cached --check"
+  optional_if_quick:
+    - >-
+      PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts=' -p no:cacheprovider
+
+static_status_scope_guard_assertions:
+  - "HEAD remains 52873c8 and branch remains main during executor S1."
+  - "No staged files are present."
+  - "Changed/untracked paths are a subset of the four-file S1 allowlist."
+  - "All four allowed files exist after S1."
+  - "Phase 369 acceptance.md exists after parent S2 closeout."
+  - "attention.md has exactly one current status line."
+  - "attention status starts with Current status (2026-06-18): All phases 1-369 accepted."
+  - "attention status ends with the exact Phase 367, Phase 368, and Phase 369 final suffix."
+  - "Phase 369 label appears exactly once in the attention status line."
+  - "Phase 368 label and Phase 121-167 label are preserved."
+  - "Every Phase 168 through Phase 369 token is present in attention status."
+  - "STALE_STATUS_PREFIX, STALE_PHASE_MARKER, and STALE_PHASE_MARKER_EN_DASH point at 1-368 in the test."
+  - "Anchored regex finds exactly one CURRENT_STATUS_PREFIX assignment and one FINAL_STATUS_SUFFIX assignment."
+  - "REQUIRED_PHASE_LABELS contains exactly one Phase 369 label and still contains Phase 368."
+  - "phase_range = range(168, 370) and live aggregate string range(168, 370) are present."
+  - "Direct stale literal range(168, 369) is absent from test source."
+  - "stale_aggregate_range_369 split guard exists and is included in the stale tuple."
+  - "No direct discovery tokens .glob(, .rglob(, iterdir(, or os.walk exist in the test source."
+  - "Checklist top-level state is accepted/parent_verified with acceptance_artifact acceptance.md."
+  - "S2 checks are completed/passed after parent verification."
+
+parent_handoff:
+  required: true
+  handoff_state: accepted
+  s1_executor_report_required:
+    - changed_paths
+    - verification_results
+    - confirmation_no_acceptance_md
+    - confirmation_no_stage_commit_push
+    - confirmation_no_prohibited_scope_changes
+  s2_parent_owns:
+    - read_only_architect_review
+    - final_verification
+    - acceptance_artifact_creation_if_finalizing
+    - final_checklist_state_if_finalizing
+    - commit_or_push_only_if_explicitly_authorized
+  review_verdict_required:
+    - "VERDICT: PASS"
+    - "VERDICT: REQUEST_CHANGES"
+
+rollback:
+  base_head: "52873c8"
+  tree_clean_before_s1: true
+  instructions:
+    - "If aborting, revert only the four allowed files and the new Phase 369 directory."
+    - "Do not commit, reset, stage, push, or touch unrelated paths unless the parent explicitly authorizes."
