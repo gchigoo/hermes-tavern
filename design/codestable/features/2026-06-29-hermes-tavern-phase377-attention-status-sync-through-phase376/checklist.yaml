@@ -1,0 +1,194 @@
+doc_type: feature-checklist
+status: accepted
+workflow_status: worker_verified_uncommitted
+acceptance_state: accepted
+implementation_ready: true
+parent_verification_required: false
+worker_commit_or_push_performed: false
+parent_commit_or_push_performed: false
+acceptance_artifact: acceptance.md
+
+feature: 2026-06-29-hermes-tavern-phase377-attention-status-sync-through-phase376
+date: "2026-06-29"
+owner: company_boost_lane
+lane: company_boost_status_sync
+bounded_phase: "docs/static-test/status-only"
+result_type: status_sync_single_tick
+selected_scope: status-docs-tests-only
+selected_phase_slug: 2026-06-29-hermes-tavern-phase377-attention-status-sync-through-phase376
+selected_title: "Phase 377 attention/status sync through Phase 376"
+summary: "Phase 377 attention/status sync through accepted Phase 376; S1 executor completed, S2 worker-controller verification and acceptance finalization completed, and the dirty tree was left uncommitted for parent handoff."
+controller_lane: company_boost
+controller_run_id: "1782693285"
+
+phase_selection_gate:
+  branch: main
+  head: 3dc6372
+  pre_run_tree_clean: true
+  prior_phase: 376
+  prior_feature_path: design/codestable/features/2026-06-26-hermes-tavern-phase376-attention-status-sync-through-phase375
+  prior_feature_accepted: true
+  attention_currently_synced_through_phase: 376
+  focused_test_currently_synced_through_phase: 376
+  phase377_preexisting: false
+  phase378_preexisting: false
+  selected_slice: "Phase 377 attention/status sync through Phase 376"
+  controller_artifact_materialization_before_s1: completed
+  executor_acceptance_finalization: prohibited
+  controller_acceptance_finalization: completed
+  executor_stage_commit_push: prohibited
+
+status_test_contract:
+  current_live_before_s1:
+    attention_prefix: "Current status (2026-06-18): All phases 1-376 accepted"
+    terminal_suffix: "Phase 374 attention status sync through Phase 373, Phase 375 attention status sync through Phase 374, and Phase 376 attention status sync through Phase 375."
+    stale_status_prefix: "Current status (2026-06-18): All phases 1-375 accepted"
+    stale_phase_marker: "1-375"
+    stale_phase_marker_en_dash: "1–375"
+    phase_range: "range(168, 377)"
+    aggregate_range: "range(168, 377)"
+    split_stale_aggregate_guard: "range(168, 376)"
+  expected_live_after_s1:
+    attention_prefix: "Current status (2026-06-18): All phases 1-377 accepted"
+    terminal_suffix: "Phase 375 attention status sync through Phase 374, Phase 376 attention status sync through Phase 375, and Phase 377 attention status sync through Phase 376."
+    stale_status_prefix: "Current status (2026-06-18): All phases 1-376 accepted"
+    stale_phase_marker: "1-376"
+    stale_phase_marker_en_dash: "1–376"
+    required_new_label: "Phase 377 attention status sync through Phase 376"
+    phase_range: "range(168, 378)"
+    aggregate_range: "range(168, 378)"
+    split_stale_aggregate_guard: "range(168, 377)"
+    split_stale_aggregate_guard_source: 'stale_aggregate_range_377 = "".join(["range(168, ", "37", "7", ")"])'
+    contiguous_stale_aggregate_literal_forbidden_in_test_source: "range(168, 377)"
+    preserve_required_labels: "Phase 121-167 and every explicit Phase 168 through Phase 377 label"
+
+scope:
+  controller_owned_files:
+    - design/codestable/features/2026-06-29-hermes-tavern-phase377-attention-status-sync-through-phase376/design.md
+    - design/codestable/features/2026-06-29-hermes-tavern-phase377-attention-status-sync-through-phase376/checklist.yaml
+    - design/codestable/features/2026-06-29-hermes-tavern-phase377-attention-status-sync-through-phase376/acceptance.md
+  executor_allowed_files:
+    - design/codestable/attention.md
+    - tests/test_hermes_tavern_codestable_status.py
+    - design/codestable/features/2026-06-29-hermes-tavern-phase377-attention-status-sync-through-phase376/design.md
+    - design/codestable/features/2026-06-29-hermes-tavern-phase377-attention-status-sync-through-phase376/checklist.yaml
+  allowed_files_after_s2:
+    - design/codestable/attention.md
+    - tests/test_hermes_tavern_codestable_status.py
+    - design/codestable/features/2026-06-29-hermes-tavern-phase377-attention-status-sync-through-phase376/design.md
+    - design/codestable/features/2026-06-29-hermes-tavern-phase377-attention-status-sync-through-phase376/checklist.yaml
+    - design/codestable/features/2026-06-29-hermes-tavern-phase377-attention-status-sync-through-phase376/acceptance.md
+  acceptance_md_during_s1: absent
+  prohibited:
+    - runtime
+    - source
+    - plugin
+    - provider
+    - gateway
+    - CLI
+    - config
+    - dependency
+    - root_design
+    - architecture
+    - roadmap
+    - requirements
+    - compound
+    - build
+    - cache
+    - service_lifecycle
+    - network
+    - credentials
+    - sillytavern_asset_behavior
+    - adult_rp_policy_behavior
+    - minors_related_work
+    - CSAM
+    - provider_safety_bypass
+    - phase378
+    - staging_by_executor
+    - commits_by_executor
+    - pushes_by_executor
+
+codex_artifacts:
+  architect_design_jsonl: /tmp/hermes-tavern-architect-phase377-1782693285.jsonl
+  executor_jsonl: /tmp/hermes-tavern-executor-phase377-2026-06-29-hermes-tavern-phase377-attention-status-sync-through-phase376.jsonl
+  architect_review_jsonl: /tmp/hermes-tavern-review-phase377-2026-06-29-hermes-tavern-phase377-attention-status-sync-through-phase376.jsonl
+  architect_review_verdict: PASS
+
+steps:
+  - id: S1
+    name: "Executor status sync for Phase 377"
+    owner: executor
+    status: completed
+    acceptance_creation: prohibited
+    checks:
+      - id: C1
+        description: "Advance attention.md from 1-376 to 1-377 and append Phase 377 label exactly once."
+        status: completed
+      - id: C2
+        description: "Preserve Phase 121-167 and all explicit Phase 168 through Phase 376 labels."
+        status: completed
+      - id: C3
+        description: "Preserve status-line placement under ### 其他 after adult-fiction boundary and before credentials header."
+        status: completed
+      - id: C4
+        description: "Update focused test current/stale constants to the Phase 377 contract."
+        status: completed
+      - id: C5
+        description: "Append Phase 377 label, update FINAL_STATUS_SUFFIX, phase_range, and aggregate_range."
+        status: completed
+      - id: C6
+        description: "Add split stale aggregate guard for range(168, 377) and include it in stale tuple."
+        status: completed
+      - id: C7
+        description: "Do not create acceptance.md during executor S1, stage, commit, push, or touch prohibited paths."
+        status: completed
+
+  - id: S2
+    name: "Worker/controller verification and acceptance finalization"
+    owner: worker_controller
+    status: completed
+    acceptance_creation: completed
+    checks:
+      - id: C8
+        description: "Validate Phase 377 design/checklist YAML."
+        status: passed
+      - id: C9
+        description: "Run py_compile for focused status test."
+        status: passed
+      - id: C10
+        description: "Run focused status pytest."
+        status: passed
+      - id: C11
+        description: "Run static source/status guard, including no contiguous stale range(168, 377) literal."
+        status: passed
+      - id: C12
+        description: "Run full pytest."
+        status: passed
+      - id: C13
+        description: "Run git diff --check, git diff --cached --check, and changed/untracked whitespace/final-newline guard."
+        status: passed
+      - id: C14
+        description: "Create and validate acceptance.md after worker/controller verification passes."
+        status: passed
+
+verification_commands:
+  - "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-29-hermes-tavern-phase377-attention-status-sync-through-phase376/design.md --require doc_type --require feature --require title --require status --require implementation_ready --require date --require owner --require lane --require bounded_phase --require tags"
+  - "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-29-hermes-tavern-phase377-attention-status-sync-through-phase376/checklist.yaml --yaml-only"
+  - "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-29-hermes-tavern-phase377-attention-status-sync-through-phase376/acceptance.md --require doc_type --require feature --require status --require accepted_at --require summary --require tags"
+  - "PYTHONDONTWRITEBYTECODE=1 python -c 'import os, py_compile, tempfile; fd,path=tempfile.mkstemp(prefix=\"phase377-status-\", suffix=\".pyc\"); os.close(fd); py_compile.compile(\"tests/test_hermes_tavern_codestable_status.py\", cfile=path, doraise=True); os.remove(path); print(\"py_compile ok\")'"
+  - "PYTHONDONTWRITEBYTECODE=1 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python -m pytest tests/test_hermes_tavern_codestable_status.py -q -o addopts= -p no:cacheprovider"
+  - "EXPECT_ACCEPTANCE=1 PYTHONDONTWRITEBYTECODE=1 python /tmp/hermes-tavern-phase377-static-guard.py"
+  - "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o addopts= -p no:cacheprovider"
+  - "git diff --check"
+  - "git diff --cached --check"
+
+controller_evidence:
+  pre_acceptance_validation: "design/checklist valid; py_compile ok; focused status pytest 1 passed in 0.02s; static guard ok; full pytest 1215 passed in 70.79s; diff checks clean."
+  post_acceptance_validation: "Final rerun after acceptance/checklist finalization: design/checklist/acceptance YAML valid; py_compile ok; focused status pytest 1 passed in 0.02s; EXPECT_ACCEPTANCE=1 static guard ok with five allowed changed paths; full pytest 1215 passed in 52.17s; git diff --check and git diff --cached --check clean."
+  executor_transient_failures: "Executor JSONL contains recovered intermediate failed status-line probes and a focused pytest failure before final correction; worker/controller reruns are authoritative."
+
+parent_handoff:
+  acceptance_md_absent_during_s1: true
+  worker_dirty_tree_uncommitted: true
+  parent_may_rerun_verification_before_commit: true
+  parent_controller_ownership: "Commit/push was intentionally left to the parent controller; no worker commit or push was performed."
