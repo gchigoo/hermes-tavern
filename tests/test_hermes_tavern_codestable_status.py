@@ -4,10 +4,10 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 ATTENTION_DOC = REPO_ROOT / "design" / "codestable" / "attention.md"
-CURRENT_STATUS_PREFIX = "Current status (2026-06-18): All phases 1-382 accepted"
-STALE_STATUS_PREFIX = "Current status (2026-06-18): All phases 1-381 accepted"
-STALE_PHASE_MARKER = "1-381"
-STALE_PHASE_MARKER_EN_DASH = "1–381"
+CURRENT_STATUS_PREFIX = "Current status (2026-06-18): All phases 1-383 accepted"
+STALE_STATUS_PREFIX = "Current status (2026-06-18): All phases 1-382 accepted"
+STALE_PHASE_MARKER = "1-382"
+STALE_PHASE_MARKER_EN_DASH = "1–382"
 REQUIRED_PHASE_LABELS = [
     "Phase 168 image settings JSON export",
     "Phase 169 project JSON export surface parity",
@@ -224,8 +224,9 @@ REQUIRED_PHASE_LABELS = [
     "Phase 380 attention status sync through Phase 379",
     "Phase 381 attention status sync through Phase 380",
     "Phase 382 attention status sync through Phase 381",
+    "Phase 383 attention status sync through Phase 382",
 ]
-FINAL_STATUS_SUFFIX = "Phase 380 attention status sync through Phase 379, Phase 381 attention status sync through Phase 380, and Phase 382 attention status sync through Phase 381."
+FINAL_STATUS_SUFFIX = "Phase 381 attention status sync through Phase 380, Phase 382 attention status sync through Phase 381, and Phase 383 attention status sync through Phase 382."
 
 
 def test_attention_current_status_line_is_current():
@@ -250,13 +251,15 @@ def test_attention_current_status_line_is_current():
     assert status.startswith(f"- {CURRENT_STATUS_PREFIX}")
     for label in REQUIRED_PHASE_LABELS:
         assert label in status
+    newest_label = REQUIRED_PHASE_LABELS[-1]
+    assert status.count(newest_label) == 1
 
     assert STALE_STATUS_PREFIX not in status
     assert re.search(rf"(?<!\d){re.escape(STALE_PHASE_MARKER)}(?!\d)", status) is None
     assert re.search(rf"(?<!\d){re.escape(STALE_PHASE_MARKER_EN_DASH)}(?!\d)", status) is None
     assert status.endswith(FINAL_STATUS_SUFFIX)
-    phase_range = range(168, 383)
-    aggregate_range = "range(168, 383)"
+    phase_range = range(168, 384)
+    aggregate_range = "range(168, 384)"
     assert all(f"Phase {phase} " in status for phase in phase_range)
     assert re.search(r"(?<!\d)Phase 121-167(?!\d)", status) is not None
     test = Path(__file__).read_text(encoding="utf-8")
@@ -297,6 +300,7 @@ def test_attention_current_status_line_is_current():
     stale_aggregate_range_380 = "".join(["range(168, ", "38", "0", ")"])
     stale_aggregate_range_381 = "".join(["range(168, ", "38", "1", ")"])
     stale_aggregate_range_382 = "".join(["range(168, ", "38", "2", ")"])
+    stale_aggregate_range_383 = "".join(["range(168, ", "38", "3", ")"])
     stale_aggregate_range_349 = "".join(["range(168, ", "34", "9", ")"])
     stale_aggregate_range_350 = "".join(["range(168, ", "35", "0", ")"])
     stale_aggregate_range_348 = "".join(["range(168, ", "34", "8", ")"])
@@ -468,10 +472,11 @@ def test_attention_current_status_line_is_current():
         stale_aggregate_range_380,
         stale_aggregate_range_381,
         stale_aggregate_range_382,
+        stale_aggregate_range_383,
         stale_aggregate_range_376,
     ):
         assert stale_range not in test
-    stale_aggregate_guard = "".join(["range(168, ", "38", "2", ")"])
+    stale_aggregate_guard = "".join(["range(168, ", "38", "3", ")"])
     assert stale_aggregate_guard not in test
     forbidden_glob = "." + "glob" + "("
     forbidden_rglob = "." + "rgl" + "ob" + "("
