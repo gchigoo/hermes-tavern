@@ -4,10 +4,10 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 ATTENTION_DOC = REPO_ROOT / "design" / "codestable" / "attention.md"
-CURRENT_STATUS_PREFIX = "Current status (2026-06-18): All phases 1-380 accepted"
-STALE_STATUS_PREFIX = "Current status (2026-06-18): All phases 1-379 accepted"
-STALE_PHASE_MARKER = "1-379"
-STALE_PHASE_MARKER_EN_DASH = "1–379"
+CURRENT_STATUS_PREFIX = "Current status (2026-06-18): All phases 1-381 accepted"
+STALE_STATUS_PREFIX = "Current status (2026-06-18): All phases 1-380 accepted"
+STALE_PHASE_MARKER = "1-380"
+STALE_PHASE_MARKER_EN_DASH = "1–380"
 REQUIRED_PHASE_LABELS = [
     "Phase 168 image settings JSON export",
     "Phase 169 project JSON export surface parity",
@@ -222,8 +222,9 @@ REQUIRED_PHASE_LABELS = [
     "Phase 378 attention status sync through Phase 377",
     "Phase 379 attention status sync through Phase 378",
     "Phase 380 attention status sync through Phase 379",
+    "Phase 381 attention status sync through Phase 380",
 ]
-FINAL_STATUS_SUFFIX = "Phase 378 attention status sync through Phase 377, Phase 379 attention status sync through Phase 378, and Phase 380 attention status sync through Phase 379."
+FINAL_STATUS_SUFFIX = "Phase 379 attention status sync through Phase 378, Phase 380 attention status sync through Phase 379, and Phase 381 attention status sync through Phase 380."
 
 
 def test_attention_current_status_line_is_current():
@@ -233,6 +234,17 @@ def test_attention_current_status_line_is_current():
 
     assert len(status_lines) == 1
     status = status_lines[0]
+    other_header = "### 其他"
+    adult_boundary = "- Adult-fiction non-negotiable boundaries defined in design doc §12.3 — do not build features that bypass provider safety systems."
+    credentials_header = "### Hermes Tavern 凭证约束"
+    status_index = lines.index(status)
+
+    assert other_header in lines
+    assert adult_boundary in lines
+    assert credentials_header in lines
+    assert lines.index(other_header) < lines.index(adult_boundary) < status_index
+    assert status_index == lines.index(adult_boundary) + 1
+    assert status_index < lines.index(credentials_header)
 
     assert status.startswith(f"- {CURRENT_STATUS_PREFIX}")
     for label in REQUIRED_PHASE_LABELS:
@@ -242,8 +254,8 @@ def test_attention_current_status_line_is_current():
     assert re.search(rf"(?<!\d){re.escape(STALE_PHASE_MARKER)}(?!\d)", status) is None
     assert re.search(rf"(?<!\d){re.escape(STALE_PHASE_MARKER_EN_DASH)}(?!\d)", status) is None
     assert status.endswith(FINAL_STATUS_SUFFIX)
-    phase_range = range(168, 381)
-    aggregate_range = "range(168, 381)"
+    phase_range = range(168, 382)
+    aggregate_range = "range(168, 382)"
     assert all(f"Phase {phase} " in status for phase in phase_range)
     assert re.search(r"(?<!\d)Phase 121-167(?!\d)", status) is not None
     test = Path(__file__).read_text(encoding="utf-8")
@@ -282,6 +294,7 @@ def test_attention_current_status_line_is_current():
     stale_aggregate_range_378 = "".join(["range(168, ", "37", "8", ")"])
     stale_aggregate_range_379 = "".join(["range(168, ", "37", "9", ")"])
     stale_aggregate_range_380 = "".join(["range(168, ", "38", "0", ")"])
+    stale_aggregate_range_381 = "".join(["range(168, ", "38", "1", ")"])
     stale_aggregate_range_349 = "".join(["range(168, ", "34", "9", ")"])
     stale_aggregate_range_350 = "".join(["range(168, ", "35", "0", ")"])
     stale_aggregate_range_348 = "".join(["range(168, ", "34", "8", ")"])
@@ -451,10 +464,11 @@ def test_attention_current_status_line_is_current():
         stale_aggregate_range_378,
         stale_aggregate_range_379,
         stale_aggregate_range_380,
+        stale_aggregate_range_381,
         stale_aggregate_range_376,
     ):
         assert stale_range not in test
-    stale_aggregate_guard = "".join(["range(168, ", "38", "0", ")"])
+    stale_aggregate_guard = "".join(["range(168, ", "38", "1", ")"])
     assert stale_aggregate_guard not in test
     forbidden_glob = "." + "glob" + "("
     forbidden_rglob = "." + "rgl" + "ob" + "("
