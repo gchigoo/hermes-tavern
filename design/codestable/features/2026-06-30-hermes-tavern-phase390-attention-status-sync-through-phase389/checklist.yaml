@@ -1,0 +1,218 @@
+doc_type: feature-checklist
+status: accepted
+workflow_status: accepted
+acceptance_state: accepted
+implementation_ready: true
+parent_verification_required: false
+worker_commit_or_push_performed: false
+parent_commit_or_push_performed: true
+acceptance_artifact: design/codestable/features/2026-06-30-hermes-tavern-phase390-attention-status-sync-through-phase389/acceptance.md
+
+feature: 2026-06-30-hermes-tavern-phase390-attention-status-sync-through-phase389
+date: "2026-06-30"
+owner: company_boost_lane
+lane: company_boost_status_sync
+bounded_phase: "docs/static-test/status-only"
+result_type: status_sync_single_tick
+selected_scope: status-docs-tests-only
+selected_phase_slug: 2026-06-30-hermes-tavern-phase390-attention-status-sync-through-phase389
+selected_title: "Phase 390 attention/status sync through Phase 389"
+summary: "Phase 390 attention/status sync through accepted Phase 389; parent-controller verification and acceptance closeout passed."
+controller_lane: company_boost
+architect_design_jsonl: /tmp/hermes-tavern-architect_design-20260630-103605.jsonl
+executor_jsonl: /tmp/hermes-tavern-executor_impl-20260630-103605.jsonl
+architect_review_jsonl: /tmp/hermes-tavern-architect_review-20260630-103605.jsonl
+executor_fix_jsonl: null
+
+phase_selection_gate:
+  branch: main
+  controller_preflight_head: 48062ee
+  controller_preflight_working_tree: clean
+  local_status_read: "## main...origin/main"
+  codestable_root: design/codestable
+  attention_source_of_truth: design/codestable/attention.md
+  prior_phase: 389
+  prior_feature_path: design/codestable/features/2026-06-30-hermes-tavern-phase389-attention-status-sync-through-phase388
+  prior_feature_accepted: true
+  attention_currently_synced_through_phase: 389
+  focused_test_currently_synced_through_phase: 389
+  phase390_preexisting_at_architect_read: false
+  selected_slice: "Phase 390 attention/status sync through Phase 389"
+  executor_acceptance_finalization: prohibited
+  controller_acceptance_finalization: completed
+  executor_stage_commit_push: prohibited
+
+status_test_contract:
+  expected_live_after_s1:
+    attention_prefix: "Current status (2026-06-18): All phases 1-390 accepted"
+    terminal_suffix: "Phase 388 attention status sync through Phase 387, Phase 389 attention status sync through Phase 388, and Phase 390 attention status sync through Phase 389."
+    stale_status_prefix: "Current status (2026-06-18): All phases 1-389 accepted"
+    stale_phase_marker: "1-389"
+    stale_phase_marker_en_dash: "1–389"
+    required_new_label: "Phase 390 attention status sync through Phase 389"
+    attention_line_new_label_count: exactly_once
+    test_source_new_label_count_policy: "Do not assert exactly once across test source; the label appears in REQUIRED_PHASE_LABELS and FINAL_STATUS_SUFFIX."
+    phase_range: "range(168, 391)"
+    aggregate_range: "range(168, 391)"
+    split_stale_aggregate_guard_new: 'stale_aggregate_range_390 = "".join(["range(168, ", "39", "0", ")"])'
+    split_stale_aggregate_guard_existing_to_preserve: 'stale_aggregate_range_389 = "".join(["range(168, ", "38", "9", ")"])'
+    final_stale_aggregate_guard: 'stale_aggregate_guard = "".join(["range(168, ", "39", "0", ")"])'
+    forbidden_direct_stale_aggregate_literal_in_test_source: "range(168, 390)"
+    preserve_required_labels: "Phase 121-167 and every explicit Phase 168 through Phase 389 label"
+    preserve_tail_labels:
+      - "Phase 388 attention status sync through Phase 387"
+      - "Phase 389 attention status sync through Phase 388"
+      - "Phase 390 attention status sync through Phase 389"
+    assignment_guards:
+      current_status_prefix_assignments: exactly_one_anchored
+      final_status_suffix_assignments: exactly_one_anchored
+      forbidden_method: naive_substring_assignment_counts
+    section_placement_guard: "Current-status bullet remains immediately after the adult-fiction boundary bullet in ### 其他 and before ### Hermes Tavern 凭证约束."
+    self_source_discovery_guards:
+      - ".glob"
+      - ".rglob"
+      - "iterdir"
+      - "os.walk"
+
+scope:
+  allowed_files_s1:
+    - design/codestable/attention.md
+    - tests/test_hermes_tavern_codestable_status.py
+    - design/codestable/features/2026-06-30-hermes-tavern-phase390-attention-status-sync-through-phase389/design.md
+    - design/codestable/features/2026-06-30-hermes-tavern-phase390-attention-status-sync-through-phase389/checklist.yaml
+  prohibited:
+    - runtime
+    - source
+    - plugin
+    - provider
+    - gateway
+    - CLI
+    - config
+    - dependency
+    - build
+    - root_design
+    - README
+    - architecture
+    - roadmap
+    - requirements
+    - compound
+    - cache
+    - service_lifecycle
+    - network
+    - credentials
+    - sillytavern_asset_behavior
+    - adult_fiction_boundary_changes
+    - roleplay_compatibility_changes
+    - minors_related_work
+    - CSAM
+    - provider_safety_bypass
+    - phase391_or_later
+    - acceptance_md_in_s1
+    - s2_closeout_by_executor
+    - staging_by_executor
+    - commits_by_executor
+    - pushes_by_executor
+
+steps:
+  - id: S1
+    name: "Executor status sync for Phase 390"
+    owner: executor
+    status: completed
+    acceptance_creation: prohibited
+    checks:
+      - id: C1
+        description: "Keep Phase 390 design.md and checklist.yaml only in the selected feature directory."
+        status: passed
+      - id: C2
+        description: "Advance attention.md from 1-389 to 1-390 and append Phase 390 label exactly once in the attention status line."
+        status: passed
+      - id: C3
+        description: "Preserve Phase 121-167 and all explicit Phase 168 through Phase 389 labels."
+        status: passed
+      - id: C4
+        description: "Preserve status-line placement under ### 其他 immediately after adult-fiction boundary and before Hermes Tavern credentials header."
+        status: passed
+      - id: C5
+        description: "Update focused test current/stale constants to the Phase 390 contract, including en-dash stale marker."
+        status: passed
+      - id: C6
+        description: "Append Phase 390 label, update FINAL_STATUS_SUFFIX, phase_range, aggregate_range, and split stale aggregate guard for range(168, 390)."
+        status: passed
+      - id: C7
+        description: "Keep existing stale split guard for range(168, 389) present in the stale tuple."
+        status: passed
+      - id: C8
+        description: "Keep anchored assignment-count guards, section-placement guard, and split no-discovery-token guards."
+        status: passed
+      - id: C9
+        description: "Do not create acceptance.md during S1, stage, commit, push, or touch prohibited paths."
+        status: passed
+
+  - id: S2
+    name: "Parent/controller verification and acceptance finalization"
+    owner: parent_controller
+    status: completed
+    acceptance_creation: parent_only
+    checks:
+      - id: C10
+        description: "Validate Phase 390 design/checklist YAML after S1."
+        status: passed
+      - id: C11
+        description: "Run py_compile for focused status test."
+        status: passed
+      - id: C12
+        description: "Run focused status pytest."
+        status: passed
+      - id: C13
+        description: "Run static Phase 390 status/scope guard, including untracked artifacts."
+        status: passed
+      - id: C14
+        description: "Run git diff --check and broader parent-owned pytest gate if required."
+        status: passed
+      - id: C15
+        description: "Create acceptance.md and final checklist closeout only after parent verification."
+        status: passed
+
+post_s1_expected_non_final_state:
+  status: implemented
+  workflow_status: pending_parent_verification
+  acceptance_state: pending_parent_verification
+  parent_verification_required: true
+  worker_commit_or_push_performed: false
+  parent_commit_or_push_performed: false
+  acceptance_artifact: null
+  s1_step_status: completed
+  s1_check_status: passed
+  s2_step_status: pending
+  s2_check_status: pending
+
+verification_commands:
+  - "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-30-hermes-tavern-phase390-attention-status-sync-through-phase389/design.md --require doc_type --require feature --require title --require status --require implementation_ready --require date --require owner --require lane --require bounded_phase --require tags"
+  - "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-06-30-hermes-tavern-phase390-attention-status-sync-through-phase389/checklist.yaml --yaml-only"
+  - "PYTHONDONTWRITEBYTECODE=1 python -m py_compile tests/test_hermes_tavern_codestable_status.py"
+  - "PYTHONDONTWRITEBYTECODE=1 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python -m pytest tests/test_hermes_tavern_codestable_status.py -q -o addopts= -p no:cacheprovider"
+  - "static Phase 390 status/scope guard using changed plus untracked files"
+  - "git diff --check"
+
+risks:
+  - id: R1
+    description: "The long attention status line can lose an older explicit phase label during manual editing."
+  - id: R2
+    description: "The terminal 'and' punctuation must move to Phase 390; Phase 389 should become comma-separated."
+  - id: R3
+    description: "The stale range range(168, 390) must be split in the test source, never embedded contiguously."
+  - id: R4
+    description: "The existing split stale guard for range(168, 389) must remain present in the stale tuple."
+  - id: R5
+    description: "Newest-label exact-once applies only to the attention status line, not to the whole test source."
+  - id: R6
+    description: "Creating acceptance.md in S1 would violate the parent/controller finalization boundary."
+  - id: R7
+    description: "Any runtime, provider, gateway, CLI, config, dependency, build, root-design, README, architecture, roadmap, requirements, compound, safety, minors/CSAM, or provider-bypass change violates scope."
+
+parent_handoff:
+  acceptance_md_absent_during_s1: true
+  acceptance_md_parent_created_after_authoritative_gates: true
+  worker_dirty_tree_uncommitted: true
+  parent_verification_required: true
+  parent_controller_ownership: "Parent/controller owns final gates, acceptance.md creation, final checklist closeout, commit, and push."
