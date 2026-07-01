@@ -1,0 +1,235 @@
+doc_type: feature-checklist
+status: accepted
+workflow_status: accepted
+acceptance_state: accepted
+implementation_ready: true
+parent_verification_required: false
+parent_reverification_before_commit_recommended: true
+worker_commit_or_push_performed: false
+parent_commit_or_push_performed: false
+acceptance_artifact: design/codestable/features/2026-07-01-hermes-tavern-phase400-attention-status-sync-through-phase399/acceptance.md
+
+feature: 2026-07-01-hermes-tavern-phase400-attention-status-sync-through-phase399
+date: "2026-07-01"
+owner: company_boost_lane
+lane: company-boost/uncommitted
+bounded_phase: "docs/static-test/status-only"
+result_type: status_sync_single_tick
+selected_scope: status-docs-tests-only
+selected_phase_slug: 2026-07-01-hermes-tavern-phase400-attention-status-sync-through-phase399
+selected_title: "Phase 400 attention/status sync through Phase 399"
+summary: "Phase 400 attention/status sync through accepted Phase 399; worker/controller verification passed and no commit or push was performed."
+controller_lane: company-boost/uncommitted
+architect_design_jsonl: /tmp/hermes-tavern-architect-phase400-status-sync.jsonl
+executor_jsonl: /tmp/hermes-tavern-executor-phase400-status-sync.jsonl
+architect_review_jsonl: /tmp/hermes-tavern-architect-review-phase400-status-sync.jsonl
+executor_fix_jsonl: null
+
+phase_selection_gate:
+  branch: main
+  read_only_working_tree: clean
+  local_status_read: "## main...origin/main"
+  codestable_root: design/codestable
+  attention_source_of_truth: design/codestable/attention.md
+  prior_phase: 399
+  prior_feature_path: design/codestable/features/2026-07-01-hermes-tavern-phase399-attention-status-sync-through-phase398
+  prior_feature_accepted: true
+  attention_currently_synced_through_phase: 399
+  focused_test_currently_synced_through_phase: 399
+  phase400_preexisting_at_architect_read: false
+  selected_slice: "Phase 400 attention/status sync through Phase 399"
+  executor_acceptance_finalization: prohibited
+  controller_acceptance_finalization: completed
+  executor_stage_commit_push: prohibited
+
+files:
+  allowed_files:
+    - design/codestable/attention.md
+    - tests/test_hermes_tavern_codestable_status.py
+    - design/codestable/features/2026-07-01-hermes-tavern-phase400-attention-status-sync-through-phase399/design.md
+    - design/codestable/features/2026-07-01-hermes-tavern-phase400-attention-status-sync-through-phase399/checklist.yaml
+    - design/codestable/features/2026-07-01-hermes-tavern-phase400-attention-status-sync-through-phase399/acceptance.md
+  prohibited:
+    - runtime
+    - source
+    - plugin
+    - provider
+    - gateway
+    - CLI
+    - config
+    - dependency
+    - root-design
+    - README
+    - architecture
+    - roadmap
+    - requirements
+    - compound
+    - build
+    - cache
+    - service_lifecycle
+    - network
+    - credentials
+    - sillytavern_asset_behavior
+    - adult_fiction_boundary_changes
+    - roleplay_compatibility_changes
+    - minors_related_work
+    - CSAM
+    - provider_safety_bypass
+    - phase401_or_later
+    - staging
+    - commits
+    - pushes
+
+contract:
+  live_after_implementation:
+    attention_prefix: "Current status (2026-06-18): All phases 1-400 accepted"
+    stale_status_prefix: "Current status (2026-06-18): All phases 1-399 accepted"
+    stale_phase_marker: "1-399"
+    stale_phase_marker_en_dash: "1–399"
+    required_new_label: "Phase 400 attention status sync through Phase 399"
+    attention_line_new_label_count: exactly_once
+    test_source_new_label_count_policy: "Do not assert exactly once across test source; the label appears in REQUIRED_PHASE_LABELS and FINAL_STATUS_SUFFIX."
+    terminal_suffix: "Phase 398 attention status sync through Phase 397, Phase 399 attention status sync through Phase 398, and Phase 400 attention status sync through Phase 399."
+    phase_range: "range(168, 401)"
+    aggregate_range: "range(168, 401)"
+    split_stale_aggregate_guard_new: 'stale_aggregate_range_400 = "".join(["range(168, ", "40", "0", ")"])'
+    split_stale_aggregate_guard_existing_preserved:
+      - 'stale_aggregate_range_399 = "".join(["range(168, ", "39", "9", ")"])'
+      - 'stale_aggregate_range_398 = "".join(["range(168, ", "39", "8", ")"])'
+    final_stale_aggregate_guard: 'stale_aggregate_guard = "".join(["range(168, ", "40", "0", ")"])'
+    forbidden_direct_stale_aggregate_literal_in_test_source: "range(168, 400)"
+    allowed_direct_live_aggregate_literal_in_test_source: "range(168, 401)"
+    preserved_required_labels: "Phase 121-167 and every explicit Phase 168 through Phase 399 label"
+    preserved_tail_labels:
+      - "Phase 398 attention status sync through Phase 397"
+      - "Phase 399 attention status sync through Phase 398"
+      - "Phase 400 attention status sync through Phase 399"
+    assignment_guards:
+      current_status_prefix_assignments: exactly_one_anchored
+      final_status_suffix_assignments: exactly_one_anchored
+      forbidden_method: naive_substring_assignment_counts
+    section_placement_guard: "Current-status bullet remains immediately after the adult-fiction boundary bullet in ### 其他 and before ### Hermes Tavern 凭证约束."
+    self_source_discovery_guards:
+      - ".glob"
+      - ".rglob"
+      - "iterdir"
+      - "os.walk"
+
+steps:
+  - id: S1
+    name: "Executor status sync for Phase 400"
+    owner: executor
+    status: completed
+    files:
+      allowed:
+        - design/codestable/attention.md
+        - tests/test_hermes_tavern_codestable_status.py
+        - design/codestable/features/2026-07-01-hermes-tavern-phase400-attention-status-sync-through-phase399/design.md
+        - design/codestable/features/2026-07-01-hermes-tavern-phase400-attention-status-sync-through-phase399/checklist.yaml
+    checks:
+      - id: C1
+        description: "Kept Phase 400 design.md and checklist.yaml in the selected feature directory."
+        status: passed
+      - id: C2
+        description: "Advanced attention.md from 1-399 to 1-400 and appended Phase 400 label exactly once in the attention status line."
+        status: passed
+      - id: C3
+        description: "Preserved Phase 121-167 and all explicit Phase 168 through Phase 399 labels."
+        status: passed
+      - id: C4
+        description: "Preserved status-line placement under ### 其他 immediately after adult-fiction boundary and before Hermes Tavern credentials header."
+        status: passed
+      - id: C5
+        description: "Updated focused test current/stale constants to the Phase 400 contract, including en-dash stale marker."
+        status: passed
+      - id: C6
+        description: "Appended Phase 400 label, updated FINAL_STATUS_SUFFIX, phase_range, aggregate_range, and split stale aggregate guard for range(168, 400)."
+        status: passed
+      - id: C7
+        description: "Kept existing stale split guard for range(168, 399) present in the stale tuple."
+        status: passed
+      - id: C8
+        description: "Kept anchored assignment-count guards, section-placement guard, and split no-discovery-token guards."
+        status: passed
+      - id: C9
+        description: "No staging, commit, push, prohibited-path edit, or Phase 401+ work was performed."
+        status: passed
+
+  - id: S2
+    name: "Worker/controller verification and acceptance finalization"
+    owner: worker_controller
+    status: completed
+    completed_at: "2026-07-01"
+    files:
+      accepted_after_worker_verification:
+        - design/codestable/attention.md
+        - tests/test_hermes_tavern_codestable_status.py
+        - design/codestable/features/2026-07-01-hermes-tavern-phase400-attention-status-sync-through-phase399/design.md
+        - design/codestable/features/2026-07-01-hermes-tavern-phase400-attention-status-sync-through-phase399/checklist.yaml
+        - design/codestable/features/2026-07-01-hermes-tavern-phase400-attention-status-sync-through-phase399/acceptance.md
+    checks:
+      - id: C10
+        description: "Worker reran Phase 400 design/checklist/acceptance YAML validation."
+        status: passed
+      - id: C11
+        description: "Worker reran py_compile for focused status test."
+        status: passed
+      - id: C12
+        description: "Worker reran focused status pytest."
+        status: passed
+      - id: C13
+        description: "Worker reran static Phase 400 status/scope/final-newline/trailing-whitespace guard, including untracked artifacts."
+        status: passed
+      - id: C14
+        description: "Worker reran full pytest, git diff --check, and whitespace/final-newline checks."
+        status: passed
+      - id: C15
+        description: "Worker created acceptance.md and finalized status closeout after verification."
+        status: passed
+      - id: C16
+        description: "Commit/push remains parent-owned and out of worker scope."
+        status: passed
+
+verification:
+  commands:
+    - command: "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-07-01-hermes-tavern-phase400-attention-status-sync-through-phase399/design.md --require doc_type --require feature --require title --require status --require implementation_ready --require date --require owner --require lane --require bounded_phase --require tags"
+      result: passed
+    - command: "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-07-01-hermes-tavern-phase400-attention-status-sync-through-phase399/checklist.yaml --yaml-only"
+      result: passed
+    - command: "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-07-01-hermes-tavern-phase400-attention-status-sync-through-phase399/acceptance.md --require doc_type --require feature --require status --require accepted_at --require owner --require lane --require bounded_phase --require tags"
+      result: passed
+    - command: "PYTHONDONTWRITEBYTECODE=1 python -m py_compile tests/test_hermes_tavern_codestable_status.py"
+      result: passed
+    - command: "PYTHONDONTWRITEBYTECODE=1 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python -m pytest tests/test_hermes_tavern_codestable_status.py -q -o 'addopts=' -p no:cacheprovider"
+      result: "passed: 1 passed in 0.02s"
+    - command: "static Phase 400 status/scope/final-newline/trailing-whitespace guard"
+      result: passed
+    - command: "git diff --check"
+      result: passed
+    - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts='"
+      result: "passed: 1215 passed in 56.38s"
+  worker_verification_performed: true
+  full_pytest_plugin_autoload_enabled: true
+  parent_finalization_pending:
+    commit: true
+    push: true
+    recommended_gates_before_commit:
+      - "git status --short --branch --untracked-files=all"
+      - "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --dir design/codestable/features/2026-07-01-hermes-tavern-phase400-attention-status-sync-through-phase399 --require doc_type --require status --require feature"
+      - "PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_codestable_status.py -q -o 'addopts=' -p no:cacheprovider"
+      - "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts='"
+      - "git diff --check"
+
+risks:
+  - id: R1
+    description: "The long attention status line can lose an older explicit phase label during manual editing."
+  - id: R2
+    description: "The terminal 'and' punctuation must move to Phase 400; Phase 399 should become comma-separated."
+  - id: R3
+    description: "The stale range range(168, 400) must be split in the test source, never embedded contiguously."
+  - id: R4
+    description: "The existing split stale guard for range(168, 399) must remain present in the stale tuple."
+  - id: R5
+    description: "Newest-label exact-once applies only to the attention status line, not to the whole test source."
+  - id: R6
+    description: "Any runtime, provider, gateway, CLI, config, dependency, build, root-design, README, architecture, roadmap, requirements, compound, safety, minors/CSAM, or provider-bypass change violates scope."
