@@ -1,0 +1,172 @@
+doc_type: feature-checklist
+status: accepted
+workflow_status: accepted
+acceptance_state: accepted
+implementation_ready: true
+parent_verification_required: false
+worker_commit_or_push_performed: false
+parent_commit_or_push_performed: false
+acceptance_artifact: design/codestable/features/2026-07-01-hermes-tavern-phase402-attention-status-sync-through-phase401/acceptance.md
+
+feature: 2026-07-01-hermes-tavern-phase402-attention-status-sync-through-phase401
+date: "2026-07-01"
+owner: company_boost_lane
+lane: company-boost/uncommitted
+bounded_phase: "docs/static-test/status-only"
+result_type: status_sync_single_tick
+selected_scope: status-docs-tests-only
+selected_phase_slug: 2026-07-01-hermes-tavern-phase402-attention-status-sync-through-phase401
+selected_title: "Phase 402 attention/status sync through Phase 401"
+summary: "Phase 402 attention/status sync through accepted Phase 401; worker/controller verification passed and no executor commit or push was performed."
+
+phase_selection_gate:
+  branch: main
+  codestable_root: design/codestable
+  attention_source_of_truth: design/codestable/attention.md
+  prior_phase: 401
+  prior_feature_path: design/codestable/features/2026-07-01-hermes-tavern-phase401-attention-status-sync-through-phase400
+  prior_feature_accepted: true
+  attention_currently_synced_through_phase: 401
+  focused_test_currently_synced_through_phase: 401
+  phase402_preexisting_at_architect_read: false
+  selected_slice: "Phase 402 attention/status sync through Phase 401"
+  executor_stage_commit_push: prohibited
+  controller_acceptance_finalization: completed_after_parent_verification
+
+files:
+  allowed_files:
+    - design/codestable/attention.md
+    - tests/test_hermes_tavern_codestable_status.py
+    - design/codestable/features/2026-07-01-hermes-tavern-phase402-attention-status-sync-through-phase401/design.md
+    - design/codestable/features/2026-07-01-hermes-tavern-phase402-attention-status-sync-through-phase401/checklist.yaml
+    - design/codestable/features/2026-07-01-hermes-tavern-phase402-attention-status-sync-through-phase401/acceptance.md
+  prohibited:
+    - src/
+    - plugins/
+    - tests/ except tests/test_hermes_tavern_codestable_status.py
+    - design/HERMES_TAVERN_DESIGN.md
+    - README.md
+    - pyproject.toml
+    - requirements-test.txt
+    - design/codestable/architecture/
+    - design/codestable/roadmap/
+    - design/codestable/requirements/
+    - design/codestable/compound/
+    - design/codestable/reviews/
+    - design/plans/
+    - patches/
+    - build/
+    - .pytest_cache/
+    - __pycache__/
+    - src/hermes_tavern.egg-info/
+    - .github/
+    - .git/
+
+contract:
+  live_after_implementation:
+    attention_prefix: "Current status (2026-06-18): All phases 1-402 accepted"
+    stale_status_prefix: "Current status (2026-06-18): All phases 1-401 accepted"
+    stale_phase_marker: "1-401"
+    stale_phase_marker_en_dash: "1–401"
+    required_new_label: "Phase 402 attention status sync through Phase 401"
+    attention_line_new_label_count: exactly_once
+    test_source_new_label_count_policy: "Do not assert exactly once across test source; the label appears in REQUIRED_PHASE_LABELS and FINAL_STATUS_SUFFIX."
+    terminal_suffix: "Phase 400 attention status sync through Phase 399, Phase 401 attention status sync through Phase 400, and Phase 402 attention status sync through Phase 401."
+    phase_range: "range(168, 403)"
+    aggregate_range: "range(168, 403)"
+    split_stale_aggregate_guard_new: 'stale_aggregate_range_402 = "".join(["range(168, ", "40", "2", ")"])'
+    split_stale_aggregate_guard_existing_preserved:
+      - 'stale_aggregate_range_401 = "".join(["range(168, ", "40", "1", ")"])'
+      - 'stale_aggregate_range_400 = "".join(["range(168, ", "40", "0", ")"])'
+      - 'stale_aggregate_range_399 = "".join(["range(168, ", "39", "9", ")"])'
+    final_stale_aggregate_guard: 'stale_aggregate_guard = "".join(["range(168, ", "40", "2", ")"])'
+    forbidden_direct_stale_aggregate_literal_in_test_source: "range(168, 402)"
+    allowed_direct_live_aggregate_literal_in_test_source: "range(168, 403)"
+    preserved_required_labels: "Phase 121-167 and every explicit Phase 168 through Phase 401 label"
+    preserved_tail_labels:
+      - "Phase 400 attention status sync through Phase 399"
+      - "Phase 401 attention status sync through Phase 400"
+      - "Phase 402 attention status sync through Phase 401"
+    assignment_guards:
+      current_status_prefix_assignments: exactly_one_anchored
+      final_status_suffix_assignments: exactly_one_anchored
+      forbidden_method: naive_substring_assignment_counts
+    section_placement_guard: "Current-status bullet remains immediately after the adult-fiction boundary bullet in ### 其他 and before ### Hermes Tavern 凭证约束."
+    self_source_discovery_guards:
+      - ".glob"
+      - ".rglob"
+      - "iterdir"
+      - "os.walk"
+
+steps:
+  - id: S1
+    name: "Executor status sync for Phase 402"
+    owner: executor
+    status: completed
+    files:
+      allowed:
+        - design/codestable/attention.md
+        - tests/test_hermes_tavern_codestable_status.py
+        - design/codestable/features/2026-07-01-hermes-tavern-phase402-attention-status-sync-through-phase401/design.md
+        - design/codestable/features/2026-07-01-hermes-tavern-phase402-attention-status-sync-through-phase401/checklist.yaml
+        - design/codestable/features/2026-07-01-hermes-tavern-phase402-attention-status-sync-through-phase401/acceptance.md
+    checks:
+      - id: C1
+        description: "Created Phase 402 design.md, checklist.yaml, and acceptance.md in the selected feature directory after parent finalization."
+        status: passed
+      - id: C2
+        description: "Advanced attention.md from 1-401 to 1-402 and appended Phase 402 label exactly once in the attention status line."
+        status: passed
+      - id: C3
+        description: "Preserved Phase 121-167 and all explicit Phase 168 through Phase 401 labels."
+        status: passed
+      - id: C4
+        description: "Preserved status-line placement under ### 其他 immediately after adult-fiction boundary and before Hermes Tavern credentials header."
+        status: passed
+      - id: C5
+        description: "Updated focused test current/stale constants to the Phase 402 contract, including en-dash stale marker."
+        status: passed
+      - id: C6
+        description: "Appended Phase 402 label, updated FINAL_STATUS_SUFFIX, phase_range, aggregate_range, and split stale aggregate guard for range(168, 402)."
+        status: passed
+      - id: C7
+        description: "Kept existing stale split guard for range(168, 401) present in the stale tuple."
+        status: passed
+      - id: C8
+        description: "Kept anchored assignment-count guards, section-placement guard, and split no-discovery-token guards."
+        status: passed
+      - id: C9
+        description: "No staging, executor commit, executor push, prohibited-path edit, or Phase 403+ work was performed."
+        status: passed
+
+checks:
+  - item: "Only the five allowed Phase 402 files changed or appeared as untracked files after parent acceptance finalization."
+    source: 范围守护
+    status: passed
+  - item: "Attention current-status prefix is exactly Current status (2026-06-18): All phases 1-402 accepted."
+    source: 名词契约
+    status: passed
+  - item: "Focused test stale prefix and markers target Phase 401 using hyphen and en-dash forms."
+    source: 名词契约
+    status: passed
+  - item: "Phase 402 label appears exactly once in the attention status line."
+    source: 验收场景
+    status: passed
+  - item: "Phase 121-167 and every explicit Phase 168 through Phase 401 label remain present."
+    source: 验收场景
+    status: passed
+  - item: "Final suffix is exactly Phase 400 attention status sync through Phase 399, Phase 401 attention status sync through Phase 400, and Phase 402 attention status sync through Phase 401."
+    source: 编排骨架
+    status: passed
+  - item: "Focused test uses phase_range range(168, 403) and aggregate_range string range(168, 403)."
+    source: 编排骨架
+    status: passed
+  - item: "Focused test includes split stale guard stale_aggregate_range_402 and does not contain stale direct literal range(168, 402)."
+    source: 流程级约束
+    status: passed
+  - item: "Focused test preserves anchored assignment-count, section-placement, and no-discovery-token guards."
+    source: 流程级约束
+    status: passed
+  - item: "No Phase 402 acceptance.md exists during S1 handoff."
+    source: 范围守护
+    status: passed
