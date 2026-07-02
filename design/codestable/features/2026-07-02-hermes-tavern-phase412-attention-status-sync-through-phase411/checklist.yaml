@@ -1,0 +1,234 @@
+doc_type: feature-checklist
+status: accepted
+workflow_status: accepted
+acceptance_state: accepted
+implementation_ready: true
+parent_verification_required: false
+worker_commit_or_push_performed: false
+parent_commit_or_push_performed: true
+acceptance_artifact: design/codestable/features/2026-07-02-hermes-tavern-phase412-attention-status-sync-through-phase411/acceptance.md
+
+feature: 2026-07-02-hermes-tavern-phase412-attention-status-sync-through-phase411
+date: "2026-07-02"
+owner: standard_lane
+lane: standard/personal
+bounded_phase: "docs/static-test/status-only"
+result_type: status_sync_single_tick
+selected_scope: status-docs-tests-only
+selected_phase_slug: 2026-07-02-hermes-tavern-phase412-attention-status-sync-through-phase411
+selected_title: "Phase 412 attention/status sync through Phase 411"
+summary: "Phase 412 attention/status sync through accepted Phase 411; parent/controller verification and acceptance closeout passed."
+controller_lane: standard/personal
+architect_design_jsonl: /tmp/hermes-tavern-standard-architect-phase412-202607020800.jsonl
+executor_jsonl: /tmp/hermes-tavern-standard-executor-phase412-202607020800.jsonl
+architect_review_jsonl: /tmp/hermes-tavern-standard-review-phase412-202607020800.jsonl
+executor_fix_jsonl: null
+
+phase_selection_gate:
+  branch: main
+  controller_preflight_head: c55693465ef90873f22db2a3daa8e2b12d8221e3
+  controller_preflight_subject: "docs: sync tavern status through phase 411"
+  controller_preflight_working_tree: clean
+  codestable_root: design/codestable
+  attention_source_of_truth: design/codestable/attention.md
+  prior_phase: 411
+  prior_feature_path: design/codestable/features/2026-07-02-hermes-tavern-phase411-attention-status-sync-through-phase410
+  prior_feature_accepted: true
+  attention_currently_synced_through_phase: 411
+  focused_test_currently_synced_through_phase: 411
+  phase412_preexisting_at_architect_read: false
+  selected_slice: "Phase 412 attention/status sync through Phase 411"
+  executor_acceptance_finalization: prohibited
+  controller_acceptance_finalization: completed
+  executor_stage_commit_push: prohibited
+
+status_test_contract:
+  expected_live_after_s1:
+    attention_prefix: "Current status (2026-06-18): All phases 1-412 accepted"
+    terminal_suffix: "Phase 410 attention status sync through Phase 409, Phase 411 attention status sync through Phase 410, and Phase 412 attention status sync through Phase 411."
+    stale_status_prefix: "Current status (2026-06-18): All phases 1-411 accepted"
+    stale_phase_marker: "1-411"
+    stale_phase_marker_en_dash: "1–411"
+    required_new_label: "Phase 412 attention status sync through Phase 411"
+    attention_line_new_label_count: exactly_once
+    test_source_new_label_count_policy: "Do not assert exactly once across test source; the label appears in REQUIRED_PHASE_LABELS and FINAL_STATUS_SUFFIX."
+    phase_range: "range(168, 413)"
+    aggregate_range: "range(168, 413)"
+    split_stale_aggregate_guard_new: 'stale_aggregate_range_412 = "".join(["range(168, ", "41", "2", ")"])'
+    split_stale_aggregate_guard_existing_to_preserve: 'stale_aggregate_range_411 = "".join(["range(168, ", "41", "1", ")"])'
+    final_stale_aggregate_guard: 'stale_aggregate_guard = "".join(["range(168, ", "41", str(2), ")"])'
+    forbidden_direct_stale_aggregate_literal_in_test_source: "range(168, 412)"
+    preserve_required_labels: "Phase 121-167 and every explicit Phase 168 through Phase 411 label"
+    preserve_tail_labels:
+      - "Phase 410 attention status sync through Phase 409"
+      - "Phase 411 attention status sync through Phase 410"
+      - "Phase 412 attention status sync through Phase 411"
+    assignment_guards:
+      current_status_prefix_assignments: exactly_one_anchored
+      final_status_suffix_assignments: exactly_one_anchored
+      forbidden_method: naive_substring_assignment_counts
+    section_placement_guard: "Current-status bullet remains immediately after the adult-fiction boundary bullet in ### 其他 and before ### Hermes Tavern 凭证约束."
+    self_source_discovery_guards:
+      - ".glob"
+      - ".rglob"
+      - "iterdir"
+      - "os.walk"
+
+scope:
+  controller_materialized_files:
+    - design/codestable/features/2026-07-02-hermes-tavern-phase412-attention-status-sync-through-phase411/design.md
+    - design/codestable/features/2026-07-02-hermes-tavern-phase412-attention-status-sync-through-phase411/checklist.yaml
+  executor_allowed_files_s1:
+    - design/codestable/attention.md
+    - tests/test_hermes_tavern_codestable_status.py
+  allowed_files_before_parent_closeout:
+    - design/codestable/attention.md
+    - tests/test_hermes_tavern_codestable_status.py
+    - design/codestable/features/2026-07-02-hermes-tavern-phase412-attention-status-sync-through-phase411/design.md
+    - design/codestable/features/2026-07-02-hermes-tavern-phase412-attention-status-sync-through-phase411/checklist.yaml
+  prohibited:
+    - runtime
+    - source
+    - plugin
+    - provider
+    - gateway
+    - CLI
+    - config
+    - dependency
+    - build
+    - root-design
+    - README
+    - architecture
+    - roadmap
+    - requirements
+    - compound
+    - review
+    - cache
+    - phase413_or_later
+    - provider_safety_bypass
+    - minors_or_CSAM
+    - adult_fiction_or_RP_boundary_change
+    - SillyTavern_asset_compatibility_change
+    - Hermes_native_plugin_architecture_change
+  s1_acceptance_artifact_creation: prohibited
+  s1_final_status_marking: prohibited
+
+verification_commands:
+  - command: "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-07-02-hermes-tavern-phase412-attention-status-sync-through-phase411/design.md --require doc_type --require feature --require title --require status --require implementation_ready --require date --require owner --require lane --require bounded_phase --require tags"
+    required: true
+    status: passed
+  - command: "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-07-02-hermes-tavern-phase412-attention-status-sync-through-phase411/checklist.yaml --yaml-only"
+    required: true
+    status: passed
+  - command: "PYTHONPYCACHEPREFIX=/tmp/hermes-tavern-pycache-phase412-controller python -m py_compile tests/test_hermes_tavern_codestable_status.py"
+    required: true
+    status: passed
+  - command: "env -u HERMES_SESSION_KEY -u HERMES_SESSION_ID HERMES_HOME=/Users/steven/.hermes PYTHONDONTWRITEBYTECODE=1 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python -m pytest tests/test_hermes_tavern_codestable_status.py -q -o 'addopts=' -p no:cacheprovider"
+    required: true
+    status: passed
+  - command: "static Phase 412 S1 scope/status/final-newline/trailing-whitespace/no-direct-stale-range guard using changed plus untracked files"
+    required: true
+    status: passed
+  - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts='"
+    required: true
+    status: passed
+    note: "Controller final rerun passed: 1215 passed in 57.43s."
+  - command: "git diff --check"
+    required: true
+    status: passed
+
+steps:
+  - id: S1
+    name: "Executor status sync for Phase 412"
+    owner: executor
+    status: completed
+    files:
+      allowed:
+        - design/codestable/attention.md
+        - tests/test_hermes_tavern_codestable_status.py
+    checks:
+      - id: C1
+        description: "Controller-created Phase 412 design.md and checklist.yaml exist before executor; executor does not edit artifacts and does not create acceptance.md."
+        status: passed
+      - id: C2
+        description: "Advance attention.md from 1-411 to 1-412 and append Phase 412 label exactly once in the attention status line."
+        status: passed
+      - id: C3
+        description: "Preserve Phase 121-167 and all explicit Phase 168 through Phase 411 labels."
+        status: passed
+      - id: C4
+        description: "Preserve status-line placement under ### 其他 immediately after adult-fiction boundary and before Hermes Tavern credentials header."
+        status: passed
+      - id: C5
+        description: "Update focused test current/stale constants to the Phase 412 contract, including hyphen and en-dash stale markers for Phase 411."
+        status: passed
+      - id: C6
+        description: "Append the Phase 412 label, update FINAL_STATUS_SUFFIX, phase_range, and aggregate_range."
+        status: passed
+      - id: C7
+        description: "Add split stale aggregate guard for range(168, 412), update final stale_aggregate_guard, and avoid a direct contiguous stale range literal in the test source."
+        status: passed
+      - id: C8
+        description: "Preserve stale_aggregate_range_411 and earlier split stale guards, anchored assignment-count guards, section-placement guard, and split no-discovery-token guards."
+        status: passed
+      - id: C9
+        description: "No staging, executor commit, executor push, prohibited-path edit, cache artifact, acceptance.md creation, final-status marking, or Phase 413+ work is performed."
+        status: passed
+  - id: S2
+    name: "Parent/controller verification and acceptance finalization"
+    owner: parent_controller
+    status: completed
+    checks:
+      - id: C10
+        description: "Parent/controller reruns validators, compile check, focused pytest, static guard, full pytest when feasible, and diff hygiene before acceptance finalization."
+        status: passed
+      - id: C11
+        description: "Parent/controller confirms changed/untracked paths before acceptance closeout are limited to the four allowed Phase 412 S1 files."
+        status: passed
+      - id: C12
+        description: "Parent/controller alone may create acceptance.md and mark checklist/workflow/acceptance statuses final after verification passes."
+        status: passed
+
+checks:
+  - item: "Only the two controller-created artifact files plus two allowed S1 files may change or appear as untracked files before parent closeout."
+    source: scope_guard
+    status: passed
+  - item: "Executor S1 may touch only design/codestable/attention.md and tests/test_hermes_tavern_codestable_status.py."
+    source: scope_guard
+    status: passed
+  - item: "Attention current-status prefix is exactly Current status (2026-06-18): All phases 1-412 accepted."
+    source: noun_contract
+    status: passed
+  - item: "Focused test stale prefix and markers target Phase 411 using hyphen and en-dash forms."
+    source: noun_contract
+    status: passed
+  - item: "Phase 412 label appears exactly once in the attention status line."
+    source: acceptance_scenario
+    status: passed
+  - item: "Phase 121-167 and every explicit Phase 168 through Phase 411 label remain present."
+    source: acceptance_scenario
+    status: passed
+  - item: "Final suffix is exactly Phase 410 attention status sync through Phase 409, Phase 411 attention status sync through Phase 410, and Phase 412 attention status sync through Phase 411."
+    source: orchestration_contract
+    status: passed
+  - item: "Focused test uses phase_range range(168, 413) and aggregate_range string range(168, 413)."
+    source: orchestration_contract
+    status: passed
+  - item: "Focused test includes split stale guard stale_aggregate_range_412 and final split stale_aggregate_guard for stale range(168, 412) without a direct stale range literal in the test source."
+    source: flow_constraint
+    status: passed
+  - item: "Focused test preserves stale_aggregate_range_411 and earlier split stale guards."
+    source: flow_constraint
+    status: passed
+  - item: "Focused test preserves anchored assignment-count, section-placement, and no-discovery-token guards."
+    source: flow_constraint
+    status: passed
+  - item: "S1 executor does not create acceptance.md, stage, commit, push, or mark final accepted/completed/passed statuses."
+    source: flow_constraint
+    status: passed
+  - item: "No runtime/source/plugin/provider/gateway/CLI/config/dependency/build/root-design/README/architecture/roadmap/requirements/compound/review/cache path changes occur."
+    source: scope_guard
+    status: passed
+  - item: "Hermes-native plugin architecture, SillyTavern asset compatibility, provider safety, adult-fiction/RP boundaries, and minors/CSAM boundaries remain unchanged."
+    source: scope_guard
+    status: passed
