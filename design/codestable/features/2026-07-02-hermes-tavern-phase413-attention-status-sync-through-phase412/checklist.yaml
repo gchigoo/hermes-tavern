@@ -1,0 +1,51 @@
+doc_type: feature-checklist
+feature: 2026-07-02-hermes-tavern-phase413-attention-status-sync-through-phase412
+status: accepted
+workflow_status: accepted
+acceptance_state: accepted
+implementation_ready: true
+parent_verification_required: false
+parent_commit_or_push_performed: true
+acceptance_artifact: design/codestable/features/2026-07-02-hermes-tavern-phase413-attention-status-sync-through-phase412/acceptance.md
+
+summary: "Phase 413 attention/status sync through accepted Phase 412 passed parent/controller verification and acceptance closeout."
+
+steps:
+  - id: S0
+    name: "Design/checklist materialization"
+    status: done
+    checks:
+      - id: C0
+        description: "Phase 413 design.md and checklist.yaml exist with the bounded S1 scope and parent acceptance boundary."
+        status: passed
+  - id: S1
+    name: "Attention/status test sync"
+    status: done
+    checks:
+      - id: C1
+        description: "attention.md advances from phases 1-412 accepted to phases 1-413 accepted and appends the Phase 413 terminal label exactly once."
+        status: passed
+      - id: C2
+        description: "Focused status test updates live/stale prefixes, stale markers, required labels, suffix, range guards, and preserves the status-line placement guard."
+        status: passed
+  - id: S2
+    name: "Parent acceptance/writeback"
+    status: done
+    checks:
+      - id: C3
+        description: "Parent/controller reran verification, finalized acceptance, and created acceptance.md."
+        status: passed
+
+verification_commands:
+  - command: "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --dir design/codestable/features/2026-07-02-hermes-tavern-phase413-attention-status-sync-through-phase412 --require doc_type --require status --require feature"
+    status: passed
+  - command: "PYTHONPYCACHEPREFIX=/tmp/hermes-tavern-pycache-phase413-exec python -m py_compile tests/test_hermes_tavern_codestable_status.py"
+    status: passed
+  - command: "env -u HERMES_SESSION_KEY -u HERMES_SESSION_ID HERMES_HOME=/Users/steven/.hermes PYTHONDONTWRITEBYTECODE=1 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python -m pytest tests/test_hermes_tavern_codestable_status.py -q -o 'addopts=' -p no:cacheprovider"
+    status: passed
+  - command: "static Phase 413 scope/status guard"
+    status: passed
+  - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts='"
+    status: passed
+  - command: "git diff --check"
+    status: passed
