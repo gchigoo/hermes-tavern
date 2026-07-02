@@ -1,0 +1,120 @@
+doc_type: feature-checklist
+feature: 2026-07-02-hermes-tavern-phase418-attention-status-sync-through-phase417
+status: accepted
+workflow_status: accepted
+acceptance_state: accepted
+implementation_ready: true
+parent_verification_required: false
+parent_commit_or_push_performed: true
+acceptance_artifact: design/codestable/features/2026-07-02-hermes-tavern-phase418-attention-status-sync-through-phase417/acceptance.md
+
+summary: "Phase 418 attention/status sync through accepted Phase 417 passed parent/controller verification and acceptance closeout."
+architect_design_jsonl: /tmp/hermes-tavern-companyboost-architect-phase418-20260702-132011.jsonl
+executor_jsonl: /tmp/hermes-tavern-companyboost-executor-phase418-20260702-132011.jsonl
+architect_review_jsonl: /tmp/hermes-tavern-companyboost-review-phase418-20260702-132011.jsonl
+executor_fix_jsonl: null
+
+phase_selection_gate:
+  branch: main
+  read_only_head: ce337b8
+  read_only_working_tree: clean
+  local_status_read: "## main...origin/main"
+  codestable_root: design/codestable
+  attention_source_of_truth: design/codestable/attention.md
+  prior_phase: 417
+  prior_feature_path: design/codestable/features/2026-07-02-hermes-tavern-phase417-attention-status-sync-through-phase416
+  prior_feature_accepted: true
+  next_phase: 418
+  selected_phase_slug: 2026-07-02-hermes-tavern-phase418-attention-status-sync-through-phase417
+  selected_scope: docs/static-test/status-only
+
+allowed_files:
+  - design/codestable/attention.md
+  - tests/test_hermes_tavern_codestable_status.py
+  - design/codestable/features/2026-07-02-hermes-tavern-phase418-attention-status-sync-through-phase417/design.md
+  - design/codestable/features/2026-07-02-hermes-tavern-phase418-attention-status-sync-through-phase417/checklist.yaml
+  - design/codestable/features/2026-07-02-hermes-tavern-phase418-attention-status-sync-through-phase417/acceptance.md
+
+prohibited_scope:
+  - runtime/source/plugin/provider/gateway/CLI/config/dependency changes
+  - root-design/README/architecture/roadmap/requirements/compound/build/cache edits
+  - dependency installs or service lifecycle commands
+  - provider safety boundary changes, minors/CSAM behavior, or safety bypass work
+  - Phase 419 or later work
+
+exact_status_contract:
+  from_prefix: "Current status (2026-06-18): All phases 1-417 accepted"
+  to_prefix: "Current status (2026-06-18): All phases 1-418 accepted"
+  new_label: "Phase 418 attention status sync through Phase 417"
+  final_suffix: "Phase 416 attention status sync through Phase 415, Phase 417 attention status sync through Phase 416, and Phase 418 attention status sync through Phase 417."
+  preserve_aggregate_label: "Phase 121-167"
+  preserve_special_labels:
+    - "Phase 168 image settings JSON export"
+    - "Phase 169 project JSON export surface parity"
+    - "Phase 170 export command-surface regression"
+    - "Phase 171 root-design export parity"
+    - "Phase 173 root-design section 17 import/export summary parity"
+  preserve_status_sync_labels_through: 417
+  section_anchor: "Status line remains immediately after the adult-fiction boundary bullet under ### 其他 and before ### Hermes Tavern 凭证约束."
+
+test_contract:
+  current_status_prefix: "Current status (2026-06-18): All phases 1-418 accepted"
+  stale_status_prefix: "Current status (2026-06-18): All phases 1-417 accepted"
+  stale_phase_marker: "1-417"
+  stale_phase_marker_en_dash: "1–417"
+  required_new_label: "Phase 418 attention status sync through Phase 417"
+  final_status_suffix: "Phase 416 attention status sync through Phase 415, Phase 417 attention status sync through Phase 416, and Phase 418 attention status sync through Phase 417."
+  phase_range: "range(168, 419)"
+  aggregate_range: "range(168, 419)"
+  stale_split_range_to_add: "range(168, 418)"
+  stale_split_range_to_preserve: "range(168, 417)"
+  preserve_guards:
+    - anchored CURRENT_STATUS_PREFIX single-assignment guard
+    - anchored FINAL_STATUS_SUFFIX single-assignment guard
+    - status-line placement guard
+    - no .glob/.rglob/iterdir/os.walk discovery-token guards
+
+steps:
+  - id: S0
+    name: "Design/checklist materialization"
+    status: done
+    checks:
+      - id: C0
+        description: "Phase 418 design.md and checklist.yaml exist with bounded S1 scope and parent acceptance boundary."
+        status: passed
+  - id: S1
+    name: "Attention/status test sync"
+    status: done
+    checks:
+      - id: C1
+        description: "attention.md advances from phases 1-417 accepted to phases 1-418 accepted and appends the Phase 418 terminal label exactly once."
+        status: passed
+      - id: C2
+        description: "Focused status test updates live/stale prefixes, stale markers, required labels, suffix, range guards, and preserves the status-line placement guard."
+        status: passed
+      - id: C3
+        description: "Changed files remain limited to the allowed docs/status-test/artifact set."
+        status: passed
+  - id: S2
+    name: "Parent acceptance/writeback"
+    status: done
+    checks:
+      - id: C4
+        description: "Parent/controller reran verification, finalized acceptance, and created acceptance.md."
+        status: passed
+
+verification_commands:
+  - command: "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --dir design/codestable/features/2026-07-02-hermes-tavern-phase418-attention-status-sync-through-phase417 --require doc_type --require status --require feature"
+    status: passed
+  - command: "PYTHONPYCACHEPREFIX=/tmp/hermes-tavern-pycache-phase418-parent python -m py_compile tests/test_hermes_tavern_codestable_status.py"
+    status: passed
+  - command: "env -u HERMES_SESSION_KEY -u HERMES_SESSION_ID HERMES_HOME=/Users/steven/.hermes PYTHONDONTWRITEBYTECODE=1 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python -m pytest tests/test_hermes_tavern_codestable_status.py -q -o 'addopts=' -p no:cacheprovider"
+    status: passed
+  - command: "static Phase 418 scope/status/final-newline/trailing-whitespace guard"
+    status: passed
+  - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o addopts= -p no:cacheprovider"
+    status: passed
+  - command: "git diff --check"
+    status: passed
+  - command: "git status --short --branch --untracked-files=all"
+    status: passed
