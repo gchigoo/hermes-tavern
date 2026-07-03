@@ -1,0 +1,243 @@
+doc_type: feature-checklist
+feature: 2026-07-03-hermes-tavern-phase428-attention-status-sync-through-phase427
+status: accepted
+workflow_status: parent_verified
+acceptance_state: accepted
+implementation_ready: true
+parent_verification_required: true
+worker_commit_or_push_performed: false
+parent_commit_or_push_performed: true
+acceptance_artifact: acceptance.md
+acceptance_md_present: true
+
+date: "2026-07-03"
+owner: company-boost
+lane: company_boost
+bounded_phase: "docs/static-test/status-only"
+result_type: status_sync_single_tick
+selected_scope: status-docs-tests-only
+selected_phase_slug: 2026-07-03-hermes-tavern-phase428-attention-status-sync-through-phase427
+selected_title: "Phase 428 attention/status sync through Phase 427"
+summary: "Phase 428 attention/status sync through accepted Phase 427 is accepted after parent-controller verification and full acceptance closeout."
+controller_lane: company_boost
+architect_design_jsonl: /tmp/hermes-tavern-companyboost-architect-phase428-20260703-095109.jsonl
+executor_jsonl: /tmp/hermes-tavern-companyboost-executor-phase428-20260703-095843.jsonl
+architect_review_jsonl: /tmp/hermes-tavern-companyboost-review-phase428-20260703-100508.jsonl
+executor_fix_jsonl: null
+
+phase_selection_gate:
+  branch: main
+  read_only_head: "4817d85b19c83f0c02196a9389757025a0d422f5"
+  read_only_working_tree: clean
+  codestable_root: design/codestable
+  attention_source_of_truth: design/codestable/attention.md
+  prior_phase: 427
+  prior_feature_path: design/codestable/features/2026-07-03-hermes-tavern-phase427-attention-status-sync-through-phase426
+  prior_feature_accepted: true
+  attention_currently_synced_through_phase: 427
+  focused_test_currently_synced_through_phase: 427
+  phase428_preexisting_at_architect_read: false
+  selected_slice: "Phase 428 attention/status sync through Phase 427"
+  executor_acceptance_finalization: prohibited
+  controller_acceptance_finalization: completed
+  executor_stage_commit_push: prohibited
+
+allowed_files:
+  - design/codestable/attention.md
+  - tests/test_hermes_tavern_codestable_status.py
+  - design/codestable/features/2026-07-03-hermes-tavern-phase428-attention-status-sync-through-phase427/design.md
+  - design/codestable/features/2026-07-03-hermes-tavern-phase428-attention-status-sync-through-phase427/checklist.yaml
+
+prohibited_scope:
+  - runtime/source/plugin/provider/gateway/CLI/config/dependency changes
+  - root-design/README/architecture/roadmap/requirements/compound/build/cache edits
+  - service lifecycle edits or commands
+  - dependency installs
+  - credential reads or writes
+  - Hermes-native plugin architecture changes
+  - SillyTavern asset compatibility changes
+  - adult-fiction/RP boundary changes
+  - minors/CSAM behavior
+  - provider safety bypass work
+  - acceptance.md during S1
+  - staging, commit, or push
+  - Phase 429 or later work
+
+exact_status_contract:
+  from_prefix: "Current status (2026-06-18): All phases 1-427 accepted"
+  to_prefix: "Current status (2026-06-18): All phases 1-428 accepted"
+  new_label: "Phase 428 attention status sync through Phase 427"
+  final_suffix: "Phase 426 attention status sync through Phase 425, Phase 427 attention status sync through Phase 426, and Phase 428 attention status sync through Phase 427."
+  preserve_aggregate_label: "Phase 121-167"
+  preserve_special_labels:
+    - "Phase 168 image settings JSON export"
+    - "Phase 169 project JSON export surface parity"
+    - "Phase 170 export command-surface regression"
+    - "Phase 171 root-design export parity"
+    - "Phase 173 root-design section 17 import/export summary parity"
+  preserve_required_phase_labels_through: 427
+  section_anchor: "Status line remains immediately after the adult-fiction boundary bullet under ### 其他 and before ### Hermes Tavern 凭证约束."
+
+test_contract:
+  current_status_prefix: "Current status (2026-06-18): All phases 1-428 accepted"
+  stale_status_prefix: "Current status (2026-06-18): All phases 1-427 accepted"
+  stale_phase_marker: "1-427"
+  stale_phase_marker_en_dash: "1–427"
+  required_new_label: "Phase 428 attention status sync through Phase 427"
+  required_new_label_position: "after Phase 427 attention status sync through Phase 426"
+  final_status_suffix: "Phase 426 attention status sync through Phase 425, Phase 427 attention status sync through Phase 426, and Phase 428 attention status sync through Phase 427."
+  phase_range: "range(168, 429)"
+  aggregate_range: "range(168, 429)"
+  stale_split_range_to_add: 'stale_aggregate_range_428 = "".join(["range(168, ", "42", "8", ")"])'
+  stale_split_ranges_to_preserve:
+    - 'stale_aggregate_range_427 = "".join(["range(168, ", "42", "7", ")"])'
+    - 'stale_aggregate_range_426 = "".join(["range(168, ", "42", "6", ")"])'
+    - 'stale_aggregate_range_425 = "".join(["range(168, ", "42", "5", ")"])'
+    - 'stale_aggregate_range_424 = "".join(["range(168, ", "42", "4", ")"])'
+    - 'stale_aggregate_range_423 = "".join(["range(168, ", "42", "3", ")"])'
+    - 'stale_aggregate_range_422 = "".join(["range(168, ", "42", "2", ")"])'
+    - 'stale_aggregate_range_421 = "".join(["range(168, ", "42", "1", ")"])'
+  direct_stale_guard_to_add: 'stale_aggregate_guard_428 = "".join(["range(168, ", "42", str(8), ")"])'
+  direct_stale_ranges_to_reject_without_contiguous_literals:
+    - stale_aggregate_guard_428
+    - stale_aggregate_guard_427
+    - stale_aggregate_guard_426
+    - stale_aggregate_guard_425
+    - stale_aggregate_guard_424
+    - stale_aggregate_guard_423
+    - stale_aggregate_guard_422
+    - stale_aggregate_guard_421
+  preserve_guards:
+    - anchored CURRENT_STATUS_PREFIX single-assignment guard
+    - anchored FINAL_STATUS_SUFFIX single-assignment guard
+    - status-line placement guard
+    - every REQUIRED_PHASE_LABELS entry remains present in attention.md
+    - no .glob/.rglob/iterdir/os.walk discovery-token guards
+  label_preservation_rule: "Compare actual labels from the existing REQUIRED_PHASE_LABELS list; do not synthesize formula labels."
+  stale_terminal_range_rule: "The live attention status must not retain the stale 1-427 terminal range; required stale constants and split-string stale guard variables may remain in the test source."
+  assignment_count_pitfall: "Use anchored assignment regexes; naive counts self-match assertion text."
+
+steps:
+  - id: S1
+    name: "Executor status sync for Phase 428"
+    owner: executor
+    status: completed
+    acceptance_creation: prohibited
+    files:
+      allowed:
+        - design/codestable/attention.md
+        - tests/test_hermes_tavern_codestable_status.py
+        - design/codestable/features/2026-07-03-hermes-tavern-phase428-attention-status-sync-through-phase427/design.md
+        - design/codestable/features/2026-07-03-hermes-tavern-phase428-attention-status-sync-through-phase427/checklist.yaml
+      acceptance_artifact_must_remain_absent: true
+    checks:
+      - id: C1
+        description: "Create Phase 428 design.md and checklist.yaml only in the selected feature directory."
+        status: passed
+      - id: C2
+        description: "Advance attention.md from 1-427 to 1-428 and append Phase 428 label exactly once in the attention status line."
+        status: passed
+      - id: C3
+        description: "Preserve Phase 121-167 and all existing REQUIRED_PHASE_LABELS entries, including nonuniform Phase 168/169/170/171/173 labels."
+        status: passed
+      - id: C4
+        description: "Preserve status-line placement under ### 其他 immediately after the adult-fiction boundary and before Hermes Tavern credentials."
+        status: passed
+      - id: C5
+        description: "Update focused test current/stale constants to the Phase 428 contract, including hyphen and en-dash stale markers."
+        status: passed
+      - id: C6
+        description: "Append Phase 428 label, update FINAL_STATUS_SUFFIX, phase_range, aggregate_range, and split stale aggregate guard ending at 428."
+        status: passed
+      - id: C7
+        description: "Keep prior stale split guards ending at 427, 426, 425, 424, 423, 422, and 421, and reject direct stale aggregate literals ending at 428, 427, 426, 425, 424, 423, 422, and 421 without embedding them contiguously."
+        status: passed
+      - id: C8
+        description: "Keep anchored assignment-count guards, section-placement guard, all-label guard, and no-discovery-token guards."
+        status: passed
+      - id: C9
+        description: "Do not create acceptance.md during S1, stage, commit, push, touch prohibited paths, or mark parent/controller checks final."
+        status: passed
+
+  - id: S2
+    name: "Parent/controller verification and acceptance finalization"
+    owner: parent_controller
+    status: completed
+    acceptance_creation: completed
+    checks:
+      - id: C10
+        description: "Validate Phase 428 design/checklist YAML after S1."
+        status: passed
+      - id: C11
+        description: "Run py_compile for focused status test."
+        status: passed
+      - id: C12
+        description: "Run focused status pytest."
+        status: passed
+      - id: C13
+        description: "Run static Phase 428 status/scope/final-newline/trailing-whitespace guard over changed plus untracked files."
+        status: passed
+      - id: C14
+        description: "Run git diff --check."
+        status: passed
+      - id: C15
+        description: "Run full pytest without PYTEST_DISABLE_PLUGIN_AUTOLOAD if feasible."
+        status: passed
+      - id: C16
+        description: "Create acceptance.md and final checklist closeout only after parent verification passes."
+        status: passed
+      - id: C17
+        description: "Keep commit/push parent-owned and out of executor scope."
+        status: passed
+
+checks:
+  - item: "Only the four allowed S1 files change or appear as untracked files before parent closeout."
+    source: scope_guard
+    status: passed
+  - item: "Attention current-status prefix is exactly Current status (2026-06-18): All phases 1-428 accepted."
+    source: status_contract
+    status: passed
+  - item: "Focused test stale prefix and markers target Phase 427 using hyphen and en-dash forms."
+    source: status_contract
+    status: passed
+  - item: "Phase 428 label appears exactly once in the attention status line."
+    source: status_contract
+    status: passed
+  - item: "Phase 121-167 and every existing REQUIRED_PHASE_LABELS entry remain present."
+    source: status_contract
+    status: passed
+  - item: "Final suffix is exactly Phase 426 attention status sync through Phase 425, Phase 427 attention status sync through Phase 426, and Phase 428 attention status sync through Phase 427."
+    source: status_contract
+    status: passed
+  - item: "Focused test uses phase_range range(168, 429) and aggregate_range string range(168, 429)."
+    source: status_contract
+    status: passed
+  - item: "Focused test includes split stale guard stale_aggregate_range_428 and preserves stale_aggregate_range_427, stale_aggregate_range_426, stale_aggregate_range_425, stale_aggregate_range_424, stale_aggregate_range_423, stale_aggregate_range_422, and stale_aggregate_range_421 direct-literal rejection without contiguous stale literals."
+    source: stale_guard_contract
+    status: passed
+  - item: "Focused test preserves anchored assignment-count, section-placement, all-label, and no-discovery-token guards."
+    source: regression_guard_contract
+    status: passed
+  - item: "S1 executor does not create acceptance.md, stage, commit, push, or mark final accepted statuses."
+    source: lifecycle_contract
+    status: passed
+
+verification_commands:
+  - command: "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --dir design/codestable/features/2026-07-03-hermes-tavern-phase428-attention-status-sync-through-phase427 --require doc_type --require status --require feature"
+    required: true
+    parent_verification_status: passed
+  - command: "PYTHONPYCACHEPREFIX=/tmp/hermes-tavern-pycache-phase428-controller python -m py_compile tests/test_hermes_tavern_codestable_status.py"
+    required: true
+    parent_verification_status: passed
+  - command: "env -u HERMES_SESSION_KEY -u HERMES_SESSION_ID HERMES_HOME=/Users/steven/.hermes PYTHONDONTWRITEBYTECODE=1 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python -m pytest tests/test_hermes_tavern_codestable_status.py -q -o addopts= -p no:cacheprovider"
+    required: true
+    parent_verification_status: passed
+  - command: "static Phase 428 status/scope/stale/final-newline/trailing-whitespace guard over changed and untracked files"
+    required: true
+    parent_verification_status: passed
+  - command: "git diff --check"
+    required: true
+    parent_verification_status: passed
+  - command: "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o addopts= -p no:cacheprovider"
+    required: false
+    parent_verification_status: passed
