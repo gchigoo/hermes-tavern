@@ -1,0 +1,105 @@
+---
+doc_type: feature-acceptance
+feature: 2026-07-04-hermes-tavern-phase437-attention-status-sync-through-phase436
+title: "Phase 437 acceptance — attention/status sync through Phase 436"
+status: accepted
+accepted_at: "2026-07-04"
+owner: standard-lane
+lane: standard
+bounded_phase: "docs/static-test/status-only"
+summary: "Phase 437 attention/status sync through Phase 436 is accepted after parent-controller verification."
+tags: [hermes-tavern, codestable, attention, status-sync, docs, tests, phase437, standard]
+parent_verification: full
+controller_evidence:
+  - "Codex executor smoke passed: /tmp/hermes-tavern-standard-executor-smoke-phase437.jsonl"
+  - "Codex architect artifact pass completed: /tmp/hermes-tavern-standard-architect-phase437.jsonl"
+  - "Codex executor S1 completed: /tmp/hermes-tavern-standard-executor-phase437.jsonl"
+  - "Codex architect review PASS: /tmp/hermes-tavern-standard-review-phase437.jsonl"
+  - "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --dir design/codestable/features/2026-07-04-hermes-tavern-phase437-attention-status-sync-through-phase436 --require doc_type --require status --require feature (passed before closeout; rerun after closeout)"
+  - "PYTHONPYCACHEPREFIX=/tmp/hermes-tavern-pycache-phase437-parent-prefinal python -m py_compile tests/test_hermes_tavern_codestable_status.py (passed)"
+  - "env -u HERMES_SESSION_KEY -u HERMES_SESSION_ID HERMES_HOME=/Users/steven/.hermes PYTHONDONTWRITEBYTECODE=1 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python -m pytest tests/test_hermes_tavern_codestable_status.py -q -o addopts= -p no:cacheprovider (1 passed)"
+  - "env -u HERMES_SESSION_KEY -u HERMES_SESSION_ID HERMES_HOME=/Users/steven/.hermes PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o addopts= -p no:cacheprovider (1215 passed)"
+  - "Static Phase 437 status/scope/stale/final-newline/trailing-whitespace guard passed before acceptance closeout"
+  - "Attention current-status prefix: All phases 1-437 accepted (verified)"
+  - "Stale terminal range 1-436 absent from attention status line (verified)"
+  - "Phase 437 label appears exactly once in attention status line (verified)"
+  - "Final suffix: Phase 435 through Phase 437 correct (verified)"
+  - "All prior labels preserved, including Phase 121-167 aggregate (verified)"
+  - "Stale split/direct guards for 437/436/435/434/433/432/431/430/429 and earlier verified"
+  - "git diff --check passed"
+  - "No acceptance.md existed during S1 executor; parent added acceptance.md during closeout"
+  - "No runtime/source/plugin/provider/gateway/CLI/config/dependency/Phase 438+ changes"
+---
+
+# Phase 437 Acceptance — attention/status sync through Phase 436
+
+## Context
+
+Phase 437 is a standard-lane status-sync continuation that advances the live CodeStable attention status from phases 1-436 accepted to 1-437 accepted. It updates `design/codestable/attention.md` and the focused status regression test `tests/test_hermes_tavern_codestable_status.py`.
+
+Phase 436 was previously accepted at commit `4720e70`, and `origin/main` matched that HEAD before this closeout. The architect pass confirmed that Phase 436 acceptance explicitly deferred Phase 437 attention/status sync through Phase 436 and that the repo was clean before the controller materialized Phase 437 artifacts.
+
+## S1 Implementation (executor)
+
+The executor workspace-write pass:
+
+- Advanced `attention.md` from 1-436 accepted to 1-437 accepted and appended the Phase 437 label exactly once.
+- Updated the focused test: current/stale prefixes, stale markers, `REQUIRED_PHASE_LABELS`, `FINAL_STATUS_SUFFIX`, `phase_range`, `aggregate_range`, stale split guard (`stale_aggregate_range_437`), and direct stale guard (`stale_aggregate_guard_437`).
+- Preserved prior stale guards for 436/435/434/433/432/431/430/429 and earlier required cases.
+- Did not create `acceptance.md`, stage, commit, or push during S1.
+
+## Controller Verification
+
+### Validators
+
+- CodeStable YAML validator: passed before closeout for `design.md` and `checklist.yaml`; rerun after closeout for the accepted feature directory.
+- `py_compile`: passed for `tests/test_hermes_tavern_codestable_status.py`.
+
+### Tests
+
+- Focused status test: passed (covers Phase 437 live/stale contract, prior label preservation, stale guards).
+- Full pytest: passed (`1215 passed`).
+
+### Guards
+
+- Allowed-path scope before closeout: only 4 S1 paths changed or appeared as untracked files (`attention.md`, focused status test, `design.md`, `checklist.yaml`).
+- Parent added only this `acceptance.md` and checklist evidence/status normalization during closeout.
+- No prohibited files touched.
+- Attention status contract: 1-437 accepted, 1-436 absent from the current status line, Phase 437 label exactly once.
+- Final suffix correct.
+- All prior labels preserved (including nonuniform Phase 168/169/170/171/173 and Phase 121-167 aggregate).
+- Stale split/direct guards present and correct.
+- No acceptance artifact existed before parent closeout.
+- Final newline and trailing whitespace clean.
+- `git diff --check` passed.
+- No Phase 438+ or runtime/source changes.
+
+## Interface / Schema Contract
+
+No runtime interface or schema changes. This is a docs/static-test-only slice.
+
+## Behavior / Scope
+
+- Only `design/codestable/attention.md` and `tests/test_hermes_tavern_codestable_status.py` were modified for S1.
+- Three artifact files now exist under `design/codestable/features/2026-07-04-hermes-tavern-phase437-attention-status-sync-through-phase436/`: `design.md`, `checklist.yaml`, and this `acceptance.md`.
+- No runtime, source, plugin, provider, gateway, CLI, config, dependency, root-design, README, architecture, roadmap, requirements, compound, build, or cache changes.
+
+## Reverse-Scope / No-Leak
+
+- Phase 438+ is untouched.
+- Hermes-native plugin architecture preserved.
+- SillyTavern asset compatibility preserved.
+- Adult-fiction/RP boundaries unchanged.
+- No provider safety bypass.
+
+## Attention Candidates
+
+None — standard recurring status-sync phase.
+
+## Residual Deferred Work
+
+Phase 438 attention/status sync through Phase 437.
+
+## Conclusion
+
+Phase 437 attention/status sync is accepted. Controller gates passed; no blockers.
