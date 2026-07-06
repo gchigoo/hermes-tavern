@@ -1,0 +1,204 @@
+doc_type: feature-checklist
+feature: 2026-07-06-hermes-tavern-phase446-attention-status-sync-through-phase445
+status: accepted
+workflow_status: accepted
+acceptance_state: accepted
+implementation_ready: true
+parent_verification_required: false
+worker_commit_or_push_performed: false
+parent_commit_or_push_performed: true
+acceptance_artifact: design/codestable/features/2026-07-06-hermes-tavern-phase446-attention-status-sync-through-phase445/acceptance.md
+acceptance_md_present: true
+
+date: "2026-07-06"
+owner: company-boost
+lane: company_boost
+bounded_phase: "docs/static-test/status-only"
+result_type: status_sync_single_tick
+selected_scope: status-docs-tests-only
+selected_phase_slug: 2026-07-06-hermes-tavern-phase446-attention-status-sync-through-phase445
+selected_title: "Phase 446 attention/status sync through Phase 445"
+summary: "Phase 446 attention/status sync through accepted Phase 445 is accepted after parent-controller verification."
+controller_lane: company-boost
+architect_design_jsonl: /tmp/hermes-tavern-companyboost-architect-20260706-phase446.jsonl
+executor_jsonl: /tmp/hermes-tavern-companyboost-executor-20260706-phase446.jsonl
+architect_review_jsonl: /tmp/hermes-tavern-companyboost-review-20260706-phase446.jsonl
+executor_fix_jsonl: null
+
+phase_selection_gate:
+  branch: main
+  starting_head: 02df22ff5d3285439fa68f8c2331d01d635f8654
+  codestable_root: design/codestable
+  attention_source_of_truth: design/codestable/attention.md
+  prior_phase: 445
+  prior_feature_path: design/codestable/features/2026-07-06-hermes-tavern-phase445-attention-status-sync-through-phase444
+  prior_feature_accepted: true
+  latest_accepted_phase_verified: 445
+  no_phase_446_accepted_artifact: false
+  no_later_phase_artifacts_or_labels: true
+  attention_currently_synced_through_phase: 446
+  focused_test_currently_synced_through_phase: 446
+  selected_slice: "Phase 446 attention/status sync through Phase 445"
+  executor_acceptance_finalization: prohibited
+  parent_acceptance_finalization: completed
+  executor_stage_commit_push: prohibited
+
+allowed_files:
+  - design/codestable/attention.md
+  - tests/test_hermes_tavern_codestable_status.py
+  - design/codestable/features/2026-07-06-hermes-tavern-phase446-attention-status-sync-through-phase445/design.md
+  - design/codestable/features/2026-07-06-hermes-tavern-phase446-attention-status-sync-through-phase445/checklist.yaml
+  - design/codestable/features/2026-07-06-hermes-tavern-phase446-attention-status-sync-through-phase445/acceptance.md
+
+prohibited_scope:
+  - runtime/source/plugin/provider/gateway/CLI/config/dependency changes
+  - root-design/README/architecture/roadmap/requirements/compound/build/cache edits
+  - service lifecycle commands
+  - dependency installs
+  - credential reads or writes
+  - staging, commit, or push by executor
+  - acceptance.md creation in S1
+  - final accepted marking by executor
+  - later-phase work
+  - Hermes-native plugin architecture changes
+  - SillyTavern asset compatibility changes
+  - adult-fiction/RP safety boundary changes
+  - minors/CSAM-related work
+  - provider-safety behavior changes
+
+exact_status_contract:
+  from_prefix: "Current status (2026-06-18): All phases 1-445 accepted"
+  to_prefix: "Current status (2026-06-18): All phases 1-446 accepted"
+  stale_direct_terminal_status_absent_from_current_status_line: "All phases 1-445 accepted"
+  live_direct_terminal_status_present_in_current_status_line: "All phases 1-446 accepted"
+  stale_phase_marker_absent_from_current_status_line: "1-445"
+  stale_phase_marker_en_dash_absent_from_current_status_line: "1–445"
+  new_label: "Phase 446 attention status sync through Phase 445"
+  final_suffix: "Phase 444 attention status sync through Phase 443, Phase 445 attention status sync through Phase 444, and Phase 446 attention status sync through Phase 445."
+  preserve_required_phase_labels_through: 445
+  section_anchor: "Status line remains immediately after the adult-fiction boundary bullet under ### 其他 and before ### Hermes Tavern 凭证约束."
+
+test_contract:
+  current_status_prefix: "Current status (2026-06-18): All phases 1-446 accepted"
+  stale_status_prefix: "Current status (2026-06-18): All phases 1-445 accepted"
+  stale_phase_marker: "1-445"
+  stale_phase_marker_en_dash: "1–445"
+  required_new_label: "Phase 446 attention status sync through Phase 445"
+  required_new_label_position: "after Phase 445 attention status sync through Phase 444"
+  final_status_suffix: "Phase 444 attention status sync through Phase 443, Phase 445 attention status sync through Phase 444, and Phase 446 attention status sync through Phase 445."
+  phase_range: "range(168, 447)"
+  aggregate_range: "range(168, 447)"
+  direct_stale_contiguous_range_absent_from_test_source: "range(168, 446)"
+  live_contiguous_range_present_in_test_source: "range(168, 447)"
+  stale_split_range_to_add: 'stale_aggregate_range_446 = "".join(["range(168, ", "44", "6", ")"])'
+  direct_stale_guard_to_add: 'stale_aggregate_guard_446 = "".join(["range(168, ", "44", str(6), ")"])'
+  preserve_existing_stale_guards_through_phase: 445
+  assignment_guards:
+    current_status_prefix_assignments: exactly_one_anchored
+    final_status_suffix_assignments: exactly_one_anchored
+  self_source_discovery_guards:
+    - ".glob("
+    - ".rglob("
+    - "iterdir("
+    - "os.walk"
+
+steps:
+  - id: S1
+    name: "Executor status sync for Phase 446"
+    owner: executor
+    status: completed
+    completion_owner: executor
+    acceptance_creation: prohibited
+    files:
+      allowed:
+        - design/codestable/attention.md
+        - tests/test_hermes_tavern_codestable_status.py
+        - design/codestable/features/2026-07-06-hermes-tavern-phase446-attention-status-sync-through-phase445/design.md
+        - design/codestable/features/2026-07-06-hermes-tavern-phase446-attention-status-sync-through-phase445/checklist.yaml
+      acceptance_artifact_must_remain_absent: true
+    checks:
+      - id: C1
+        description: "Create Phase 446 design.md and checklist.yaml only in the selected feature directory."
+        status: passed
+      - id: C2
+        description: "Advance attention.md from 1-445 to 1-446 and append the Phase 446 label after the Phase 445 label."
+        status: passed
+      - id: C3
+        description: "Preserve all existing labels, the exact final suffix, and status-line placement under ### 其他 before credentials constraints."
+        status: passed
+      - id: C4
+        description: "Update focused test CURRENT_STATUS_PREFIX, STALE_STATUS_PREFIX, STALE_PHASE_MARKER, STALE_PHASE_MARKER_EN_DASH, REQUIRED_PHASE_LABELS, FINAL_STATUS_SUFFIX, phase_range, and aggregate_range to the Phase 446 contract."
+        status: passed
+      - id: C5
+        description: "Add stale_aggregate_range_446 and stale_aggregate_guard_446 while preserving existing stale split/direct guards, anchored assignment-count checks, Phase 121-167 aggregate guard, section-placement guard, all-label guard, and no-discovery-token guards."
+        status: passed
+      - id: C6
+        description: "Do not create acceptance.md during S1, touch prohibited paths, create later-phase artifacts or references, or perform stage/commit/push work."
+        status: passed
+
+  - id: S2
+    name: "Parent verification and acceptance closeout"
+    owner: parent_controller
+    status: passed
+    acceptance_creation: completed
+    checks:
+      - id: C7
+        description: "Validate Phase 446 design/checklist frontmatter and YAML."
+        status: passed
+      - id: C8
+        description: "Run py_compile for the focused status test."
+        status: passed
+      - id: C9
+        description: "Run focused status pytest."
+        status: passed
+      - id: C10
+        description: "Run git diff --check and confirm only the four allowed files changed."
+        status: passed
+      - id: C11
+        description: "Parent owns acceptance.md creation plus any commit/push decision."
+        status: passed
+
+checks:
+  - item: "S1 executor scope remained limited to the four executor-allowed files; parent acceptance closeout added acceptance.md after verification."
+    source: scope_guard
+    status: passed
+  - item: "Attention current-status prefix is exactly Current status (2026-06-18): All phases 1-446 accepted."
+    source: status_contract
+    status: passed
+  - item: "Attention final suffix is exactly Phase 444 attention status sync through Phase 443, Phase 445 attention status sync through Phase 444, and Phase 446 attention status sync through Phase 445."
+    source: status_contract
+    status: passed
+  - item: "Focused test stale prefix and markers target Phase 445 using hyphen and en-dash forms."
+    source: status_contract
+    status: passed
+  - item: "Focused test uses phase_range range(168, 447) and aggregate_range string range(168, 447)."
+    source: status_contract
+    status: passed
+  - item: "Focused test adds stale_aggregate_range_446 and stale_aggregate_guard_446 while preserving earlier stale guards."
+    source: stale_guard_contract
+    status: passed
+  - item: "Parent owns full verification, acceptance.md creation, and commit/push; executor did not commit or push."
+    source: parent_handoff
+    status: passed
+
+verification_commands:
+  - command: "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --dir design/codestable/features/2026-07-06-hermes-tavern-phase446-attention-status-sync-through-phase445 --require doc_type --require status --require feature"
+    required: true
+    executor_status: passed
+    parent_verification_status: passed
+  - command: "PYTHONPYCACHEPREFIX=/tmp/hermes-tavern-pycache-phase446-executor python -m py_compile tests/test_hermes_tavern_codestable_status.py"
+    required: true
+    executor_status: passed
+    parent_verification_status: passed
+  - command: "env -u HERMES_SESSION_KEY -u HERMES_SESSION_ID HERMES_HOME=/Users/steven/.hermes PYTHONDONTWRITEBYTECODE=1 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python -m pytest tests/test_hermes_tavern_codestable_status.py -q -o 'addopts=' -p no:cacheprovider"
+    required: true
+    executor_status: passed
+    parent_verification_status: passed
+  - command: "python /tmp/hermes-tavern-phase446-static-guard.py"
+    required: true
+    executor_status: pending
+    parent_verification_status: passed
+  - command: "git diff --check"
+    required: true
+    executor_status: passed
+    parent_verification_status: passed
