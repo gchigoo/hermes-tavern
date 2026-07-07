@@ -1,0 +1,121 @@
+doc_type: feature-checklist
+feature: 2026-07-07-hermes-tavern-phase463-attention-status-sync-through-phase462
+status: accepted
+workflow_status: completed
+acceptance_state: accepted
+implementation_ready: true
+parent_verification_required: false
+worker_commit_or_push_performed: false
+parent_commit_or_push_performed: false
+acceptance_artifact: acceptance.md
+acceptance_md_present: true
+
+date: "2026-07-07"
+owner: company-boost
+lane: company-boost
+bounded_phase: "docs/static-test/status-only"
+result_type: status_sync_single_tick
+selected_scope: status-docs-tests-only
+selected_phase_slug: 2026-07-07-hermes-tavern-phase463-attention-status-sync-through-phase462
+selected_title: "Phase 463 attention/status sync through Phase 462"
+summary: "Phase 463 attention/status sync through accepted Phase 462 is implemented, parent-controller verified, and accepted."
+controller_lane: company-boost
+architect_design_jsonl: /tmp/hermes-tavern-companyboost-architect-20260707-phase463.jsonl
+executor_jsonl: /tmp/hermes-tavern-companyboost-executor-20260707-phase463.jsonl
+architect_review_jsonl: /tmp/hermes-tavern-standard-review-20260707-phase463.jsonl
+executor_fix_jsonl: null
+
+allowed_files:
+  - design/codestable/attention.md
+  - tests/test_hermes_tavern_codestable_status.py
+  - design/codestable/features/2026-07-07-hermes-tavern-phase463-attention-status-sync-through-phase462/design.md
+  - design/codestable/features/2026-07-07-hermes-tavern-phase463-attention-status-sync-through-phase462/checklist.yaml
+
+status_test_contract:
+  current_status_prefix: "Current status (2026-06-18): All phases 1-463 accepted"
+  stale_status_prefix: "Current status (2026-06-18): All phases 1-462 accepted"
+  stale_phase_marker: "1-462"
+  stale_phase_marker_en_dash: "1–462"
+  older_stale_phase_markers:
+    - "1-461"
+    - "1–461"
+  required_new_label: "Phase 463 attention status sync through Phase 462"
+  final_status_suffix: "Phase 461 attention status sync through Phase 460, Phase 462 attention status sync through Phase 461, and Phase 463 attention status sync through Phase 462."
+  phase_range: "range(168, 464)"
+  aggregate_range: "range(168, 464)"
+  stale_direct_ranges_must_remain_rejected:
+    - previous_phase_aggregate_range_split_guard
+    - older_phase_aggregate_range_split_guard
+
+steps:
+  - id: S1
+    name: "Executor status sync for Phase 463"
+    owner: executor
+    status: completed
+    completion_owner: executor
+    acceptance_creation: prohibited
+    files:
+      allowed:
+        - design/codestable/attention.md
+        - tests/test_hermes_tavern_codestable_status.py
+        - design/codestable/features/2026-07-07-hermes-tavern-phase463-attention-status-sync-through-phase462/design.md
+        - design/codestable/features/2026-07-07-hermes-tavern-phase463-attention-status-sync-through-phase462/checklist.yaml
+      acceptance_artifact_must_remain_absent: true
+    checks:
+      - id: C1
+        description: "Create Phase 463 design.md and checklist.yaml only in the selected feature directory."
+        status: passed
+      - id: C2
+        description: "Advance attention.md from 1-462 to 1-463 and append the Phase 463 label exactly once in the attention status line."
+        status: passed
+      - id: C3
+        description: "Preserve special early labels, Phase 121-167 aggregate, and all existing Phase 168-462 labels while moving to the required Phase 461/462/463 suffix."
+        status: passed
+      - id: C4
+        description: "Preserve status-line placement under ### 其他 immediately after the adult-fiction boundary and before Hermes Tavern credentials."
+        status: passed
+      - id: C5
+        description: "Update focused test CURRENT_STATUS_PREFIX, STALE_STATUS_PREFIX, stale direct markers, and older Phase 461 direct-marker guards to the Phase 463 contract."
+        status: passed
+      - id: C6
+        description: "Append the Phase 463 label and update FINAL_STATUS_SUFFIX, phase_range, aggregate_range, stale range guards, and stale direct guard assertions."
+        status: passed
+      - id: C7
+        description: "Preserve anchored assignment-count checks, existing stale split/direct guards for required earlier cases, section-placement guard, all-label guard, Phase 121-167 aggregate guard, and no-discovery-token guards."
+        status: passed
+      - id: C8
+        description: "Do not create acceptance.md, touch prohibited paths, create later-phase artifacts or live labels, mark checklist accepted, or perform stage/commit/push work."
+        status: passed
+
+  - id: S2
+    name: "Parent/controller verification and acceptance closeout"
+    owner: parent_controller
+    status: completed
+    acceptance_creation: completed
+    checks:
+      - id: C9
+        description: "Validate Phase 463 design/checklist YAML."
+        status: passed
+      - id: C10
+        description: "Run py_compile for the focused status test."
+        status: passed
+      - id: C11
+        description: "Run focused status pytest."
+        status: passed
+      - id: C12
+        description: "Run full pytest."
+        status: passed
+      - id: C13
+        description: "Run static allowed-path/status/range/newline/whitespace guard and git diff --check."
+        status: passed
+      - id: C14
+        description: "Create acceptance.md and finalize checklist status."
+        status: passed
+
+verification_commands:
+  - "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --dir design/codestable/features/2026-07-07-hermes-tavern-phase463-attention-status-sync-through-phase462 --require doc_type --require status --require feature"
+  - "PYTHONPYCACHEPREFIX=/tmp/hermes-tavern-pycache-phase463-executor python -m py_compile tests/test_hermes_tavern_codestable_status.py"
+  - "env -u HERMES_SESSION_KEY -u HERMES_SESSION_ID HERMES_HOME=/Users/steven/.hermes PYTHONDONTWRITEBYTECODE=1 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python -m pytest tests/test_hermes_tavern_codestable_status.py -q -o 'addopts=' -p no:cacheprovider"
+  - "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts=' -p no:cacheprovider"
+  - "static allowed-path/status/range/newline/whitespace guard over changed plus untracked files"
+  - "git diff --check"
