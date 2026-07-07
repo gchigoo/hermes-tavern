@@ -1,0 +1,120 @@
+doc_type: feature-checklist
+feature: 2026-07-07-hermes-tavern-phase462-attention-status-sync-through-phase461
+status: accepted
+workflow_status: completed
+acceptance_state: accepted
+implementation_ready: true
+parent_verification_required: false
+worker_commit_or_push_performed: false
+parent_commit_or_push_performed: false
+acceptance_artifact: acceptance.md
+acceptance_md_present: true
+
+date: "2026-07-07"
+owner: company-boost
+lane: company-boost
+bounded_phase: "docs/static-test/status-only"
+result_type: status_sync_single_tick
+selected_scope: status-docs-tests-only
+selected_phase_slug: 2026-07-07-hermes-tavern-phase462-attention-status-sync-through-phase461
+selected_title: "Phase 462 attention/status sync through Phase 461"
+summary: "Phase 462 attention/status sync through accepted Phase 461 is implemented by S1 and awaits parent-controller verification."
+controller_lane: company-boost
+architect_design_jsonl: /tmp/hermes-tavern-companyboost-architect-20260707-phase462.jsonl
+executor_jsonl: /tmp/hermes-tavern-companyboost-executor-20260707-phase462.jsonl
+architect_review_jsonl: /tmp/hermes-tavern-companyboost-review-20260707-phase462.jsonl
+executor_fix_jsonl: null
+
+allowed_files:
+  - design/codestable/attention.md
+  - tests/test_hermes_tavern_codestable_status.py
+  - design/codestable/features/2026-07-07-hermes-tavern-phase462-attention-status-sync-through-phase461/design.md
+  - design/codestable/features/2026-07-07-hermes-tavern-phase462-attention-status-sync-through-phase461/checklist.yaml
+
+status_test_contract:
+  current_status_prefix: "Current status (2026-06-18): All phases 1-462 accepted"
+  stale_status_prefix: "Current status (2026-06-18): All phases 1-461 accepted"
+  stale_phase_marker: "1-461"
+  stale_phase_marker_en_dash: "1–461"
+  older_stale_phase_markers:
+    - "1-460"
+    - "1–460"
+  required_new_label: "Phase 462 attention status sync through Phase 461"
+  final_status_suffix: "Phase 460 attention status sync through Phase 459, Phase 461 attention status sync through Phase 460, and Phase 462 attention status sync through Phase 461."
+  phase_range: "range(168, 463)"
+  aggregate_range: "range(168, 463)"
+  stale_direct_ranges_must_remain_rejected:
+    - previous_phase_aggregate_range_split_guard
+    - older_phase_aggregate_range_split_guard
+
+steps:
+  - id: S1
+    name: "Executor status sync for Phase 462"
+    owner: executor
+    status: completed
+    completion_owner: executor
+    acceptance_creation: prohibited
+    files:
+      allowed:
+        - design/codestable/attention.md
+        - tests/test_hermes_tavern_codestable_status.py
+        - design/codestable/features/2026-07-07-hermes-tavern-phase462-attention-status-sync-through-phase461/design.md
+        - design/codestable/features/2026-07-07-hermes-tavern-phase462-attention-status-sync-through-phase461/checklist.yaml
+      acceptance_artifact_must_remain_absent: true
+    checks:
+      - id: C1
+        description: "Create Phase 462 design.md and checklist.yaml only in the selected feature directory."
+        status: passed
+      - id: C2
+        description: "Advance attention.md from 1-461 to 1-462 and append the Phase 462 label exactly once in the attention status line."
+        status: passed
+      - id: C3
+        description: "Preserve special early labels, Phase 121-167 aggregate, and all existing Phase 168-461 labels while moving to the required Phase 460/461/462 suffix."
+        status: passed
+      - id: C4
+        description: "Preserve status-line placement under ### 其他 immediately after the adult-fiction boundary and before Hermes Tavern credentials."
+        status: passed
+      - id: C5
+        description: "Update focused test CURRENT_STATUS_PREFIX, STALE_STATUS_PREFIX, stale direct markers, and older Phase 460 direct-marker guards to the Phase 462 contract."
+        status: passed
+      - id: C6
+        description: "Append the Phase 462 label and update FINAL_STATUS_SUFFIX, phase_range, aggregate_range, stale range guards, and stale direct guard assertions."
+        status: passed
+      - id: C7
+        description: "Preserve anchored assignment-count checks, existing stale split/direct guards for required earlier cases, section-placement guard, all-label guard, Phase 121-167 aggregate guard, and no-discovery-token guards."
+        status: passed
+      - id: C8
+        description: "Do not create acceptance.md, touch prohibited paths, create later-phase artifacts or live labels, mark checklist accepted, or perform stage/commit/push work."
+        status: passed
+
+  - id: S2
+    name: "Parent/controller verification and acceptance closeout"
+    owner: parent_controller
+    status: completed
+    acceptance_creation: completed
+    checks:
+      - id: C9
+        description: "Validate Phase 462 design/checklist YAML."
+        status: passed
+      - id: C10
+        description: "Run py_compile for the focused status test."
+        status: passed
+      - id: C11
+        description: "Run focused status pytest."
+        status: passed
+      - id: C12
+        description: "Run full pytest."
+        status: passed
+      - id: C13
+        description: "Run static allowed-path/status/range/newline/whitespace guard and git diff --check."
+        status: passed
+      - id: C14
+        description: "Create acceptance.md and finalize checklist status."
+        status: passed
+
+verification_commands:
+  - "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --dir design/codestable/features/2026-07-07-hermes-tavern-phase462-attention-status-sync-through-phase461 --require doc_type --require status --require feature"
+  - "PYTHONPYCACHEPREFIX=/tmp/hermes-tavern-pycache-phase462-executor python -m py_compile tests/test_hermes_tavern_codestable_status.py"
+  - "env -u HERMES_SESSION_KEY -u HERMES_SESSION_ID HERMES_HOME=/Users/steven/.hermes PYTHONDONTWRITEBYTECODE=1 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python -m pytest tests/test_hermes_tavern_codestable_status.py -q -o 'addopts=' -p no:cacheprovider"
+  - "static allowed-path/status/range/newline/whitespace guard over changed plus untracked files"
+  - "git diff --check"
