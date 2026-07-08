@@ -1,0 +1,124 @@
+doc_type: feature-checklist
+feature: 2026-07-08-hermes-tavern-phase466-attention-status-sync-through-phase465
+status: implemented
+workflow_status: pending_parent_verification
+acceptance_state: pending_parent_verification
+implementation_ready: true
+parent_verification_required: true
+parent_verification_completed: false
+worker_commit_or_push_performed: false
+parent_commit_or_push_performed: false
+acceptance_artifact: null
+acceptance_md_present: false
+
+date: "2026-07-08"
+owner: company-boost
+lane: company-boost
+bounded_phase: "docs/static-test/status-only"
+result_type: status_sync_single_tick
+selected_scope: status-docs-tests-only
+selected_phase_slug: 2026-07-08-hermes-tavern-phase466-attention-status-sync-through-phase465
+selected_title: "Phase 466 attention/status sync through Phase 465"
+summary: "Phase 466 attention/status sync through accepted Phase 465 is implemented by S1 and awaits parent verification."
+controller_lane: company-boost
+architect_design_jsonl: /tmp/hermes-tavern-companyboost-architect-20260708-phase466-s1.jsonl
+executor_jsonl: /tmp/hermes-tavern-companyboost-executor-20260708-phase466-s1.jsonl
+architect_review_jsonl: /tmp/hermes-tavern-companyboost-review-20260708-phase466-s1.jsonl
+executor_fix_jsonl: null
+
+allowed_files:
+  - design/codestable/attention.md
+  - tests/test_hermes_tavern_codestable_status.py
+  - design/codestable/features/2026-07-08-hermes-tavern-phase466-attention-status-sync-through-phase465/design.md
+  - design/codestable/features/2026-07-08-hermes-tavern-phase466-attention-status-sync-through-phase465/checklist.yaml
+
+status_test_contract:
+  current_status_prefix: "Current status (2026-06-18): All phases 1-466 accepted"
+  stale_status_prefix: "Current status (2026-06-18): All phases 1-465 accepted"
+  stale_phase_marker: "1-465"
+  stale_phase_marker_en_dash: "1–465"
+  older_stale_phase_markers:
+    - "1-464"
+    - "1–464"
+  required_new_label: "Phase 466 attention status sync through Phase 465"
+  final_status_suffix: "Phase 464 attention status sync through Phase 463, Phase 465 attention status sync through Phase 464, and Phase 466 attention status sync through Phase 465."
+  phase_range: "range(168, 467)"
+  aggregate_range: "range(168, 467)"
+  split_stale_guard_to_add: 'stale_aggregate_range_466 = "".join(["range(168, ", "46", "6", ")"])'
+  split_stale_direct_guard_to_add: 'stale_aggregate_guard_466 = "".join(["range(168, ", "46", str(6), ")"])'
+
+steps:
+  - id: S1
+    name: "Executor status sync for Phase 466"
+    owner: executor
+    status: completed
+    completion_owner: executor
+    acceptance_creation: prohibited
+    files:
+      allowed:
+        - design/codestable/attention.md
+        - tests/test_hermes_tavern_codestable_status.py
+        - design/codestable/features/2026-07-08-hermes-tavern-phase466-attention-status-sync-through-phase465/design.md
+        - design/codestable/features/2026-07-08-hermes-tavern-phase466-attention-status-sync-through-phase465/checklist.yaml
+      acceptance_artifact_must_remain_absent: true
+    checks:
+      - id: C1
+        description: "Create Phase 466 design.md and checklist.yaml only in the selected feature directory."
+        status: passed
+      - id: C2
+        description: "Advance attention.md from 1-465 to 1-466 and append the Phase 466 label exactly once."
+        status: passed
+      - id: C3
+        description: "Preserve early special labels, Phase 121-167 aggregate, and all Phase 168-465 labels while moving to the Phase 464/465/466 suffix."
+        status: passed
+      - id: C4
+        description: "Preserve status-line placement under ### 其他 immediately after the adult-fiction boundary and before Hermes Tavern credentials."
+        status: passed
+      - id: C5
+        description: "Update focused test prefixes, stale markers, required label, suffix, phase_range, aggregate_range, and stale aggregate guards."
+        status: passed
+      - id: C6
+        description: "Do not create acceptance.md, protected-path edits, later-phase artifacts, accepted lifecycle fields, or stage/commit/push work."
+        status: passed
+
+  - id: S2
+    name: "Parent verification and acceptance closeout"
+    owner: parent_controller
+    status: pending
+    acceptance_creation: pending_parent_controller
+    checks:
+      - id: C7
+        description: "Validate Phase 466 design/checklist YAML."
+        status: pending
+      - id: C8
+        description: "Run py_compile and focused status pytest."
+        status: pending
+      - id: C9
+        description: "Run static allowed-path/status/range/newline/whitespace/no-acceptance/no-later-phase guard and git diff --check."
+        status: pending
+      - id: C10
+        description: "Run full pytest when feasible."
+        status: pending
+      - id: C11
+        description: "Only after parent verification, create acceptance.md and finalize checklist."
+        status: pending
+
+verification_commands:
+  - command: "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --dir design/codestable/features/2026-07-08-hermes-tavern-phase466-attention-status-sync-through-phase465 --require doc_type --require status --require feature"
+    status: passed_worker_controller
+    observed: "Validated 2 file(s): 2 passed, 0 failed."
+  - command: "PYTHONDONTWRITEBYTECODE=1 python -m py_compile tests/test_hermes_tavern_codestable_status.py"
+    status: passed_worker_controller
+    observed: "exit 0"
+  - command: "env -u HERMES_SESSION_KEY -u HERMES_SESSION_ID HERMES_HOME=/Users/steven/.hermes PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_codestable_status.py -q -o 'addopts=' -p no:cacheprovider"
+    status: passed_worker_controller
+    observed: "1 passed in 0.04s"
+  - command: "python /tmp/hermes-tavern-phase466-s1-static-guard.py"
+    status: passed_worker_controller
+    observed: "static_guard=passed"
+  - command: "git diff --check"
+    status: passed_worker_controller
+    observed: "exit 0"
+  - command: "env -u HERMES_SESSION_KEY -u HERMES_SESSION_ID HERMES_HOME=/Users/steven/.hermes PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts=' -p no:cacheprovider"
+    status: passed_worker_controller
+    observed: "1215 passed in 55.45s"
