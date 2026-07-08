@@ -1,0 +1,131 @@
+doc_type: feature-checklist
+feature: 2026-07-08-hermes-tavern-phase468-attention-status-sync-through-phase467
+status: accepted
+workflow_status: accepted
+acceptance_state: accepted
+implementation_ready: true
+parent_verification_required: false
+parent_verification_completed: true
+worker_commit_or_push_performed: false
+parent_commit_or_push_performed: false
+acceptance_artifact: design/codestable/features/2026-07-08-hermes-tavern-phase468-attention-status-sync-through-phase467/acceptance.md
+acceptance_md_present: true
+
+date: "2026-07-08"
+accepted_at: "2026-07-08"
+owner: company-boost
+lane: company-boost
+bounded_phase: "docs/static-test/status-only"
+result_type: status_sync_single_tick
+selected_scope: status-docs-tests-only
+selected_phase_slug: 2026-07-08-hermes-tavern-phase468-attention-status-sync-through-phase467
+selected_title: "Phase 468 attention/status sync through Phase 467"
+summary: "Phase 468 S2 acceptance closeout accepted after parent-controller gates; no child commit, push, or state update was performed."
+controller_lane: company-boost
+architect_design_jsonl: /tmp/hermes-tavern-companyboost-architect-20260708-next-slice.jsonl
+executor_jsonl: /tmp/hermes-tavern-companyboost-executor-20260708-phase468-s1.jsonl
+architect_review_jsonl: /tmp/hermes-tavern-companyboost-review-20260708-phase468-s1.jsonl
+executor_fix_jsonl: null
+
+dirty_tree_handoff:
+  expected_dirty_files:
+    - design/codestable/attention.md
+    - tests/test_hermes_tavern_codestable_status.py
+    - design/codestable/features/2026-07-08-hermes-tavern-phase468-attention-status-sync-through-phase467/design.md
+    - design/codestable/features/2026-07-08-hermes-tavern-phase468-attention-status-sync-through-phase467/checklist.yaml
+    - design/codestable/features/2026-07-08-hermes-tavern-phase468-attention-status-sync-through-phase467/acceptance.md
+  staged_changes_allowed: false
+  commit_allowed: false
+  push_allowed: false
+  state_update_allowed: false
+
+status_test_contract:
+  current_status_prefix: "Current status (2026-06-18): All phases 1-468 accepted"
+  stale_status_prefix: "Current status (2026-06-18): All phases 1-467 accepted"
+  stale_phase_marker: "1-467"
+  stale_phase_marker_en_dash: "1–467"
+  older_stale_phase_markers:
+    - "1-466"
+    - "1–466"
+  required_new_label: "Phase 468 attention status sync through Phase 467"
+  final_status_suffix: "Phase 466 attention status sync through Phase 465, Phase 467 attention status sync through Phase 466, and Phase 468 attention status sync through Phase 467."
+  phase_range: "range(168, 469)"
+  aggregate_range: "range(168, 469)"
+  split_stale_guard_to_add: 'stale_aggregate_range_468 = "".join(["range(168, ", "46", "8", ")"])'
+  split_stale_direct_guard_to_add: 'stale_aggregate_guard_468 = "".join(["range(168, ", "46", str(8), ")"])'
+
+steps:
+  - id: S1
+    name: "Executor status sync for Phase 468"
+    owner: executor
+    status: completed
+    completion_owner: executor
+    acceptance_creation: prohibited_during_s1
+    files:
+      allowed:
+        - design/codestable/attention.md
+        - tests/test_hermes_tavern_codestable_status.py
+        - design/codestable/features/2026-07-08-hermes-tavern-phase468-attention-status-sync-through-phase467/design.md
+        - design/codestable/features/2026-07-08-hermes-tavern-phase468-attention-status-sync-through-phase467/checklist.yaml
+      acceptance_artifact_must_remain_absent: true
+    checks:
+      - id: C1
+        description: "Create Phase 468 design.md and checklist.yaml only in the selected feature directory."
+        status: passed
+      - id: C2
+        description: "Advance attention.md from 1-467 to 1-468 and append the Phase 468 label exactly once."
+        status: passed
+      - id: C3
+        description: "Preserve special early labels, Phase 121-167 aggregate, and all Phase 168-467 labels while moving to the Phase 466/467/468 suffix."
+        status: passed
+      - id: C4
+        description: "Preserve status-line placement under ### 其他 immediately after the adult-fiction boundary and before Hermes Tavern credentials."
+        status: passed
+      - id: C5
+        description: "Update focused test prefixes, stale markers, required label, suffix, phase_range, aggregate_range, and stale aggregate guards."
+        status: passed
+      - id: C6
+        description: "Do not create acceptance.md, protected-path edits, out-of-scope artifacts, accepted lifecycle fields, or stage/commit/push work during S1."
+        status: passed
+
+  - id: S2
+    name: "Parent verification and acceptance closeout"
+    owner: parent_controller
+    status: completed
+    acceptance_creation: completed
+    checks:
+      - id: C7
+        description: "Validate Phase 468 design/checklist/acceptance frontmatter and YAML."
+        status: passed
+      - id: C8
+        description: "Run py_compile and focused status pytest."
+        status: passed
+      - id: C9
+        description: "Run static allowed-path/status/range/newline/whitespace/no-out-of-scope guard and git diff --check."
+        status: passed
+      - id: C10
+        description: "Run full pytest."
+        status: passed
+      - id: C11
+        description: "Create acceptance.md and finalize checklist after parent verification."
+        status: passed
+
+verification_commands:
+  - command: "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --dir design/codestable/features/2026-07-08-hermes-tavern-phase468-attention-status-sync-through-phase467 --require doc_type --require status --require feature"
+    status: passed_parent_controller
+    observed: "Validated Phase 468 design, checklist, and acceptance artifacts."
+  - command: "PYTHONDONTWRITEBYTECODE=1 python -m py_compile tests/test_hermes_tavern_codestable_status.py"
+    status: passed_parent_controller
+    observed: "exit 0"
+  - command: "env -u HERMES_SESSION_KEY -u HERMES_SESSION_ID HERMES_HOME=/Users/steven/.hermes PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_codestable_status.py -q -o addopts= -p no:cacheprovider"
+    status: passed_parent_controller
+    observed: "focused status test passed"
+  - command: "parent static guard for allowed paths/status/range/newline/whitespace"
+    status: passed_parent_controller
+    observed: "status/range, no Phase 469 tokens, final newline, trailing whitespace, and allowed-path checks passed"
+  - command: "git diff --check"
+    status: passed_parent_controller
+    observed: "exit 0"
+  - command: "env -u HERMES_SESSION_KEY -u HERMES_SESSION_ID HERMES_HOME=/Users/steven/.hermes PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o addopts= -p no:cacheprovider"
+    status: passed_parent_controller
+    observed: "full pytest passed"
