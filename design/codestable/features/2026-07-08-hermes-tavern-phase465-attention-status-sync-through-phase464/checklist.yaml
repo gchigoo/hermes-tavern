@@ -1,0 +1,127 @@
+doc_type: feature-checklist
+feature: 2026-07-08-hermes-tavern-phase465-attention-status-sync-through-phase464
+status: pending_parent_verification
+workflow_status: pending_parent_verification
+acceptance_state: pending_parent_verification
+implementation_ready: true
+parent_verification_required: true
+worker_commit_or_push_performed: false
+parent_commit_or_push_performed: false
+acceptance_artifact: null
+acceptance_md_present: false
+
+date: "2026-07-08"
+owner: company-boost
+lane: company-boost
+bounded_phase: "docs/static-test/status-only"
+result_type: status_sync_single_tick
+selected_scope: status-docs-tests-only
+selected_phase_slug: 2026-07-08-hermes-tavern-phase465-attention-status-sync-through-phase464
+selected_title: "Phase 465 attention/status sync through Phase 464"
+summary: "Phase 465 attention/status sync through accepted Phase 464 is implemented by S1 and awaits parent-controller verification."
+controller_lane: company-boost
+architect_design_jsonl: /tmp/hermes-tavern-companyboost-architect-20260708-next.jsonl
+executor_jsonl: /tmp/hermes-tavern-companyboost-executor-20260708-phase465.jsonl
+architect_review_jsonl: /tmp/hermes-tavern-companyboost-review-20260708-phase465.jsonl
+executor_fix_jsonl: null
+
+allowed_files:
+  - design/codestable/attention.md
+  - tests/test_hermes_tavern_codestable_status.py
+  - design/codestable/features/2026-07-08-hermes-tavern-phase465-attention-status-sync-through-phase464/design.md
+  - design/codestable/features/2026-07-08-hermes-tavern-phase465-attention-status-sync-through-phase464/checklist.yaml
+
+status_test_contract:
+  current_status_prefix: "Current status (2026-06-18): All phases 1-465 accepted"
+  stale_status_prefix: "Current status (2026-06-18): All phases 1-464 accepted"
+  stale_phase_marker: "1-464"
+  stale_phase_marker_en_dash: "1–464"
+  older_stale_phase_markers:
+    - "1-463"
+    - "1–463"
+  required_new_label: "Phase 465 attention status sync through Phase 464"
+  final_status_suffix: "Phase 463 attention status sync through Phase 462, Phase 464 attention status sync through Phase 463, and Phase 465 attention status sync through Phase 464."
+  phase_range: "range(168, 466)"
+  aggregate_range: "range(168, 466)"
+  split_stale_guard_to_add: 'stale_aggregate_range_465 = "".join(["range(168, ", "46", "5", ")"])'
+  split_stale_direct_guard_to_add: 'stale_aggregate_guard_465 = "".join(["range(168, ", "46", str(5), ")"])'
+  stale_direct_ranges_must_remain_rejected:
+    - previous_phase_aggregate_range_split_guard_465
+    - older_phase_aggregate_range_split_guard_464
+    - older_phase_aggregate_range_split_guard_463
+
+steps:
+  - id: S1
+    name: "Executor status sync for Phase 465"
+    owner: executor
+    status: completed
+    completion_owner: executor
+    acceptance_creation: prohibited
+    s1_checks_passed_only_after_executor_evidence: true
+    files:
+      allowed:
+        - design/codestable/attention.md
+        - tests/test_hermes_tavern_codestable_status.py
+        - design/codestable/features/2026-07-08-hermes-tavern-phase465-attention-status-sync-through-phase464/design.md
+        - design/codestable/features/2026-07-08-hermes-tavern-phase465-attention-status-sync-through-phase464/checklist.yaml
+      acceptance_artifact_must_remain_absent: true
+    checks:
+      - id: C1
+        description: "Create Phase 465 design.md and checklist.yaml only in the selected feature directory."
+        status: passed
+      - id: C2
+        description: "Advance attention.md from 1-464 to 1-465 and append the Phase 465 label exactly once in the attention status line."
+        status: passed
+      - id: C3
+        description: "Preserve special early labels, Phase 121-167 aggregate, and all existing Phase 168-464 labels while moving to the required Phase 463/464/465 suffix."
+        status: passed
+      - id: C4
+        description: "Preserve status-line placement under ### 其他 immediately after the adult-fiction boundary and before Hermes Tavern credentials."
+        status: passed
+      - id: C5
+        description: "Update focused test CURRENT_STATUS_PREFIX, STALE_STATUS_PREFIX, stale direct markers, and older Phase 463 direct-marker guards to the Phase 465 contract."
+        status: passed
+      - id: C6
+        description: "Append the Phase 465 label and update FINAL_STATUS_SUFFIX, phase_range, aggregate_range, stale range guards, and stale direct guard assertions."
+        status: passed
+      - id: C7
+        description: "Preserve anchored assignment-count checks, existing stale split/direct guards for required earlier cases, section-placement guard, all-label guard, Phase 121-167 aggregate guard, and no-discovery-token guards."
+        status: passed
+      - id: C8
+        description: "Do not create acceptance.md, touch prohibited paths, create later-phase artifacts or live labels, mark checklist accepted, or perform stage/commit/push work."
+        status: passed
+
+  - id: S2
+    name: "Parent/controller verification and acceptance closeout"
+    owner: parent_controller
+    status: pending
+    acceptance_creation: pending_parent_controller
+    checks:
+      - id: C9
+        description: "Validate Phase 465 design/checklist YAML."
+        status: pending
+      - id: C10
+        description: "Run py_compile for the focused status test."
+        status: pending
+      - id: C11
+        description: "Run focused status pytest."
+        status: pending
+      - id: C12
+        description: "Optionally run full pytest as parent/full verification."
+        status: pending
+      - id: C13
+        description: "Run static allowed-path/status/range/no-later-phase/no-acceptance guard and git diff --check."
+        status: pending
+      - id: C14
+        description: "Create acceptance.md and finalize checklist status only after parent verification."
+        status: pending
+
+verification_commands:
+  - "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --dir design/codestable/features/2026-07-08-hermes-tavern-phase465-attention-status-sync-through-phase464 --require doc_type --require status --require feature"
+  - "PYTHONPYCACHEPREFIX=/tmp/hermes-tavern-pycache-phase465-executor python -m py_compile tests/test_hermes_tavern_codestable_status.py"
+  - "env -u HERMES_SESSION_KEY -u HERMES_SESSION_ID HERMES_HOME=/Users/steven/.hermes PYTHONDONTWRITEBYTECODE=1 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python -m pytest tests/test_hermes_tavern_codestable_status.py -q -o 'addopts=' -p no:cacheprovider"
+  - "static allowed-path/status/range/no-later-phase/no-acceptance guard over changed plus untracked files"
+  - "git diff --check"
+
+parent_full_verification_commands:
+  - "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts=' -p no:cacheprovider"
