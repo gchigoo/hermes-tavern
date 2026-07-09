@@ -4,12 +4,12 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 ATTENTION_DOC = REPO_ROOT / "design" / "codestable" / "attention.md"
-CURRENT_STATUS_PREFIX = "Current status (2026-06-18): All phases 1-476 accepted"
-STALE_STATUS_PREFIX = "Current status (2026-06-18): All phases 1-475 accepted"
-STALE_PHASE_MARKER = "1-475"
-STALE_PHASE_MARKER_EN_DASH = "1–475"
-OLDER_STALE_PHASE_MARKER = "1-474"
-OLDER_STALE_PHASE_MARKER_EN_DASH = "1–474"
+CURRENT_STATUS_PREFIX = "Current status (2026-06-18): All phases 1-477 accepted"
+STALE_STATUS_PREFIX = "Current status (2026-06-18): All phases 1-476 accepted"
+STALE_PHASE_MARKER = "1-476"
+STALE_PHASE_MARKER_EN_DASH = "1–476"
+OLDER_STALE_PHASE_MARKER = "1-475"
+OLDER_STALE_PHASE_MARKER_EN_DASH = "1–475"
 REQUIRED_PHASE_LABELS = [
     "Phase 168 image settings JSON export",
     "Phase 169 project JSON export surface parity",
@@ -320,8 +320,9 @@ REQUIRED_PHASE_LABELS = [
     "Phase 474 attention status sync through Phase 473",
     "Phase 475 attention status sync through Phase 474",
     "Phase 476 attention status sync through Phase 475",
+    "Phase 477 attention status sync through Phase 476",
 ]
-FINAL_STATUS_SUFFIX = "Phase 474 attention status sync through Phase 473, Phase 475 attention status sync through Phase 474, and Phase 476 attention status sync through Phase 475."
+FINAL_STATUS_SUFFIX = "Phase 475 attention status sync through Phase 474, Phase 476 attention status sync through Phase 475, and Phase 477 attention status sync through Phase 476."
 
 
 def test_attention_current_status_line_is_current():
@@ -352,8 +353,8 @@ def test_attention_current_status_line_is_current():
     assert re.search(rf"(?<!\d){re.escape(OLDER_STALE_PHASE_MARKER)}(?!\d)", status) is None
     assert re.search(rf"(?<!\d){re.escape(OLDER_STALE_PHASE_MARKER_EN_DASH)}(?!\d)", status) is None
     assert status.endswith(FINAL_STATUS_SUFFIX)
-    phase_range = range(168, 477)
-    aggregate_range = "range(168, 477)"
+    phase_range = range(168, 478)
+    aggregate_range = "range(168, 478)"
     assert all(f"Phase {phase} " in status for phase in phase_range)
     assert re.search(r"(?<!\d)Phase 121-167(?!\d)", status) is not None
     test = Path(__file__).read_text(encoding="utf-8")
@@ -488,6 +489,7 @@ def test_attention_current_status_line_is_current():
     stale_aggregate_range_474 = "".join(["range(168, ", "47", "4", ")"])
     stale_aggregate_range_475 = "".join(["range(168, ", "47", "5", ")"])
     stale_aggregate_range_476 = "".join(["range(168, ", "47", "6", ")"])
+    stale_aggregate_range_477 = "".join(["range(168, ", "47", "7", ")"])
     stale_aggregate_range_349 = "".join(["range(168, ", "34", "9", ")"])
     stale_aggregate_range_350 = "".join(["range(168, ", "35", "0", ")"])
     stale_aggregate_range_348 = "".join(["range(168, ", "34", "8", ")"])
@@ -752,6 +754,7 @@ def test_attention_current_status_line_is_current():
         stale_aggregate_range_473,
         stale_aggregate_range_475,
         stale_aggregate_range_476,
+        stale_aggregate_range_477,
         stale_aggregate_range_474,
         stale_aggregate_range_376,
     ):
@@ -763,6 +766,7 @@ def test_attention_current_status_line_is_current():
     stale_aggregate_guard_474 = "".join(["range(168, ", "47", str(4), ")"])
     stale_aggregate_guard_475 = "".join(["range(168, ", "47", str(5), ")"])
     stale_aggregate_guard_476 = "".join(["range(168, ", "47", str(6), ")"])
+    stale_aggregate_guard_477 = "".join(["range(168, ", "47", str(7), ")"])
     stale_aggregate_guard_469 = "".join(["range(168, ", "46", str(9), ")"])
     stale_aggregate_guard_468 = "".join(["range(168, ", "46", str(8), ")"])
     stale_aggregate_guard_467 = "".join(["range(168, ", "46", str(7), ")"])
@@ -812,6 +816,7 @@ def test_attention_current_status_line_is_current():
     stale_aggregate_guard_422 = "".join(["range(168, ", "42", str(2), ")"])
     stale_aggregate_guard_423 = "".join(["range(168, ", "42", str(3), ")"])
     stale_aggregate_guard_424 = "".join(["range(168, ", "42", str(4), ")"])
+    assert stale_aggregate_guard_477 not in test
     assert stale_aggregate_guard_476 not in test
     assert stale_aggregate_guard_475 not in test
     assert stale_aggregate_guard_474 not in test
