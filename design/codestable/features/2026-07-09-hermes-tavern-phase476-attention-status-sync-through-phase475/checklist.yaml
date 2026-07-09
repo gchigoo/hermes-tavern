@@ -1,36 +1,48 @@
 doc_type: feature-checklist
 feature: 2026-07-09-hermes-tavern-phase476-attention-status-sync-through-phase475
-status: implemented
-workflow_status: pending_parent_verification
-acceptance_state: pending_parent_verification
+status: accepted
+workflow_status: accepted
+acceptance_state: accepted
 implementation_ready: true
-parent_verification_required: true
-parent_verification_completed: false
+parent_verification_required: false
+parent_verification_completed: true
 worker_commit_or_push_performed: false
 parent_commit_or_push_performed: false
-acceptance_artifact: null
-acceptance_md_present: false
+acceptance_artifact: design/codestable/features/2026-07-09-hermes-tavern-phase476-attention-status-sync-through-phase475/acceptance.md
+acceptance_md_present: true
 
 date: "2026-07-09"
+accepted_at: "2026-07-09"
 owner: company-boost
 lane: company-boost
 bounded_phase: "docs/static-test/status-only"
 result_type: status_sync_single_tick
-selected_scope: status-docs-tests-only
+selected_scope: phase476-parent-acceptance-closeout-only
 selected_phase_slug: 2026-07-09-hermes-tavern-phase476-attention-status-sync-through-phase475
-selected_title: "Phase 476 attention/status sync through Phase 475"
-summary: "Phase 476 attention/status sync through accepted Phase 475 is implemented by S1 and awaits parent verification."
+selected_title: "Phase 476 parent acceptance closeout"
+summary: "Phase 476 S2 acceptance closeout finalized the already-committed Phase 476 status-sync artifacts after parent-controller verification; no later-phase work, commit, or push was performed."
 controller_lane: company-boost
 architect_design_jsonl: /tmp/hermes-tavern-companyboost-architect-20260709-phase476.jsonl
 executor_jsonl: /tmp/hermes-tavern-companyboost-executor-20260709-phase476.jsonl
 architect_review_jsonl: /tmp/hermes-tavern-companyboost-review-20260709-phase476.jsonl
 executor_fix_jsonl: null
 
+preconditions:
+  git_tree_must_start_clean: true
+  committed_status_contract_must_already_match_phase476: true
+
 allowed_files:
-  - design/codestable/attention.md
-  - tests/test_hermes_tavern_codestable_status.py
-  - design/codestable/features/2026-07-09-hermes-tavern-phase476-attention-status-sync-through-phase475/design.md
   - design/codestable/features/2026-07-09-hermes-tavern-phase476-attention-status-sync-through-phase475/checklist.yaml
+  - design/codestable/features/2026-07-09-hermes-tavern-phase476-attention-status-sync-through-phase475/acceptance.md
+
+dirty_tree_handoff:
+  expected_dirty_files:
+    - design/codestable/features/2026-07-09-hermes-tavern-phase476-attention-status-sync-through-phase475/checklist.yaml
+    - design/codestable/features/2026-07-09-hermes-tavern-phase476-attention-status-sync-through-phase475/acceptance.md
+  staged_changes_allowed: false
+  commit_allowed: false
+  push_allowed: false
+  state_update_allowed: false
 
 status_test_contract:
   current_status_prefix: "Current status (2026-06-18): All phases 1-476 accepted"
@@ -84,31 +96,66 @@ steps:
   - id: S2
     name: "Parent verification and acceptance closeout"
     owner: parent_controller
-    status: pending
-    acceptance_creation: pending_parent_controller
+    status: completed
+    acceptance_creation: completed
+    files:
+      allowed:
+        - design/codestable/features/2026-07-09-hermes-tavern-phase476-attention-status-sync-through-phase475/checklist.yaml
+        - design/codestable/features/2026-07-09-hermes-tavern-phase476-attention-status-sync-through-phase475/acceptance.md
     checks:
       - id: C7
-        description: "Validate Phase 476 design/checklist YAML."
-        status: pending
+        description: "Confirm the committed repo already carries the Phase 476 attention/status contract and that the tree starts clean before closeout."
+        status: passed
       - id: C8
-        description: "Run py_compile and focused status pytest."
-        status: pending
+        description: "Validate Phase 476 design/checklist/acceptance artifacts."
+        status: passed
       - id: C9
-        description: "Run static allowed-path/status/range/newline/whitespace/no-acceptance/no-later-phase guard and git diff --check."
-        status: pending
+        description: "Run py_compile and focused status pytest with writable /tmp-backed cache/temp paths."
+        status: passed
       - id: C10
-        description: "Run full pytest when feasible."
-        status: pending
+        description: "Run closeout-only allowed-path and no-Phase-477 guards plus git diff --check."
+        status: passed
       - id: C11
-        description: "Only after parent verification, create acceptance.md and finalize checklist."
-        status: pending
+        description: "Run full pytest and finalize checklist plus acceptance.md without opening any later-phase slice."
+        status: passed
 
 verification_commands:
-  - "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --dir design/codestable/features/2026-07-09-hermes-tavern-phase476-attention-status-sync-through-phase475 --require doc_type --require status --require feature"
-  - "PYTHONDONTWRITEBYTECODE=1 python -m py_compile tests/test_hermes_tavern_codestable_status.py"
-  - "env -u PYTEST_DISABLE_PLUGIN_AUTOLOAD -u HERMES_SESSION_KEY -u HERMES_SESSION_ID HERMES_HOME=/Users/steven/.hermes PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_codestable_status.py -q -o addopts= -p no:cacheprovider"
-  - "static allowed-path/status/range/newline/whitespace/no-later-phase/no-acceptance guard over changed plus untracked files"
-  - "git diff --check"
-
-parent_full_verification_commands:
-  - "env -u PYTEST_DISABLE_PLUGIN_AUTOLOAD -u HERMES_SESSION_KEY -u HERMES_SESSION_ID HERMES_HOME=/Users/steven/.hermes PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o addopts= -p no:cacheprovider"
+  - command: >-
+      PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --dir
+      design/codestable/features/2026-07-09-hermes-tavern-phase476-attention-status-sync-through-phase475
+      --require doc_type --require status --require feature
+    status: passed_parent_controller
+    observed: "Validated Phase 476 design, checklist, and acceptance artifacts."
+  - command: >-
+      PYTHONPYCACHEPREFIX=/tmp/hermes-tavern-pycache-phase476-parent python -m py_compile
+      tests/test_hermes_tavern_codestable_status.py
+    status: passed_parent_controller
+    observed: "exit 0"
+  - command: >-
+      TMPDIR=/tmp env -u PYTEST_DISABLE_PLUGIN_AUTOLOAD -u HERMES_SESSION_KEY
+      -u HERMES_SESSION_ID HERMES_HOME=/Users/steven/.hermes PYTHONDONTWRITEBYTECODE=1
+      python -m pytest tests/test_hermes_tavern_codestable_status.py -q -o 'addopts='
+      -p no:cacheprovider
+    status: passed_parent_controller
+    observed: "focused status test passed"
+  - command: >-
+      python -c 'import subprocess; allowed={"design/codestable/features/2026-07-09-hermes-tavern-phase476-attention-status-sync-through-phase475/checklist.yaml","design/codestable/features/2026-07-09-hermes-tavern-phase476-attention-status-sync-through-phase475/acceptance.md"}; files=[line[3:] for line in subprocess.check_output(["git","status","--short","--untracked-files=all"], text=True).splitlines() if line.strip()]; assert set(files)==allowed, files'
+    status: passed_parent_controller
+    observed: "only checklist.yaml and acceptance.md were dirty after closeout"
+  - command: >-
+      no-later-phase token guard over
+      design/codestable/features/2026-07-09-hermes-tavern-phase476-attention-status-sync-through-phase475/checklist.yaml
+      and
+      design/codestable/features/2026-07-09-hermes-tavern-phase476-attention-status-sync-through-phase475/acceptance.md
+    status: passed_parent_controller
+    observed: "no later-phase tokens present in closeout artifacts"
+  - command: >-
+      git diff --check
+    status: passed_parent_controller
+    observed: "exit 0"
+  - command: >-
+      TMPDIR=/tmp env -u PYTEST_DISABLE_PLUGIN_AUTOLOAD -u HERMES_SESSION_KEY
+      -u HERMES_SESSION_ID HERMES_HOME=/Users/steven/.hermes PYTHONDONTWRITEBYTECODE=1
+      python -m pytest -q -o 'addopts=' -p no:cacheprovider
+    status: passed_parent_controller
+    observed: "full pytest passed"
