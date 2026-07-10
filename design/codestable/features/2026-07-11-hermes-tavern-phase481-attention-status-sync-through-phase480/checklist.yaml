@@ -1,0 +1,117 @@
+doc_type: feature-checklist
+feature: 2026-07-11-hermes-tavern-phase481-attention-status-sync-through-phase480
+status: accepted
+workflow_status: accepted
+acceptance_state: accepted
+implementation_ready: true
+parent_verification_required: false
+parent_verification_completed: true
+executor_acceptance_creation: prohibited
+executor_final_status_claims: prohibited
+executor_commit_or_push: prohibited
+date: '2026-07-11'
+owner: standard-lane
+lane: standard
+architect_model: gpt-5.5
+architect_reasoning: xhigh
+executor_model: gpt-5.4
+bounded_phase: docs/static-test/status-only
+selected_scope: phase481-attention-status-sync-through-phase480
+selected_phase_slug: 2026-07-11-hermes-tavern-phase481-attention-status-sync-through-phase480
+selected_title: Phase 481 attention/status sync through Phase 480
+s1_allowed_files:
+- design/codestable/attention.md
+- tests/test_hermes_tavern_codestable_status.py
+- design/codestable/features/2026-07-11-hermes-tavern-phase481-attention-status-sync-through-phase480/design.md
+- design/codestable/features/2026-07-11-hermes-tavern-phase481-attention-status-sync-through-phase480/checklist.yaml
+parent_closeout_allowed_files:
+- design/codestable/features/2026-07-11-hermes-tavern-phase481-attention-status-sync-through-phase480/acceptance.md
+status_test_contract:
+  current_status_prefix: 'Current status (2026-06-18): All phases 1-481 accepted'
+  stale_status_prefix: 'Current status (2026-06-18): All phases 1-480 accepted'
+  stale_phase_marker: 1-480
+  stale_phase_marker_en_dash: 1–480
+  older_stale_phase_markers:
+  - 1-479
+  - 1–479
+  required_new_label: Phase 481 attention status sync through Phase 480
+  final_status_suffix: Phase 479 attention status sync through Phase 478, Phase 480 attention status sync through Phase 479,
+    and Phase 481 attention status sync through Phase 480.
+  phase_range: range(168, 482)
+  aggregate_range: range(168, 482)
+  split_stale_range: stale_aggregate_range_481
+  split_stale_direct_guard: stale_aggregate_guard_481
+steps:
+- id: S1
+  name: Executor status sync for Phase 481
+  owner: executor
+  model: gpt-5.4
+  status: completed
+  acceptance_creation: prohibited
+  checks:
+  - id: C1
+    status: passed_executor_observed
+    description: Keep Phase 481 design/checklist aligned with the bounded S1 contract.
+  - id: C2
+    status: passed_executor_observed
+    description: Advance attention.md to 1-481 and append the Phase 481 label exactly once.
+  - id: C3
+    status: passed_executor_observed
+    description: Preserve prior labels, special aggregates, placement, and exact Phase 479/480/481 suffix.
+  - id: C4
+    status: passed_executor_observed
+    description: Advance focused test current/stale/older markers, labels, suffix, and aggregate ranges.
+  - id: C5
+    status: passed_executor_observed
+    description: Add and wire split stale guards for superseded range(168, 481).
+  - id: C6
+    status: passed_executor_observed
+    description: Preserve anchored assignments, placement/all-label/special-aggregate/no-discovery guards.
+  - id: C7
+    status: passed_executor_observed
+    description: Do not create acceptance.md, set final statuses, commit, push, or claim parent verification.
+- id: S2
+  name: Parent-controller verification and acceptance closeout
+  owner: parent_controller
+  status: completed
+  acceptance_creation: completed
+  checks:
+  - id: C8
+    description: Validate Phase 481 artifacts and exact changed-file scope.
+    status: passed
+  - id: C9
+    description: Run CodeStable validator, py_compile, focused pytest, and full pytest.
+    status: passed
+  - id: C10
+    description: Run static scope/status/range/newline/trailing-whitespace/no-Phase-482 guard and git diff --check.
+    status: passed
+  - id: C11
+    description: Create acceptance.md only after controller verification passes.
+    status: passed
+accepted_at: '2026-07-11'
+result_type: status_sync_single_tick
+architect_design_jsonl: /tmp/hermes-tavern-standard-architect-20260711-phase481.jsonl
+executor_jsonl: /tmp/hermes-tavern-standard-executor-20260711-phase481.jsonl
+architect_review_jsonl: /tmp/hermes-tavern-standard-review-20260711-phase481.jsonl
+acceptance_artifact: design/codestable/features/2026-07-11-hermes-tavern-phase481-attention-status-sync-through-phase480/acceptance.md
+verification_commands:
+- command: PYTHONDONTWRITEBYTECODE=1 /usr/local/bin/python3 design/codestable/tools/validate-yaml.py --dir design/codestable/features/2026-07-11-hermes-tavern-phase481-attention-status-sync-through-phase480
+    --require doc_type --require status --require feature
+  status: passed_parent_controller
+  observed: 2 artifacts passed before closeout; final artifact validation rerun after acceptance creation
+- command: PYTHONDONTWRITEBYTECODE=1 /usr/local/bin/python3 -m py_compile tests/test_hermes_tavern_codestable_status.py
+  status: passed_parent_controller
+  observed: exit 0
+- command: env -u PYTEST_DISABLE_PLUGIN_AUTOLOAD -u HERMES_SESSION_KEY -u HERMES_SESSION_ID HERMES_HOME=/Users/steven/.hermes
+    PYTHONDONTWRITEBYTECODE=1 /usr/local/bin/python3 -m pytest tests/test_hermes_tavern_codestable_status.py -q -o addopts=
+    -p no:cacheprovider
+  status: passed_parent_controller
+  observed: 1 passed
+- command: TMPDIR=/tmp env -u PYTEST_DISABLE_PLUGIN_AUTOLOAD -u HERMES_SESSION_KEY -u HERMES_SESSION_ID HERMES_HOME=/Users/steven/.hermes
+    PYTHONDONTWRITEBYTECODE=1 /usr/local/bin/python3 -m pytest -q -o addopts= -p no:cacheprovider
+  status: passed_parent_controller
+  observed: 1215 passed
+- command: controller static scope/status/placement/suffix/range/no-Phase-482/newline/trailing-whitespace guard and git diff
+    --check
+  status: passed_parent_controller
+  observed: passed before and after acceptance closeout
