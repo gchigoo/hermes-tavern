@@ -1,0 +1,117 @@
+doc_type: feature-checklist
+feature: 2026-07-10-hermes-tavern-phase479-attention-status-sync-through-phase478
+status: accepted
+workflow_status: accepted
+acceptance_state: accepted
+implementation_ready: true
+parent_verification_required: false
+parent_verification_completed: true
+worker_commit_or_push_performed: false
+parent_commit_or_push_performed: false
+acceptance_artifact: design/codestable/features/2026-07-10-hermes-tavern-phase479-attention-status-sync-through-phase478/acceptance.md
+acceptance_md_present: true
+date: "2026-07-10"
+accepted_at: "2026-07-10"
+owner: standard-lane
+lane: standard
+bounded_phase: "docs/static-test/status-only"
+result_type: status_sync_single_tick
+selected_scope: phase479-parent-verification-and-acceptance
+selected_phase_slug: 2026-07-10-hermes-tavern-phase479-attention-status-sync-through-phase478
+selected_title: "Phase 479 attention/status sync through Phase 478"
+summary: "Phase 479 status sync through accepted Phase 478 finalized after controller verification; no later-phase work introduced."
+controller_lane: standard
+executor_model: gpt-5.4
+architect_design_jsonl: /tmp/hermes-tavern-standard-architect-20260710-phase479.jsonl
+executor_jsonl: /tmp/hermes-tavern-standard-executor-20260710-phase479.jsonl
+architect_review_jsonl: /tmp/hermes-tavern-standard-review-20260710-phase479.jsonl
+executor_fix_jsonl: null
+
+allowed_files:
+  - design/codestable/attention.md
+  - tests/test_hermes_tavern_codestable_status.py
+  - design/codestable/features/2026-07-10-hermes-tavern-phase479-attention-status-sync-through-phase478/design.md
+  - design/codestable/features/2026-07-10-hermes-tavern-phase479-attention-status-sync-through-phase478/checklist.yaml
+  - design/codestable/features/2026-07-10-hermes-tavern-phase479-attention-status-sync-through-phase478/acceptance.md
+
+status_test_contract:
+  current_status_prefix: "Current status (2026-06-18): All phases 1-479 accepted"
+  stale_status_prefix: "Current status (2026-06-18): All phases 1-478 accepted"
+  stale_phase_marker: "1-478"
+  stale_phase_marker_en_dash: "1–478"
+  older_stale_phase_markers:
+    - "1-477"
+    - "1–477"
+  required_new_label: "Phase 479 attention status sync through Phase 478"
+  final_status_suffix: "Phase 477 attention status sync through Phase 476, Phase 478 attention status sync through Phase 477, and Phase 479 attention status sync through Phase 478."
+  phase_range: "range(168, 480)"
+  aggregate_range: "range(168, 480)"
+  split_stale_range: 'stale_aggregate_range_479 = "".join(["range(168, ", "47", "9", ")"])'
+  split_stale_direct_guard: 'stale_aggregate_guard_479 = "".join(["range(168, ", "47", str(9), ")"])'
+
+steps:
+  - id: S1
+    name: "Executor status sync for Phase 479"
+    owner: executor
+    model: gpt-5.4
+    status: completed
+    completion_owner: executor
+    acceptance_creation: prohibited
+    checks:
+      - id: C1
+        description: "Keep Phase 479 design/checklist aligned with the bounded S1 contract."
+        status: passed
+      - id: C2
+        description: "Advance attention.md to 1-479 and append the Phase 479 label exactly once."
+        status: passed
+      - id: C3
+        description: "Preserve prior labels, special aggregates, placement, and exact Phase 477/478/479 suffix."
+        status: passed
+      - id: C4
+        description: "Advance focused test markers, labels, suffix, and aggregate ranges."
+        status: passed
+      - id: C5
+        description: "Add and wire split stale guards for the old range(168, 479)."
+        status: passed
+      - id: C6
+        description: "Preserve anchored assignments, placement/all-label/special-aggregate/no-discovery guards."
+        status: passed
+      - id: C7
+        description: "Keep acceptance, protected edits, later-phase work, finalization, commit, and push out of executor S1."
+        status: passed
+
+  - id: S2
+    name: "Parent-controller verification and acceptance closeout"
+    owner: parent_controller
+    status: completed
+    acceptance_creation: completed
+    checks:
+      - id: C8
+        description: "Validate Phase 479 artifacts and exact changed-file scope."
+        status: passed
+      - id: C9
+        description: "Run py_compile, focused status pytest, and full pytest."
+        status: passed
+      - id: C10
+        description: "Run status/range/newline/whitespace/no-later-phase guards and git diff --check."
+        status: passed
+      - id: C11
+        description: "Create acceptance.md and finalize lifecycle after controller verification and architect PASS review."
+        status: passed
+
+verification_commands:
+  - command: "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --dir design/codestable/features/2026-07-10-hermes-tavern-phase479-attention-status-sync-through-phase478 --require doc_type --require status --require feature"
+    status: passed_parent_controller
+    observed: "Phase 479 artifacts valid."
+  - command: "PYTHONDONTWRITEBYTECODE=1 python -m py_compile tests/test_hermes_tavern_codestable_status.py"
+    status: passed_parent_controller
+    observed: "exit 0"
+  - command: "env -u PYTEST_DISABLE_PLUGIN_AUTOLOAD -u HERMES_SESSION_KEY -u HERMES_SESSION_ID HERMES_HOME=/Users/steven/.hermes PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_codestable_status.py -q -o addopts= -p no:cacheprovider"
+    status: passed_parent_controller
+    observed: "1 passed"
+  - command: "controller static scope/status/range/newline/trailing-whitespace/no-Phase-480 guard and git diff --check"
+    status: passed_parent_controller
+    observed: "passed"
+  - command: "TMPDIR=/tmp env -u PYTEST_DISABLE_PLUGIN_AUTOLOAD -u HERMES_SESSION_KEY -u HERMES_SESSION_ID HERMES_HOME=/Users/steven/.hermes PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o addopts= -p no:cacheprovider"
+    status: passed_parent_controller
+    observed: "1215 passed"
