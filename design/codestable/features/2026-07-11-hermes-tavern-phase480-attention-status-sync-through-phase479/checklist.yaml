@@ -1,0 +1,121 @@
+doc_type: feature-checklist
+feature: 2026-07-11-hermes-tavern-phase480-attention-status-sync-through-phase479
+status: accepted
+workflow_status: accepted
+acceptance_state: accepted
+implementation_ready: true
+parent_verification_required: false
+parent_verification_completed: true
+worker_commit_or_push_performed: false
+parent_commit_or_push_performed: false
+acceptance_artifact: design/codestable/features/2026-07-11-hermes-tavern-phase480-attention-status-sync-through-phase479/acceptance.md
+acceptance_md_present: true
+executor_acceptance_creation: prohibited
+parent_acceptance_creation_after_verification: completed
+date: "2026-07-11"
+accepted_at: "2026-07-11"
+owner: standard-lane
+lane: standard
+architect_model: gpt-5.5
+architect_reasoning: xhigh
+bounded_phase: "docs/static-test/status-only"
+result_type: status_sync_single_tick
+selected_scope: phase480-parent-verification-and-acceptance
+selected_phase_slug: 2026-07-11-hermes-tavern-phase480-attention-status-sync-through-phase479
+selected_title: "Phase 480 attention/status sync through Phase 479"
+summary: "Phase 480 status sync through accepted Phase 479 finalized after controller verification; no later-phase work introduced."
+controller_lane: standard
+executor_model: gpt-5.4
+architect_design_jsonl: /tmp/hermes-tavern-standard-architect-20260711-phase480.jsonl
+executor_jsonl: /tmp/hermes-tavern-standard-executor-20260711-phase480.jsonl
+architect_review_jsonl: /tmp/hermes-tavern-standard-review-20260711-phase480.jsonl
+executor_fix_jsonl: null
+
+allowed_files:
+  - design/codestable/attention.md
+  - tests/test_hermes_tavern_codestable_status.py
+  - design/codestable/features/2026-07-11-hermes-tavern-phase480-attention-status-sync-through-phase479/design.md
+  - design/codestable/features/2026-07-11-hermes-tavern-phase480-attention-status-sync-through-phase479/checklist.yaml
+  - design/codestable/features/2026-07-11-hermes-tavern-phase480-attention-status-sync-through-phase479/acceptance.md
+
+status_test_contract:
+  current_status_prefix: "Current status (2026-06-18): All phases 1-480 accepted"
+  stale_status_prefix: "Current status (2026-06-18): All phases 1-479 accepted"
+  stale_phase_marker: "1-479"
+  stale_phase_marker_en_dash: "1–479"
+  older_stale_phase_markers:
+    - "1-478"
+    - "1–478"
+  required_new_label: "Phase 480 attention status sync through Phase 479"
+  final_status_suffix: "Phase 478 attention status sync through Phase 477, Phase 479 attention status sync through Phase 478, and Phase 480 attention status sync through Phase 479."
+  phase_range: "range(168, 481)"
+  aggregate_range: "range(168, 481)"
+  split_stale_range: 'stale_aggregate_range_480 = "".join(["range(168, ", "48", "0", ")"])'
+  split_stale_direct_guard: 'stale_aggregate_guard_480 = "".join(["range(168, ", "48", str(0), ")"])'
+
+steps:
+  - id: S1
+    name: "Executor status sync for Phase 480"
+    owner: executor
+    model: gpt-5.4
+    status: completed
+    completion_owner: executor
+    acceptance_creation: prohibited
+    checks:
+      - id: C1
+        description: "Keep Phase 480 design/checklist aligned with the bounded S1 contract."
+        status: passed
+      - id: C2
+        description: "Advance attention.md to 1-480 and append the Phase 480 label exactly once."
+        status: passed
+      - id: C3
+        description: "Preserve prior labels, special aggregates, placement, and exact Phase 478/479/480 suffix."
+        status: passed
+      - id: C4
+        description: "Advance focused test current/stale/older markers, labels, suffix, and aggregate ranges."
+        status: passed
+      - id: C5
+        description: "Add and wire split stale guards for the superseded range(168, 480)."
+        status: passed
+      - id: C6
+        description: "Preserve anchored assignments, placement/all-label/special-aggregate/no-discovery guards."
+        status: passed
+      - id: C7
+        description: "Keep acceptance, protected edits, later-phase work, finalization, commit, and push out of executor S1."
+        status: passed
+
+  - id: S2
+    name: "Parent-controller verification and acceptance closeout"
+    owner: parent_controller
+    status: completed
+    acceptance_creation: completed
+    checks:
+      - id: C8
+        description: "Validate Phase 480 artifacts and exact changed-file scope."
+        status: passed
+      - id: C9
+        description: "Run py_compile, focused status pytest, and full pytest."
+        status: passed
+      - id: C10
+        description: "Run status/range/newline/whitespace/no-later-phase guards and git diff --check."
+        status: passed
+      - id: C11
+        description: "Create acceptance.md only after controller verification passes."
+        status: passed
+
+verification_commands:
+  - command: "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --dir design/codestable/features/2026-07-11-hermes-tavern-phase480-attention-status-sync-through-phase479 --require doc_type --require status --require feature"
+    status: passed_parent_controller
+    observed: "Phase 480 design/checklist validated before closeout; all three artifacts validated after closeout."
+  - command: "PYTHONDONTWRITEBYTECODE=1 python -m py_compile tests/test_hermes_tavern_codestable_status.py"
+    status: passed_parent_controller
+    observed: "exit 0"
+  - command: "env -u PYTEST_DISABLE_PLUGIN_AUTOLOAD -u HERMES_SESSION_KEY -u HERMES_SESSION_ID HERMES_HOME=/Users/steven/.hermes PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_codestable_status.py -q -o addopts= -p no:cacheprovider"
+    status: passed_parent_controller
+    observed: "1 passed"
+  - command: "controller static scope/status/range/newline/trailing-whitespace/no-Phase-481 guard and git diff --check"
+    status: passed_parent_controller
+    observed: "passed after scoping later-phase scans away from feature artifacts that document the prohibition"
+  - command: "TMPDIR=/tmp env -u PYTEST_DISABLE_PLUGIN_AUTOLOAD -u HERMES_SESSION_KEY -u HERMES_SESSION_ID HERMES_HOME=/Users/steven/.hermes PYTHONDONTWRITEBYTECODE=1 /usr/local/bin/python3 -m pytest -q -o addopts= -p no:cacheprovider"
+    status: passed_parent_controller
+    observed: "1215 passed; the first run under Hermes' stripped Python failed only four packaging tests because that interpreter has no pip, then the project-capable Python 3.11 rerun passed"
