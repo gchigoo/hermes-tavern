@@ -1,29 +1,30 @@
 doc_type: feature-checklist
 feature: 2026-07-10-hermes-tavern-phase478-attention-status-sync-through-phase477
-status: implemented
-workflow_status: pending_parent_verification
-acceptance_state: pending_parent_verification
+status: accepted
+workflow_status: accepted
+acceptance_state: accepted
 implementation_ready: true
-parent_verification_required: true
-parent_verification_completed: false
+parent_verification_required: false
+parent_verification_completed: true
 worker_commit_or_push_performed: false
 parent_commit_or_push_performed: false
-acceptance_artifact: null
-acceptance_md_present: false
+acceptance_artifact: design/codestable/features/2026-07-10-hermes-tavern-phase478-attention-status-sync-through-phase477/acceptance.md
+acceptance_md_present: true
 
 date: "2026-07-10"
+accepted_at: "2026-07-10"
 owner: company-boost
 lane: company-boost
 bounded_phase: "docs/static-test/status-only"
 result_type: status_sync_single_tick
-selected_scope: status-docs-tests-only
+selected_scope: phase478-parent-verification-and-acceptance
 selected_phase_slug: 2026-07-10-hermes-tavern-phase478-attention-status-sync-through-phase477
 selected_title: "Phase 478 attention/status sync through Phase 477"
-summary: "Phase 478 attention/status sync through accepted Phase 477 is implemented by S1 and awaits parent verification."
+summary: "Phase 478 attention/status sync through accepted Phase 477 is finalized after parent-controller verification; no later-phase work was introduced."
 controller_lane: company-boost
 architect_design_jsonl: /tmp/hermes-tavern-companyboost-architect-20260710-phase478-s1.jsonl
 executor_jsonl: /tmp/hermes-tavern-companyboost-executor-20260710-phase478-s1.jsonl
-architect_review_jsonl: /tmp/hermes-tavern-companyboost-review-20260710-phase478-s1.jsonl
+architect_review_jsonl: /tmp/hermes-tavern-companyboost-review-20260710-phase478-final.jsonl
 executor_fix_jsonl: null
 
 allowed_files:
@@ -31,6 +32,19 @@ allowed_files:
   - tests/test_hermes_tavern_codestable_status.py
   - design/codestable/features/2026-07-10-hermes-tavern-phase478-attention-status-sync-through-phase477/design.md
   - design/codestable/features/2026-07-10-hermes-tavern-phase478-attention-status-sync-through-phase477/checklist.yaml
+  - design/codestable/features/2026-07-10-hermes-tavern-phase478-attention-status-sync-through-phase477/acceptance.md
+
+dirty_tree_handoff:
+  expected_dirty_files:
+    - design/codestable/attention.md
+    - tests/test_hermes_tavern_codestable_status.py
+    - design/codestable/features/2026-07-10-hermes-tavern-phase478-attention-status-sync-through-phase477/design.md
+    - design/codestable/features/2026-07-10-hermes-tavern-phase478-attention-status-sync-through-phase477/checklist.yaml
+    - design/codestable/features/2026-07-10-hermes-tavern-phase478-attention-status-sync-through-phase477/acceptance.md
+  staged_changes_allowed: false
+  commit_allowed: false
+  push_allowed: false
+  state_update_allowed: false
 
 status_test_contract:
   current_status_prefix: "Current status (2026-06-18): All phases 1-478 accepted"
@@ -84,30 +98,63 @@ steps:
   - id: S2
     name: "Parent verification and acceptance closeout"
     owner: parent_controller
-    status: pending
-    acceptance_creation: pending_parent_controller
+    status: completed
+    acceptance_creation: completed
+    files:
+      allowed:
+        - design/codestable/attention.md
+        - tests/test_hermes_tavern_codestable_status.py
+        - design/codestable/features/2026-07-10-hermes-tavern-phase478-attention-status-sync-through-phase477/design.md
+        - design/codestable/features/2026-07-10-hermes-tavern-phase478-attention-status-sync-through-phase477/checklist.yaml
+        - design/codestable/features/2026-07-10-hermes-tavern-phase478-attention-status-sync-through-phase477/acceptance.md
     checks:
       - id: C7
-        description: "Validate Phase 478 design/checklist YAML."
-        status: pending
+        description: "Validate Phase 478 design/checklist/acceptance artifacts."
+        status: passed
       - id: C8
         description: "Run py_compile and focused status pytest."
-        status: pending
+        status: passed
       - id: C9
-        description: "Run git diff --check after the focused status test covers the placement/stale/range/discovery guards."
-        status: pending
+        description: "Run the allowed-path/status/range/newline/whitespace/no-later-phase guard and git diff --check."
+        status: passed
       - id: C10
-        description: "Run full pytest when feasible."
-        status: pending
+        description: "Run full pytest under the normal host environment."
+        status: passed
       - id: C11
-        description: "Only after parent verification, create acceptance.md and finalize checklist."
-        status: pending
+        description: "Create acceptance.md, finalize checklist lifecycle, and record final architect review evidence without opening any Phase 479 work."
+        status: passed
 
 verification_commands:
-  - "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --dir design/codestable/features/2026-07-10-hermes-tavern-phase478-attention-status-sync-through-phase477 --require doc_type --require status --require feature"
-  - "PYTHONDONTWRITEBYTECODE=1 python -m py_compile tests/test_hermes_tavern_codestable_status.py"
-  - "env -u PYTEST_DISABLE_PLUGIN_AUTOLOAD -u HERMES_SESSION_KEY -u HERMES_SESSION_ID HERMES_HOME=/Users/steven/.hermes PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_codestable_status.py -q -o addopts= -p no:cacheprovider"
-  - "git diff --check"
-
-parent_full_verification_commands:
-  - "TMPDIR=/tmp env -u PYTEST_DISABLE_PLUGIN_AUTOLOAD -u HERMES_SESSION_KEY -u HERMES_SESSION_ID HERMES_HOME=/Users/steven/.hermes PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o addopts= -p no:cacheprovider"
+  - command: >-
+      PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --dir
+      design/codestable/features/2026-07-10-hermes-tavern-phase478-attention-status-sync-through-phase477
+      --require doc_type --require status --require feature
+    status: passed_parent_controller
+    observed: "Validated Phase 478 design, checklist, and acceptance artifacts."
+  - command: >-
+      PYTHONDONTWRITEBYTECODE=1 python -m py_compile
+      tests/test_hermes_tavern_codestable_status.py
+    status: passed_parent_controller
+    observed: "exit 0"
+  - command: >-
+      env -u PYTEST_DISABLE_PLUGIN_AUTOLOAD -u HERMES_SESSION_KEY
+      -u HERMES_SESSION_ID HERMES_HOME=/Users/steven/.hermes PYTHONDONTWRITEBYTECODE=1
+      python -m pytest tests/test_hermes_tavern_codestable_status.py -q -o addopts=
+      -p no:cacheprovider
+    status: passed_parent_controller
+    observed: "focused status test passed"
+  - command: >-
+      static allowed-path/status/range/newline/whitespace/no-later-phase guard over
+      attention.md, focused test, design.md, checklist.yaml, and acceptance.md
+    status: passed_parent_controller
+    observed: "allowed-path plus status/range/no-Phase-479 guard passed"
+  - command: >-
+      git diff --check
+    status: passed_parent_controller
+    observed: "exit 0"
+  - command: >-
+      TMPDIR=/tmp env -u PYTEST_DISABLE_PLUGIN_AUTOLOAD -u HERMES_SESSION_KEY
+      -u HERMES_SESSION_ID HERMES_HOME=/Users/steven/.hermes PYTHONDONTWRITEBYTECODE=1
+      python -m pytest -q -o addopts= -p no:cacheprovider
+    status: passed_parent_controller
+    observed: "full pytest passed"
