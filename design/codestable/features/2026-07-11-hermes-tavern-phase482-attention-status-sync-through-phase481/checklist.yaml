@@ -1,0 +1,133 @@
+doc_type: feature-checklist
+feature: 2026-07-11-hermes-tavern-phase482-attention-status-sync-through-phase481
+status: accepted
+workflow_status: accepted
+acceptance_state: accepted
+implementation_ready: true
+parent_verification_required: false
+parent_verification_completed: true
+executor_acceptance_creation: prohibited
+executor_final_status_claims: prohibited
+executor_commit_or_push: prohibited
+date: '2026-07-11'
+owner: standard-lane
+lane: standard
+architect_model: gpt-5.5
+architect_reasoning: xhigh
+executor_model: gpt-5.4
+bounded_phase: docs/static-test/status-only
+selected_scope: phase482-attention-status-sync-through-phase481
+selected_phase_slug: 2026-07-11-hermes-tavern-phase482-attention-status-sync-through-phase481
+selected_title: Phase 482 attention/status sync through Phase 481
+s1_allowed_files:
+- design/codestable/attention.md
+- tests/test_hermes_tavern_codestable_status.py
+- design/codestable/features/2026-07-11-hermes-tavern-phase482-attention-status-sync-through-phase481/design.md
+- design/codestable/features/2026-07-11-hermes-tavern-phase482-attention-status-sync-through-phase481/checklist.yaml
+parent_closeout_allowed_files:
+- design/codestable/features/2026-07-11-hermes-tavern-phase482-attention-status-sync-through-phase481/acceptance.md
+status_test_contract:
+  current_status_prefix: 'Current status (2026-06-18): All phases 1-482 accepted'
+  stale_status_prefix: 'Current status (2026-06-18): All phases 1-481 accepted'
+  stale_phase_marker: '1-481'
+  stale_phase_marker_en_dash: '1–481'
+  older_stale_phase_markers:
+  - '1-480'
+  - '1–480'
+  required_new_label: Phase 482 attention status sync through Phase 481
+  final_status_suffix: Phase 480 attention status sync through Phase 479, Phase 481 attention status sync through Phase 480, and Phase 482 attention status sync through Phase 481.
+  phase_range: range(168, 483)
+  aggregate_range: range(168, 483)
+  split_stale_range: stale_aggregate_range_482
+  split_stale_direct_guard: stale_aggregate_guard_482
+  no_later_phase: Phase 483
+steps:
+- id: S1
+  name: Executor status sync for Phase 482
+  owner: executor
+  model: gpt-5.4
+  status: completed
+  acceptance_creation: prohibited
+  checks:
+  - id: C1
+    status: passed_executor_observed
+    description: Keep Phase 482 design/checklist aligned with the bounded S1 contract and non-final lifecycle.
+  - id: C2
+    status: passed_executor_observed
+    description: Advance attention.md to 1-482 and append the Phase 482 label exactly once.
+  - id: C3
+    status: passed_executor_observed
+    description: Preserve prior labels, Phase 121-167 aggregate, placement, and exact Phase 480/481/482 suffix.
+  - id: C4
+    status: passed_executor_observed
+    description: Advance focused test current/stale/older markers, labels, suffix, and active ranges.
+  - id: C5
+    status: passed_executor_observed
+    description: Add split stale guards for superseded range(168, 482) while preserving all historical guards.
+  - id: C6
+    status: passed_parent_controller
+    description: Preserve anchored assignments, placement/all-label/special-aggregate/no-discovery/newline guards, with the controller adding the computed no-later-phase regression requested by architect review.
+  - id: C7
+    status: passed_executor_observed
+    description: Do not create acceptance.md, set accepted/completed/passed claims, commit, push, or claim parent verification.
+- id: S2
+  name: Parent-controller verification and acceptance closeout
+  owner: parent_controller
+  status: completed
+  acceptance_creation: completed
+  checks:
+  - id: C8
+    description: Validate Phase 482 artifacts and exact changed-file scope.
+    status: passed
+  - id: C9
+    description: Run CodeStable validator, py_compile, focused pytest, and full pytest.
+    status: passed
+  - id: C10
+    description: Run static scope/status/placement/suffix/range/no-later-phase/newline/trailing-whitespace guard and git diff --check.
+    status: passed
+  - id: C11
+    description: Create acceptance.md only after controller verification passes.
+    status: passed
+  - id: C12
+    description: Post-commit push, remote, and CI evidence belongs in external project-progress state and cannot be embedded in the commit it verifies.
+    status: not_applicable_in_repo_artifact
+accepted_at: '2026-07-11'
+result_type: status_sync_single_tick
+architect_design_jsonl: /tmp/hermes-tavern-standard-architect-20260711-phase482.jsonl
+executor_jsonl: /tmp/hermes-tavern-standard-executor-20260711-phase482.jsonl
+architect_review_jsonl: /tmp/hermes-tavern-standard-review-20260711-phase482-r2.jsonl
+architect_review_history:
+- /tmp/hermes-tavern-standard-review-20260711-phase482.jsonl
+- /tmp/hermes-tavern-standard-review-20260711-phase482-r2.jsonl
+controller_reconciliation:
+- Added a computed no-later-phase assertion derived from phase_range.stop after the first architect review requested it.
+acceptance_artifact: design/codestable/features/2026-07-11-hermes-tavern-phase482-attention-status-sync-through-phase481/acceptance.md
+verification_commands:
+- command: "PYTHONDONTWRITEBYTECODE=1 /usr/local/bin/python3 design/codestable/tools/validate-yaml.py --dir design/codestable/features/2026-07-11-hermes-tavern-phase482-attention-status-sync-through-phase481 --require doc_type --require status --require feature"
+  owner: parent_controller
+  status: passed_parent_controller
+  observed: 2 artifacts passed before closeout; 3 artifacts passed after acceptance finalization
+- command: "PYTHONDONTWRITEBYTECODE=1 /usr/local/bin/python3 -m py_compile tests/test_hermes_tavern_codestable_status.py"
+  owner: parent_controller
+  status: passed_parent_controller
+  observed: exit 0 before and after closeout
+- command: "TMPDIR=/tmp env -u PYTEST_DISABLE_PLUGIN_AUTOLOAD -u HERMES_SESSION_KEY -u HERMES_SESSION_ID HERMES_HOME=/Users/steven/.hermes PYTHONDONTWRITEBYTECODE=1 /usr/local/bin/python3 -m pytest tests/test_hermes_tavern_codestable_status.py -q -o addopts= -p no:cacheprovider"
+  owner: parent_controller
+  status: passed_parent_controller
+  observed: 1 passed before and after closeout
+- command: "TMPDIR=/tmp env -u PYTEST_DISABLE_PLUGIN_AUTOLOAD -u HERMES_SESSION_KEY -u HERMES_SESSION_ID HERMES_HOME=/Users/steven/.hermes PYTHONDONTWRITEBYTECODE=1 /usr/local/bin/python3 -m pytest -q -o addopts= -p no:cacheprovider"
+  owner: parent_controller
+  status: passed_parent_controller
+  observed: 1215 passed before and after closeout
+- command: "controller static allowed-path/status/placement/suffix/range/no-later-phase/newline/trailing-whitespace guard"
+  owner: parent_controller
+  status: passed_parent_controller
+  observed: changed-path scope and 315 explicit phase labels passed before and after closeout
+- command: "git diff --check"
+  owner: parent_controller
+  status: passed_parent_controller
+  observed: passed before and after closeout
+- command: "codex architect read-only final review"
+  owner: architect
+  status: passed
+  observed: first review requested the computed no-later-phase assertion; second review returned VERDICT PASS
