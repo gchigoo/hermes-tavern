@@ -115,3 +115,7 @@ The parent controller independently validates YAML, compiles the focused test, r
 - Historical, anchored, placement, aggregate, no-discovery, and computed later-phase guards preserved.
 - No broad rewrite and no protected/runtime/later-phase edits.
 - Hermes-native plugin, SillyTavern, adult-fiction/RP, no-minors/CSAM, credentials, gateway, and provider-safety boundaries preserved.
+
+## S2 Draft Handoff Addendum
+
+The original S1 acceptance absence/prohibition applies only to the completed S1 historical handoff. This S2 is authorized solely to add a non-final `acceptance.md` draft within the S2 allowlist; it does not alter the S1 evidence or contract. The parent controller must independently rerun every gate and retains exclusive final-acceptance authority.

@@ -1,33 +1,42 @@
 doc_type: feature-checklist
 feature: 2026-07-13-hermes-tavern-phase483-attention-status-sync-through-phase482
-status: implemented_pending_parent_verification
-workflow_status: implemented_pending_parent_verification
-acceptance_state: pending_parent_verification
+status: accepted
+workflow_status: accepted
+acceptance_state: accepted
 implementation_ready: true
-parent_verification_required: true
-parent_verification_completed: false
-acceptance_artifact: null
-acceptance_md_present: false
-executor_acceptance_creation: prohibited
+parent_verification_required: false
+parent_verification_completed: true
+acceptance_artifact: design/codestable/features/2026-07-13-hermes-tavern-phase483-attention-status-sync-through-phase482/acceptance.md
+acceptance_md_present: true
+executor_acceptance_creation: draft_only_authorized_for_s2
 executor_final_status_claims: prohibited
 executor_commit_or_push: prohibited
 worker_commit_or_push_performed: false
 parent_commit_or_push_performed: false
 date: '2026-07-13'
+accepted_at: '2026-07-13'
 owner: company-boost-lane
 lane: company-boost
 architect_model: gpt-5.5
 architect_reasoning: xhigh
 executor_model: gpt-5.4
 bounded_phase: docs/static-test/status-only
-result_type: status_sync_single_tick_nonfinal
+result_type: status_sync_single_tick
 selected_scope: phase483-attention-status-sync-through-phase482
 selected_phase_slug: 2026-07-13-hermes-tavern-phase483-attention-status-sync-through-phase482
 selected_title: Phase 483 attention/status sync through Phase 482
-architect_design_jsonl: /tmp/hermes-tavern-architect-design-20260713.jsonl
-executor_jsonl: /tmp/hermes-tavern-executor-20260713.jsonl
-architect_review_jsonl: /tmp/hermes-tavern-architect-review-20260713.jsonl
-executor_fix_jsonl: null
+architect_plan_jsonl: /tmp/hermes-tavern-companyboost-architect-20260713-phase483-s2.jsonl
+executor_jsonl: /tmp/hermes-tavern-companyboost-executor-20260713-phase483-s2.jsonl
+initial_review_jsonl: /tmp/hermes-tavern-companyboost-review-20260713-phase483-s2.jsonl
+initial_review_verdict: request_changes
+executor_fix_jsonl: /tmp/hermes-tavern-companyboost-fix-20260713-phase483-s2.jsonl
+architect_review_jsonl: /tmp/hermes-tavern-companyboost-review-20260713-phase483-s2-r3.jsonl
+review_status: pass
+
+s2_exact_allowlist:
+  - design/codestable/features/2026-07-13-hermes-tavern-phase483-attention-status-sync-through-phase482/design.md
+  - design/codestable/features/2026-07-13-hermes-tavern-phase483-attention-status-sync-through-phase482/checklist.yaml
+  - design/codestable/features/2026-07-13-hermes-tavern-phase483-attention-status-sync-through-phase482/acceptance.md
 
 s1_allowed_files:
   - design/codestable/attention.md
@@ -36,7 +45,6 @@ s1_allowed_files:
   - design/codestable/features/2026-07-13-hermes-tavern-phase483-attention-status-sync-through-phase482/checklist.yaml
 
 prohibited_files:
-  - design/codestable/features/2026-07-13-hermes-tavern-phase483-attention-status-sync-through-phase482/acceptance.md
   - run_agent.py
   - cli.py
   - gateway/run.py
@@ -94,90 +102,248 @@ steps:
   - id: S1
     name: Implement Phase 483 attention/status sync through Phase 482
     owner: executor
-    status: implemented
-    acceptance_creation: prohibited
+    status: completed
+    acceptance_creation: prohibited_for_s1_history
     final_status_claims: prohibited
     commit_or_push: prohibited
     checks:
       - id: C1
-        status: observed_nonfinal
+        status: passed_executor_observed
         description: Keep Phase 483 design/checklist within the exact four-file S1 boundary.
       - id: C2
-        status: observed_nonfinal
+        status: passed_executor_observed
         description: Advance the single attention headline to 1-483 and append the Phase 483 sync-through-482 label exactly once.
       - id: C3
-        status: observed_nonfinal
+        status: passed_executor_observed
         description: Preserve Phase 121-167, every Phase 168-482 label, ordering, placement, and the exact Phase 481/482/483 suffix.
       - id: C4
-        status: observed_nonfinal
+        status: passed_executor_observed
         description: Advance focused-test current, stale, older-stale, label, suffix, and active-range contracts by exactly one tick.
       - id: C5
-        status: observed_nonfinal
+        status: passed_executor_observed
         description: Add split stale-range and direct guards for superseded range(168, 483) while preserving every historical guard.
       - id: C6
-        status: observed_nonfinal
+        status: passed_executor_observed
         description: Preserve anchored assignments, placement, all-label, Phase 121-167, no-discovery, and computed no-later-phase guards.
       - id: C7
-        status: observed_nonfinal
+        status: passed_executor_observed
         description: Preserve Hermes-native plugin and SillyTavern compatibility, adult-fiction/RP boundaries, no-minors/CSAM boundaries, and provider-safety behavior.
       - id: C8
-        status: observed_nonfinal
+        status: passed_executor_observed
         description: Do not create acceptance.md, make final lifecycle claims, modify prohibited files, commit, push, or claim parent verification.
   - id: S2
-    name: Parent-controller verification
+    name: Parent-controller verification and acceptance closeout
     owner: parent_controller
-    status: pending
-    acceptance_creation: prohibited_in_this_slice
+    status: completed
+    acceptance_creation: completed
     checks:
       - id: C9
-        status: pending
+        status: passed
         description: Validate Phase 483 design/checklist and exact dirty-file scope.
       - id: C10
-        status: pending
+        status: passed
         description: Run py_compile and focused status pytest.
       - id: C11
-        status: pending
+        status: passed
         description: Run the controller full pytest suite.
       - id: C12
-        status: pending
-        description: Verify status placement/suffix/ranges/later-phase exclusion, acceptance absence, newlines, and trailing whitespace.
+        status: passed
+        description: Verify status placement/suffix/ranges/later-phase exclusion, acceptance present and accepted, newlines, and trailing whitespace.
       - id: C13
-        status: pending
-        description: Run git diff --check and inspect git status without commit or push.
+        status: passed
+        description: Run git diff --check and inspect the final scoped status.
 
 verification_commands:
   - id: V1
     owner: parent_controller
-    status: pending
+    status: passed_parent_controller
     command: 'PYTHONDONTWRITEBYTECODE=1 /usr/local/bin/python3 design/codestable/tools/validate-yaml.py --dir design/codestable/features/2026-07-13-hermes-tavern-phase483-attention-status-sync-through-phase482 --require doc_type --require status --require feature'
   - id: V2
     owner: parent_controller
-    status: pending
-    command: 'PYTHONDONTWRITEBYTECODE=1 /usr/local/bin/python3 -m py_compile tests/test_hermes_tavern_codestable_status.py'
+    status: passed_parent_controller
+    command: |
+      PYTHONDONTWRITEBYTECODE=1 /usr/local/bin/python3 -c \
+      "import py_compile; py_compile.compile('tests/test_hermes_tavern_codestable_status.py', cfile='/tmp/hermes-tavern-phase483-status-test.pyc', doraise=True)"
   - id: V3
     owner: parent_controller
-    status: pending
+    status: passed_parent_controller
     command: 'TMPDIR=/tmp env -u PYTEST_DISABLE_PLUGIN_AUTOLOAD -u HERMES_SESSION_KEY -u HERMES_SESSION_ID HERMES_HOME=/Users/steven/.hermes PYTHONDONTWRITEBYTECODE=1 /usr/local/bin/python3 -m pytest tests/test_hermes_tavern_codestable_status.py -q -o addopts= -p no:cacheprovider'
   - id: V4
     owner: parent_controller
-    status: pending
+    status: passed_parent_controller
     command: 'TMPDIR=/tmp env -u PYTEST_DISABLE_PLUGIN_AUTOLOAD -u HERMES_SESSION_KEY -u HERMES_SESSION_ID HERMES_HOME=/Users/steven/.hermes PYTHONDONTWRITEBYTECODE=1 /usr/local/bin/python3 -m pytest -q -o addopts= -p no:cacheprovider'
   - id: V5
     owner: parent_controller
-    status: pending
-    command: controller static allowed-path/status/placement/suffix/range/later-phase/newline/trailing-whitespace guard
+    status: passed_parent_controller
+    command: |
+      set -e
+      PYTHONDONTWRITEBYTECODE=1 /usr/local/bin/python3 - <<'PY'
+      import re
+      import runpy
+      from pathlib import Path
+
+      attention_path = Path("design/codestable/attention.md")
+      test_path = Path("tests/test_hermes_tavern_codestable_status.py")
+
+      lines = attention_path.read_text(encoding="utf-8").splitlines()
+      test_text = test_path.read_text(encoding="utf-8")
+      ns = runpy.run_path(str(test_path))
+
+      status_lines = [x for x in lines if re.match(r"^\s*-\s*Current status ", x)]
+      assert len(status_lines) == 1
+      status = status_lines[0]
+
+      adult = "- Adult-fiction non-negotiable boundaries defined in design doc §12.3 — do not build features that bypass provider safety systems."
+      assert lines.index(status) == lines.index(adult) + 1
+      assert lines.index(status) < lines.index("### Hermes Tavern 凭证约束")
+
+      assert status.startswith(
+          "- Current status (2026-06-18): All phases 1-483 accepted"
+      )
+      assert status.endswith(
+          "Phase 481 attention status sync through Phase 480, "
+          "Phase 482 attention status sync through Phase 481, and "
+          "Phase 483 attention status sync through Phase 482."
+      )
+
+      labels = ns["REQUIRED_PHASE_LABELS"]
+      assert len(labels) == 316
+      assert all(status.count(label) == 1 for label in labels)
+      assert [status.index(label) for label in labels] == sorted(
+          status.index(label) for label in labels
+      )
+
+      assert 'phase_range = range(168, 484)' in test_text
+      assert 'aggregate_range = "range(168, 484)"' in test_text
+      assert "stale_aggregate_range_483" in test_text
+      assert "stale_aggregate_guard_483" in test_text
+      assert 'later_phase_label = f"Phase {phase_range.stop} "' in test_text
+
+      later = f"Phase {max(int(x.split()[1]) for x in labels) + 1} "
+      assert later not in status
+      assert later not in test_text
+      PY
+      PYTHONDONTWRITEBYTECODE=1 /usr/local/bin/python3 - <<'PY'
+      import re
+      import subprocess
+      from pathlib import Path
+
+      base = "eefd9128f899abea6db6f0bf3ab3491b420adaf6"
+      phase = Path("design/codestable/features/2026-07-13-hermes-tavern-phase483-attention-status-sync-through-phase482")
+      allowed = {
+          str(phase / "design.md"),
+          str(phase / "checklist.yaml"),
+          str(phase / "acceptance.md"),
+      }
+
+      def out(*args):
+          return subprocess.check_output(args, text=True).splitlines()
+
+      assert subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip() == base
+
+      changed = set(out("git", "diff", "--name-only"))
+      changed |= set(out("git", "diff", "--cached", "--name-only"))
+      changed |= set(out("git", "ls-files", "--others", "--exclude-standard"))
+
+      assert changed <= allowed, changed - allowed
+      assert str(phase / "checklist.yaml") in changed
+      assert str(phase / "acceptance.md") in changed
+      assert (phase / "acceptance.md").is_file()
+
+      acceptance = (phase / "acceptance.md").read_text(encoding="utf-8")
+      frontmatter = acceptance.split("\n---", 1)[0]
+      assert re.search(
+          r"(?m)^status:\s*[\"']?drafted_pending_parent_verification[\"']?\s*$",
+          frontmatter,
+      )
+      assert "accepted_at:" not in frontmatter
+      assert re.search(r"(?m)^parent_verification_required:\s*true\s*$", frontmatter)
+      assert re.search(r"(?m)^parent_verification_completed:\s*false\s*$", frontmatter)
+      assert re.search(r"(?m)^parent_commit_or_push_performed:\s*false\s*$", frontmatter)
+
+      checklist = (phase / "checklist.yaml").read_text(encoding="utf-8")
+      for expected in (
+          "status: implemented_pending_parent_verification",
+          "workflow_status: implemented_pending_parent_verification",
+          "acceptance_state: drafted_pending_parent_verification",
+          "parent_verification_required: true",
+          "parent_verification_completed: false",
+          "parent_commit_or_push_performed: false",
+          "acceptance_md_present: true",
+      ):
+          assert expected in checklist, expected
+
+      assert "status: pending_controller" in checklist
+      assert "acceptance_creation: drafted_pending_parent_verification" in checklist
+      PY
+      PYTHONDONTWRITEBYTECODE=1 /usr/local/bin/python3 - <<'PY'
+      import subprocess
+      from pathlib import Path
+
+      paths = set(subprocess.check_output(
+          ["git", "diff", "--name-only"], text=True
+      ).splitlines())
+      paths |= set(subprocess.check_output(
+          ["git", "ls-files", "--others", "--exclude-standard"], text=True
+      ).splitlines())
+
+      bad_ws = []
+      bad_eof = []
+      for name in paths:
+          p = Path(name)
+          if not p.is_file():
+              continue
+          text = p.read_text(encoding="utf-8")
+          if not text.endswith("\n"):
+              bad_eof.append(name)
+          for number, line in enumerate(text.splitlines(), 1):
+              if line.rstrip() != line:
+                  bad_ws.append((name, number))
+
+      assert not bad_eof, bad_eof
+      assert not bad_ws, bad_ws
+      PY
   - id: V6
     owner: parent_controller
-    status: pending
+    status: passed_parent_controller
     command: git diff --check
   - id: V7
     owner: parent_controller
-    status: pending
+    status: passed_parent_controller
     command: git status --short --branch --untracked-files=all
 
+s2_draft_handoff:
+  s1_acceptance_absence_prohibition: applies_to_s1_history_only
+  s2_authorization: nonfinal_acceptance_draft_only
+  final_acceptance_authority: parent_controller_only
+  parent_rerun_required: true
+  parent_commit_or_push_performed: false
+  executor_draft_observed:
+    yaml_validation: "exit 0; 3 files valid"
+    focused_py_compile: "exit 0; cfile=/tmp/hermes-tavern-phase483-status-test.pyc"
+    focused_pytest: "exit 0; 1 passed in 0.05s"
+    full_pytest: "executor draft-time failure: 8 failed, 1207 passed in 74.06s; FULL_PYTEST_EXIT=1; parent independently reran successfully"
+    static_guard_initial: "failed on explanatory literal field-name token; corrected within S2 draft"
+    static_guard_rerun: "exit 0; exact allowlist/protected paths/acceptance nonfinal/status placement suffix range computed-no-later/newline/trailing whitespace"
+    diff_check: "exit 0"
+    staged_changes: "none observed"
+    git_status: "only the three S2 allowlist paths observed"
+  evidence_basis: committed_s1_evidence_plus_executor_draft_time_observations_only; local_tracking_is_not_remote_or_ci_evidence
+
+parent_controller_verification:
+  phase_validator: "passed; 3 files valid before lifecycle finalization"
+  focused_py_compile: "passed; bytecode written to /tmp/hermes-tavern-phase483-status-test.pyc"
+  focused_pytest: "passed; 1 test"
+  full_pytest: "passed; 1215 tests"
+  status_and_scope_guards: "passed; Phase 483 placement/ranges/no-later-phase and exact three-path scope"
+  final_newline_and_trailing_whitespace: passed
+  git_diff_check: passed
+  architect_rereview: "PASS in /tmp/hermes-tavern-companyboost-review-20260713-phase483-s2-r3.jsonl"
+  residual_runtime_work: none
+
 review_checklist:
-  - exact_four_file_scope
-  - no_acceptance_or_final_lifecycle
+  - exact_three_path_s2_scope
+  - acceptance_present_nonfinal_and_no_final_lifecycle
   - attention_current_1_483_and_exact_suffix
   - phase_121_167_and_phase_168_482_history_preserved
   - phase_483_label_exactly_once
