@@ -1,0 +1,296 @@
+doc_type: feature-checklist
+feature: 2026-07-13-hermes-tavern-phase484-attention-status-sync-through-phase483
+status: accepted
+workflow_status: accepted
+acceptance_state: accepted
+implementation_ready: true
+parent_verification_required: false
+parent_verification_completed: true
+acceptance_artifact: design/codestable/features/2026-07-13-hermes-tavern-phase484-attention-status-sync-through-phase483/acceptance.md
+acceptance_md_present: true
+executor_acceptance_creation: prohibited
+executor_final_status_claims: prohibited
+executor_commit_or_push: prohibited
+worker_commit_or_push_performed: false
+parent_commit_or_push_performed: false
+date: '2026-07-13'
+owner: company-boost-lane
+lane: company-boost
+architect_model: gpt-5.5
+architect_reasoning: xhigh
+executor_model: gpt-5.4
+bounded_phase: docs/static-test/status-only
+result_type: status_sync_single_tick
+selected_scope: phase484-attention-status-sync-through-phase483
+selected_phase_slug: 2026-07-13-hermes-tavern-phase484-attention-status-sync-through-phase483
+selected_title: Phase 484 attention/status sync through Phase 483
+architect_plan_jsonl: /tmp/hermes-tavern-companyboost-architect-policy-20260713-phase484.jsonl
+executor_jsonl: /tmp/hermes-tavern-companyboost-executor-policy-20260713-phase484.jsonl
+architect_review_jsonl: /tmp/hermes-tavern-companyboost-closeout-review-20260713-phase484.jsonl
+initial_review_jsonl: /tmp/hermes-tavern-companyboost-review-20260713-phase484.jsonl
+initial_review_verdict: REQUEST_CHANGES
+fix_jsonl: /tmp/hermes-tavern-companyboost-fix-20260713-phase484.jsonl
+preliminary_rereview_jsonl: /tmp/hermes-tavern-companyboost-review-20260713-phase484-r2.jsonl
+review_status: pass
+
+lifecycle_contract:
+  architect_design_completed: true
+  controller_materialization_completed: true
+  s1_executor_ready: true
+  s1_may_update_only_its_status_checks_and_truthful_nonfinal_evidence: true
+  top_level_must_remain_pending_parent_verification_after_s1: true
+  s2_parent_controller_only: true
+  acceptance_creation_in_worker_slice: prohibited
+  final_acceptance_authority: parent_controller
+  fabricated_parent_evidence: prohibited
+  remote_or_ci_claims: prohibited
+
+s1_allowed_files:
+  - design/codestable/attention.md
+  - tests/test_hermes_tavern_codestable_status.py
+  - design/codestable/features/2026-07-13-hermes-tavern-phase484-attention-status-sync-through-phase483/design.md
+  - design/codestable/features/2026-07-13-hermes-tavern-phase484-attention-status-sync-through-phase483/checklist.yaml
+
+prohibited_files:
+  - run_agent.py
+  - cli.py
+  - gateway/run.py
+
+prohibited_scope:
+  - later_phase_artifacts_or_status
+  - runtime_or_source
+  - plugin_or_provider
+  - provider_routing_or_credentials
+  - gateway_or_service_lifecycle
+  - config_dependencies_or_build
+  - root_design_or_readme
+  - architecture_roadmap_requirements_or_compound
+  - graph_or_generated_discovery
+  - broad_rewrite_or_history_compaction
+  - stage_commit_or_push
+  - remote_or_ci_claims
+
+attention_contract:
+  current_status_prefix: 'Current status (2026-06-18): All phases 1-484 accepted'
+  preserve_phase_121_167_aggregate: true
+  preserve_explicit_labels:
+    start: 168
+    end: 483
+    each_exactly_once: true
+    preserve_order: true
+  required_new_label: Phase 484 attention status sync through Phase 483
+  required_new_label_count: 1
+  final_status_suffix: 'Phase 482 attention status sync through Phase 481, Phase 483 attention status sync through Phase 482, and Phase 484 attention status sync through Phase 483.'
+  section_header: '### 其他'
+  immediately_after: '- Adult-fiction non-negotiable boundaries defined in design doc §12.3 — do not build features that bypass provider safety systems.'
+  before_header: '### Hermes Tavern 凭证约束'
+  current_status_line_count: 1
+  broad_rewrite: prohibited
+
+status_test_contract:
+  current_status_prefix: 'Current status (2026-06-18): All phases 1-484 accepted'
+  stale_status_prefix: 'Current status (2026-06-18): All phases 1-483 accepted'
+  stale_phase_marker: '1-483'
+  stale_phase_marker_en_dash: '1–483'
+  older_stale_phase_marker: '1-482'
+  older_stale_phase_marker_en_dash: '1–482'
+  required_new_label: Phase 484 attention status sync through Phase 483
+  required_new_label_count: 1
+  final_status_suffix: 'Phase 482 attention status sync through Phase 481, Phase 483 attention status sync through Phase 482, and Phase 484 attention status sync through Phase 483.'
+  phase_range: 'range(168, 485)'
+  aggregate_range: 'range(168, 485)'
+  split_stale_range: stale_aggregate_range_484
+  split_stale_range_value: superseded_active_range_stop_484
+  split_stale_direct_guard: stale_aggregate_guard_484
+  split_stale_direct_guard_value: superseded_active_range_stop_484
+  preserve_historical_stale_guards: true
+  preserve_previous_terminal_range_guard: stale_aggregate_range_483
+  preserve_previous_terminal_direct_guard: stale_aggregate_guard_483
+  preserve_anchored_current_assignment: true
+  preserve_anchored_suffix_assignment: true
+  preserve_placement_guards: true
+  preserve_all_label_guards: true
+  preserve_phase_121_167_guard: true
+  preserve_no_discovery_guards: true
+  preserve_computed_no_later_phase_guard: true
+  no_later_phase_source: phase_range.stop
+  literal_future_phase_label: prohibited
+
+compatibility_contract:
+  hermes_native_plugin_architecture: preserved
+  sillytavern_card_asset_compatibility: preserved
+  adult_fiction_rp_compatibility: preserved
+  minors_or_csam_content_or_behavior: prohibited
+  provider_safety_bypass: prohibited
+  provider_routing: unchanged
+  credential_handling: unchanged
+  gateway_behavior: unchanged
+  service_lifecycle: unchanged
+
+post_s1_expected_non_final_state:
+  status: pending_parent_verification
+  workflow_status: implemented_pending_parent_verification
+  acceptance_state: absent_pending_parent_verification
+  parent_verification_required: true
+  parent_verification_completed: false
+  acceptance_artifact: null
+  acceptance_md_present: false
+  s1_status: completed_nonfinal
+  s1_check_status: passed_executor_observed_nonfinal
+  s2_status: pending
+  s2_check_status: pending
+
+steps:
+  - id: S1
+    name: Implement Phase 484 attention/status sync through Phase 483
+    owner: executor
+    status: completed_nonfinal
+    ready: true
+    acceptance_creation: prohibited
+    final_status_claims: prohibited
+    commit_or_push: prohibited
+    checks:
+      - id: C1
+        status: passed_executor_observed_nonfinal
+        description: Keep all changes within the exact four-file S1 boundary.
+      - id: C2
+        status: passed_executor_observed_nonfinal
+        description: Advance the single attention headline to 1-484 and append the Phase 484 sync-through-483 label exactly once.
+      - id: C3
+        status: passed_executor_observed_nonfinal
+        description: Preserve Phase 121-167, every Phase 168-483 label, ordering, placement, and the exact Phase 482/483/484 suffix.
+      - id: C4
+        status: passed_executor_observed_nonfinal
+        description: Advance focused-test current, stale, older-stale, label, suffix, and both active-range contracts by exactly one tick.
+      - id: C5
+        status: passed_executor_observed_nonfinal
+        description: Add split stale-range and direct guards for the superseded active range with stop 484 while preserving every historical guard.
+      - id: C6
+        status: passed_executor_observed_nonfinal
+        description: Preserve anchored assignments, placement, all-label, Phase 121-167, no-discovery, and computed no-later-phase guards.
+      - id: C7
+        status: passed_executor_observed_nonfinal
+        description: Preserve Hermes-native plugin architecture, SillyTavern card/asset compatibility, adult-fiction/RP compatibility, no-minors/CSAM boundaries, credentials, routing, gateway behavior, and provider safety.
+      - id: C8
+        status: passed_executor_observed_nonfinal
+        description: Keep acceptance absent, lifecycle non-final, parent verification pending, S2 pending, and perform no stage, commit, push, remote, or CI action.
+
+  - id: S2
+    name: Parent-controller verification and acceptance closeout
+    owner: parent_controller
+    status: completed
+    acceptance_creation: completed
+    checks:
+      - id: C9
+        status: passed
+        description: Validate Phase 484 design/checklist and exact four-file dirty scope.
+      - id: C10
+        status: passed
+        description: Compile the focused status test to a temporary path and run focused pytest.
+      - id: C11
+        status: passed
+        description: Run the full repository pytest suite.
+      - id: C12
+        status: passed
+        description: Verify status placement, prefix, suffix, all-label counts and order, active ranges, both stale guard families, computed later-phase exclusion, and acceptance absence.
+      - id: C13
+        status: passed
+        description: Verify final newlines, trailing whitespace, git diff --check, no staged changes, protected paths, and final git status.
+      - id: C14
+        status: passed
+        description: Finalize acceptance only after every authoritative parent-controller gate passes.
+
+verification_commands:
+  - id: V1
+    owner: parent_controller
+    status: passed_parent_controller
+    command: 'PYTHONDONTWRITEBYTECODE=1 /usr/local/bin/python3 design/codestable/tools/validate-yaml.py --dir design/codestable/features/2026-07-13-hermes-tavern-phase484-attention-status-sync-through-phase483 --require doc_type --require status --require feature'
+  - id: V2
+    owner: parent_controller
+    status: passed_parent_controller
+    command: >-
+      PYTHONDONTWRITEBYTECODE=1 /usr/local/bin/python3 -c
+      "import py_compile; py_compile.compile('tests/test_hermes_tavern_codestable_status.py', cfile='/tmp/hermes-tavern-phase484-status-test.pyc', doraise=True)"
+  - id: V3
+    owner: parent_controller
+    status: passed_parent_controller
+    command: 'TMPDIR=/tmp env -u PYTEST_DISABLE_PLUGIN_AUTOLOAD -u HERMES_SESSION_KEY -u HERMES_SESSION_ID HERMES_HOME=/Users/steven/.hermes PYTHONDONTWRITEBYTECODE=1 /usr/local/bin/python3 -m pytest tests/test_hermes_tavern_codestable_status.py -q -o addopts= -p no:cacheprovider'
+  - id: V4
+    owner: parent_controller
+    status: passed_parent_controller
+    command: 'TMPDIR=/tmp env -u PYTEST_DISABLE_PLUGIN_AUTOLOAD -u HERMES_SESSION_KEY -u HERMES_SESSION_ID HERMES_HOME=/Users/steven/.hermes PYTHONDONTWRITEBYTECODE=1 /usr/local/bin/python3 -m pytest -q -o addopts= -p no:cacheprovider'
+  - id: V5
+    owner: parent_controller
+    status: passed_parent_controller
+    command: controller static exact-scope/no-acceptance/status/placement/suffix/label/range/stale-guard/computed-later-phase/newline/trailing-whitespace guard
+  - id: V6
+    owner: parent_controller
+    status: passed_parent_controller
+    command: git diff --check
+  - id: V7
+    owner: parent_controller
+    status: passed_parent_controller
+    command: git status --short --branch --untracked-files=all
+
+executor_evidence:
+  status: completed_nonfinal
+  validator: passed_executor_observed_nonfinal (2 files passed)
+  py_compile: passed_executor_observed_nonfinal (temporary cfile /tmp/hermes-tavern-phase484-status-test-executor.pyc)
+  focused_pytest: passed_executor_observed_nonfinal (1 passed)
+  full_pytest: failed_executor_observed_nonfinal (two completed runs; 8 failed, 1207 passed in 69.78s and 8 failed, 1207 passed in 70.34s; failures were in tests/test_hermes_tavern_images.py)
+  static_guard: passed_executor_observed_nonfinal (final corrected probe; exact scope/no-acceptance/status/placement/suffix/317-label/range/stale-guard/computed-later-phase/newline/trailing-whitespace)
+  static_guard_intermediate_failures: 'two probes failed before the final pass: the first incorrectly required the credentials header immediately after the status line; the later probe incorrectly searched for aggregate_range = "range(168, 485)", with a trailing comma; the corrected final static guard passed'
+  diff_check: passed_executor_observed_nonfinal
+  status_scope: passed_executor_observed_nonfinal (exact four dirty paths; no staged changes; HEAD unchanged)
+  staged_changes: none_executor_observed_nonfinal
+  acceptance_absent: passed_executor_observed_nonfinal
+
+parent_controller_verification:
+  phase_validator_before_closeout: passed (2 files valid)
+  focused_py_compile: passed (temporary cfile /tmp/hermes-tavern-phase484-status-test.pyc)
+  focused_pytest: passed (1 test)
+  full_pytest: passed (1215 tests)
+  status_and_scope_guards: passed (exact pre-closeout scope; 317 ordered labels; placement, suffix, ranges, stale guards, and computed later-phase exclusion)
+  final_newline_and_trailing_whitespace: passed
+  git_diff_check: passed
+  architect_review: PASS in /tmp/hermes-tavern-companyboost-closeout-review-20260713-phase484.jsonl
+  acceptance_created_by: parent_controller
+  residual_runtime_work: none
+
+review_checklist:
+  - exactly_one_phase484_docs_static_test_status_only_slice
+  - exact_four_file_dirty_scope
+  - no_staged_changes
+  - no_acceptance_artifact
+  - no_final_or_accepted_lifecycle
+  - current_prefix_1_484_exactly_once
+  - exact_phase482_phase483_phase484_suffix_punctuation
+  - phase_121_167_aggregate_preserved
+  - phase_168_through_484_labels_complete_ordered_each_once
+  - previous_terminal_phase483_label_preserved
+  - current_stale_older_values_484_483_482
+  - active_range_stop_485_in_both_representations
+  - split_stale_range_484_present_in_tuple_and_asserted
+  - split_direct_guard_484_present_and_asserted
+  - stale_range_and_direct_guard_483_preserved
+  - all_historical_stale_guards_preserved
+  - anchored_current_and_suffix_assignments_single
+  - placement_and_no_discovery_guards_preserved
+  - computed_later_phase_exclusion_preserved
+  - no_literal_future_phase_label
+  - no_protected_runtime_source_or_provider_change
+  - hermes_native_and_sillytavern_compatibility_preserved
+  - adult_fiction_rp_no_minors_csam_and_provider_safety_boundaries_preserved
+  - credentials_routing_gateway_and_service_lifecycle_unchanged
+  - no_stage_commit_push_remote_or_ci_claim
+
+rollback:
+  mode: worktree_only
+  history_rewrite: prohibited
+  broad_git_clean: prohibited
+  restore_tracked:
+    - design/codestable/attention.md
+    - tests/test_hermes_tavern_codestable_status.py
+  remove_new_only:
+    - design/codestable/features/2026-07-13-hermes-tavern-phase484-attention-status-sync-through-phase483/design.md
+    - design/codestable/features/2026-07-13-hermes-tavern-phase484-attention-status-sync-through-phase483/checklist.yaml
