@@ -1,0 +1,40 @@
+doc_type: feature-checklist
+feature: 2026-07-13-hermes-tavern-phase487-attention-status-sync-through-phase486
+status: pending_parent_verification
+workflow_status: implemented_pending_parent_verification
+acceptance_state: absent_pending_parent_verification
+parent_verification_required: true
+parent_verification_completed: false
+acceptance_artifact: null
+acceptance_md_present: false
+tags: [hermes-tavern, codestable, attention, status-sync, phase487]
+steps:
+  - id: S1
+    name: Implement Phase 487 attention/status sync through Phase 486
+    owner: executor
+    status: completed_nonfinal
+    acceptance_creation: prohibited
+    commit_or_push: prohibited
+    checks:
+      - id: C1
+        status: passed_executor_observed_nonfinal
+        description: Exact four-file non-final worker scope is preserved.
+      - id: C2
+        status: passed_executor_observed_nonfinal
+        description: Attention and focused test advance to aggregate 487 and sync-through 486 with 320 ordered labels.
+      - id: C3
+        status: passed_executor_observed_nonfinal
+        description: Current/stale/older/range/guard contracts advance one tick while historic guards persist.
+  - id: S2
+    name: Parent-controller verification and acceptance closeout
+    owner: parent_controller
+    status: pending
+    checks:
+      - id: C4
+        status: pending
+        description: Parent independently validates artifacts, focused/full tests and exact scope before lifecycle promotion.
+verification_commands:
+  - "PYTHONDONTWRITEBYTECODE=1 /usr/local/bin/python3 design/codestable/tools/validate-yaml.py --dir design/codestable/features/2026-07-13-hermes-tavern-phase487-attention-status-sync-through-phase486 --require doc_type --require status --require feature"
+  - "PYTHONDONTWRITEBYTECODE=1 /usr/local/bin/python3 -m pytest tests/test_hermes_tavern_codestable_status.py -q -o addopts="
+  - "PYTHONDONTWRITEBYTECODE=1 /usr/local/bin/python3 -m pytest -q -o addopts="
+  - "git diff --check"
