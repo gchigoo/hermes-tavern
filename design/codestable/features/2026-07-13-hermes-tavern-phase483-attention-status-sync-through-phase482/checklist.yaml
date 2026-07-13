@@ -1,0 +1,190 @@
+doc_type: feature-checklist
+feature: 2026-07-13-hermes-tavern-phase483-attention-status-sync-through-phase482
+status: implemented_pending_parent_verification
+workflow_status: implemented_pending_parent_verification
+acceptance_state: pending_parent_verification
+implementation_ready: true
+parent_verification_required: true
+parent_verification_completed: false
+acceptance_artifact: null
+acceptance_md_present: false
+executor_acceptance_creation: prohibited
+executor_final_status_claims: prohibited
+executor_commit_or_push: prohibited
+worker_commit_or_push_performed: false
+parent_commit_or_push_performed: false
+date: '2026-07-13'
+owner: company-boost-lane
+lane: company-boost
+architect_model: gpt-5.5
+architect_reasoning: xhigh
+executor_model: gpt-5.4
+bounded_phase: docs/static-test/status-only
+result_type: status_sync_single_tick_nonfinal
+selected_scope: phase483-attention-status-sync-through-phase482
+selected_phase_slug: 2026-07-13-hermes-tavern-phase483-attention-status-sync-through-phase482
+selected_title: Phase 483 attention/status sync through Phase 482
+architect_design_jsonl: /tmp/hermes-tavern-architect-design-20260713.jsonl
+executor_jsonl: /tmp/hermes-tavern-executor-20260713.jsonl
+architect_review_jsonl: /tmp/hermes-tavern-architect-review-20260713.jsonl
+executor_fix_jsonl: null
+
+s1_allowed_files:
+  - design/codestable/attention.md
+  - tests/test_hermes_tavern_codestable_status.py
+  - design/codestable/features/2026-07-13-hermes-tavern-phase483-attention-status-sync-through-phase482/design.md
+  - design/codestable/features/2026-07-13-hermes-tavern-phase483-attention-status-sync-through-phase482/checklist.yaml
+
+prohibited_files:
+  - design/codestable/features/2026-07-13-hermes-tavern-phase483-attention-status-sync-through-phase482/acceptance.md
+  - run_agent.py
+  - cli.py
+  - gateway/run.py
+
+attention_contract:
+  current_status_prefix: 'Current status (2026-06-18): All phases 1-483 accepted'
+  preserve_phase_121_167_aggregate: true
+  preserve_explicit_labels:
+    start: 168
+    end: 482
+  required_new_label: Phase 483 attention status sync through Phase 482
+  required_new_label_count: 1
+  final_status_suffix: 'Phase 481 attention status sync through Phase 480, Phase 482 attention status sync through Phase 481, and Phase 483 attention status sync through Phase 482.'
+  section_header: '### 其他'
+  immediately_after: '- Adult-fiction non-negotiable boundaries defined in design doc §12.3 — do not build features that bypass provider safety systems.'
+  before_header: '### Hermes Tavern 凭证约束'
+  current_status_line_count: 1
+  broad_rewrite: prohibited
+
+status_test_contract:
+  current_status_prefix: 'Current status (2026-06-18): All phases 1-483 accepted'
+  stale_status_prefix: 'Current status (2026-06-18): All phases 1-482 accepted'
+  stale_phase_marker: '1-482'
+  stale_phase_marker_en_dash: '1–482'
+  older_stale_phase_marker: '1-481'
+  older_stale_phase_marker_en_dash: '1–481'
+  required_new_label: Phase 483 attention status sync through Phase 482
+  final_status_suffix: 'Phase 481 attention status sync through Phase 480, Phase 482 attention status sync through Phase 481, and Phase 483 attention status sync through Phase 482.'
+  phase_range: 'range(168, 484)'
+  aggregate_range: 'range(168, 484)'
+  split_stale_range: stale_aggregate_range_483
+  split_stale_direct_guard: stale_aggregate_guard_483
+  preserve_historical_stale_guards: true
+  preserve_anchored_current_assignment: true
+  preserve_anchored_suffix_assignment: true
+  preserve_placement_guards: true
+  preserve_all_label_guards: true
+  preserve_phase_121_167_guard: true
+  preserve_no_discovery_guards: true
+  preserve_computed_no_later_phase_guard: true
+  no_later_phase_source: phase_range.stop
+  literal_future_phase_label: prohibited
+
+compatibility_contract:
+  hermes_native_plugin_behavior: preserved
+  sillytavern_compatibility: preserved
+  adult_fiction_rp_boundaries: preserved
+  minors_or_csam_content: prohibited
+  provider_safety_bypass: prohibited
+  provider_routing: unchanged
+  credential_handling: unchanged
+  gateway_behavior: unchanged
+
+steps:
+  - id: S1
+    name: Implement Phase 483 attention/status sync through Phase 482
+    owner: executor
+    status: implemented
+    acceptance_creation: prohibited
+    final_status_claims: prohibited
+    commit_or_push: prohibited
+    checks:
+      - id: C1
+        status: observed_nonfinal
+        description: Keep Phase 483 design/checklist within the exact four-file S1 boundary.
+      - id: C2
+        status: observed_nonfinal
+        description: Advance the single attention headline to 1-483 and append the Phase 483 sync-through-482 label exactly once.
+      - id: C3
+        status: observed_nonfinal
+        description: Preserve Phase 121-167, every Phase 168-482 label, ordering, placement, and the exact Phase 481/482/483 suffix.
+      - id: C4
+        status: observed_nonfinal
+        description: Advance focused-test current, stale, older-stale, label, suffix, and active-range contracts by exactly one tick.
+      - id: C5
+        status: observed_nonfinal
+        description: Add split stale-range and direct guards for superseded range(168, 483) while preserving every historical guard.
+      - id: C6
+        status: observed_nonfinal
+        description: Preserve anchored assignments, placement, all-label, Phase 121-167, no-discovery, and computed no-later-phase guards.
+      - id: C7
+        status: observed_nonfinal
+        description: Preserve Hermes-native plugin and SillyTavern compatibility, adult-fiction/RP boundaries, no-minors/CSAM boundaries, and provider-safety behavior.
+      - id: C8
+        status: observed_nonfinal
+        description: Do not create acceptance.md, make final lifecycle claims, modify prohibited files, commit, push, or claim parent verification.
+  - id: S2
+    name: Parent-controller verification
+    owner: parent_controller
+    status: pending
+    acceptance_creation: prohibited_in_this_slice
+    checks:
+      - id: C9
+        status: pending
+        description: Validate Phase 483 design/checklist and exact dirty-file scope.
+      - id: C10
+        status: pending
+        description: Run py_compile and focused status pytest.
+      - id: C11
+        status: pending
+        description: Run the controller full pytest suite.
+      - id: C12
+        status: pending
+        description: Verify status placement/suffix/ranges/later-phase exclusion, acceptance absence, newlines, and trailing whitespace.
+      - id: C13
+        status: pending
+        description: Run git diff --check and inspect git status without commit or push.
+
+verification_commands:
+  - id: V1
+    owner: parent_controller
+    status: pending
+    command: 'PYTHONDONTWRITEBYTECODE=1 /usr/local/bin/python3 design/codestable/tools/validate-yaml.py --dir design/codestable/features/2026-07-13-hermes-tavern-phase483-attention-status-sync-through-phase482 --require doc_type --require status --require feature'
+  - id: V2
+    owner: parent_controller
+    status: pending
+    command: 'PYTHONDONTWRITEBYTECODE=1 /usr/local/bin/python3 -m py_compile tests/test_hermes_tavern_codestable_status.py'
+  - id: V3
+    owner: parent_controller
+    status: pending
+    command: 'TMPDIR=/tmp env -u PYTEST_DISABLE_PLUGIN_AUTOLOAD -u HERMES_SESSION_KEY -u HERMES_SESSION_ID HERMES_HOME=/Users/steven/.hermes PYTHONDONTWRITEBYTECODE=1 /usr/local/bin/python3 -m pytest tests/test_hermes_tavern_codestable_status.py -q -o addopts= -p no:cacheprovider'
+  - id: V4
+    owner: parent_controller
+    status: pending
+    command: 'TMPDIR=/tmp env -u PYTEST_DISABLE_PLUGIN_AUTOLOAD -u HERMES_SESSION_KEY -u HERMES_SESSION_ID HERMES_HOME=/Users/steven/.hermes PYTHONDONTWRITEBYTECODE=1 /usr/local/bin/python3 -m pytest -q -o addopts= -p no:cacheprovider'
+  - id: V5
+    owner: parent_controller
+    status: pending
+    command: controller static allowed-path/status/placement/suffix/range/later-phase/newline/trailing-whitespace guard
+  - id: V6
+    owner: parent_controller
+    status: pending
+    command: git diff --check
+  - id: V7
+    owner: parent_controller
+    status: pending
+    command: git status --short --branch --untracked-files=all
+
+review_checklist:
+  - exact_four_file_scope
+  - no_acceptance_or_final_lifecycle
+  - attention_current_1_483_and_exact_suffix
+  - phase_121_167_and_phase_168_482_history_preserved
+  - phase_483_label_exactly_once
+  - current_stale_older_and_active_range_correct
+  - stale_range_483_guarded_in_both_families
+  - anchored_placement_all_label_no_discovery_and_computed_later_guards_preserved
+  - hermes_native_and_sillytavern_compatibility_preserved
+  - adult_fiction_rp_no_minors_csam_and_provider_safety_boundaries_preserved
+  - protected_files_untouched
+  - no_commit_or_push
