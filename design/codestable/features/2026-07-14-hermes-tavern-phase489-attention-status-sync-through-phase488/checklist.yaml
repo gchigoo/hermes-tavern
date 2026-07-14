@@ -29,8 +29,8 @@ steps:
   - id: S2
     name: Parent acceptance closeout
     owner: parent_controller
-    status: pending
+    status: completed
 checks:
   - id: C1
-    status: pending
+    status: passed
     description: Current status and focused static regression advance exactly one status-sync tick.
