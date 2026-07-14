@@ -1,0 +1,42 @@
+doc_type: feature-checklist
+feature: 2026-07-14-hermes-tavern-phase488-codestable-verification-command-parity
+status: accepted
+workflow_status: accepted
+acceptance_state: accepted
+parent_verification_required: false
+parent_verification_completed: true
+acceptance_artifact: acceptance.md
+tags: [hermes-tavern, codestable, verification, regression, phase488]
+steps:
+  - id: S1
+    name: Align attention verification commands
+    owner: executor
+    status: done
+    allowed_files:
+      - design/codestable/attention.md
+      - tests/test_hermes_tavern_codestable_status.py
+    prohibited_files:
+      - run_agent.py
+      - cli.py
+      - gateway/run.py
+      - src/
+      - plugins/
+      - scripts/
+      - .github/
+      - README.md
+      - pyproject.toml
+      - design/HERMES_TAVERN_DESIGN.md
+    exit_signal: Attention instructions and focused status regression agree with the actual test layout.
+checks:
+  - id: C1
+    status: done
+    description: Focused status test proves active command and fixture parity.
+  - id: C2
+    status: done
+    description: Full suite remains green without runtime changes.
+verification_commands:
+  - "python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-07-14-hermes-tavern-phase488-codestable-verification-command-parity/design.md --require doc_type --require status"
+  - "python -m py_compile tests/test_hermes_tavern_codestable_status.py"
+  - "python -m pytest tests/test_hermes_tavern_codestable_status.py -q -o 'addopts=' -p no:cacheprovider"
+  - "python -m pytest -q -o 'addopts=' -p no:cacheprovider"
+  - "git diff --check"

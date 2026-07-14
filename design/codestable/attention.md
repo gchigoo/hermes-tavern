@@ -19,10 +19,9 @@ This file is the CodeStable skill startup mandatory read for the hermes-agent re
 
 ### 测试
 
-- Run Tavern plugin tests: `python -m pytest tests/plugins/test_hermes_tavern_*.py -q -o 'addopts='`
-- Run full suite: `bash scripts/run_tests.sh`
-- Always use `-o 'addopts='` to bypass any injected global pytest flags.
-- Test fixtures for card parsing live under `tests/fixtures/` (to be created in Phase 3.5).
+- `python -m pytest tests/test_hermes_tavern_*.py -q -o 'addopts=' -p no:cacheprovider`
+- `python -m pytest -q -o 'addopts=' -p no:cacheprovider`
+- fixtures live under `tests/fixtures/cards/`
 
 ### 命令与脚本陷阱
 

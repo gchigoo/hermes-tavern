@@ -935,3 +935,17 @@ def test_attention_current_status_line_is_current():
     forbidden_os_walk = "os" + "." + "walk"
     assert forbidden_iterdir not in test
     assert forbidden_os_walk not in test
+
+
+def test_attention_verification_commands_match_current_test_layout():
+    text = ATTENTION_DOC.read_text(encoding="utf-8")
+    test_section = text.split("### 测试\n", 1)[1].split("\n### ", 1)[0]
+
+    assert [line for line in test_section.splitlines() if line.startswith("- ")] == [
+        "- `python -m pytest tests/test_hermes_tavern_*.py -q -o 'addopts=' -p no:cacheprovider`",
+        "- `python -m pytest -q -o 'addopts=' -p no:cacheprovider`",
+        "- fixtures live under `tests/fixtures/cards/`",
+    ]
+    assert "tests/plugins/" not in text
+    assert "scripts/run_tests.sh" not in text
+    assert (REPO_ROOT / "tests" / "fixtures" / "cards").is_dir()
