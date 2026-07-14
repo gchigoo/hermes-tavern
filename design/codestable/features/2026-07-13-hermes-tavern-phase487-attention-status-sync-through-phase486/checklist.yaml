@@ -1,12 +1,12 @@
 doc_type: feature-checklist
 feature: 2026-07-13-hermes-tavern-phase487-attention-status-sync-through-phase486
-status: pending_parent_verification
-workflow_status: implemented_pending_parent_verification
-acceptance_state: absent_pending_parent_verification
+status: accepted
+workflow_status: accepted
+acceptance_state: accepted
 parent_verification_required: true
-parent_verification_completed: false
-acceptance_artifact: null
-acceptance_md_present: false
+parent_verification_completed: true
+acceptance_artifact: acceptance.md
+acceptance_md_present: true
 tags: [hermes-tavern, codestable, attention, status-sync, phase487]
 steps:
   - id: S1
@@ -28,11 +28,17 @@ steps:
   - id: S2
     name: Parent-controller verification and acceptance closeout
     owner: parent_controller
-    status: pending
+    status: completed
+    acceptance_creation: completed_by_parent_controller
     checks:
       - id: C4
-        status: pending
-        description: Parent independently validates artifacts, focused/full tests and exact scope before lifecycle promotion.
+        status: passed_parent_controller
+        description: Parent independently validated artifacts, focused/full tests and exact scope before lifecycle promotion.
+        evidence:
+          - "Parent controller validated all three feature artifacts after acceptance finalization."
+          - "Parent controller ran py_compile plus the focused status suite: 2 passed."
+          - "Parent controller ran the full suite: 1216 passed."
+          - "Exact two-path documentation scope and git diff --check passed."
 verification_commands:
   - "PYTHONDONTWRITEBYTECODE=1 /usr/local/bin/python3 design/codestable/tools/validate-yaml.py --dir design/codestable/features/2026-07-13-hermes-tavern-phase487-attention-status-sync-through-phase486 --require doc_type --require status --require feature"
   - "PYTHONDONTWRITEBYTECODE=1 /usr/local/bin/python3 -m pytest tests/test_hermes_tavern_codestable_status.py -q -o addopts="
