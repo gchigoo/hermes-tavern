@@ -1,0 +1,42 @@
+doc_type: feature-checklist
+feature: 2026-07-14-hermes-tavern-phase490-attention-status-sync-through-phase489
+status: accepted
+workflow_status: accepted
+acceptance_state: accepted
+parent_verification_required: true
+parent_verification_completed: true
+acceptance_artifact: acceptance.md
+tags: [hermes-tavern, codestable, attention, status-sync, phase490]
+steps:
+  - id: S1
+    name: Implement Phase 490 attention status sync
+    owner: executor
+    status: completed
+    allowed_files:
+      - design/codestable/attention.md
+      - tests/test_hermes_tavern_codestable_status.py
+      - design/codestable/features/2026-07-14-hermes-tavern-phase490-attention-status-sync-through-phase489/design.md
+      - design/codestable/features/2026-07-14-hermes-tavern-phase490-attention-status-sync-through-phase489/checklist.yaml
+    prohibited_files:
+      - run_agent.py
+      - cli.py
+      - gateway/run.py
+      - src/
+      - plugins/
+      - scripts/
+      - .github/
+      - README.md
+      - pyproject.toml
+  - id: S2
+    name: Parent acceptance closeout
+    owner: parent_controller
+    status: completed
+checks:
+  - id: C1
+    status: passed
+    description: Unique current status, label order, stale guards, scope, focused and full pytest passed.
+verification_commands:
+  - python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-07-14-hermes-tavern-phase490-attention-status-sync-through-phase489/design.md --require doc_type --require status --require feature
+  - python -m pytest tests/test_hermes_tavern_codestable_status.py -q -o 'addopts=' -p no:cacheprovider
+  - python -m pytest -q -o 'addopts=' -p no:cacheprovider
+  - git diff --check
