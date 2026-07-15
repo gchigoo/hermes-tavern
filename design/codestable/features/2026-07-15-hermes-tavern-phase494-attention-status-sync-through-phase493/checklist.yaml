@@ -1,0 +1,42 @@
+doc_type: feature-checklist
+feature: 2026-07-15-hermes-tavern-phase494-attention-status-sync-through-phase493
+status: accepted
+workflow_status: accepted
+acceptance_state: accepted
+parent_verification_required: true
+parent_verification_completed: true
+tags: [hermes-tavern, codestable, attention, status-sync, phase494]
+steps:
+  - id: S1
+    name: Implement Phase 494 attention status sync
+    owner: executor
+    status: completed
+    allowed_files:
+      - design/codestable/attention.md
+      - tests/test_hermes_tavern_codestable_status.py
+    prohibited_files:
+      - run_agent.py
+      - cli.py
+      - gateway/run.py
+      - src/
+      - plugins/
+      - scripts/
+      - .github/
+      - README.md
+      - pyproject.toml
+  - id: S2
+    name: Parent acceptance closeout
+    owner: parent_controller
+    status: completed
+checks:
+  - id: C1
+    status: passed
+    description: Parent independently verified status regression, focused Tavern glob, full pytest, scope, and whitespace evidence.
+verification_commands:
+  - python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-07-15-hermes-tavern-phase494-attention-status-sync-through-phase493/design.md --require doc_type --require status --require feature
+  - python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-07-15-hermes-tavern-phase494-attention-status-sync-through-phase493/checklist.yaml --yaml-only --require doc_type --require status --require feature
+  - PYTHONPYCACHEPREFIX=/tmp/hermes-tavern-phase494-pycache python -m py_compile tests/test_hermes_tavern_codestable_status.py
+  - PYTHONDONTWRITEBYTECODE=1 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python -m pytest tests/test_hermes_tavern_codestable_status.py -q -o 'addopts=' -p no:cacheprovider
+  - PYTHONDONTWRITEBYTECODE=1 python -m pytest tests/test_hermes_tavern_*.py -q -o 'addopts=' -p no:cacheprovider
+  - PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -o 'addopts=' -p no:cacheprovider
+  - git diff --check
