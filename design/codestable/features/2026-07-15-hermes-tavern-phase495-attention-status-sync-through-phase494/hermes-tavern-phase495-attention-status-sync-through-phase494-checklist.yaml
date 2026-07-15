@@ -1,0 +1,28 @@
+feature: hermes-tavern-phase495-attention-status-sync-through-phase494
+status: in_progress
+created: 2026-07-15
+workflow_status: in_progress
+parent_verification_required: true
+steps:
+  - id: S1
+    title: Synchronize live attention status through Phase 494
+    action: Update only attention.md and the focused static status test.
+    exit_signal: Focused and full pytest pass; controller scope and whitespace guards pass.
+    status: pending
+    allowed_files:
+      - design/codestable/attention.md
+      - tests/test_hermes_tavern_codestable_status.py
+    prohibited_files:
+      - run_agent.py
+      - cli.py
+      - gateway/run.py
+      - src/
+      - plugins/
+checks:
+  - id: C1
+    title: Status synchronization is structurally correct
+    status: pending
+    commands:
+      - python -m pytest tests/test_hermes_tavern_codestable_status.py -q -o 'addopts=' -p no:cacheprovider
+      - python -m pytest -q -o 'addopts=' -p no:cacheprovider
+      - git diff --check
