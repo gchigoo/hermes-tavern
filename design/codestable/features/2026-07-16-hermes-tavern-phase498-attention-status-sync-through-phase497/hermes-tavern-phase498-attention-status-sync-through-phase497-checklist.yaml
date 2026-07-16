@@ -1,0 +1,33 @@
+doc_type: feature-checklist
+feature: 2026-07-16-hermes-tavern-phase498-attention-status-sync-through-phase497
+status: accepted
+workflow_status: accepted
+parent_verification_required: true
+parent_verification_completed: true
+steps:
+  - id: s1-status-sync
+    title: Sync attention and static status contract through Phase 497
+    status: done
+    allowed_files:
+      - design/codestable/attention.md
+      - tests/test_hermes_tavern_codestable_status.py
+    prohibited_files:
+      - run_agent.py
+      - cli.py
+      - gateway/run.py
+      - plugins/
+      - src/
+checks:
+  - id: current-marker
+    title: Current status and Phase 498 markers are exact
+    status: passed
+  - id: scope
+    title: Only approved Phase 498 paths change
+    status: passed
+verification_commands:
+  - python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-07-16-hermes-tavern-phase498-attention-status-sync-through-phase497/hermes-tavern-phase498-attention-status-sync-through-phase497-design.md --require doc_type --require status --require feature --require summary --require tags
+  - python design/codestable/tools/validate-yaml.py --yaml-only --file design/codestable/features/2026-07-16-hermes-tavern-phase498-attention-status-sync-through-phase497/hermes-tavern-phase498-attention-status-sync-through-phase497-checklist.yaml --require doc_type --require status --require feature
+  - python -m py_compile tests/test_hermes_tavern_codestable_status.py
+  - python -m pytest tests/test_hermes_tavern_codestable_status.py -q -o 'addopts=' -p no:cacheprovider
+  - python -m pytest -q -o 'addopts=' -p no:cacheprovider
+  - git diff --check
