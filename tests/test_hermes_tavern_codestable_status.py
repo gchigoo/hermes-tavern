@@ -4,17 +4,17 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 ATTENTION_DOC = REPO_ROOT / "design" / "codestable" / "attention.md"
-CURRENT_STATUS_PREFIX = "Current status (2026-06-18): All phases 1-503 accepted"
-STALE_STATUS_PREFIX = "Current status (2026-06-18): All phases 1-502 accepted"
-STALE_PHASE_MARKER = "1-502"
-STALE_PHASE_MARKER_EN_DASH = "1–502"
-OLDER_STALE_STATUS_PREFIX = "Current status (2026-06-18): All phases 1-501 accepted"
-OLDER_STALE_PHASE_MARKER = "1-501"
-OLDER_STALE_PHASE_MARKER_EN_DASH = "1–501"
-HISTORIC_STALE_PHASE_MARKER = "1-500"
-HISTORIC_STALE_PHASE_MARKER_EN_DASH = "1–500"
-OLDEST_STALE_PHASE_MARKER = "1-499"
-OLDEST_STALE_PHASE_MARKER_EN_DASH = "1–499"
+CURRENT_STATUS_PREFIX = "Current status (2026-06-18): All phases 1-504 accepted"
+STALE_STATUS_PREFIX = "Current status (2026-06-18): All phases 1-503 accepted"
+STALE_PHASE_MARKER = "1-503"
+STALE_PHASE_MARKER_EN_DASH = "1–503"
+OLDER_STALE_STATUS_PREFIX = "Current status (2026-06-18): All phases 1-502 accepted"
+OLDER_STALE_PHASE_MARKER = "1-502"
+OLDER_STALE_PHASE_MARKER_EN_DASH = "1–502"
+HISTORIC_STALE_PHASE_MARKER = "1-501"
+HISTORIC_STALE_PHASE_MARKER_EN_DASH = "1–501"
+OLDEST_STALE_PHASE_MARKER = "1-500"
+OLDEST_STALE_PHASE_MARKER_EN_DASH = "1–500"
 REQUIRED_PHASE_LABELS = [
     "Phase 168 image settings JSON export",
     "Phase 169 project JSON export surface parity",
@@ -352,8 +352,9 @@ REQUIRED_PHASE_LABELS = [
     "Phase 501 attention status sync through Phase 500",
     "Phase 502 attention status sync through Phase 501",
     "Phase 503 attention status sync through Phase 502",
+    "Phase 504 attention status sync through Phase 503",
 ]
-FINAL_STATUS_SUFFIX = "Phase 499 attention status sync through Phase 498, Phase 500 attention status sync through Phase 499, Phase 501 attention status sync through Phase 500, Phase 502 attention status sync through Phase 501, and Phase 503 attention status sync through Phase 502."
+FINAL_STATUS_SUFFIX = "Phase 500 attention status sync through Phase 499, Phase 501 attention status sync through Phase 500, Phase 502 attention status sync through Phase 501, Phase 503 attention status sync through Phase 502, and Phase 504 attention status sync through Phase 503."
 
 
 def test_attention_current_status_line_is_current():
@@ -376,7 +377,7 @@ def test_attention_current_status_line_is_current():
     assert status_index < lines.index(credentials_header)
 
     assert status.startswith(f"- {CURRENT_STATUS_PREFIX}")
-    assert len(REQUIRED_PHASE_LABELS) == 336
+    assert len(REQUIRED_PHASE_LABELS) == 337
     for label in REQUIRED_PHASE_LABELS:
         assert label in status
     assert [status.index(label) for label in REQUIRED_PHASE_LABELS] == sorted(
@@ -394,8 +395,8 @@ def test_attention_current_status_line_is_current():
     assert re.search(rf"(?<!\d){re.escape(OLDEST_STALE_PHASE_MARKER)}(?!\d)", status) is None
     assert re.search(rf"(?<!\d){re.escape(OLDEST_STALE_PHASE_MARKER_EN_DASH)}(?!\d)", status) is None
     assert status.endswith(FINAL_STATUS_SUFFIX)
-    phase_range = range(168, 504)
-    aggregate_range = "range(168, 504)"
+    phase_range = range(168, 505)
+    aggregate_range = "range(168, 505)"
     later_phase_label = f"Phase {phase_range.stop} "
     assert all(f"Phase {phase} " in status for phase in phase_range)
     assert later_phase_label not in status
@@ -407,6 +408,7 @@ def test_attention_current_status_line_is_current():
     assert re.findall(r"^FINAL_STATUS_SUFFIX\s*=", test, re.M) == ["FINAL_STATUS_SUFFIX ="]
     assert CURRENT_STATUS_PREFIX in test
     assert all(label in test for label in REQUIRED_PHASE_LABELS)
+    stale_aggregate_range_504 = "".join(["range(168, ", "50", "4", ")"])
     stale_aggregate_range_503 = "".join(["range(168, ", "50", "3", ")"])
     stale_aggregate_range_502 = "".join(["range(168, ", "50", "2", ")"])
     stale_aggregate_range_501 = "".join(["range(168, ", "50", "1", ")"])
@@ -777,6 +779,7 @@ def test_attention_current_status_line_is_current():
         stale_aggregate_range_426,
         stale_aggregate_range_427,
         stale_aggregate_range_428,
+        stale_aggregate_range_504,
         stale_aggregate_range_429,
         stale_aggregate_range_430,
         stale_aggregate_range_431,
@@ -839,6 +842,7 @@ def test_attention_current_status_line_is_current():
         stale_aggregate_range_376,
     ):
         assert stale_range not in test
+    stale_aggregate_guard_504 = "".join(["range(168, ", "50", str(4), ")"])
     stale_aggregate_guard_503 = "".join(["range(168, ", "50", str(3), ")"])
     stale_aggregate_guard_502 = "".join(["range(168, ", "50", str(2), ")"])
     stale_aggregate_guard_501 = "".join(["range(168, ", "50", str(1), ")"])
@@ -922,6 +926,7 @@ def test_attention_current_status_line_is_current():
     stale_aggregate_guard_422 = "".join(["range(168, ", "42", str(2), ")"])
     stale_aggregate_guard_423 = "".join(["range(168, ", "42", str(3), ")"])
     stale_aggregate_guard_424 = "".join(["range(168, ", "42", str(4), ")"])
+    assert stale_aggregate_guard_504 not in test
     assert stale_aggregate_guard_503 not in test
     assert stale_aggregate_guard_502 not in test
     assert stale_aggregate_guard_501 not in test

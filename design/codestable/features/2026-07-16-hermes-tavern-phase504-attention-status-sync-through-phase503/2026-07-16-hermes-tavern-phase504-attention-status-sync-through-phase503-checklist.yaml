@@ -1,0 +1,40 @@
+doc_type: feature-checklist
+feature: 2026-07-16-hermes-tavern-phase504-attention-status-sync-through-phase503
+status: accepted
+workflow_status: accepted
+acceptance_state: accepted
+parent_verification_required: true
+parent_verification_completed: true
+acceptance_artifact: 2026-07-16-hermes-tavern-phase504-attention-status-sync-through-phase503-acceptance.md
+steps:
+  - id: s1-status-sync
+    title: Sync attention and static status contract through Phase 503
+    status: done
+    allowed_files:
+      - design/codestable/attention.md
+      - tests/test_hermes_tavern_codestable_status.py
+      - design/codestable/features/2026-07-16-hermes-tavern-phase504-attention-status-sync-through-phase503/2026-07-16-hermes-tavern-phase504-attention-status-sync-through-phase503-design.md
+      - design/codestable/features/2026-07-16-hermes-tavern-phase504-attention-status-sync-through-phase503/2026-07-16-hermes-tavern-phase504-attention-status-sync-through-phase503-checklist.yaml
+    prohibited_files:
+      - run_agent.py
+      - cli.py
+      - gateway/run.py
+      - plugins/
+      - src/
+      - scripts/
+      - .github/
+      - README.md
+      - pyproject.toml
+checks:
+  - id: current-marker
+    title: Current status and Phase 504 markers are exact
+    status: passed
+  - id: scope
+    title: Only approved Phase 504 paths change
+    status: passed
+verification_commands:
+  - python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-07-16-hermes-tavern-phase504-attention-status-sync-through-phase503/2026-07-16-hermes-tavern-phase504-attention-status-sync-through-phase503-design.md --require doc_type --require status --require feature --require summary --require tags
+  - python design/codestable/tools/validate-yaml.py --yaml-only --file design/codestable/features/2026-07-16-hermes-tavern-phase504-attention-status-sync-through-phase503/2026-07-16-hermes-tavern-phase504-attention-status-sync-through-phase503-checklist.yaml --require doc_type --require status --require feature
+  - python -m py_compile tests/test_hermes_tavern_codestable_status.py
+  - python -m pytest tests/test_hermes_tavern_codestable_status.py -q -o 'addopts=' -p no:cacheprovider
+  - git diff --check
