@@ -1,0 +1,54 @@
+doc_type: feature-checklist
+feature: 2026-07-17-hermes-tavern-phase507-attention-status-sync-through-phase506
+status: implemented
+workflow_status: pending_parent_verification
+acceptance_state: pending_parent_verification
+implementation_ready: true
+parent_verification_required: true
+parent_verification_completed: false
+worker_commit_or_push_performed: false
+parent_commit_or_push_performed: false
+acceptance_artifact: null
+acceptance_md_present: false
+date: "2026-07-17"
+bounded_phase: "docs/static-test/status-only"
+summary: "Phase 507 attention status sync through accepted Phase 506 is implemented by S1 and awaits parent verification."
+tags: [hermes-tavern, codestable, attention, status-sync, documentation, tests, phase507]
+
+allowed_files:
+  - design/codestable/attention.md
+  - tests/test_hermes_tavern_codestable_status.py
+  - design/codestable/features/2026-07-17-hermes-tavern-phase507-attention-status-sync-through-phase506/2026-07-17-hermes-tavern-phase507-attention-status-sync-through-phase506-design.md
+  - design/codestable/features/2026-07-17-hermes-tavern-phase507-attention-status-sync-through-phase506/2026-07-17-hermes-tavern-phase507-attention-status-sync-through-phase506-checklist.yaml
+
+steps:
+  - id: S1
+    title: "Sync attention and static status contract through Phase 506"
+    status: completed
+    acceptance_creation: prohibited
+    evidence: local_implementation_complete
+    checks:
+      - id: current-marker
+        title: "Advance the sole status record to Phase 507 and append its label once."
+        status: passed
+      - id: focused-contract
+        title: "Require 340 labels, range(168, 508), rotated stale guards, and the exact Phase 503-507 suffix."
+        status: passed
+      - id: scope
+        title: "Keep changes inside the S1 allowlist and leave acceptance absent."
+        status: passed
+  - id: S2
+    title: "Parent verification and acceptance closeout"
+    status: pending_parent_verification
+    acceptance_creation: parent_controller_only
+    checks:
+      - id: controller-verification
+        title: "Parent controller must validate YAML, Python compilation, focused tests, scope, and whitespace before acceptance closeout."
+        status: pending
+
+verification_commands:
+  - python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-07-17-hermes-tavern-phase507-attention-status-sync-through-phase506/2026-07-17-hermes-tavern-phase507-attention-status-sync-through-phase506-design.md --require doc_type --require status --require feature --require summary --require tags
+  - python design/codestable/tools/validate-yaml.py --yaml-only --file design/codestable/features/2026-07-17-hermes-tavern-phase507-attention-status-sync-through-phase506/2026-07-17-hermes-tavern-phase507-attention-status-sync-through-phase506-checklist.yaml --require doc_type --require status --require feature
+  - python -m py_compile tests/test_hermes_tavern_codestable_status.py
+  - python -m pytest tests/test_hermes_tavern_codestable_status.py -q -o 'addopts=' -p no:cacheprovider
+  - git diff --check
