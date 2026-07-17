@@ -1,0 +1,31 @@
+doc_type: feature-checklist
+feature: 2026-07-17-hermes-tavern-phase510-attention-status-sync-through-phase509
+status: implemented
+workflow_status: implementation_verified
+acceptance_state: pending
+parent_verification_required: true
+parent_verification_completed: true
+acceptance_md_present: false
+summary: S1 controller verification completed for Phase 510; acceptance/writeback remains pending.
+tags: [codestable, status-sync, docs, static-test]
+steps:
+  - id: S1
+    title: Sync attention and static status contract through Phase 509
+    action: Update only attention, status test, and this feature's non-final design/checklist artifacts.
+    exit_signal: Focused status test passes with the Phase 510 contract.
+    status: completed
+    evidence: "python -m pytest tests/test_hermes_tavern_codestable_status.py -q -o 'addopts=' -p no:cacheprovider (2 passed in 0.06s)"
+checks:
+  - id: current-marker
+    title: Canonical current-status record reaches Phase 510 exactly once.
+    status: passed_by_executor_pending_parent_verification
+  - id: focused-contract
+    title: Static tests require Phase 510 label ordering and stale-range protection.
+    status: passed_by_executor_pending_parent_verification
+verification_commands:
+  - python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-07-17-hermes-tavern-phase510-attention-status-sync-through-phase509/2026-07-17-hermes-tavern-phase510-attention-status-sync-through-phase509-design.md --require doc_type --require status --require feature --require summary --require tags
+  - python design/codestable/tools/validate-yaml.py --yaml-only --file design/codestable/features/2026-07-17-hermes-tavern-phase510-attention-status-sync-through-phase509/2026-07-17-hermes-tavern-phase510-attention-status-sync-through-phase509-checklist.yaml --require doc_type --require status --require feature
+  - python -m py_compile tests/test_hermes_tavern_codestable_status.py
+  - python -m pytest tests/test_hermes_tavern_codestable_status.py -q -o 'addopts=' -p no:cacheprovider
+  - python -m pytest -q -o 'addopts=' -p no:cacheprovider
+  - git diff --check
