@@ -1,0 +1,27 @@
+doc_type: feature-checklist
+feature: 2026-07-17-hermes-tavern-phase509-attention-status-sync-through-phase508
+status: accepted
+acceptance_md_present: true
+summary: S1 is complete; pending parent verification for Phase 509 attention status sync.
+tags: [codestable, status-sync, docs, static-test]
+steps:
+  - id: S1
+    title: Sync attention and static status contract through Phase 508
+    action: Update only attention, status test, and this feature's non-final design/checklist artifacts.
+    exit_signal: Focused status test passes with the Phase 509 contract.
+    status: completed
+    evidence: parent_verified
+checks:
+  - id: current-marker
+    title: Canonical current-status record reaches Phase 509 exactly once.
+    status: passed
+  - id: focused-contract
+    title: Static tests require Phase 509 label ordering and stale-range protection.
+    status: passed
+verification_commands:
+  - python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-07-17-hermes-tavern-phase509-attention-status-sync-through-phase508/2026-07-17-hermes-tavern-phase509-attention-status-sync-through-phase508-design.md --require doc_type --require status --require feature --require summary --require tags
+  - python design/codestable/tools/validate-yaml.py --yaml-only --file design/codestable/features/2026-07-17-hermes-tavern-phase509-attention-status-sync-through-phase508/2026-07-17-hermes-tavern-phase509-attention-status-sync-through-phase508-checklist.yaml --require doc_type --require status --require feature
+  - python -m py_compile tests/test_hermes_tavern_codestable_status.py
+  - python -m pytest tests/test_hermes_tavern_codestable_status.py -q -o 'addopts=' -p no:cacheprovider
+  - python -m pytest -q -o 'addopts=' -p no:cacheprovider
+  - git diff --check
