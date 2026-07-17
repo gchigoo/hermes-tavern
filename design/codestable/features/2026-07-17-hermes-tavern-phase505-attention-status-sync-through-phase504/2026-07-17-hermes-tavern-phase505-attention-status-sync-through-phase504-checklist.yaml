@@ -1,0 +1,50 @@
+doc_type: feature-checklist
+feature: 2026-07-17-hermes-tavern-phase505-attention-status-sync-through-phase504
+status: accepted
+workflow_status: accepted
+acceptance_state: accepted
+implementation_ready: true
+parent_verification_required: true
+parent_verification_completed: true
+worker_commit_or_push_performed: false
+parent_commit_or_push_performed: false
+acceptance_artifact: 2026-07-17-hermes-tavern-phase505-attention-status-sync-through-phase504-acceptance.md
+acceptance_md_present: true
+summary: "Phase 505 attention status sync through accepted Phase 504 passed parent verification and is accepted."
+tags: [codestable, status-sync, documentation]
+
+allowed_files:
+  - design/codestable/attention.md
+  - tests/test_hermes_tavern_codestable_status.py
+  - design/codestable/features/2026-07-17-hermes-tavern-phase505-attention-status-sync-through-phase504/2026-07-17-hermes-tavern-phase505-attention-status-sync-through-phase504-design.md
+  - design/codestable/features/2026-07-17-hermes-tavern-phase505-attention-status-sync-through-phase504/2026-07-17-hermes-tavern-phase505-attention-status-sync-through-phase504-checklist.yaml
+
+steps:
+  - id: s1-status-sync
+    title: Sync attention and static status contract through Phase 504
+    status: completed
+    checks:
+      - id: current-marker
+        title: Advance the sole current-status record to Phase 505 and append its label once
+        status: passed
+      - id: focused-contract
+        title: Update focused prefixes, stale markers, labels, suffix, ranges, and guards to Phase 505
+        status: passed
+      - id: scope
+        title: Preserve protected paths and leave acceptance absent
+        status: passed
+  - id: s2-parent-verification
+    title: Parent verification and acceptance closeout
+    status: completed
+    acceptance_creation: completed
+    checks:
+      - id: parent-gates
+        title: Parent controller validated artifacts, focused status tests, full pytest, scope, and whitespace.
+        status: passed
+
+verification_commands:
+  - python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-07-17-hermes-tavern-phase505-attention-status-sync-through-phase504/2026-07-17-hermes-tavern-phase505-attention-status-sync-through-phase504-design.md --require doc_type --require status --require feature --require summary --require tags
+  - python design/codestable/tools/validate-yaml.py --yaml-only --file design/codestable/features/2026-07-17-hermes-tavern-phase505-attention-status-sync-through-phase504/2026-07-17-hermes-tavern-phase505-attention-status-sync-through-phase504-checklist.yaml --require doc_type --require status --require feature
+  - python -m py_compile tests/test_hermes_tavern_codestable_status.py
+  - python -m pytest tests/test_hermes_tavern_codestable_status.py -q -o 'addopts=' -p no:cacheprovider
+  - git diff --check
