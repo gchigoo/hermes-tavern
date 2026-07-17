@@ -4,17 +4,17 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 ATTENTION_DOC = REPO_ROOT / "design" / "codestable" / "attention.md"
-CURRENT_STATUS_PREFIX = "Current status (2026-06-18): All phases 1-507 accepted"
-STALE_STATUS_PREFIX = "Current status (2026-06-18): All phases 1-506 accepted"
-STALE_PHASE_MARKER = "1-506"
-STALE_PHASE_MARKER_EN_DASH = "1–506"
-OLDER_STALE_STATUS_PREFIX = "Current status (2026-06-18): All phases 1-505 accepted"
-OLDER_STALE_PHASE_MARKER = "1-505"
-OLDER_STALE_PHASE_MARKER_EN_DASH = "1–505"
-HISTORIC_STALE_PHASE_MARKER = "1-504"
-HISTORIC_STALE_PHASE_MARKER_EN_DASH = "1–504"
-OLDEST_STALE_PHASE_MARKER = "1-503"
-OLDEST_STALE_PHASE_MARKER_EN_DASH = "1–503"
+CURRENT_STATUS_PREFIX = "Current status (2026-06-18): All phases 1-508 accepted"
+STALE_STATUS_PREFIX = "Current status (2026-06-18): All phases 1-507 accepted"
+STALE_PHASE_MARKER = "1-507"
+STALE_PHASE_MARKER_EN_DASH = "1–507"
+OLDER_STALE_STATUS_PREFIX = "Current status (2026-06-18): All phases 1-506 accepted"
+OLDER_STALE_PHASE_MARKER = "1-506"
+OLDER_STALE_PHASE_MARKER_EN_DASH = "1–506"
+HISTORIC_STALE_PHASE_MARKER = "1-505"
+HISTORIC_STALE_PHASE_MARKER_EN_DASH = "1–505"
+OLDEST_STALE_PHASE_MARKER = "1-504"
+OLDEST_STALE_PHASE_MARKER_EN_DASH = "1–504"
 REQUIRED_PHASE_LABELS = [
     "Phase 168 image settings JSON export",
     "Phase 169 project JSON export surface parity",
@@ -356,8 +356,9 @@ REQUIRED_PHASE_LABELS = [
     "Phase 505 attention status sync through Phase 504",
     "Phase 506 attention status sync through Phase 505",
     "Phase 507 attention status sync through Phase 506",
+    "Phase 508 attention status sync through Phase 507",
 ]
-FINAL_STATUS_SUFFIX = "Phase 503 attention status sync through Phase 502, Phase 504 attention status sync through Phase 503, Phase 505 attention status sync through Phase 504, Phase 506 attention status sync through Phase 505, and Phase 507 attention status sync through Phase 506."
+FINAL_STATUS_SUFFIX = "Phase 504 attention status sync through Phase 503, Phase 505 attention status sync through Phase 504, Phase 506 attention status sync through Phase 505, Phase 507 attention status sync through Phase 506, and Phase 508 attention status sync through Phase 507."
 
 
 def test_attention_current_status_line_is_current():
@@ -380,7 +381,7 @@ def test_attention_current_status_line_is_current():
     assert status_index < lines.index(credentials_header)
 
     assert status.startswith(f"- {CURRENT_STATUS_PREFIX}")
-    assert len(REQUIRED_PHASE_LABELS) == 340
+    assert len(REQUIRED_PHASE_LABELS) == 341
     for label in REQUIRED_PHASE_LABELS:
         assert label in status
     assert [status.index(label) for label in REQUIRED_PHASE_LABELS] == sorted(
@@ -398,8 +399,8 @@ def test_attention_current_status_line_is_current():
     assert re.search(rf"(?<!\d){re.escape(OLDEST_STALE_PHASE_MARKER)}(?!\d)", status) is None
     assert re.search(rf"(?<!\d){re.escape(OLDEST_STALE_PHASE_MARKER_EN_DASH)}(?!\d)", status) is None
     assert status.endswith(FINAL_STATUS_SUFFIX)
-    phase_range = range(168, 508)
-    aggregate_range = "range(168, 508)"
+    phase_range = range(168, 509)
+    aggregate_range = "range(168, 509)"
     stale_old_range = f"range(168, {phase_range.stop - 1})"
     later_phase_label = f"Phase {phase_range.stop} "
     assert all(f"Phase {phase} " in status for phase in phase_range)
@@ -851,6 +852,7 @@ def test_attention_current_status_line_is_current():
         stale_aggregate_range_376,
     ):
         assert stale_range not in test
+    stale_aggregate_guard_507 = "".join(["range(168, ", "50", str(7), ")"])
     stale_aggregate_guard_506 = "".join(["range(168, ", "50", str(6), ")"])
     stale_aggregate_guard_505 = "".join(["range(168, ", "50", str(5), ")"])
     stale_aggregate_guard_504 = "".join(["range(168, ", "50", str(4), ")"])
@@ -937,6 +939,7 @@ def test_attention_current_status_line_is_current():
     stale_aggregate_guard_422 = "".join(["range(168, ", "42", str(2), ")"])
     stale_aggregate_guard_423 = "".join(["range(168, ", "42", str(3), ")"])
     stale_aggregate_guard_424 = "".join(["range(168, ", "42", str(4), ")"])
+    assert stale_aggregate_guard_507 not in test
     assert stale_aggregate_guard_506 not in test
     assert stale_aggregate_guard_505 not in test
     assert stale_aggregate_guard_504 not in test

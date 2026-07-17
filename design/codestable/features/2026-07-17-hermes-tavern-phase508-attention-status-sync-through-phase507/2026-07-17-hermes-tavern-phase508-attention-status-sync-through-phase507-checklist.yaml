@@ -1,0 +1,50 @@
+doc_type: feature-checklist
+feature: 2026-07-17-hermes-tavern-phase508-attention-status-sync-through-phase507
+status: pending_parent_verification
+workflow_status: in_progress
+acceptance_state: pending
+implementation_ready: true
+parent_verification_required: true
+parent_verification_completed: false
+worker_commit_or_push_performed: false
+parent_commit_or_push_performed: false
+acceptance_md_present: false
+date: "2026-07-17"
+bounded_phase: "docs/static-test/status-only"
+summary: "Phase 508 attention status sync through accepted Phase 507 awaits parent verification."
+tags: [hermes-tavern, codestable, attention, status-sync, documentation, tests, phase508]
+allowed_files:
+  - design/codestable/attention.md
+  - tests/test_hermes_tavern_codestable_status.py
+  - design/codestable/features/2026-07-17-hermes-tavern-phase508-attention-status-sync-through-phase507/2026-07-17-hermes-tavern-phase508-attention-status-sync-through-phase507-design.md
+  - design/codestable/features/2026-07-17-hermes-tavern-phase508-attention-status-sync-through-phase507/2026-07-17-hermes-tavern-phase508-attention-status-sync-through-phase507-checklist.yaml
+steps:
+  - id: S1
+    title: "Sync attention and static status contract through Phase 507"
+    status: completed
+    acceptance_creation: prohibited
+    evidence: pending_controller_verification
+    checks:
+      - id: current-marker
+        title: "Advance the sole status record to Phase 508 and append its label once."
+        status: pending
+      - id: focused-contract
+        title: "Require 341 labels, range(168, 509), rotated stale guards, and the exact Phase 504-508 suffix."
+        status: pending
+      - id: scope
+        title: "Keep changes inside the S1 allowlist and leave acceptance absent."
+        status: pending
+  - id: S2
+    title: "Parent verification and acceptance closeout"
+    status: pending
+    acceptance_creation: pending
+    checks:
+      - id: controller-verification
+        title: "Controller validates YAML, Python compilation, focused tests, full pytest, scope, and whitespace before acceptance closeout."
+        status: pending
+verification_commands:
+  - python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-07-17-hermes-tavern-phase508-attention-status-sync-through-phase507/2026-07-17-hermes-tavern-phase508-attention-status-sync-through-phase507-design.md --require doc_type --require status --require feature --require summary --require tags
+  - python design/codestable/tools/validate-yaml.py --yaml-only --file design/codestable/features/2026-07-17-hermes-tavern-phase508-attention-status-sync-through-phase507/2026-07-17-hermes-tavern-phase508-attention-status-sync-through-phase507-checklist.yaml --require doc_type --require status --require feature
+  - python -m py_compile tests/test_hermes_tavern_codestable_status.py
+  - python -m pytest tests/test_hermes_tavern_codestable_status.py -q -o 'addopts=' -p no:cacheprovider
+  - git diff --check
