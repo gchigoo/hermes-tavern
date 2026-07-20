@@ -1,12 +1,12 @@
 doc_type: feature-checklist
 feature: 2026-07-17-hermes-tavern-phase510-attention-status-sync-through-phase509
-status: implemented
-workflow_status: implementation_verified
-acceptance_state: pending
+status: accepted
+workflow_status: accepted
+acceptance_state: accepted
 parent_verification_required: true
 parent_verification_completed: true
-acceptance_md_present: false
-summary: S1 controller verification completed for Phase 510; acceptance/writeback remains pending.
+acceptance_md_present: true
+summary: Phase 510 controller verification and acceptance closeout completed.
 tags: [codestable, status-sync, docs, static-test]
 steps:
   - id: S1
@@ -18,10 +18,10 @@ steps:
 checks:
   - id: current-marker
     title: Canonical current-status record reaches Phase 510 exactly once.
-    status: passed_by_executor_pending_parent_verification
+    status: passed
   - id: focused-contract
     title: Static tests require Phase 510 label ordering and stale-range protection.
-    status: passed_by_executor_pending_parent_verification
+    status: passed
 verification_commands:
   - python design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-07-17-hermes-tavern-phase510-attention-status-sync-through-phase509/2026-07-17-hermes-tavern-phase510-attention-status-sync-through-phase509-design.md --require doc_type --require status --require feature --require summary --require tags
   - python design/codestable/tools/validate-yaml.py --yaml-only --file design/codestable/features/2026-07-17-hermes-tavern-phase510-attention-status-sync-through-phase509/2026-07-17-hermes-tavern-phase510-attention-status-sync-through-phase509-checklist.yaml --require doc_type --require status --require feature
