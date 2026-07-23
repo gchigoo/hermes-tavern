@@ -1,0 +1,44 @@
+doc_type: feature-checklist
+feature: 2026-07-23-hermes-tavern-phase513-attention-status-sync-through-phase512
+requirement: docs
+created: 2026-07-23
+status: in_progress
+tags: [codestable, status-sync, docs, static-test]
+verification_commands:
+  - "python3 design/codestable/tools/validate-yaml.py --dir design/codestable/features/2026-07-23-hermes-tavern-phase513-attention-status-sync-through-phase512"
+  - "python -m py_compile tests/test_hermes_tavern_codestable_status.py"
+  - "python -m pytest tests/test_hermes_tavern_codestable_status.py -q -o 'addopts=' -p no:cacheprovider"
+  - "python -m pytest -q -o 'addopts=' -p no:cacheprovider"
+  - "git diff --check"
+steps:
+  - id: advance-attention-and-test
+    title: Advance attention status and focused test to Phase 513
+    action: Update the status prefix, append Phase 513 once, advance phase range and stale guards, and add the exact label.
+    exit_signal: Focused status test passes and attention.md reflects Phase 513 as current.
+    status: completed
+    evidence: "Focused static test passed: 2 passed in 0.06s."
+  - id: controller-verification
+    title: Parent verification without acceptance artifact
+    action: Parent controller independently reran all declared verification commands; no acceptance artifact was created.
+    exit_signal: Controller verification is recorded without expanding the bounded artifact scope.
+    status: completed
+    evidence: "Controller: YAML validator, py_compile, focused pytest (2 passed), full pytest (1216 passed), and git diff --check passed."
+checks:
+  - id: current-status-line
+    title: Current status line advanced
+    item: attention.md current status reads All phases 1-513 accepted with Phase 513 label appended.
+    source: design/codestable/attention.md
+    description: Focused static test validates the exact line, label count, and stale guards.
+    status: completed
+  - id: stale-guard-rotation
+    title: Stale guard rotation
+    item: Stale phase-specific guards rotate to 512/511/510/509.
+    source: tests/test_hermes_tavern_codestable_status.py
+    description: No stale terminal-phase markers remain; dynamic aggregate guard covers range(168, 514).
+    status: completed
+  - id: phase-labels-count
+    title: Phase labels count
+    item: REQUIRED_PHASE_LABELS contains exactly 346 entries ending with Phase 513 label.
+    source: tests/test_hermes_tavern_codestable_status.py
+    description: All Phase 168-513 labels are present in order with the new Phase 513 label appended exactly once.
+    status: completed
