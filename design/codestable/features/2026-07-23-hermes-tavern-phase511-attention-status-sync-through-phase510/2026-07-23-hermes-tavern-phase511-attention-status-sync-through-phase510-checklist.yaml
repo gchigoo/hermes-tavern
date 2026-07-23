@@ -1,0 +1,48 @@
+doc_type: feature-checklist
+feature: 2026-07-23-hermes-tavern-phase511-attention-status-sync-through-phase510
+requirement: docs
+created: 2026-07-23
+status: implemented
+tags: [codestable, status-sync, docs, static-test]
+verification_commands:
+  - "python3 design/codestable/tools/validate-yaml.py --dir design/codestable/features/2026-07-23-hermes-tavern-phase511-attention-status-sync-through-phase510"
+  - "python -m pytest tests/test_hermes_tavern_codestable_status.py -q -o 'addopts=' -p no:cacheprovider"
+  - "python -m py_compile tests/test_hermes_tavern_codestable_status.py"
+  - "python -m pytest -q -o 'addopts=' -p no:cacheprovider"
+  - "git diff --check"
+controller_evidence:
+  - "python3 design/codestable/tools/validate-yaml.py --dir design/codestable/features/2026-07-23-hermes-tavern-phase511-attention-status-sync-through-phase510"
+  - "python -m pytest tests/test_hermes_tavern_codestable_status.py -q -o 'addopts=' -p no:cacheprovider"
+  - "python -m py_compile tests/test_hermes_tavern_codestable_status.py"
+  - "python -m pytest -q -o 'addopts=' -p no:cacheprovider"
+  - "git diff --check"
+steps:
+  - id: advance-attention-and-test
+    title: Advance attention status and focused test to Phase 511
+    action: Update CURRENT_STATUS_PREFIX to "All phases 1-511 accepted", append Phase 511 label, advance phase_range to range(168, 512), rotate stale guards, and update REQUIRED_PHASE_LABELS to 344 with the new label.
+    exit_signal: Focused status test passes and attention.md reflects Phase 511 as current.
+    status: done
+  - id: controller-verification
+    title: Parent verification without acceptance artifact
+    action: Controller independently reruns all verification commands and records status-sync verification in this existing checklist after independent Architect review; no acceptance artifact is created.
+    exit_signal: Controller verification evidence is recorded in this checklist without expanding the bounded S1 artifact scope.
+    status: completed
+checks:
+  - id: current-status-line
+    title: Current status line advanced
+    item: attention.md current status reads "All phases 1-511 accepted" with Phase 511 label appended.
+    source: design/codestable/attention.md
+    description: The focused static status test validates the exact status line, label count, and stale guards.
+    status: passed
+  - id: stale-guard-rotation
+    title: Stale guard rotation
+    item: Stale phase-specific guards rotated from 509/508/507/506 to 510/509/508/507.
+    source: tests/test_hermes_tavern_codestable_status.py
+    description: No stale terminal-phase markers remain; dynamic aggregate guard covers range(168, 512).
+    status: passed
+  - id: phase-labels-count
+    title: Phase labels count
+    item: REQUIRED_PHASE_LABELS contains exactly 344 entries ending with Phase 511 label.
+    source: tests/test_hermes_tavern_codestable_status.py
+    description: All Phase 168-511 labels are present in order with the new Phase 511 label appended exactly once.
+    status: passed
