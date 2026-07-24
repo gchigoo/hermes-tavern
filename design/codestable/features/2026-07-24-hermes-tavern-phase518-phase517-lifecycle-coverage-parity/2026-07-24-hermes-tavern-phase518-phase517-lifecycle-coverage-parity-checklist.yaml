@@ -1,0 +1,39 @@
+doc_type: feature-checklist
+feature: 2026-07-24-hermes-tavern-phase518-phase517-lifecycle-coverage-parity
+requirement: docs
+created: 2026-07-24
+status: accepted
+tags: [codestable, lifecycle, docs, static-test]
+verification_commands:
+  - "python3 design/codestable/tools/validate-yaml.py --dir design/codestable/features/2026-07-24-hermes-tavern-phase518-phase517-lifecycle-coverage-parity"
+  - "python3 design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-07-24-hermes-tavern-phase518-phase517-lifecycle-coverage-parity/2026-07-24-hermes-tavern-phase518-phase517-lifecycle-coverage-parity-checklist.yaml --yaml-only"
+  - "python -m py_compile tests/test_hermes_tavern_codestable_status.py"
+  - "python -m pytest tests/test_hermes_tavern_codestable_status.py -q -o 'addopts=' -p no:cacheprovider"
+  - "python -m pytest -q -o 'addopts=' -p no:cacheprovider"
+  - "git diff --check"
+steps:
+  - id: cover-phase517-lifecycle-and-status
+    title: Cover accepted Phase 517 lifecycle and advance current status
+    action: Add Phase 517 to the focused lifecycle contract and advance attention/test status invariants to Phase 518.
+    exit_signal: Focused static tests pass and attention.md records Phase 518 as current.
+    status: done
+    evidence: "Controller: YAML validation, py_compile, focused pytest (3 passed), full pytest (1217 passed), and diff check all passed after lifecycle promotion."
+  - id: controller-verification
+    title: Parent verification without acceptance artifact
+    action: Parent controller independently reruns every declared verification command and finalizes lifecycle state.
+    exit_signal: Controller evidence is recorded only after all gates pass.
+    status: done
+    evidence: "Controller: all declared verification gates passed independently — YAML validation (2/2), py_compile, focused pytest (3 passed), full pytest (1217 passed), diff check."
+checks:
+  - id: phase517-lifecycle-covered
+    title: Phase 517 accepted lifecycle is covered
+    item: The focused lifecycle contract includes the accepted Phase 517 checklist with completed steps and passed checks.
+    source: tests/test_hermes_tavern_codestable_status.py
+    description: Preserve coverage for prior Phase 511-516 checklists while adding Phase 517 parity.
+    status: passed
+  - id: current-status-line
+    title: Current status line advanced
+    item: attention.md reads All phases 1-518 accepted with the Phase 518 label appended.
+    source: design/codestable/attention.md
+    description: Focused static tests validate the exact current line, ordered labels, and stale guards.
+    status: passed
