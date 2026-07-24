@@ -1,9 +1,16 @@
 import re
 from pathlib import Path
 
+import yaml
+
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 ATTENTION_DOC = REPO_ROOT / "design" / "codestable" / "attention.md"
+LIFECYCLE_CHECKLISTS = {
+    511: REPO_ROOT / "design/codestable/features/2026-07-23-hermes-tavern-phase511-attention-status-sync-through-phase510/2026-07-23-hermes-tavern-phase511-attention-status-sync-through-phase510-checklist.yaml",
+    512: REPO_ROOT / "design/codestable/features/2026-07-23-hermes-tavern-phase512-attention-status-sync-through-phase511/2026-07-23-hermes-tavern-phase512-attention-status-sync-through-phase511-checklist.yaml",
+    513: REPO_ROOT / "design/codestable/features/2026-07-23-hermes-tavern-phase513-attention-status-sync-through-phase512/2026-07-23-hermes-tavern-phase513-attention-status-sync-through-phase512-checklist.yaml",
+}
 CURRENT_STATUS_PREFIX = "Current status (2026-06-18): All phases 1-513 accepted"
 STALE_STATUS_PREFIX = "Current status (2026-06-18): All phases 1-512 accepted"
 STALE_PHASE_MARKER = "1-512"
@@ -364,6 +371,22 @@ REQUIRED_PHASE_LABELS = [
     "Phase 513 attention status sync through Phase 512",
 ]
 FINAL_STATUS_SUFFIX = "Phase 509 attention status sync through Phase 508, Phase 510 attention status sync through Phase 509, Phase 511 attention status sync through Phase 510, Phase 512 attention status sync through Phase 511, and Phase 513 attention status sync through Phase 512."
+
+
+def test_status_sync_checklists_have_accepted_lifecycle_contract():
+    for phase, checklist_path in LIFECYCLE_CHECKLISTS.items():
+        checklist = yaml.safe_load(checklist_path.read_text(encoding="utf-8"))
+
+        assert checklist["status"] == "accepted", f"Phase {phase} root is not accepted"
+        assert all(step.get("status") == "done" for step in checklist["steps"])
+        assert all(check.get("status") == "passed" for check in checklist["checks"])
+
+        controller_steps = [
+            step for step in checklist["steps"] if step.get("id") == "controller-verification"
+        ]
+        assert len(controller_steps) == 1
+        evidence = controller_steps[0].get("evidence")
+        assert isinstance(evidence, str) and evidence.strip()
 
 
 def test_attention_current_status_line_is_current():

@@ -2,7 +2,7 @@ doc_type: feature-checklist
 feature: 2026-07-23-hermes-tavern-phase511-attention-status-sync-through-phase510
 requirement: docs
 created: 2026-07-23
-status: implemented
+status: accepted
 tags: [codestable, status-sync, docs, static-test]
 verification_commands:
   - "python3 design/codestable/tools/validate-yaml.py --dir design/codestable/features/2026-07-23-hermes-tavern-phase511-attention-status-sync-through-phase510"
@@ -26,7 +26,8 @@ steps:
     title: Parent verification without acceptance artifact
     action: Controller independently reruns all verification commands and records status-sync verification in this existing checklist after independent Architect review; no acceptance artifact is created.
     exit_signal: Controller verification evidence is recorded in this checklist without expanding the bounded S1 artifact scope.
-    status: completed
+    status: done
+    evidence: "Controller: YAML validation, py_compile, focused pytest (3 passed), full pytest (1217 passed), and git diff --check passed."
 checks:
   - id: current-status-line
     title: Current status line advanced
