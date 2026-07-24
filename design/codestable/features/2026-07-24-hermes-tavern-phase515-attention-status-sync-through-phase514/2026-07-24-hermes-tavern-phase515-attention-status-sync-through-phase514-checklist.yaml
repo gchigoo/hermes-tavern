@@ -1,0 +1,44 @@
+doc_type: feature-checklist
+feature: 2026-07-24-hermes-tavern-phase515-attention-status-sync-through-phase514
+requirement: docs
+created: 2026-07-24
+status: accepted
+tags: [codestable, status-sync, docs, static-test]
+verification_commands:
+  - "python3 design/codestable/tools/validate-yaml.py --dir design/codestable/features/2026-07-24-hermes-tavern-phase515-attention-status-sync-through-phase514"
+  - "python3 design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-07-24-hermes-tavern-phase515-attention-status-sync-through-phase514/2026-07-24-hermes-tavern-phase515-attention-status-sync-through-phase514-checklist.yaml --yaml-only"
+  - "python -m py_compile tests/test_hermes_tavern_codestable_status.py"
+  - "python -m pytest tests/test_hermes_tavern_codestable_status.py -q -o 'addopts=' -p no:cacheprovider"
+  - "git diff --check"
+steps:
+  - id: advance-attention-and-test
+    title: Advance attention status and focused test to Phase 515
+    action: Update the status prefix, append Phase 515 once, advance phase range and stale guards, and add the exact label.
+    exit_signal: Focused status test passes and attention.md reflects Phase 515 as current.
+    status: done
+    evidence: "Controller: YAML validation, py_compile, focused pytest (3 passed), full pytest (1217 passed), exact scope, and diff checks passed."
+  - id: controller-verification
+    title: Parent verification without acceptance artifact
+    action: Parent controller independently reruns every declared verification command and finalizes lifecycle state.
+    exit_signal: The parent controller recorded independent verification and completed lifecycle promotion.
+    status: done
+    evidence: "Controller independently reran the declared commands and the full pytest suite before final review."
+checks:
+  - id: current-status-line
+    title: Current status line advanced
+    item: attention.md current status reads All phases 1-515 accepted with Phase 515 label appended.
+    source: design/codestable/attention.md
+    description: Focused static test validates the exact line, label count, and stale guards.
+    status: passed
+  - id: stale-guard-rotation
+    title: Stale guard rotation
+    item: Stale phase-specific guards rotate to 514/513/512/511.
+    source: tests/test_hermes_tavern_codestable_status.py
+    description: Dynamic aggregate guard covers range(168, 516) and rejects Phase 516.
+    status: passed
+  - id: phase-labels-count
+    title: Phase labels count
+    item: REQUIRED_PHASE_LABELS contains exactly 348 entries ending with the Phase 515 label.
+    source: tests/test_hermes_tavern_codestable_status.py
+    description: All Phase 168-515 labels are present in order with the Phase 515 label appended exactly once.
+    status: passed
