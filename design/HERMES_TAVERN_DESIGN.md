@@ -2115,7 +2115,7 @@ Acceptance:
 Create an implementation plan:
 
 ```text
-.hermes/plans/hermes-tavern-implementation-v0.1.md
+design/plans/hermes-tavern-implementation-v0.1.md
 ```
 
 The plan should break Phase 1–3 into bite-sized TDD tasks:

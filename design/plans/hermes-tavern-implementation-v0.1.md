@@ -12,7 +12,7 @@
 
 ## Read First
 
-- `HERMES_TAVERN_DESIGN.md`
+- `design/HERMES_TAVERN_DESIGN.md`
 - `AGENTS.md`, especially plugin and testing sections
 - `hermes_cli/plugins.py`
 - `gateway/run.py` around `pre_gateway_dispatch`
@@ -429,7 +429,7 @@ Expected: all selected tests pass.
 Use this as the first Codex prompt for a narrow implementation slice:
 
 ```text
-Implement Hermes Tavern Phase 1-3 foundation from .hermes/plans/hermes-tavern-implementation-v0.1.md.
+Implement Hermes Tavern Phase 1-3 foundation from design/plans/hermes-tavern-implementation-v0.1.md.
 
 Scope for this Codex run:
 - Tasks 1-4 only: plugin skeleton, session identity utilities, /rp command parser, SQLite store/migrations.

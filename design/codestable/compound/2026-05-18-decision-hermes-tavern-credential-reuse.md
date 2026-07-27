@@ -56,4 +56,4 @@ Tavern DB（SQLite）只存储逻辑性的"模型档案"（model profile）引�
 - `HERMES_TAVERN_DESIGN.md` §19（禁止打印/泄露 API key）
 - `.codestable/attention.md` §环境变量与凭证
 - `hermes_cli.runtime_provider.resolve_runtime_provider`（凭证解析入口）
-- `.hermes/plans/hermes-tavern-implementation-v0.1.md`
+- `design/plans/hermes-tavern-implementation-v0.1.md`

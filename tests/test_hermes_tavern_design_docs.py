@@ -4,6 +4,19 @@ import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 DESIGN_DOC = REPO_ROOT / "design" / "HERMES_TAVERN_DESIGN.md"
+IMPLEMENTATION_PLAN = REPO_ROOT / "design" / "plans" / "hermes-tavern-implementation-v0.1.md"
+ATTENTION_DOC = REPO_ROOT / "design" / "codestable" / "attention.md"
+CREDENTIAL_REUSE_DECISION = (
+    REPO_ROOT
+    / "design"
+    / "codestable"
+    / "compound"
+    / "2026-05-18-decision-hermes-tavern-credential-reuse.md"
+)
+OBSOLETE_IMPLEMENTATION_PLAN = (
+    REPO_ROOT / ".hermes" / "plans" / "hermes-tavern-implementation-v0.1.md"
+)
+CANONICAL_IMPLEMENTATION_PLAN_PATH = "design/plans/hermes-tavern-implementation-v0.1.md"
 
 EXPECTED_EXPORT_LITERALS = (
     "/rp relationship export <relationship-id>",
@@ -101,3 +114,24 @@ def test_design_docs_include_missing_export_command_literals(literal: str) -> No
     assert any(_line_has_literal(surface, literal) for surface in surfaces), (
         f"Missing command literal in writing command surface: {literal}"
     )
+
+
+def test_design_docs_use_the_canonical_implementation_plan_path() -> None:
+    assert DESIGN_DOC.is_file()
+    assert IMPLEMENTATION_PLAN.is_file()
+    assert CREDENTIAL_REUSE_DECISION.is_file()
+    assert not OBSOLETE_IMPLEMENTATION_PLAN.exists()
+
+    obsolete_path = ".hermes/plans/hermes-tavern-implementation-v0.1.md"
+    for authority_document in (
+        DESIGN_DOC,
+        IMPLEMENTATION_PLAN,
+        ATTENTION_DOC,
+        CREDENTIAL_REUSE_DECISION,
+    ):
+        text = authority_document.read_text(encoding="utf-8")
+        assert CANONICAL_IMPLEMENTATION_PLAN_PATH in text
+        assert obsolete_path not in text
+
+    plan_text = IMPLEMENTATION_PLAN.read_text(encoding="utf-8")
+    assert "- `design/HERMES_TAVERN_DESIGN.md`" in plan_text
