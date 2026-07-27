@@ -20,7 +20,7 @@ This planning-only phase records a narrow later implementation slice to correct 
 
 The later implementation must update only the five known stale path references: root design section 23, the attention entry, the implementation plan Read First reference and self-reference, and the active credential-reuse decision reference. A focused static test must prove both canonical paths exist, the obsolete `.hermes/plans/hermes-tavern-implementation-v0.1.md` path remains absent, and the four current authority documents no longer contain that obsolete plan path.
 
-After the path contract passes, the later slice may advance canonical attention/status evidence through Phase 520 only. It must retain Phase 1–519 history, exclude Phase 521, preserve ordering/uniqueness guards, and leave the adult-fiction safety boundary in root design section 12.3 unchanged.
+After the path contract passes, the later slice records Phase 520 as pending independent controller verification while retaining accepted history through Phase 519 only. It must exclude Phase 521, preserve ordering/uniqueness guards, and leave the adult-fiction safety boundary in root design section 12.3 unchanged.
 
 ## Boundaries
 
@@ -28,7 +28,7 @@ The planned implementation allowlist is `design/HERMES_TAVERN_DESIGN.md`, `desig
 
 ## Lifecycle
 
-This artifact passed a fresh implementation-stage architecture validation. The bounded executor implementation is complete, but acceptance and final lifecycle promotion remain controller-owned.
+This artifact is a pending controller-verification handoff. The bounded executor implementation is complete, but acceptance and final lifecycle promotion remain controller-owned; no acceptance artifact is created by this repair.
 
 ## Verification
 

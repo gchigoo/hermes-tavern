@@ -19,10 +19,11 @@ PHASE_518_DIR = REPO_ROOT / "design/codestable/features/2026-07-24-hermes-tavern
 PHASE_518_DESIGN = PHASE_518_DIR / "2026-07-24-hermes-tavern-phase518-phase517-lifecycle-coverage-parity-design.md"
 PHASE_518_CHECKLIST = PHASE_518_DIR / "2026-07-24-hermes-tavern-phase518-phase517-lifecycle-coverage-parity-checklist.yaml"
 PHASE_518_ACCEPTANCE = PHASE_518_DIR / "2026-07-24-hermes-tavern-phase518-phase517-lifecycle-coverage-parity-acceptance.md"
-CURRENT_STATUS_PREFIX = "Current status (2026-06-18): All phases 1-520 accepted"
-STALE_STATUS_PREFIX = "Current status (2026-06-18): All phases 1-519 accepted"
-STALE_PHASE_MARKER = "1-519"
-STALE_PHASE_MARKER_EN_DASH = "1–519"
+PENDING_PHASE_520_STATUS = "Phase 520 canonical design-plan path parity is pending independent controller verification"
+CURRENT_STATUS_PREFIX = "Current status (2026-06-18): All phases 1-519 accepted; Phase 520 canonical design-plan path parity is pending independent controller verification"
+STALE_STATUS_PREFIX = "Current status (2026-06-18): All phases 1-520 accepted"
+STALE_PHASE_MARKER = "1-520"
+STALE_PHASE_MARKER_EN_DASH = "1–520"
 OLDER_STALE_STATUS_PREFIX = "Current status (2026-06-18): All phases 1-518 accepted"
 OLDER_STALE_PHASE_MARKER = "1-518"
 OLDER_STALE_PHASE_MARKER_EN_DASH = "1–518"
@@ -487,15 +488,17 @@ def test_attention_current_status_line_is_current():
     assert status_index < lines.index(credentials_header)
 
     assert status.startswith(f"- {CURRENT_STATUS_PREFIX}")
+    assert status.count(PENDING_PHASE_520_STATUS) == 1
+    phase_labels_status = status[len(f"- {CURRENT_STATUS_PREFIX}") :]
     assert len(REQUIRED_PHASE_LABELS) == 353
     phase_range = range(168, 521)
     assert [int(label.split()[1]) for label in REQUIRED_PHASE_LABELS] == list(phase_range)
     for label in REQUIRED_PHASE_LABELS:
-        assert label in status
-    assert [status.index(label) for label in REQUIRED_PHASE_LABELS] == sorted(
-        status.index(label) for label in REQUIRED_PHASE_LABELS
+        assert label in phase_labels_status
+    assert [phase_labels_status.index(label) for label in REQUIRED_PHASE_LABELS] == sorted(
+        phase_labels_status.index(label) for label in REQUIRED_PHASE_LABELS
     )
-    assert status.count(REQUIRED_PHASE_LABELS[-1]) == 1
+    assert phase_labels_status.count(REQUIRED_PHASE_LABELS[-1]) == 1
     assert STALE_STATUS_PREFIX not in status
     assert OLDER_STALE_STATUS_PREFIX not in status
     assert re.search(rf"(?<!\d){re.escape(STALE_PHASE_MARKER)}(?!\d)", status) is None
@@ -512,16 +515,18 @@ def test_attention_current_status_line_is_current():
     aggregate_range = "range(168, 521)"
     stale_aggregate_guard = "".join(["range(168, ", str(phase_range.stop - 1), ")"])
     later_phase_label = f"Phase {phase_range.stop} "
-    assert all(f"Phase {phase} " in status for phase in phase_range)
-    assert all(status.count(label) == 1 for label in REQUIRED_PHASE_LABELS)
+    assert all(f"Phase {phase} " in phase_labels_status for phase in phase_range)
+    assert all(phase_labels_status.count(label) == 1 for label in REQUIRED_PHASE_LABELS)
     assert later_phase_label not in status
     assert re.search(r"(?<!\d)Phase 121-167(?!\d)", status) is not None
     test = Path(__file__).read_text(encoding="utf-8")
     assert later_phase_label not in test
     assert aggregate_range in test
     assert stale_aggregate_guard not in test
+    assert re.findall(r"^PENDING_PHASE_520_STATUS\s*=", test, re.M) == ["PENDING_PHASE_520_STATUS ="]
     assert re.findall(r"^CURRENT_STATUS_PREFIX\s*=", test, re.M) == ["CURRENT_STATUS_PREFIX ="]
     assert re.findall(r"^FINAL_STATUS_SUFFIX\s*=", test, re.M) == ["FINAL_STATUS_SUFFIX ="]
+    assert PENDING_PHASE_520_STATUS in test
     assert CURRENT_STATUS_PREFIX in test
     assert all(label in test for label in REQUIRED_PHASE_LABELS)
     stale_aggregate_range_519 = "".join(["range(168, ", "51", "9", ")"])

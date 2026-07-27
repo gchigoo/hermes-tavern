@@ -17,6 +17,12 @@ OBSOLETE_IMPLEMENTATION_PLAN = (
     REPO_ROOT / ".hermes" / "plans" / "hermes-tavern-implementation-v0.1.md"
 )
 CANONICAL_IMPLEMENTATION_PLAN_PATH = "design/plans/hermes-tavern-implementation-v0.1.md"
+CANONICAL_DESIGN_DOC_PATH = "design/HERMES_TAVERN_DESIGN.md"
+NONCANONICAL_ROOT_DESIGN_DOC_REFERENCE = "`" + "HERMES_TAVERN_DESIGN.md" + "`"
+PENDING_PHASE_520_STATUS = (
+    "Current status (2026-06-18): All phases 1-519 accepted; "
+    "Phase 520 canonical design-plan path parity is pending independent controller verification"
+)
 
 EXPECTED_EXPORT_LITERALS = (
     "/rp relationship export <relationship-id>",
@@ -134,4 +140,13 @@ def test_design_docs_use_the_canonical_implementation_plan_path() -> None:
         assert obsolete_path not in text
 
     plan_text = IMPLEMENTATION_PLAN.read_text(encoding="utf-8")
-    assert "- `design/HERMES_TAVERN_DESIGN.md`" in plan_text
+    assert f"- `{CANONICAL_DESIGN_DOC_PATH}`" in plan_text
+
+    attention_text = ATTENTION_DOC.read_text(encoding="utf-8")
+    assert f"- Design doc: `{CANONICAL_DESIGN_DOC_PATH}`." in attention_text
+    assert NONCANONICAL_ROOT_DESIGN_DOC_REFERENCE not in attention_text
+    assert PENDING_PHASE_520_STATUS in attention_text
+
+    credential_reuse_text = CREDENTIAL_REUSE_DECISION.read_text(encoding="utf-8")
+    assert f"- `{CANONICAL_DESIGN_DOC_PATH}` §19" in credential_reuse_text
+    assert NONCANONICAL_ROOT_DESIGN_DOC_REFERENCE not in credential_reuse_text
