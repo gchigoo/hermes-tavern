@@ -19,9 +19,9 @@ steps:
     status: done
     evidence: "Controller: YAML validation, py_compile, focused pytest (3 passed), full pytest (1217 passed), and diff check all passed after lifecycle promotion."
   - id: controller-verification
-    title: Parent verification without acceptance artifact
-    action: Parent controller independently reruns every declared verification command and finalizes lifecycle state.
-    exit_signal: Controller evidence is recorded only after all gates pass.
+    title: Parent verification with accepted acceptance artifact
+    action: Parent controller independently reruns every declared verification command and finalizes lifecycle state with the acceptance artifact.
+    exit_signal: Controller evidence is recorded with the accepted acceptance artifact after all gates pass.
     status: done
     evidence: "Controller: all declared verification gates passed independently — YAML validation (2/2), py_compile, focused pytest (3 passed), full pytest (1217 passed), diff check."
 checks:

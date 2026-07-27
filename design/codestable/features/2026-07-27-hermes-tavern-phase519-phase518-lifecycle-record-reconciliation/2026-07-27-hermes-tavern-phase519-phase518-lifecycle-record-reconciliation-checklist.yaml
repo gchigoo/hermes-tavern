@@ -1,0 +1,47 @@
+doc_type: feature-checklist
+feature: 2026-07-27-hermes-tavern-phase519-phase518-lifecycle-record-reconciliation
+requirement: docs
+created: 2026-07-27
+status: accepted
+tags: [codestable, lifecycle, docs, static-test]
+verification_commands:
+  - "python3 design/codestable/tools/validate-yaml.py --dir design/codestable/features/2026-07-27-hermes-tavern-phase519-phase518-lifecycle-record-reconciliation"
+  - "python3 design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-07-27-hermes-tavern-phase519-phase518-lifecycle-record-reconciliation/2026-07-27-hermes-tavern-phase519-phase518-lifecycle-record-reconciliation-checklist.yaml --yaml-only"
+  - "python3 design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-07-24-hermes-tavern-phase518-phase517-lifecycle-coverage-parity/2026-07-24-hermes-tavern-phase518-phase517-lifecycle-coverage-parity-design.md --require parent_verification_status --require acceptance_state"
+  - "python -m py_compile tests/test_hermes_tavern_codestable_status.py"
+  - "python -m pytest tests/test_hermes_tavern_codestable_status.py -q -o 'addopts=' -p no:cacheprovider"
+  - "python -m pytest -q -o 'addopts=' -p no:cacheprovider"
+  - "git diff --check"
+  - "git status --short --untracked-files=all"
+  - "git diff --name-only"
+  - "git ls-files --others --exclude-standard"
+steps:
+  - id: reconcile-phase518-lifecycle-record
+    title: Reconcile Phase 518 accepted lifecycle records
+    action: Update only contradictory Phase 518 lifecycle metadata/prose and lock it with the focused status test.
+    exit_signal: The focused test proves the Phase 518 design/checklist/acceptance records agree.
+    status: done
+    evidence: "Executor: reconciled the Phase 518 design/checklist lifecycle records and added the focused agreement assertions. YAML validation passed (Phase 519 directory: 2 passed; Phase 519 checklist: 1 passed; Phase 518 design: 1 passed); py_compile passed; focused pytest: 3 passed."
+  - id: advance-phase519-status
+    title: Advance canonical attention status
+    action: Advance attention and focused status invariants to Phase 519 without weakening historical guards.
+    exit_signal: Attention status contains every ordered Phase 168-519 label once and excludes Phase 520.
+    status: done
+    evidence: "Executor: advanced attention and focused status invariants through Phase 519, preserving historical labels, range/stale guards, and the Phase 520 exclusion. Focused pytest: 3 passed."
+  - id: controller-verification
+    title: Complete independent controller verification
+    action: Rerun all declared validation, focused, full, and scope gates before lifecycle promotion.
+    exit_signal: Only controller-run evidence may finalize this feature.
+    status: done
+    evidence: "Controller: Phase 519 YAML validation (2/2), checklist YAML validation (1/1), Phase 518 required metadata validation (1/1), py_compile, focused pytest (3 passed), full pytest (1217 passed), exact six-file implementation scope, and diff check all passed before lifecycle promotion; post-promotion validation and final review are recorded after they complete."
+checks:
+  - id: phase518-record-consistency
+    title: Phase 518 lifecycle records are consistent
+    item: Accepted Phase 518 design, checklist, and acceptance artifact have no pending/no-acceptance contradiction.
+    source: tests/test_hermes_tavern_codestable_status.py
+    status: passed
+  - id: phase519-status-line
+    title: Canonical current status advances to Phase 519
+    item: attention.md records Phase 519 exactly once with preserved historical ordering and stale guards.
+    source: design/codestable/attention.md
+    status: passed

@@ -4,8 +4,8 @@ feature: 2026-07-24-hermes-tavern-phase518-phase517-lifecycle-coverage-parity
 status: approved
 implementation_ready: true
 bounded_phase: docs/static-test/lifecycle-hardening
-parent_verification_status: pending_parent_verification
-acceptance_state: pending_parent_verification
+parent_verification_status: verified
+acceptance_state: accepted
 summary: Approved Phase 518 coverage parity for the accepted Phase 517 checklist lifecycle.
 tags: [codestable, lifecycle, docs, static-test]
 ---
@@ -28,7 +28,7 @@ Only attention, the focused status test, and this feature's design/checklist may
 
 ## Lifecycle
 
-This slice has no acceptance artifact. During executor work the checklist remains non-final. The parent controller finalizes it only after independently rerunning every declared verification gate.
+This slice has an accepted acceptance artifact. The parent controller independently reran every declared verification gate and finalized the lifecycle.
 
 ## Verification
 
