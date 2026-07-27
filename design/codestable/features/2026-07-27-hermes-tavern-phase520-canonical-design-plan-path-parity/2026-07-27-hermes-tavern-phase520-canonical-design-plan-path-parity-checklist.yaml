@@ -1,0 +1,40 @@
+doc_type: feature-checklist
+feature: 2026-07-27-hermes-tavern-phase520-canonical-design-plan-path-parity
+requirement: docs
+created: 2026-07-27
+status: planned
+tags: [codestable, docs, static-test, canonical-path]
+verification_commands:
+  - "python3 design/codestable/tools/validate-yaml.py --dir design/codestable/features/2026-07-27-hermes-tavern-phase520-canonical-design-plan-path-parity"
+  - "python3 design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-07-27-hermes-tavern-phase520-canonical-design-plan-path-parity/2026-07-27-hermes-tavern-phase520-canonical-design-plan-path-parity-checklist.yaml --yaml-only"
+  - "python -m py_compile tests/test_hermes_tavern_design_docs.py tests/test_hermes_tavern_codestable_status.py"
+  - "python -m pytest tests/test_hermes_tavern_design_docs.py tests/test_hermes_tavern_codestable_status.py -q -o 'addopts=' -p no:cacheprovider"
+  - "python -m pytest -q -o 'addopts=' -p no:cacheprovider"
+  - "git diff --check"
+steps:
+  - id: canonicalize-design-plan-paths
+    title: Canonicalize current design-plan references
+    action: Correct the four current path references without creating, moving, or copying plan files.
+    exit_signal: Focused documentation test proves both canonical files exist and obsolete plan references are absent.
+    status: planned
+  - id: advance-phase520-status
+    title: Advance canonical status only after path parity
+    action: Advance attention and focused status invariants through Phase 520 after the path contract passes.
+    exit_signal: Ordered Phase 168-520 labels are unique and Phase 521 remains absent.
+    status: planned
+  - id: controller-verification
+    title: Complete independent controller verification
+    action: Run declared validators, focused and full tests, exact-scope and whitespace gates before any lifecycle promotion.
+    exit_signal: Only controller-run evidence can create acceptance and finalize lifecycle state.
+    status: planned
+checks:
+  - id: canonical-plan-authority
+    title: One tracked canonical implementation plan
+    item: Current authority documents reference design/plans/hermes-tavern-implementation-v0.1.md and no second plan authority is created.
+    source: tests/test_hermes_tavern_design_docs.py
+    status: pending
+  - id: phase520-status-line
+    title: Canonical current status advances through Phase 520
+    item: attention.md records Phase 520 once with historical ordering and stale guards preserved.
+    source: tests/test_hermes_tavern_codestable_status.py
+    status: pending
