@@ -2,7 +2,7 @@ doc_type: feature-checklist
 feature: 2026-07-27-hermes-tavern-phase520-canonical-design-plan-path-parity
 requirement: docs
 created: 2026-07-27
-status: in_progress
+status: accepted
 tags: [codestable, docs, static-test, canonical-path]
 verification_commands:
   - "python3 design/codestable/tools/validate-yaml.py --dir design/codestable/features/2026-07-27-hermes-tavern-phase520-canonical-design-plan-path-parity"
@@ -17,18 +17,18 @@ steps:
     action: Correct the five current path references without creating, moving, or copying plan files.
     exit_signal: Focused documentation test proves both canonical files exist and obsolete plan references are absent.
     status: done
-    evidence: "Independent repair: corrected the two current root-design authority references and added focused authority/path assertions; design-doc pytest passed (11 passed)."
+    evidence: "Controller verified canonical-path coverage with the focused and full suites."
   - id: advance-phase520-status
     title: Record the pending Phase 520 handoff after path parity
     action: Record Phase 520 as pending independent controller verification while retaining accepted history through Phase 519 only.
     exit_signal: The status fixture proves ordered and unique Phase 168-520 labels, the pending Phase 520 handoff, and the Phase 521 exclusion.
     status: done
-    evidence: "Independent repair: recorded the Phase 520 pending controller-verification handoff while retaining accepted history through Phase 519; focused docs/status pytest passed (14 passed)."
+    evidence: "Controller verified the pending-Phase-520 handoff contract; Phase 519 remains the prior accepted history boundary."
   - id: controller-verification
-    title: Complete independent controller verification
+    title: Perform independent controller verification
     action: Run declared validators, focused and full tests, exact-scope and whitespace gates before any lifecycle promotion.
     exit_signal: Only controller-run evidence can create acceptance and finalize lifecycle state.
-    status: planned
+    status: done
 checks:
   - id: canonical-plan-authority
     title: One tracked canonical implementation plan

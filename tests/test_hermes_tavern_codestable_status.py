@@ -19,6 +19,10 @@ PHASE_518_DIR = REPO_ROOT / "design/codestable/features/2026-07-24-hermes-tavern
 PHASE_518_DESIGN = PHASE_518_DIR / "2026-07-24-hermes-tavern-phase518-phase517-lifecycle-coverage-parity-design.md"
 PHASE_518_CHECKLIST = PHASE_518_DIR / "2026-07-24-hermes-tavern-phase518-phase517-lifecycle-coverage-parity-checklist.yaml"
 PHASE_518_ACCEPTANCE = PHASE_518_DIR / "2026-07-24-hermes-tavern-phase518-phase517-lifecycle-coverage-parity-acceptance.md"
+PHASE_520_DIR = REPO_ROOT / "design/codestable/features/2026-07-27-hermes-tavern-phase520-canonical-design-plan-path-parity"
+PHASE_520_DESIGN = PHASE_520_DIR / "2026-07-27-hermes-tavern-phase520-canonical-design-plan-path-parity-design.md"
+PHASE_520_CHECKLIST = PHASE_520_DIR / "2026-07-27-hermes-tavern-phase520-canonical-design-plan-path-parity-checklist.yaml"
+PHASE_520_ACCEPTANCE = PHASE_520_DIR / "2026-07-27-hermes-tavern-phase520-canonical-design-plan-path-parity-acceptance.md"
 PENDING_PHASE_520_STATUS = "Phase 520 canonical design-plan path parity is pending independent controller verification"
 CURRENT_STATUS_PREFIX = "Current status (2026-06-18): All phases 1-519 accepted; Phase 520 canonical design-plan path parity is pending independent controller verification"
 STALE_STATUS_PREFIX = "Current status (2026-06-18): All phases 1-520 accepted"
@@ -466,6 +470,35 @@ def test_status_sync_checklists_have_expected_lifecycle_contract():
     assert "pending_parent_verification" not in phase_518_design_text
     assert "no acceptance artifact" not in phase_518_design_text.lower()
     assert "without acceptance artifact" not in phase_518_checklist_text.lower()
+
+
+def test_phase520_accepted_closeout_has_controller_evidence():
+    phase_520_design_text = PHASE_520_DESIGN.read_text(encoding="utf-8")
+    phase_520_design = yaml.safe_load(phase_520_design_text.split("---", 2)[1])
+    phase_520_checklist = yaml.safe_load(PHASE_520_CHECKLIST.read_text(encoding="utf-8"))
+    phase_520_acceptance = yaml.safe_load(
+        PHASE_520_ACCEPTANCE.read_text(encoding="utf-8").split("---", 2)[1]
+    )
+
+    expected_feature = "2026-07-27-hermes-tavern-phase520-canonical-design-plan-path-parity"
+    assert {
+        phase_520_design["feature"],
+        phase_520_checklist["feature"],
+        phase_520_acceptance["feature"],
+    } == {expected_feature}
+    assert phase_520_design["status"] == "approved"
+    assert phase_520_design["parent_verification_status"] == "completed"
+    assert phase_520_design["acceptance_state"] == "accepted"
+    assert phase_520_checklist["status"] == "accepted"
+    assert phase_520_acceptance["doc_type"] == "feature-acceptance"
+    assert phase_520_acceptance["status"] == "accepted"
+    assert str(phase_520_acceptance["accepted_at"]) == "2026-07-28"
+    assert phase_520_acceptance["audit_state"] == "passed"
+    assert phase_520_acceptance["controller_verification_state"] == "completed"
+    assert all(step.get("status") == "done" for step in phase_520_checklist["steps"])
+    assert all(check.get("status") == "passed" for check in phase_520_checklist["checks"])
+    assert "must exclude Phase 521" in phase_520_design_text
+    assert "Phase 521" not in PHASE_520_ACCEPTANCE.read_text(encoding="utf-8")
 
 
 def test_attention_current_status_line_is_current():

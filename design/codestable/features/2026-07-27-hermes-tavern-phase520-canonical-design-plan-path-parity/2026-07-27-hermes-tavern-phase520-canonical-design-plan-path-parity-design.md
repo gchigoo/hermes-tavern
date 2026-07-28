@@ -4,8 +4,8 @@ feature: 2026-07-27-hermes-tavern-phase520-canonical-design-plan-path-parity
 status: approved
 implementation_ready: true
 bounded_phase: docs/static-test/canonical-path-parity
-parent_verification_status: pending
-acceptance_state: not_started
+parent_verification_status: completed
+acceptance_state: accepted
 summary: Plan the canonical design and implementation-plan path parity correction without creating a second plan authority.
 tags: [codestable, docs, static-test, canonical-path]
 ---
@@ -28,7 +28,7 @@ The planned implementation allowlist is `design/HERMES_TAVERN_DESIGN.md`, `desig
 
 ## Lifecycle
 
-This artifact is a pending controller-verification handoff. The bounded executor implementation is complete, but acceptance and final lifecycle promotion remain controller-owned; no acceptance artifact is created by this repair.
+Controller verification completed the declared YAML, compile, focused, full-suite, scope, and whitespace gates. The company-policy final Architect review returned PASS, so the lifecycle is accepted; the acceptance artifact records the controller evidence.
 
 ## Verification
 
