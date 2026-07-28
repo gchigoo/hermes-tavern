@@ -23,8 +23,11 @@ PHASE_520_DIR = REPO_ROOT / "design/codestable/features/2026-07-27-hermes-tavern
 PHASE_520_DESIGN = PHASE_520_DIR / "2026-07-27-hermes-tavern-phase520-canonical-design-plan-path-parity-design.md"
 PHASE_520_CHECKLIST = PHASE_520_DIR / "2026-07-27-hermes-tavern-phase520-canonical-design-plan-path-parity-checklist.yaml"
 PHASE_520_ACCEPTANCE = PHASE_520_DIR / "2026-07-27-hermes-tavern-phase520-canonical-design-plan-path-parity-acceptance.md"
-PENDING_PHASE_520_STATUS = "Phase 520 canonical design-plan path parity is pending independent controller verification"
-CURRENT_STATUS_PREFIX = "Current status (2026-06-18): All phases 1-519 accepted; Phase 520 canonical design-plan path parity is pending independent controller verification"
+PHASE_521_DIR = REPO_ROOT / "design/codestable/features/2026-07-28-hermes-tavern-phase521-attention-status-sync-through-phase520"
+PHASE_521_DESIGN = PHASE_521_DIR / "2026-07-28-hermes-tavern-phase521-attention-status-sync-through-phase520-design.md"
+PHASE_521_CHECKLIST = PHASE_521_DIR / "2026-07-28-hermes-tavern-phase521-attention-status-sync-through-phase520-checklist.yaml"
+PHASE_521_ACCEPTANCE = PHASE_521_DIR / "2026-07-28-hermes-tavern-phase521-attention-status-sync-through-phase520-acceptance.md"
+CURRENT_STATUS_PREFIX = "Current status (2026-06-18): All phases 1-521 accepted"
 STALE_STATUS_PREFIX = "Current status (2026-06-18): All phases 1-520 accepted"
 STALE_PHASE_MARKER = "1-520"
 STALE_PHASE_MARKER_EN_DASH = "1–520"
@@ -391,8 +394,9 @@ REQUIRED_PHASE_LABELS = [
     "Phase 518 phase517 lifecycle coverage parity",
     "Phase 519 phase518 lifecycle record reconciliation",
     "Phase 520 canonical design-plan path parity",
+    "Phase 521 attention status sync through Phase 520",
 ]
-FINAL_STATUS_SUFFIX = "Phase 516 attention status sync through Phase 515, Phase 517 attention status sync through Phase 516, Phase 518 phase517 lifecycle coverage parity, Phase 519 phase518 lifecycle record reconciliation, and Phase 520 canonical design-plan path parity."
+FINAL_STATUS_SUFFIX = "Phase 516 attention status sync through Phase 515, Phase 517 attention status sync through Phase 516, Phase 518 phase517 lifecycle coverage parity, Phase 519 phase518 lifecycle record reconciliation, Phase 520 canonical design-plan path parity, and Phase 521 attention status sync through Phase 520."
 
 
 def test_status_sync_checklists_have_expected_lifecycle_contract():
@@ -501,6 +505,35 @@ def test_phase520_accepted_closeout_has_controller_evidence():
     assert "Phase 521" not in PHASE_520_ACCEPTANCE.read_text(encoding="utf-8")
 
 
+def test_phase521_accepted_closeout_has_controller_evidence():
+    phase_521_design_text = PHASE_521_DESIGN.read_text(encoding="utf-8")
+    phase_521_design = yaml.safe_load(phase_521_design_text.split("---", 2)[1])
+    phase_521_checklist = yaml.safe_load(PHASE_521_CHECKLIST.read_text(encoding="utf-8"))
+    phase_521_acceptance = yaml.safe_load(
+        PHASE_521_ACCEPTANCE.read_text(encoding="utf-8").split("---", 2)[1]
+    )
+
+    expected_feature = "2026-07-28-hermes-tavern-phase521-attention-status-sync-through-phase520"
+    assert {
+        phase_521_design["feature"],
+        phase_521_checklist["feature"],
+        phase_521_acceptance["feature"],
+    } == {
+        expected_feature
+    }
+    assert phase_521_design["status"] == "approved"
+    assert phase_521_design["parent_verification_status"] == "completed"
+    assert phase_521_design["acceptance_state"] == "accepted"
+    assert phase_521_checklist["status"] == "accepted"
+    assert phase_521_acceptance["doc_type"] == "feature-acceptance"
+    assert phase_521_acceptance["status"] == "accepted"
+    assert str(phase_521_acceptance["accepted_at"]) == "2026-07-28"
+    assert phase_521_acceptance["controller_verification_state"] == "completed"
+    assert all(step.get("status") == "done" for step in phase_521_checklist["steps"])
+    assert all(check.get("status") == "passed" for check in phase_521_checklist["checks"])
+    assert "pending independent controller verification" not in phase_521_design_text
+
+
 def test_attention_current_status_line_is_current():
     lines = ATTENTION_DOC.read_text(encoding="utf-8").splitlines()
 
@@ -521,10 +554,9 @@ def test_attention_current_status_line_is_current():
     assert status_index < lines.index(credentials_header)
 
     assert status.startswith(f"- {CURRENT_STATUS_PREFIX}")
-    assert status.count(PENDING_PHASE_520_STATUS) == 1
     phase_labels_status = status[len(f"- {CURRENT_STATUS_PREFIX}") :]
-    assert len(REQUIRED_PHASE_LABELS) == 353
-    phase_range = range(168, 521)
+    assert len(REQUIRED_PHASE_LABELS) == 354
+    phase_range = range(168, 522)
     assert [int(label.split()[1]) for label in REQUIRED_PHASE_LABELS] == list(phase_range)
     for label in REQUIRED_PHASE_LABELS:
         assert label in phase_labels_status
@@ -545,7 +577,7 @@ def test_attention_current_status_line_is_current():
     assert re.search(rf"(?<!\d){re.escape(EARLIEST_STALE_PHASE_MARKER)}(?!\d)", status) is None
     assert re.search(rf"(?<!\d){re.escape(EARLIEST_STALE_PHASE_MARKER_EN_DASH)}(?!\d)", status) is None
     assert status.endswith(FINAL_STATUS_SUFFIX)
-    aggregate_range = "range(168, 521)"
+    aggregate_range = "range(168, 522)"
     stale_aggregate_guard = "".join(["range(168, ", str(phase_range.stop - 1), ")"])
     later_phase_label = f"Phase {phase_range.stop} "
     assert all(f"Phase {phase} " in phase_labels_status for phase in phase_range)
@@ -556,12 +588,11 @@ def test_attention_current_status_line_is_current():
     assert later_phase_label not in test
     assert aggregate_range in test
     assert stale_aggregate_guard not in test
-    assert re.findall(r"^PENDING_PHASE_520_STATUS\s*=", test, re.M) == ["PENDING_PHASE_520_STATUS ="]
     assert re.findall(r"^CURRENT_STATUS_PREFIX\s*=", test, re.M) == ["CURRENT_STATUS_PREFIX ="]
     assert re.findall(r"^FINAL_STATUS_SUFFIX\s*=", test, re.M) == ["FINAL_STATUS_SUFFIX ="]
-    assert PENDING_PHASE_520_STATUS in test
     assert CURRENT_STATUS_PREFIX in test
     assert all(label in test for label in REQUIRED_PHASE_LABELS)
+    stale_aggregate_range_521 = "".join(["range(168, ", "52", "1", ")"])
     stale_aggregate_range_519 = "".join(["range(168, ", "51", "9", ")"])
     stale_aggregate_range_518 = "".join(["range(168, ", "51", "8", ")"])
     stale_aggregate_range_506 = "".join(["range(168, ", "50", "6", ")"])
@@ -783,6 +814,7 @@ def test_attention_current_status_line_is_current():
     stale_aggregate_range_282 = "".join(["range(168, ", "28", "2", ")"])
     stale_aggregate_range_281 = "".join(["range(168, ", "28", "1", ")"])
     for stale_range in (
+        stale_aggregate_range_521,
         stale_aggregate_range_519,
         stale_aggregate_range_518,
         stale_aggregate_range_506,
@@ -1004,6 +1036,7 @@ def test_attention_current_status_line_is_current():
         stale_aggregate_range_376,
     ):
         assert stale_range not in test
+    stale_aggregate_guard_521 = "".join(["range(168, ", "52", str(1), ")"])
     stale_aggregate_guard_518 = "".join(["range(168, ", "51", str(8), ")"])
     stale_aggregate_guard_510 = "".join(["range(168, ", "51", str(0), ")"])
     stale_aggregate_guard_509 = "".join(["range(168, ", "50", str(9), ")"])
@@ -1095,6 +1128,7 @@ def test_attention_current_status_line_is_current():
     stale_aggregate_guard_422 = "".join(["range(168, ", "42", str(2), ")"])
     stale_aggregate_guard_423 = "".join(["range(168, ", "42", str(3), ")"])
     stale_aggregate_guard_424 = "".join(["range(168, ", "42", str(4), ")"])
+    assert stale_aggregate_guard_521 not in test
     assert stale_aggregate_guard_518 not in test
     assert stale_aggregate_guard_510 not in test
     assert stale_aggregate_guard_509 not in test

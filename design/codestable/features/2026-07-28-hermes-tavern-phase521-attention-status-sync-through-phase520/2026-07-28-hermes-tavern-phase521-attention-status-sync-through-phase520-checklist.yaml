@@ -1,0 +1,37 @@
+doc_type: feature-checklist
+feature: 2026-07-28-hermes-tavern-phase521-attention-status-sync-through-phase520
+requirement: docs
+created: 2026-07-28
+status: accepted
+tags: [codestable, docs, static-test, status-sync]
+verification_commands:
+  - "python3 design/codestable/tools/validate-yaml.py --dir design/codestable/features/2026-07-28-hermes-tavern-phase521-attention-status-sync-through-phase520"
+  - "python3 design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-07-28-hermes-tavern-phase521-attention-status-sync-through-phase520/2026-07-28-hermes-tavern-phase521-attention-status-sync-through-phase520-checklist.yaml --yaml-only"
+  - "python -m py_compile tests/test_hermes_tavern_design_docs.py tests/test_hermes_tavern_codestable_status.py"
+  - "python -m pytest tests/test_hermes_tavern_design_docs.py tests/test_hermes_tavern_codestable_status.py -q -o 'addopts=' -p no:cacheprovider"
+  - "python -m pytest -q -o 'addopts=' -p no:cacheprovider"
+  - "git diff --check"
+steps:
+  - id: synchronize-phase521-status
+    title: Synchronize accepted history through Phase 520
+    action: Update the status line and static test invariants through accepted Phase 521.
+    exit_signal: Focused tests prove ordered unique labels 168–521, accepted history through Phase 521, and Phase 522 exclusion.
+    status: done
+    evidence: "Executor updated attention and both focused static tests through Phase 521; controller verification completed before lifecycle promotion."
+  - id: controller-verification
+    title: Perform independent controller verification
+    action: Run every declared controller gate before lifecycle promotion, then obtain the final Architect review after promotion.
+    exit_signal: Controller gates support lifecycle promotion; the final audited Architect review completes closeout before commit.
+    status: done
+    evidence: "Controller gates passed before promotion; a first post-promotion review requested lifecycle-order wording correction, and the audited gpt-5.6-sol/max re-review returned PASS."
+checks:
+  - id: phase521-status-line
+    title: Accepted Phase 521 status
+    item: The attention current-status line records phases 1–521 accepted exactly once.
+    source: tests/test_hermes_tavern_codestable_status.py
+    status: passed
+  - id: canonical-plan-authority
+    title: Canonical implementation plan authority remains unchanged
+    item: Current authority documents retain the canonical design and implementation-plan paths with no mirror or second authority.
+    source: tests/test_hermes_tavern_design_docs.py
+    status: passed
