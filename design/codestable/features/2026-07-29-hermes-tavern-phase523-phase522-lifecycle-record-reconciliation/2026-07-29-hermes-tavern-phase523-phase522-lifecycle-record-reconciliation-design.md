@@ -5,9 +5,11 @@ requirement: docs
 status: approved
 implementation_ready: true
 bounded_phase: docs/static-test/lifecycle-reconciliation
-parent_verification_status: pending_parent_verification
-acceptance_state: pending_parent_verification
-summary: Approved S1 design to reconcile completed Phase 522 lifecycle prose and advance the canonical status through Phase 523.
+parent_verification_status: completed
+acceptance_state: accepted
+parent_verification_required: true
+parent_verification_completed: true
+summary: Parent-verified Phase 523 reconciliation of accepted Phase 522 lifecycle records and canonical status contracts.
 tags: [codestable, lifecycle, docs, static-test, status-sync]
 ---
 
@@ -28,11 +30,15 @@ Reconcile only stale future commit-gate prose in the completed Phase 522 design,
 
 S1 may change only `design/codestable/attention.md`, `tests/test_hermes_tavern_codestable_status.py`, `tests/test_hermes_tavern_design_docs.py`, the three Phase 522 artifacts, and this feature's design/checklist. Phase 521 artifacts remain unchanged. No acceptance artifact, commit, push, root plan, root design, runtime, plugin, gateway, provider, authentication, credential, network, cron, model, dependency, service-lifecycle, architecture, roadmap, requirements, README, CI, or other test/artifact work is in scope.
 
+S2 is limited to this feature's draft lifecycle documentation: this design, checklist, and the draft acceptance report. It does not alter the S1 implementation evidence or execute any verification gate.
+
 ## Lifecycle
 
-This is S1 only. The Phase 523 checklist remains non-final and pending independent Controller verification, acceptance, and promotion. Controller owns all post-S1 lifecycle actions.
+The parent independently reran the declared validators, Python compile, focused static suite, full suite, exact-scope review, and whitespace gate. The independent policy-aligned Architect review returned PASS. The Phase 523 checklist and acceptance report record that parent verification was required and completed; retained S1 evidence remains historical context rather than a substitute for those controller gates.
 
 ## Verification
+
+The Controller reran the following gates before lifecycle promotion:
 
 - `python3 design/codestable/tools/validate-yaml.py --dir design/codestable/features/2026-07-29-hermes-tavern-phase523-phase522-lifecycle-record-reconciliation`
 - `python3 design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-07-29-hermes-tavern-phase523-phase522-lifecycle-record-reconciliation/2026-07-29-hermes-tavern-phase523-phase522-lifecycle-record-reconciliation-checklist.yaml --yaml-only`

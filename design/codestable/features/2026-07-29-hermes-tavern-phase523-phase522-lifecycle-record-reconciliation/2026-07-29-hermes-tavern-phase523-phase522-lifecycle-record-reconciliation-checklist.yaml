@@ -2,16 +2,18 @@ doc_type: feature-checklist
 feature: 2026-07-29-hermes-tavern-phase523-phase522-lifecycle-record-reconciliation
 requirement: docs
 created: 2026-07-29
-status: implemented
-workflow_status: pending_parent_verification
-acceptance_state: pending_parent_verification
+status: accepted
+lifecycle_status: accepted
+workflow_status: accepted
+acceptance_state: accepted
 implementation_ready: true
 parent_verification_required: true
-parent_verification_completed: false
+parent_verification_completed: true
+controller_review_completed: true
 worker_commit_or_push_performed: false
 parent_commit_or_push_performed: false
-acceptance_artifact: null
-acceptance_md_present: false
+acceptance_artifact: design/codestable/features/2026-07-29-hermes-tavern-phase523-phase522-lifecycle-record-reconciliation/2026-07-29-hermes-tavern-phase523-phase522-lifecycle-record-reconciliation-acceptance.md
+acceptance_md_present: true
 tags: [codestable, lifecycle, docs, static-test, status-sync]
 verification_commands:
   - "python3 design/codestable/tools/validate-yaml.py --dir design/codestable/features/2026-07-29-hermes-tavern-phase523-phase522-lifecycle-record-reconciliation"
@@ -33,24 +35,37 @@ steps:
     exit_signal: Attention contains ordered unique Phase 168-523 labels, includes Phase 523 once, and excludes Phase 524.
     status: done
     evidence: "S1 advanced the canonical attention status and focused static contracts through Phase 523."
+  - id: draft-s2-lifecycle-documentation
+    title: Draft non-final Phase 523 lifecycle documentation
+    action: Create the acceptance report as a pending draft and retain the S1 evidence without performing verification or lifecycle promotion.
+    exit_signal: Design, checklist, and acceptance report explicitly identify independent Controller verification as pending.
+    status: done
+    evidence: "S2 drafted lifecycle prose only; no test, review, acceptance, promotion, commit, or push is recorded for this documentation turn."
   - id: controller-verification
     title: Perform independent Controller verification and lifecycle promotion
-    action: Controller reruns every declared validator, compile, focused/full test, scope, and whitespace gate before any acceptance or promotion action.
-    exit_signal: Controller independently records verification before deciding whether to promote this pending lifecycle.
-    status: pending
+    action: Controller reran every declared validator, compile, focused/full test, scope, and whitespace gate; independent Architect review then returned PASS.
+    exit_signal: Controller verification is recorded and the accepted lifecycle is internally consistent.
+    status: done
 checks:
   - id: phase522-lifecycle-consistency
     title: Phase 522 completed lifecycle records are consistent
     item: Phase 522 accepted structured fields and prose agree, retain accurate evidence, and omit stale future commit-gate wording.
     source: tests/test_hermes_tavern_codestable_status.py
     status: passed
+    evidence_scope: retained_s1_evidence_pending_controller_verification
   - id: phase523-status-line
     title: Canonical current status advances through Phase 523
     item: attention.md records Phase 523 exactly once with labels 168-523 continuous, ordered, and unique while Phase 524 remains absent.
     source: tests/test_hermes_tavern_codestable_status.py
     status: passed
-  - id: controller-verification-pending
-    title: Independent Controller verification remains pending
-    item: No Phase 523 acceptance artifact, lifecycle promotion, commit, or push is created by S1.
+    evidence_scope: retained_s1_evidence_pending_controller_verification
+  - id: s2-documentation-draft
+    title: S2 pending-draft history is retained accurately
+    item: The acceptance report preserves the historical fact that its S2 draft awaited independent Controller verification before the subsequent accepted lifecycle promotion.
     source: design/codestable/features/2026-07-29-hermes-tavern-phase523-phase522-lifecycle-record-reconciliation
-    status: pending
+    status: passed
+  - id: controller-verification-pending
+    title: Independent Controller verification completed
+    item: Controller verification and an independent Architect PASS supported lifecycle promotion; commit and push remain controller-owned repository operations.
+    source: design/codestable/features/2026-07-29-hermes-tavern-phase523-phase522-lifecycle-record-reconciliation
+    status: passed
