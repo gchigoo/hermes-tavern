@@ -1,0 +1,44 @@
+doc_type: feature-checklist
+feature: 2026-07-29-hermes-tavern-phase522-attention-status-sync-through-phase521
+requirement: docs
+created: 2026-07-29
+status: accepted
+workflow_status: accepted
+acceptance_state: accepted
+implementation_ready: true
+parent_verification_required: true
+parent_verification_completed: true
+worker_commit_or_push_performed: false
+parent_commit_or_push_performed: true
+acceptance_artifact: 2026-07-29-hermes-tavern-phase522-attention-status-sync-through-phase521-acceptance.md
+acceptance_md_present: true
+tags: [codestable, docs, static-test, status-sync, company-boost]
+verification_commands:
+  - "python3 design/codestable/tools/validate-yaml.py --dir design/codestable/features/2026-07-29-hermes-tavern-phase522-attention-status-sync-through-phase521"
+  - "python3 design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-07-29-hermes-tavern-phase522-attention-status-sync-through-phase521/2026-07-29-hermes-tavern-phase522-attention-status-sync-through-phase521-checklist.yaml --yaml-only"
+  - "python -m py_compile tests/test_hermes_tavern_design_docs.py tests/test_hermes_tavern_codestable_status.py"
+  - "python -m pytest tests/test_hermes_tavern_design_docs.py tests/test_hermes_tavern_codestable_status.py -q -o 'addopts=' -p no:cacheprovider"
+  - "python -m pytest -q -o 'addopts=' -p no:cacheprovider"
+  - "git diff --check"
+steps:
+  - id: synchronize-phase522-status
+    title: Synchronize accepted history through Phase 521
+    action: Update only the allowed status source, static tests, and non-final S1 artifacts through Phase 522.
+    exit_signal: Focused tests prove ordered unique labels 168–522 and exclude Phase 523.
+    status: done
+  - id: controller-verification
+    title: Perform independent controller verification and closeout
+    action: "Parent reran controller gates, exact-scope review, lifecycle promotion, acceptance creation, and post-promotion gates; final Architect PASS remains the commit gate."
+    exit_signal: The accepted lifecycle remains contingent on the final policy-aligned Architect PASS before commit.
+    status: done
+checks:
+  - id: phase522-status-line
+    title: Accepted Phase 522 status
+    item: The attention current-status line records phases 1–522 accepted exactly once.
+    source: tests/test_hermes_tavern_codestable_status.py
+    status: passed
+  - id: canonical-plan-authority
+    title: Canonical implementation plan authority remains unchanged
+    item: Current authority documents retain the canonical design and implementation-plan paths with no mirror or second authority.
+    source: tests/test_hermes_tavern_design_docs.py
+    status: passed

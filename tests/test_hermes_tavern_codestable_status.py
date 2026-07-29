@@ -27,10 +27,10 @@ PHASE_521_DIR = REPO_ROOT / "design/codestable/features/2026-07-28-hermes-tavern
 PHASE_521_DESIGN = PHASE_521_DIR / "2026-07-28-hermes-tavern-phase521-attention-status-sync-through-phase520-design.md"
 PHASE_521_CHECKLIST = PHASE_521_DIR / "2026-07-28-hermes-tavern-phase521-attention-status-sync-through-phase520-checklist.yaml"
 PHASE_521_ACCEPTANCE = PHASE_521_DIR / "2026-07-28-hermes-tavern-phase521-attention-status-sync-through-phase520-acceptance.md"
-CURRENT_STATUS_PREFIX = "Current status (2026-06-18): All phases 1-521 accepted"
-STALE_STATUS_PREFIX = "Current status (2026-06-18): All phases 1-520 accepted"
-STALE_PHASE_MARKER = "1-520"
-STALE_PHASE_MARKER_EN_DASH = "1–520"
+CURRENT_STATUS_PREFIX = "Current status (2026-06-18): All phases 1-522 accepted"
+STALE_STATUS_PREFIX = "Current status (2026-06-18): All phases 1-521 accepted"
+STALE_PHASE_MARKER = "1-521"
+STALE_PHASE_MARKER_EN_DASH = "1–521"
 OLDER_STALE_STATUS_PREFIX = "Current status (2026-06-18): All phases 1-518 accepted"
 OLDER_STALE_PHASE_MARKER = "1-518"
 OLDER_STALE_PHASE_MARKER_EN_DASH = "1–518"
@@ -395,8 +395,9 @@ REQUIRED_PHASE_LABELS = [
     "Phase 519 phase518 lifecycle record reconciliation",
     "Phase 520 canonical design-plan path parity",
     "Phase 521 attention status sync through Phase 520",
+    "Phase 522 attention status sync through Phase 521",
 ]
-FINAL_STATUS_SUFFIX = "Phase 516 attention status sync through Phase 515, Phase 517 attention status sync through Phase 516, Phase 518 phase517 lifecycle coverage parity, Phase 519 phase518 lifecycle record reconciliation, Phase 520 canonical design-plan path parity, and Phase 521 attention status sync through Phase 520."
+FINAL_STATUS_SUFFIX = "Phase 516 attention status sync through Phase 515, Phase 517 attention status sync through Phase 516, Phase 518 phase517 lifecycle coverage parity, Phase 519 phase518 lifecycle record reconciliation, Phase 520 canonical design-plan path parity, Phase 521 attention status sync through Phase 520, and Phase 522 attention status sync through Phase 521."
 
 
 def test_status_sync_checklists_have_expected_lifecycle_contract():
@@ -555,8 +556,8 @@ def test_attention_current_status_line_is_current():
 
     assert status.startswith(f"- {CURRENT_STATUS_PREFIX}")
     phase_labels_status = status[len(f"- {CURRENT_STATUS_PREFIX}") :]
-    assert len(REQUIRED_PHASE_LABELS) == 354
-    phase_range = range(168, 522)
+    assert len(REQUIRED_PHASE_LABELS) == 355
+    phase_range = range(168, 523)
     assert [int(label.split()[1]) for label in REQUIRED_PHASE_LABELS] == list(phase_range)
     for label in REQUIRED_PHASE_LABELS:
         assert label in phase_labels_status
@@ -577,7 +578,7 @@ def test_attention_current_status_line_is_current():
     assert re.search(rf"(?<!\d){re.escape(EARLIEST_STALE_PHASE_MARKER)}(?!\d)", status) is None
     assert re.search(rf"(?<!\d){re.escape(EARLIEST_STALE_PHASE_MARKER_EN_DASH)}(?!\d)", status) is None
     assert status.endswith(FINAL_STATUS_SUFFIX)
-    aggregate_range = "range(168, 522)"
+    aggregate_range = "range(168, 523)"
     stale_aggregate_guard = "".join(["range(168, ", str(phase_range.stop - 1), ")"])
     later_phase_label = f"Phase {phase_range.stop} "
     assert all(f"Phase {phase} " in phase_labels_status for phase in phase_range)
@@ -593,6 +594,7 @@ def test_attention_current_status_line_is_current():
     assert CURRENT_STATUS_PREFIX in test
     assert all(label in test for label in REQUIRED_PHASE_LABELS)
     stale_aggregate_range_521 = "".join(["range(168, ", "52", "1", ")"])
+    stale_aggregate_range_522 = "".join(["range(168, ", "52", "2", ")"])
     stale_aggregate_range_519 = "".join(["range(168, ", "51", "9", ")"])
     stale_aggregate_range_518 = "".join(["range(168, ", "51", "8", ")"])
     stale_aggregate_range_506 = "".join(["range(168, ", "50", "6", ")"])
@@ -815,6 +817,7 @@ def test_attention_current_status_line_is_current():
     stale_aggregate_range_281 = "".join(["range(168, ", "28", "1", ")"])
     for stale_range in (
         stale_aggregate_range_521,
+        stale_aggregate_range_522,
         stale_aggregate_range_519,
         stale_aggregate_range_518,
         stale_aggregate_range_506,
