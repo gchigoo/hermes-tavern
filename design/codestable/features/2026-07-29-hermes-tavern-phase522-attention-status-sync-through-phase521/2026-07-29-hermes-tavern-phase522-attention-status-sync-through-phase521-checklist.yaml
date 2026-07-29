@@ -28,8 +28,8 @@ steps:
     status: done
   - id: controller-verification
     title: Perform independent controller verification and closeout
-    action: "Parent reran controller gates, exact-scope review, lifecycle promotion, acceptance creation, and post-promotion gates; final Architect PASS remains the commit gate."
-    exit_signal: The accepted lifecycle remains contingent on the final policy-aligned Architect PASS before commit.
+    action: "Parent reran controller gates, exact-scope review, lifecycle promotion, acceptance creation, and post-promotion gates; the final policy-aligned Architect review returned PASS."
+    exit_signal: The accepted lifecycle records completed parent verification and the final policy-aligned Architect PASS.
     status: done
 checks:
   - id: phase522-status-line

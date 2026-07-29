@@ -20,7 +20,7 @@ Advance the single current-status line in `design/codestable/attention.md` from 
 
 ## Lifecycle
 
-S1 completed without a worker commit or push. The parent independently reran controller gates, performed exact-scope review, promoted lifecycle evidence, created the acceptance report, reran post-promotion gates, and will require a final policy-aligned Architect PASS before committing.
+S1 completed without a worker commit or push. The parent independently reran controller gates, performed exact-scope review, promoted lifecycle evidence, created the acceptance report, and reran post-promotion gates. The final policy-aligned Architect review returned PASS, as recorded by the accepted lifecycle evidence.
 
 ## Boundaries
 

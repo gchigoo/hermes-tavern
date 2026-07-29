@@ -17,7 +17,7 @@ tags: [codestable, docs, static-test, status-sync, company-boost]
 
 ## Result
 
-The parent independently completed the declared YAML validation, Python compile, focused documentation/status suite, full suite, exact-scope review, and whitespace gate. Lifecycle artifacts were then promoted to record that parent verification was required and completed. A final policy-aligned Architect review remains the commit gate.
+The parent independently completed the declared YAML validation, Python compile, focused documentation/status suite, full suite, exact-scope review, and whitespace gate. Lifecycle artifacts were then promoted to record that parent verification was required and completed. The final policy-aligned Architect review returned PASS.
 
 ## Scope
 
@@ -36,4 +36,4 @@ No runtime, plugin, gateway, provider, authentication, credential, network, cron
 
 ## Controller Decision
 
-Lifecycle promotion and parent verification are complete. Commit and push require the final policy-aligned Architect PASS review.
+Lifecycle promotion and parent verification are complete, and the final policy-aligned Architect PASS review is recorded.
