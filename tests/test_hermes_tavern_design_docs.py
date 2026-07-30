@@ -143,6 +143,8 @@ def test_design_docs_use_the_canonical_implementation_plan_path() -> None:
     assert f"- Design doc: `{CANONICAL_DESIGN_DOC_PATH}`." in attention_text
     assert NONCANONICAL_ROOT_DESIGN_DOC_REFERENCE not in attention_text
     assert ACCEPTED_PHASE_524_STATUS in attention_text
+    assert "All phases 1-525 accepted" not in attention_text
+    assert "Phase " + "525" not in attention_text
 
     credential_reuse_text = CREDENTIAL_REUSE_DECISION.read_text(encoding="utf-8")
     assert f"- `{CANONICAL_DESIGN_DOC_PATH}` §19" in credential_reuse_text

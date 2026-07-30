@@ -35,6 +35,10 @@ PHASE_523_DIR = REPO_ROOT / "design/codestable/features/2026-07-29-hermes-tavern
 PHASE_523_DESIGN = PHASE_523_DIR / "2026-07-29-hermes-tavern-phase523-phase522-lifecycle-record-reconciliation-design.md"
 PHASE_523_CHECKLIST = PHASE_523_DIR / "2026-07-29-hermes-tavern-phase523-phase522-lifecycle-record-reconciliation-checklist.yaml"
 PHASE_523_ACCEPTANCE = PHASE_523_DIR / "2026-07-29-hermes-tavern-phase523-phase522-lifecycle-record-reconciliation-acceptance.md"
+PHASE_525_DIR = REPO_ROOT / "design/codestable/features/2026-07-30-hermes-tavern-phase525-phase524-post-commit-record-plan"
+PHASE_525_DESIGN = PHASE_525_DIR / "2026-07-30-hermes-tavern-phase525-phase524-post-commit-record-plan-design.md"
+PHASE_525_CHECKLIST = PHASE_525_DIR / "2026-07-30-hermes-tavern-phase525-phase524-post-commit-record-plan-checklist.yaml"
+PHASE_525_ACCEPTANCE = PHASE_525_DIR / "2026-07-30-hermes-tavern-phase525-phase524-post-commit-record-plan-acceptance.md"
 CURRENT_STATUS_PREFIX = "Current status (2026-06-18): All phases 1-524 accepted"
 STALE_STATUS_PREFIX = "Current status (2026-06-18): All phases 1-523 accepted"
 STALE_PHASE_MARKER = "1-523"
@@ -661,6 +665,64 @@ def test_phase524_accepted_lifecycle_records_are_consistent():
     assert all(step.get("status") == "done" for step in phase_524_checklist["steps"])
     assert all(check.get("status") == "passed" for check in phase_524_checklist["checks"])
     assert "At this review point no Phase 524 commit or push has occurred." in phase_524_acceptance_text
+
+
+def test_phase525_closeout_draft_records_only_current_lifecycle_facts():
+    phase_525_design_text = PHASE_525_DESIGN.read_text(encoding="utf-8")
+    phase_525_checklist_text = PHASE_525_CHECKLIST.read_text(encoding="utf-8")
+    phase_525_acceptance_text = PHASE_525_ACCEPTANCE.read_text(encoding="utf-8")
+    phase_525_design = yaml.safe_load(phase_525_design_text.split("---", 2)[1])
+    phase_525_checklist = yaml.safe_load(phase_525_checklist_text)
+    phase_525_acceptance = yaml.safe_load(phase_525_acceptance_text.split("---", 2)[1])
+
+    expected_feature = "2026-07-30-hermes-tavern-phase525-phase524-post-commit-record-plan"
+    assert {
+        phase_525_design["feature"],
+        phase_525_checklist["feature"],
+        phase_525_acceptance["feature"],
+    } == {expected_feature}
+    assert phase_525_design["status"] == "draft"
+    assert phase_525_design["implementation_ready"] is True
+    assert phase_525_design["implementation_commit"] == "c8e3fc6"
+    assert phase_525_design["parent_verification_completed"] is False
+    assert phase_525_design["controller_review_completed"] is False
+    assert phase_525_design["acceptance_state"] == "pending_parent_verification"
+    assert phase_525_checklist["status"] == "draft"
+    assert phase_525_checklist["lifecycle_status"] == "pending_parent_verification"
+    assert phase_525_checklist["workflow_status"] == "pending_controller_review"
+    assert phase_525_checklist["acceptance_state"] == "pending_parent_verification"
+    assert phase_525_checklist["implementation_ready"] is True
+    assert phase_525_checklist["implementation_commit"] == "c8e3fc6"
+    assert phase_525_checklist["parent_verification_completed"] is False
+    assert phase_525_checklist["controller_review_completed"] is False
+    assert phase_525_checklist["worker_commit_or_push_performed"] is False
+    assert phase_525_checklist["parent_commit_or_push_performed"] is True
+    assert phase_525_checklist["acceptance_md_present"] is True
+    assert phase_525_acceptance["status"] == "draft"
+    assert phase_525_acceptance["implementation_commit"] == "c8e3fc6"
+    assert phase_525_acceptance["acceptance_state"] == "pending_parent_verification"
+    assert phase_525_acceptance["audit_state"] == "pending"
+    assert phase_525_acceptance["parent_verification_completed"] is False
+    assert phase_525_acceptance["controller_review_completed"] is False
+    assert phase_525_acceptance["lifecycle_promotion"] == "pending"
+    assert all(step.get("status") == "pending" for step in phase_525_checklist["steps"])
+    assert all(check.get("status") == "pending" for check in phase_525_checklist["checks"])
+
+    phase_524_acceptance = (
+        REPO_ROOT
+        / "design/codestable/features/2026-07-29-hermes-tavern-phase524-phase523-lifecycle-record-reconciliation"
+        / "2026-07-29-hermes-tavern-phase524-phase523-lifecycle-record-reconciliation-acceptance.md"
+    ).read_text(encoding="utf-8")
+    assert "At this review point no Phase 524 commit or push has occurred." in phase_524_acceptance
+
+    status = next(
+        line
+        for line in ATTENTION_DOC.read_text(encoding="utf-8").splitlines()
+        if re.match(r"^\s*-\s*Current status ", line)
+    )
+    phase_525_marker = "Phase " + "525"
+    assert status.startswith(f"- {CURRENT_STATUS_PREFIX}")
+    assert phase_525_marker not in status
 
 
 def test_attention_current_status_line_is_current():

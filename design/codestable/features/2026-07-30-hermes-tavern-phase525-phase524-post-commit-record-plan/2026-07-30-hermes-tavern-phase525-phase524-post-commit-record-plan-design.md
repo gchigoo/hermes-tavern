@@ -3,34 +3,37 @@ doc_type: feature-design
 feature: 2026-07-30-hermes-tavern-phase525-phase524-post-commit-record-plan
 requirement: docs
 status: draft
-implementation_ready: false
+implementation_ready: true
+implementation_commit: c8e3fc6
 parent_verification_required: true
 parent_verification_completed: false
 controller_review_completed: false
-acceptance_state: not_started
-summary: Planning-only reconciliation contract for the current Phase 524 parent-commit record.
-tags: [codestable, lifecycle, docs, static-test, planning]
+acceptance_state: pending_parent_verification
+summary: Draft closeout record for the existing Phase 525 implementation commit and its still-pending independent lifecycle review.
+tags: [codestable, lifecycle, docs, static-test, closeout]
 ---
 
-# Phase 525 Phase 524 Post-Commit Record Plan
+# Phase 525 Phase 524 Post-Commit Record Closeout Draft
 
 ## Scope
 
-This planning-only feature records a narrow follow-up contract for Phase 524. Current HEAD `a2d2572` contains the accepted Phase 524 triplet, while its checklist still records `parent_commit_or_push_performed: false`. No lifecycle record, test, attention status, or runtime behavior changes in this planning slice.
+This draft records the current closeout boundary for the original Phase 525 contract. Commit `c8e3fc6` is the existing implementation commit: it reconciled the Phase 524 checklist's current parent commit fact and added the focused Phase 524 lifecycle contract. This slice records that fact without modifying any Phase 524 artifact.
 
 ## Exact Contract
 
-A later bounded implementation may reconcile only the current Phase 524 checklist fact: `worker_commit_or_push_performed` remains `false`; `parent_commit_or_push_performed` becomes `true` to match `a2d2572`; and one focused static contract verifies agreement across the Phase 524 triplet. The Phase 524 acceptance report's statement that no commit existed at acceptance-review time is historical evidence and must not be rewritten.
+The current Phase 524 checklist records `worker_commit_or_push_performed: false` and `parent_commit_or_push_performed: true`. The latter is anchored to `c8e3fc6`. The Phase 524 acceptance report's statement that no Phase 524 commit or push had occurred at acceptance-review time is historical evidence and remains unchanged.
 
-The implementation must avoid a recursive lifecycle rule: it must not make every newly created feature require a follow-up phase merely to record its own later controller commit.
+The static contract for this closeout may assert only observable current facts: the three Phase 525 artifacts are draft or pending, the implementation commit is `c8e3fc6`, the Phase 524 checklist has the two current commit facts above, and the canonical attention status remains through Phase 524. It must not infer an independent verification, review, acceptance, or promotion outcome from the existence of the implementation commit.
 
 ## Boundaries
 
-This slice adds only this design and its checklist. It must not create an acceptance report or alter `design/codestable/attention.md`; the canonical status remains `All phases 1-524 accepted`. No runtime, plugin, core, auth, credential, provider, gateway, network, cron, Radar, CI, dependency, README, root-design, architecture, or product behavior changes are allowed. Adult-fiction compatibility is preserved; no minor-related behavior or fixtures are introduced.
+Only the Phase 525 design, checklist, and acceptance draft, the two focused static-test modules, and the existing attention-status contract are in scope. The attention status must remain `All phases 1-524 accepted` and must not name Phase 525. No Phase 524 file may change.
+
+No runtime, plugin, core, auth, credential, provider, gateway, network, cron, Radar, CI, dependency, README, root-design, architecture, or product-behavior change is allowed. Adult-fiction compatibility is preserved; no minor-related behavior or fixture is introduced.
 
 ## Lifecycle
 
-This is a draft planning artifact created from an audited Architect plan (`gpt-5.6-sol`, high effort). It has no implementation evidence, no acceptance decision, and no automatic authorization for execution.
+This is a draft closeout record, not a lifecycle promotion. Parent verification and Controller review are pending. The Controller alone may promote this record after independently running the declared gates and obtaining the required independent review; this draft does not claim those results.
 
 ## Verification
 
