@@ -5,6 +5,9 @@ requirement: docs
 status: draft
 implementation_ready: true
 implementation_commit: c8e3fc6
+implementation_commit_full: c8e3fc6428081192684323bd47dcf1c939d37db9
+implementation_commit_parent: cd24c593087308ddd6a3036def0c2c04a5dad537
+phase_524_parent_commit_or_push_performed: true
 parent_verification_required: true
 parent_verification_completed: false
 controller_review_completed: false
@@ -21,9 +24,9 @@ This draft records the current closeout boundary for the original Phase 525 cont
 
 ## Exact Contract
 
-The current Phase 524 checklist records `worker_commit_or_push_performed: false` and `parent_commit_or_push_performed: true`. The latter is anchored to `c8e3fc6`. The Phase 524 acceptance report's statement that no Phase 524 commit or push had occurred at acceptance-review time is historical evidence and remains unchanged.
+The current Phase 524 checklist records `worker_commit_or_push_performed: false` and `parent_commit_or_push_performed: true`. The latter is anchored to `c8e3fc6` (`c8e3fc6428081192684323bd47dcf1c939d37db9`), whose sole parent is `cd24c593087308ddd6a3036def0c2c04a5dad537`. The Phase 524 acceptance report's statement that no Phase 524 commit or push had occurred at acceptance-review time is historical evidence and remains unchanged.
 
-The static contract for this closeout may assert only observable current facts: the three Phase 525 artifacts are draft or pending, the implementation commit is `c8e3fc6`, the Phase 524 checklist has the two current commit facts above, and the canonical attention status remains through Phase 524. It must not infer an independent verification, review, acceptance, or promotion outcome from the existence of the implementation commit.
+The static contract for this closeout may assert only observable current facts: the three Phase 525 artifacts are draft or pending, the implementation commit is `c8e3fc6` (`c8e3fc6428081192684323bd47dcf1c939d37db9`) with parent `cd24c593087308ddd6a3036def0c2c04a5dad537`, the Phase 524 checklist has the two current commit facts above, and the canonical attention status remains through Phase 524. It must not infer an independent verification, review, acceptance, or promotion outcome from the existence of the implementation commit.
 
 ## Boundaries
 

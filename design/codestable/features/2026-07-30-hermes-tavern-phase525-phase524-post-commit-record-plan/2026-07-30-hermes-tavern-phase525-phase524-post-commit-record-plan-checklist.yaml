@@ -8,6 +8,9 @@ workflow_status: pending_controller_review
 acceptance_state: pending_parent_verification
 implementation_ready: true
 implementation_commit: c8e3fc6
+implementation_commit_full: c8e3fc6428081192684323bd47dcf1c939d37db9
+implementation_commit_parent: cd24c593087308ddd6a3036def0c2c04a5dad537
+phase_524_parent_commit_or_push_performed: true
 parent_verification_required: true
 parent_verification_completed: false
 controller_review_completed: false
@@ -25,8 +28,8 @@ verification_commands:
 steps:
   - id: record-existing-implementation
     title: Record the existing original implementation commit
-    action: Record c8e3fc6 as the current implementation commit without changing the Phase 524 artifacts it reconciled.
-    exit_signal: The draft and static contract identify c8e3fc6 and preserve the Phase 524 historical acceptance report.
+    action: Record c8e3fc6 (c8e3fc6428081192684323bd47dcf1c939d37db9) as the current implementation commit, its parent cd24c593087308ddd6a3036def0c2c04a5dad537, and the Phase 524 parent-commit fact without changing the Phase 524 artifacts it reconciled.
+    exit_signal: The draft and static contract identify c8e3fc6, its immutable parent, the Phase 524 parent-commit fact, and preserve the Phase 524 historical acceptance report.
     status: pending
     evidence: "Current repository fact recorded for independent verification; no gate result is claimed."
   - id: retain-draft-lifecycle-boundary
@@ -38,7 +41,7 @@ steps:
 checks:
   - id: current-implementation-fact
     title: Original implementation commit is recorded as a current fact
-    item: The Phase 525 draft names c8e3fc6 and the Phase 524 checklist retains worker false and parent true.
+    item: The Phase 525 draft names c8e3fc6, its immutable parent, and the Phase 524 checklist retains worker false and parent true.
     source: tests/test_hermes_tavern_codestable_status.py
     status: pending
     evidence: "Awaiting independent execution of the declared static contract."

@@ -1,4 +1,5 @@
 import re
+import subprocess
 from pathlib import Path
 
 import yaml
@@ -39,6 +40,11 @@ PHASE_525_DIR = REPO_ROOT / "design/codestable/features/2026-07-30-hermes-tavern
 PHASE_525_DESIGN = PHASE_525_DIR / "2026-07-30-hermes-tavern-phase525-phase524-post-commit-record-plan-design.md"
 PHASE_525_CHECKLIST = PHASE_525_DIR / "2026-07-30-hermes-tavern-phase525-phase524-post-commit-record-plan-checklist.yaml"
 PHASE_525_ACCEPTANCE = PHASE_525_DIR / "2026-07-30-hermes-tavern-phase525-phase524-post-commit-record-plan-acceptance.md"
+PHASE_524_DIR = REPO_ROOT / "design/codestable/features/2026-07-29-hermes-tavern-phase524-phase523-lifecycle-record-reconciliation"
+PHASE_524_CHECKLIST = PHASE_524_DIR / "2026-07-29-hermes-tavern-phase524-phase523-lifecycle-record-reconciliation-checklist.yaml"
+PHASE_525_IMPLEMENTATION_COMMIT = "c8e3fc6"
+PHASE_525_IMPLEMENTATION_COMMIT_FULL = "c8e3fc6428081192684323bd47dcf1c939d37db9"
+PHASE_525_IMPLEMENTATION_COMMIT_PARENT = "cd24c593087308ddd6a3036def0c2c04a5dad537"
 CURRENT_STATUS_PREFIX = "Current status (2026-06-18): All phases 1-524 accepted"
 STALE_STATUS_PREFIX = "Current status (2026-06-18): All phases 1-523 accepted"
 STALE_PHASE_MARKER = "1-523"
@@ -683,7 +689,10 @@ def test_phase525_closeout_draft_records_only_current_lifecycle_facts():
     } == {expected_feature}
     assert phase_525_design["status"] == "draft"
     assert phase_525_design["implementation_ready"] is True
-    assert phase_525_design["implementation_commit"] == "c8e3fc6"
+    assert phase_525_design["implementation_commit"] == PHASE_525_IMPLEMENTATION_COMMIT
+    assert phase_525_design["implementation_commit_full"] == PHASE_525_IMPLEMENTATION_COMMIT_FULL
+    assert phase_525_design["implementation_commit_parent"] == PHASE_525_IMPLEMENTATION_COMMIT_PARENT
+    assert phase_525_design["phase_524_parent_commit_or_push_performed"] is True
     assert phase_525_design["parent_verification_completed"] is False
     assert phase_525_design["controller_review_completed"] is False
     assert phase_525_design["acceptance_state"] == "pending_parent_verification"
@@ -692,14 +701,20 @@ def test_phase525_closeout_draft_records_only_current_lifecycle_facts():
     assert phase_525_checklist["workflow_status"] == "pending_controller_review"
     assert phase_525_checklist["acceptance_state"] == "pending_parent_verification"
     assert phase_525_checklist["implementation_ready"] is True
-    assert phase_525_checklist["implementation_commit"] == "c8e3fc6"
+    assert phase_525_checklist["implementation_commit"] == PHASE_525_IMPLEMENTATION_COMMIT
+    assert phase_525_checklist["implementation_commit_full"] == PHASE_525_IMPLEMENTATION_COMMIT_FULL
+    assert phase_525_checklist["implementation_commit_parent"] == PHASE_525_IMPLEMENTATION_COMMIT_PARENT
+    assert phase_525_checklist["phase_524_parent_commit_or_push_performed"] is True
     assert phase_525_checklist["parent_verification_completed"] is False
     assert phase_525_checklist["controller_review_completed"] is False
     assert phase_525_checklist["worker_commit_or_push_performed"] is False
     assert phase_525_checklist["parent_commit_or_push_performed"] is True
     assert phase_525_checklist["acceptance_md_present"] is True
     assert phase_525_acceptance["status"] == "draft"
-    assert phase_525_acceptance["implementation_commit"] == "c8e3fc6"
+    assert phase_525_acceptance["implementation_commit"] == PHASE_525_IMPLEMENTATION_COMMIT
+    assert phase_525_acceptance["implementation_commit_full"] == PHASE_525_IMPLEMENTATION_COMMIT_FULL
+    assert phase_525_acceptance["implementation_commit_parent"] == PHASE_525_IMPLEMENTATION_COMMIT_PARENT
+    assert phase_525_acceptance["phase_524_parent_commit_or_push_performed"] is True
     assert phase_525_acceptance["acceptance_state"] == "pending_parent_verification"
     assert phase_525_acceptance["audit_state"] == "pending"
     assert phase_525_acceptance["parent_verification_completed"] is False
@@ -707,6 +722,32 @@ def test_phase525_closeout_draft_records_only_current_lifecycle_facts():
     assert phase_525_acceptance["lifecycle_promotion"] == "pending"
     assert all(step.get("status") == "pending" for step in phase_525_checklist["steps"])
     assert all(check.get("status") == "pending" for check in phase_525_checklist["checks"])
+
+    phase_524_checklist = yaml.safe_load(PHASE_524_CHECKLIST.read_text(encoding="utf-8"))
+    assert phase_524_checklist["status"] == "accepted"
+    assert phase_524_checklist["worker_commit_or_push_performed"] is False
+    assert phase_524_checklist["parent_commit_or_push_performed"] is True
+
+    resolved_commit = subprocess.run(
+        ["git", "rev-parse", f"{PHASE_525_IMPLEMENTATION_COMMIT}^{{commit}}"],
+        cwd=REPO_ROOT,
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout.strip()
+    resolved_parent = subprocess.run(
+        ["git", "show", "-s", "--format=%P", PHASE_525_IMPLEMENTATION_COMMIT],
+        cwd=REPO_ROOT,
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout.strip()
+    assert resolved_commit == PHASE_525_IMPLEMENTATION_COMMIT_FULL
+    assert resolved_parent == PHASE_525_IMPLEMENTATION_COMMIT_PARENT
+    assert subprocess.run(
+        ["git", "merge-base", "--is-ancestor", PHASE_525_IMPLEMENTATION_COMMIT_FULL, "HEAD"],
+        cwd=REPO_ROOT,
+    ).returncode == 0
 
     phase_524_acceptance = (
         REPO_ROOT

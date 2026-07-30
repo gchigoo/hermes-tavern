@@ -4,6 +4,9 @@ feature: 2026-07-30-hermes-tavern-phase525-phase524-post-commit-record-plan
 requirement: docs
 status: draft
 implementation_commit: c8e3fc6
+implementation_commit_full: c8e3fc6428081192684323bd47dcf1c939d37db9
+implementation_commit_parent: cd24c593087308ddd6a3036def0c2c04a5dad537
+phase_524_parent_commit_or_push_performed: true
 acceptance_state: pending_parent_verification
 audit_state: pending
 parent_verification_required: true
@@ -18,7 +21,7 @@ tags: [codestable, lifecycle, docs, static-test, closeout]
 
 ## Current Evidence
 
-Commit `c8e3fc6` is the existing implementation commit for the original Phase 525 contract. It established the current Phase 524 checklist facts: `worker_commit_or_push_performed: false` and `parent_commit_or_push_performed: true`. This draft records those facts only.
+Commit `c8e3fc6` (`c8e3fc6428081192684323bd47dcf1c939d37db9`) is the existing implementation commit for the original Phase 525 contract; its sole parent is `cd24c593087308ddd6a3036def0c2c04a5dad537`. It established the current Phase 524 checklist facts: `worker_commit_or_push_performed: false` and `parent_commit_or_push_performed: true`. This draft records those facts only.
 
 The Phase 524 acceptance report remains historical evidence, including its acceptance-review-time statement that no Phase 524 commit or push had occurred. This closeout draft does not revise that statement.
 
