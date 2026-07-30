@@ -774,6 +774,26 @@ def test_phase525_accepted_lifecycle_records_current_truth():
     assert "Phase 526" not in status
 
 
+def test_phase525_checklist_acceptance_artifact_reference_is_exact_and_accepted():
+    phase_525_checklist = yaml.safe_load(PHASE_525_CHECKLIST.read_text(encoding="utf-8"))
+    expected_acceptance_artifact = (
+        "design/codestable/features/2026-07-30-hermes-tavern-phase525-phase524-post-commit-record-plan/"
+        "2026-07-30-hermes-tavern-phase525-phase524-post-commit-record-plan-acceptance.md"
+    )
+
+    assert phase_525_checklist["acceptance_artifact"] == expected_acceptance_artifact
+
+    acceptance_artifact = (REPO_ROOT / phase_525_checklist["acceptance_artifact"]).resolve()
+    assert acceptance_artifact.is_file()
+
+    acceptance_frontmatter = yaml.safe_load(
+        acceptance_artifact.read_text(encoding="utf-8").split("---", 2)[1]
+    )
+    assert acceptance_frontmatter["doc_type"] == "feature-acceptance"
+    assert acceptance_frontmatter["feature"] == phase_525_checklist["feature"]
+    assert acceptance_frontmatter["status"] == "accepted"
+
+
 def test_attention_current_status_line_is_current():
     lines = ATTENTION_DOC.read_text(encoding="utf-8").splitlines()
 

@@ -1,0 +1,43 @@
+doc_type: feature-checklist
+feature: 2026-07-30-hermes-tavern-phase526-phase525-acceptance-reference-integrity
+requirement: docs
+created: 2026-07-30
+status: implemented
+lifecycle_status: implemented
+workflow_status: implemented
+acceptance_state: pending
+implementation_ready: true
+parent_verification_required: true
+parent_verification_completed: false
+worker_commit_or_push_performed: false
+parent_commit_or_push_performed: false
+tags: [codestable, lifecycle, docs, static-test]
+verification_commands:
+  - "PYTHONDONTWRITEBYTECODE=1 python3 -B -m pytest tests/test_hermes_tavern_design_docs.py tests/test_hermes_tavern_codestable_status.py -q -o 'addopts=' -p no:cacheprovider"
+  - "PYTHONDONTWRITEBYTECODE=1 python3 -B -m pytest -q -o 'addopts=' -p no:cacheprovider"
+steps:
+  - id: add-phase525-reference-contract
+    title: Add exact Phase 525 acceptance reference contract
+    action: Add one explicit static test for the Phase 525 checklist acceptance_artifact path, resolved file, and acceptance frontmatter identity without discovering files dynamically.
+    exit_signal: The focused static suite proves a wrong, missing, or cross-feature reference fails.
+    status: done
+    evidence: "Controller verification on 2026-07-30: focused static suite 21 passed; full suite 1225 passed; exact-scope and whitespace checks passed."
+  - id: controller-closeout
+    title: Complete controller-owned lifecycle closeout
+    action: Create acceptance evidence and update attention/status lifecycle only after controller gates and independent review pass.
+    exit_signal: Accepted lifecycle records actual controller evidence and exact scope.
+    status: pending
+    evidence: "Pending Controller verification."
+checks:
+  - id: phase525-reference-integrity
+    title: Phase 525 acceptance reference is exact and identity-safe
+    item: The Phase 525 checklist reference resolves to its accepted feature-acceptance artifact with matching feature identity.
+    source: tests/test_hermes_tavern_codestable_status.py
+    status: passed
+    evidence: "Controller verification on 2026-07-30: the exact-reference regression passed in the focused static suite."
+  - id: scope-boundary
+    title: Runtime and historical artifacts remain unchanged
+    item: Only the explicitly allowed Phase 526 lifecycle/static-test paths change.
+    source: git status and git diff --check
+    status: passed
+    evidence: "Controller exact-scope review and git diff --check passed on 2026-07-30."
