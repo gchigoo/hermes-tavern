@@ -2,52 +2,48 @@ doc_type: feature-checklist
 feature: 2026-07-30-hermes-tavern-phase525-phase524-post-commit-record-plan
 requirement: docs
 created: 2026-07-30
-status: draft
-lifecycle_status: pending_parent_verification
-workflow_status: pending_controller_review
-acceptance_state: pending_parent_verification
+status: accepted
+lifecycle_status: accepted
+workflow_status: accepted
+acceptance_state: accepted
 implementation_ready: true
 implementation_commit: c8e3fc6
 implementation_commit_full: c8e3fc6428081192684323bd47dcf1c939d37db9
 implementation_commit_parent: cd24c593087308ddd6a3036def0c2c04a5dad537
 phase_524_parent_commit_or_push_performed: true
 parent_verification_required: true
-parent_verification_completed: false
-controller_review_completed: false
+parent_verification_completed: true
+controller_review_completed: true
 worker_commit_or_push_performed: false
 parent_commit_or_push_performed: true
 acceptance_artifact: design/codestable/features/2026-07-30-hermes-tavern-phase525-phase524-post-commit-record-plan/2026-07-30-hermes-tavern-phase525-phase524-post-commit-record-plan-acceptance.md
 acceptance_md_present: true
 tags: [codestable, lifecycle, docs, static-test, closeout]
 verification_commands:
-  - "python3 -B design/codestable/tools/validate-yaml.py --dir design/codestable/features/2026-07-30-hermes-tavern-phase525-phase524-post-commit-record-plan --require doc_type --require status"
-  - "python3 -B design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-07-30-hermes-tavern-phase525-phase524-post-commit-record-plan/2026-07-30-hermes-tavern-phase525-phase524-post-commit-record-plan-checklist.yaml --yaml-only"
   - "PYTHONDONTWRITEBYTECODE=1 python3 -B -m pytest tests/test_hermes_tavern_design_docs.py tests/test_hermes_tavern_codestable_status.py -q -o 'addopts=' -p no:cacheprovider"
-  - "PYTHONDONTWRITEBYTECODE=1 python3 -B -m pytest -q -o 'addopts=' -p no:cacheprovider"
-  - "git diff HEAD --check"
 steps:
   - id: record-existing-implementation
     title: Record the existing original implementation commit
-    action: Record c8e3fc6 (c8e3fc6428081192684323bd47dcf1c939d37db9) as the current implementation commit, its parent cd24c593087308ddd6a3036def0c2c04a5dad537, and the Phase 524 parent-commit fact without changing the Phase 524 artifacts it reconciled.
-    exit_signal: The draft and static contract identify c8e3fc6, its immutable parent, the Phase 524 parent-commit fact, and preserve the Phase 524 historical acceptance report.
-    status: pending
-    evidence: "Current repository fact recorded for independent verification; no gate result is claimed."
-  - id: retain-draft-lifecycle-boundary
-    title: Retain the draft lifecycle boundary
-    action: Keep all Phase 525 lifecycle and review fields pending until the Controller independently runs the declared gates and review.
-    exit_signal: Draft artifacts make no acceptance, promotion, or gate-result claim.
-    status: pending
-    evidence: "Parent verification and Controller review remain pending."
+    action: Record c8e3fc6 (c8e3fc6428081192684323bd47dcf1c939d37db9), its sole parent cd24c593087308ddd6a3036def0c2c04a5dad537, and the Phase 524 worker/parent commit facts without changing the Phase 524 artifacts it reconciled.
+    exit_signal: The static contract identifies the immutable lineage, retains worker false and parent true, and preserves the Phase 524 historical acceptance report.
+    status: done
+    evidence: "Controller verification completed on 2026-07-30; the accepted contract records current lineage and historical Phase 524 text separately."
+  - id: complete-lifecycle-promotion
+    title: Complete lifecycle promotion
+    action: Promote the audited Phase 525 record after Controller verification and review of the focused static contract.
+    exit_signal: All lifecycle fields are accepted, Controller review is complete, and attention advances through Phase 525 exactly once.
+    status: done
+    evidence: "Controller verification and review completed on 2026-07-30; accepted promotion is recorded in the companion acceptance artifact."
 checks:
   - id: current-implementation-fact
-    title: Original implementation commit is recorded as a current fact
-    item: The Phase 525 draft names c8e3fc6, its immutable parent, and the Phase 524 checklist retains worker false and parent true.
+    title: Original implementation lineage is recorded as a current fact
+    item: The accepted Phase 525 triplet records c8e3fc6, its immutable parent, and the Phase 524 checklist retains worker false and parent true.
     source: tests/test_hermes_tavern_codestable_status.py
-    status: pending
-    evidence: "Awaiting independent execution of the declared static contract."
-  - id: draft-closeout-boundary
-    title: Closeout remains a draft pending independent review
-    item: Phase 525 fields remain draft or pending, the Phase 524 historical acceptance statement remains intact, and attention remains through Phase 524.
+    status: passed
+    evidence: "Focused static lifecycle contract passed in Controller verification on 2026-07-30."
+  - id: accepted-closeout-status
+    title: Accepted closeout and canonical status are current
+    item: Phase 525 is approved and accepted, its checklist is complete, and the single attention status advances through Phase 525 with the exact label once while excluding Phase 526.
     source: tests/test_hermes_tavern_codestable_status.py
-    status: pending
-    evidence: "Awaiting Controller verification and independent review."
+    status: passed
+    evidence: "Focused static status contract passed in Controller verification on 2026-07-30."

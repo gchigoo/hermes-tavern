@@ -1,5 +1,6 @@
 import re
 import subprocess
+from datetime import date
 from pathlib import Path
 
 import yaml
@@ -45,7 +46,7 @@ PHASE_524_CHECKLIST = PHASE_524_DIR / "2026-07-29-hermes-tavern-phase524-phase52
 PHASE_525_IMPLEMENTATION_COMMIT = "c8e3fc6"
 PHASE_525_IMPLEMENTATION_COMMIT_FULL = "c8e3fc6428081192684323bd47dcf1c939d37db9"
 PHASE_525_IMPLEMENTATION_COMMIT_PARENT = "cd24c593087308ddd6a3036def0c2c04a5dad537"
-CURRENT_STATUS_PREFIX = "Current status (2026-06-18): All phases 1-524 accepted"
+CURRENT_STATUS_PREFIX = "Current status (2026-06-18): All phases 1-525 accepted"
 STALE_STATUS_PREFIX = "Current status (2026-06-18): All phases 1-523 accepted"
 STALE_PHASE_MARKER = "1-523"
 STALE_PHASE_MARKER_EN_DASH = "1–523"
@@ -416,8 +417,9 @@ REQUIRED_PHASE_LABELS = [
     "Phase 522 attention status sync through Phase 521",
     "Phase 523 phase522 lifecycle record reconciliation",
     "Phase 524 phase523 lifecycle record reconciliation",
+    "Phase 525 phase524 post-commit record plan",
 ]
-FINAL_STATUS_SUFFIX = "Phase 516 attention status sync through Phase 515, Phase 517 attention status sync through Phase 516, Phase 518 phase517 lifecycle coverage parity, Phase 519 phase518 lifecycle record reconciliation, Phase 520 canonical design-plan path parity, Phase 521 attention status sync through Phase 520, Phase 522 attention status sync through Phase 521, Phase 523 phase522 lifecycle record reconciliation, and Phase 524 phase523 lifecycle record reconciliation."
+FINAL_STATUS_SUFFIX = "Phase 516 attention status sync through Phase 515, Phase 517 attention status sync through Phase 516, Phase 518 phase517 lifecycle coverage parity, Phase 519 phase518 lifecycle record reconciliation, Phase 520 canonical design-plan path parity, Phase 521 attention status sync through Phase 520, Phase 522 attention status sync through Phase 521, Phase 523 phase522 lifecycle record reconciliation, Phase 524 phase523 lifecycle record reconciliation, and Phase 525 phase524 post-commit record plan."
 
 
 def test_status_sync_checklists_have_expected_lifecycle_contract():
@@ -673,7 +675,7 @@ def test_phase524_accepted_lifecycle_records_are_consistent():
     assert "At this review point no Phase 524 commit or push has occurred." in phase_524_acceptance_text
 
 
-def test_phase525_closeout_draft_records_only_current_lifecycle_facts():
+def test_phase525_accepted_lifecycle_records_current_truth():
     phase_525_design_text = PHASE_525_DESIGN.read_text(encoding="utf-8")
     phase_525_checklist_text = PHASE_525_CHECKLIST.read_text(encoding="utf-8")
     phase_525_acceptance_text = PHASE_525_ACCEPTANCE.read_text(encoding="utf-8")
@@ -687,41 +689,47 @@ def test_phase525_closeout_draft_records_only_current_lifecycle_facts():
         phase_525_checklist["feature"],
         phase_525_acceptance["feature"],
     } == {expected_feature}
-    assert phase_525_design["status"] == "draft"
+    assert phase_525_design["status"] == "approved"
     assert phase_525_design["implementation_ready"] is True
     assert phase_525_design["implementation_commit"] == PHASE_525_IMPLEMENTATION_COMMIT
     assert phase_525_design["implementation_commit_full"] == PHASE_525_IMPLEMENTATION_COMMIT_FULL
     assert phase_525_design["implementation_commit_parent"] == PHASE_525_IMPLEMENTATION_COMMIT_PARENT
     assert phase_525_design["phase_524_parent_commit_or_push_performed"] is True
-    assert phase_525_design["parent_verification_completed"] is False
-    assert phase_525_design["controller_review_completed"] is False
-    assert phase_525_design["acceptance_state"] == "pending_parent_verification"
-    assert phase_525_checklist["status"] == "draft"
-    assert phase_525_checklist["lifecycle_status"] == "pending_parent_verification"
-    assert phase_525_checklist["workflow_status"] == "pending_controller_review"
-    assert phase_525_checklist["acceptance_state"] == "pending_parent_verification"
+    assert phase_525_design["parent_verification_completed"] is True
+    assert phase_525_design["controller_review_completed"] is True
+    assert phase_525_design["acceptance_state"] == "accepted"
+
+    assert phase_525_checklist["status"] == "accepted"
+    assert phase_525_checklist["lifecycle_status"] == "accepted"
+    assert phase_525_checklist["workflow_status"] == "accepted"
+    assert phase_525_checklist["acceptance_state"] == "accepted"
     assert phase_525_checklist["implementation_ready"] is True
     assert phase_525_checklist["implementation_commit"] == PHASE_525_IMPLEMENTATION_COMMIT
     assert phase_525_checklist["implementation_commit_full"] == PHASE_525_IMPLEMENTATION_COMMIT_FULL
     assert phase_525_checklist["implementation_commit_parent"] == PHASE_525_IMPLEMENTATION_COMMIT_PARENT
     assert phase_525_checklist["phase_524_parent_commit_or_push_performed"] is True
-    assert phase_525_checklist["parent_verification_completed"] is False
-    assert phase_525_checklist["controller_review_completed"] is False
+    assert phase_525_checklist["parent_verification_completed"] is True
+    assert phase_525_checklist["controller_review_completed"] is True
     assert phase_525_checklist["worker_commit_or_push_performed"] is False
     assert phase_525_checklist["parent_commit_or_push_performed"] is True
     assert phase_525_checklist["acceptance_md_present"] is True
-    assert phase_525_acceptance["status"] == "draft"
+    assert all(step.get("status") == "done" for step in phase_525_checklist["steps"])
+    assert all(check.get("status") == "passed" for check in phase_525_checklist["checks"])
+
+    assert phase_525_acceptance["status"] == "accepted"
+    assert phase_525_acceptance["accepted_at"] == date(2026, 7, 30)
     assert phase_525_acceptance["implementation_commit"] == PHASE_525_IMPLEMENTATION_COMMIT
     assert phase_525_acceptance["implementation_commit_full"] == PHASE_525_IMPLEMENTATION_COMMIT_FULL
     assert phase_525_acceptance["implementation_commit_parent"] == PHASE_525_IMPLEMENTATION_COMMIT_PARENT
     assert phase_525_acceptance["phase_524_parent_commit_or_push_performed"] is True
-    assert phase_525_acceptance["acceptance_state"] == "pending_parent_verification"
-    assert phase_525_acceptance["audit_state"] == "pending"
-    assert phase_525_acceptance["parent_verification_completed"] is False
-    assert phase_525_acceptance["controller_review_completed"] is False
-    assert phase_525_acceptance["lifecycle_promotion"] == "pending"
-    assert all(step.get("status") == "pending" for step in phase_525_checklist["steps"])
-    assert all(check.get("status") == "pending" for check in phase_525_checklist["checks"])
+    assert phase_525_acceptance["acceptance_state"] == "accepted"
+    assert phase_525_acceptance["audit_state"] == "passed"
+    assert phase_525_acceptance["parent_verification_completed"] is True
+    assert phase_525_acceptance["controller_review_completed"] is True
+    assert phase_525_acceptance["lifecycle_promotion"] == "completed"
+    assert "Controller completed parent verification and lifecycle review on 2026-07-30." in phase_525_acceptance_text
+    assert "— 20 passed." in phase_525_acceptance_text
+    assert "No final independent Controller review is pending" in phase_525_acceptance_text
 
     phase_524_checklist = yaml.safe_load(PHASE_524_CHECKLIST.read_text(encoding="utf-8"))
     assert phase_524_checklist["status"] == "accepted"
@@ -761,9 +769,9 @@ def test_phase525_closeout_draft_records_only_current_lifecycle_facts():
         for line in ATTENTION_DOC.read_text(encoding="utf-8").splitlines()
         if re.match(r"^\s*-\s*Current status ", line)
     )
-    phase_525_marker = "Phase " + "525"
     assert status.startswith(f"- {CURRENT_STATUS_PREFIX}")
-    assert phase_525_marker not in status
+    assert status.count("Phase 525 phase524 post-commit record plan") == 1
+    assert "Phase 526" not in status
 
 
 def test_attention_current_status_line_is_current():
@@ -787,8 +795,8 @@ def test_attention_current_status_line_is_current():
 
     assert status.startswith(f"- {CURRENT_STATUS_PREFIX}")
     phase_labels_status = status[len(f"- {CURRENT_STATUS_PREFIX}") :]
-    assert len(REQUIRED_PHASE_LABELS) == 357
-    phase_range = range(168, 525)
+    assert len(REQUIRED_PHASE_LABELS) == 358
+    phase_range = range(168, 526)
     assert [int(label.split()[1]) for label in REQUIRED_PHASE_LABELS] == list(phase_range)
     for label in REQUIRED_PHASE_LABELS:
         assert label in phase_labels_status
@@ -809,13 +817,13 @@ def test_attention_current_status_line_is_current():
     assert re.search(rf"(?<!\d){re.escape(EARLIEST_STALE_PHASE_MARKER)}(?!\d)", status) is None
     assert re.search(rf"(?<!\d){re.escape(EARLIEST_STALE_PHASE_MARKER_EN_DASH)}(?!\d)", status) is None
     assert status.endswith(FINAL_STATUS_SUFFIX)
-    aggregate_range = "range(168, 525)"
+    aggregate_range = "range(168, 526)"
     stale_aggregate_guard = "".join(["range(168, ", str(phase_range.stop - 1), ")"])
     later_phase_label = f"Phase {phase_range.stop} "
     assert all(f"Phase {phase} " in phase_labels_status for phase in phase_range)
     assert all(phase_labels_status.count(label) == 1 for label in REQUIRED_PHASE_LABELS)
     assert later_phase_label not in status
-    assert "Phase 525" not in status
+    assert "Phase 526" not in status
     assert re.search(r"(?<!\d)Phase 121-167(?!\d)", status) is not None
     test = Path(__file__).read_text(encoding="utf-8")
     assert later_phase_label not in test
