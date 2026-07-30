@@ -14,7 +14,7 @@ tags: [codestable, lifecycle, docs, static-test]
 
 ## Scope
 
-Add one focused static regression for the existing Phase 525 checklist `acceptance_artifact` reference and create the Phase 526 design/checklist. The regression must compare the exact repo-relative reference, resolved file, and acceptance frontmatter identity.
+Add focused static regressions that retain the existing Phase 525 checklist `acceptance_artifact` contract and lock the expected pending Phase 526 acceptance file and artifact identity. The regressions must compare exact repo-relative references, resolved files, matching frontmatter identities, gated attention progression through Phase 526, and Phase 527 absence.
 
 ## Boundaries
 
@@ -22,7 +22,7 @@ Only Phase 526 artifacts and the two focused static-test modules may change duri
 
 ## Lifecycle
 
-Executor implements S1 only. The Controller owns acceptance creation, status promotion, attention progression, final verification, review, commit, and push. No Phase 526 acceptance artifact exists before controller gates pass.
+Executor implements S1 only. The Controller owns status promotion, attention progression, final verification, review, commit, and push. The Phase 526 acceptance artifact remains pending and non-final until controller gates pass.
 
 ## Verification
 

@@ -144,8 +144,7 @@ def test_design_docs_use_the_canonical_implementation_plan_path() -> None:
     assert NONCANONICAL_ROOT_DESIGN_DOC_REFERENCE not in attention_text
     assert ACCEPTED_PHASE_525_STATUS in attention_text
     assert attention_text.count("Phase 525 phase524 post-commit record plan") == 1
-    assert "All phases 1-526 accepted" not in attention_text
-    assert "Phase " + "526" not in attention_text
+    assert "Phase " + "527" not in attention_text
 
     credential_reuse_text = CREDENTIAL_REUSE_DECISION.read_text(encoding="utf-8")
     assert f"- `{CANONICAL_DESIGN_DOC_PATH}` §19" in credential_reuse_text

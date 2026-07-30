@@ -41,6 +41,18 @@ PHASE_525_DIR = REPO_ROOT / "design/codestable/features/2026-07-30-hermes-tavern
 PHASE_525_DESIGN = PHASE_525_DIR / "2026-07-30-hermes-tavern-phase525-phase524-post-commit-record-plan-design.md"
 PHASE_525_CHECKLIST = PHASE_525_DIR / "2026-07-30-hermes-tavern-phase525-phase524-post-commit-record-plan-checklist.yaml"
 PHASE_525_ACCEPTANCE = PHASE_525_DIR / "2026-07-30-hermes-tavern-phase525-phase524-post-commit-record-plan-acceptance.md"
+PHASE_526_DIR = REPO_ROOT / "design/codestable/features/2026-07-30-hermes-tavern-phase526-phase525-acceptance-reference-integrity"
+PHASE_526_DESIGN = PHASE_526_DIR / "2026-07-30-hermes-tavern-phase526-phase525-acceptance-reference-integrity-design.md"
+PHASE_526_CHECKLIST = PHASE_526_DIR / "2026-07-30-hermes-tavern-phase526-phase525-acceptance-reference-integrity-checklist.yaml"
+PHASE_526_ACCEPTANCE = PHASE_526_DIR / "2026-07-30-hermes-tavern-phase526-phase525-acceptance-reference-integrity-acceptance.md"
+PHASE_526_FEATURE = "2026-07-30-hermes-tavern-phase526-phase525-acceptance-reference-integrity"
+PHASE_526_ACCEPTANCE_ARTIFACT = (
+    "design/codestable/features/2026-07-30-hermes-tavern-phase526-phase525-acceptance-reference-integrity/"
+    "2026-07-30-hermes-tavern-phase526-phase525-acceptance-reference-integrity-acceptance.md"
+)
+PHASE_526_STATUS_PREFIX = "Current status (2026-06-18): All phases 1-526 accepted"
+PHASE_526_STATUS_LABEL = "Phase 526 phase525 acceptance reference integrity"
+PHASE_527_STATUS_MARKER = "Phase 527"
 PHASE_524_DIR = REPO_ROOT / "design/codestable/features/2026-07-29-hermes-tavern-phase524-phase523-lifecycle-record-reconciliation"
 PHASE_524_CHECKLIST = PHASE_524_DIR / "2026-07-29-hermes-tavern-phase524-phase523-lifecycle-record-reconciliation-checklist.yaml"
 PHASE_525_IMPLEMENTATION_COMMIT = "c8e3fc6"
@@ -769,9 +781,8 @@ def test_phase525_accepted_lifecycle_records_current_truth():
         for line in ATTENTION_DOC.read_text(encoding="utf-8").splitlines()
         if re.match(r"^\s*-\s*Current status ", line)
     )
-    assert status.startswith(f"- {CURRENT_STATUS_PREFIX}")
+    assert "Phase 525 phase524 post-commit record plan" in status
     assert status.count("Phase 525 phase524 post-commit record plan") == 1
-    assert "Phase 526" not in status
 
 
 def test_phase525_checklist_acceptance_artifact_reference_is_exact_and_accepted():
@@ -794,6 +805,81 @@ def test_phase525_checklist_acceptance_artifact_reference_is_exact_and_accepted(
     assert acceptance_frontmatter["status"] == "accepted"
 
 
+def test_phase526_static_test_preparation_has_exact_artifact_identity():
+    phase_526_design_text = PHASE_526_DESIGN.read_text(encoding="utf-8")
+    phase_526_checklist_text = PHASE_526_CHECKLIST.read_text(encoding="utf-8")
+    phase_526_acceptance_text = PHASE_526_ACCEPTANCE.read_text(encoding="utf-8")
+    phase_526_design = yaml.safe_load(phase_526_design_text.split("---", 2)[1])
+    phase_526_checklist = yaml.safe_load(phase_526_checklist_text)
+    phase_526_acceptance = yaml.safe_load(phase_526_acceptance_text.split("---", 2)[1])
+
+    assert {
+        phase_526_design["feature"],
+        phase_526_checklist["feature"],
+        phase_526_acceptance["feature"],
+    } == {PHASE_526_FEATURE}
+    assert PHASE_526_CHECKLIST.is_file()
+    assert PHASE_526_ACCEPTANCE.is_file()
+    assert phase_526_checklist["acceptance_artifact"] == PHASE_526_ACCEPTANCE_ARTIFACT
+    assert (REPO_ROOT / phase_526_checklist["acceptance_artifact"]).resolve() == PHASE_526_ACCEPTANCE.resolve()
+    assert phase_526_acceptance["doc_type"] == "feature-acceptance"
+
+    assert phase_526_design["status"] == "approved"
+    assert phase_526_checklist["acceptance_md_present"] is True
+    if phase_526_acceptance["status"] == "pending":
+        assert phase_526_design["acceptance_state"] == "pending"
+        assert phase_526_checklist["status"] == "implemented"
+        assert phase_526_checklist["acceptance_state"] == "pending"
+        assert phase_526_acceptance["acceptance_state"] == "pending"
+        assert phase_526_acceptance["accepted_at"] is None
+        assert phase_526_acceptance["parent_verification_completed"] is False
+        assert phase_526_acceptance["controller_review_completed"] is False
+    else:
+        assert phase_526_acceptance["status"] == "accepted"
+        assert phase_526_design["acceptance_state"] == "accepted"
+        assert phase_526_checklist["status"] == "accepted"
+        assert phase_526_checklist["acceptance_state"] == "accepted"
+        assert phase_526_acceptance["acceptance_state"] == "accepted"
+        assert phase_526_acceptance["accepted_at"] is not None
+        assert phase_526_acceptance["parent_verification_completed"] is True
+        assert phase_526_acceptance["controller_review_completed"] is True
+
+
+def test_phase526_closeout_status_progression_is_gated_and_excludes_phase527():
+    phase_526_design = yaml.safe_load(
+        PHASE_526_DESIGN.read_text(encoding="utf-8").split("---", 2)[1]
+    )
+    phase_526_checklist = yaml.safe_load(PHASE_526_CHECKLIST.read_text(encoding="utf-8"))
+    phase_526_acceptance = yaml.safe_load(
+        PHASE_526_ACCEPTANCE.read_text(encoding="utf-8").split("---", 2)[1]
+    )
+    status = next(
+        line
+        for line in ATTENTION_DOC.read_text(encoding="utf-8").splitlines()
+        if re.match(r"^\s*-\s*Current status ", line)
+    )
+
+    lifecycle_accepted = {
+        phase_526_design["acceptance_state"],
+        phase_526_checklist["acceptance_state"],
+        phase_526_acceptance["acceptance_state"],
+        phase_526_acceptance["status"],
+    } == {"accepted"}
+    if lifecycle_accepted:
+        assert phase_526_checklist["status"] == "accepted"
+        assert status.startswith(f"- {PHASE_526_STATUS_PREFIX}")
+        assert status.count(PHASE_526_STATUS_LABEL) == 1
+    else:
+        assert phase_526_design["acceptance_state"] == "pending"
+        assert phase_526_checklist["acceptance_state"] == "pending"
+        assert phase_526_acceptance["acceptance_state"] == "pending"
+        assert phase_526_acceptance["status"] == "pending"
+        assert status.startswith(f"- {CURRENT_STATUS_PREFIX}")
+        assert PHASE_526_STATUS_LABEL not in status
+
+    assert PHASE_527_STATUS_MARKER not in status
+
+
 def test_attention_current_status_line_is_current():
     lines = ATTENTION_DOC.read_text(encoding="utf-8").splitlines()
 
@@ -813,17 +899,26 @@ def test_attention_current_status_line_is_current():
     assert status_index == lines.index(adult_boundary) + 1
     assert status_index < lines.index(credentials_header)
 
-    assert status.startswith(f"- {CURRENT_STATUS_PREFIX}")
-    phase_labels_status = status[len(f"- {CURRENT_STATUS_PREFIX}") :]
-    assert len(REQUIRED_PHASE_LABELS) == 358
-    phase_range = range(168, 526)
-    assert [int(label.split()[1]) for label in REQUIRED_PHASE_LABELS] == list(phase_range)
-    for label in REQUIRED_PHASE_LABELS:
-        assert label in phase_labels_status
-    assert [phase_labels_status.index(label) for label in REQUIRED_PHASE_LABELS] == sorted(
-        phase_labels_status.index(label) for label in REQUIRED_PHASE_LABELS
+    phase_526_acceptance = yaml.safe_load(
+        PHASE_526_ACCEPTANCE.read_text(encoding="utf-8").split("---", 2)[1]
     )
-    assert phase_labels_status.count(REQUIRED_PHASE_LABELS[-1]) == 1
+    phase_526_accepted = phase_526_acceptance["status"] == "accepted"
+    expected_prefix = PHASE_526_STATUS_PREFIX if phase_526_accepted else CURRENT_STATUS_PREFIX
+    expected_labels = [*REQUIRED_PHASE_LABELS]
+    if phase_526_accepted:
+        expected_labels.append(PHASE_526_STATUS_LABEL)
+
+    assert status.startswith(f"- {expected_prefix}")
+    phase_labels_status = status[len(f"- {expected_prefix}") :]
+    assert len(REQUIRED_PHASE_LABELS) == 358
+    phase_range = range(168, 526 + int(phase_526_accepted))
+    assert [int(label.split()[1]) for label in REQUIRED_PHASE_LABELS] == list(range(168, 526))
+    for label in expected_labels:
+        assert label in phase_labels_status
+        assert phase_labels_status.count(label) == 1
+    assert [phase_labels_status.index(label) for label in expected_labels] == sorted(
+        phase_labels_status.index(label) for label in expected_labels
+    )
     assert STALE_STATUS_PREFIX not in status
     assert OLDER_STALE_STATUS_PREFIX not in status
     assert re.search(rf"(?<!\d){re.escape(STALE_PHASE_MARKER)}(?!\d)", status) is None
@@ -836,19 +931,26 @@ def test_attention_current_status_line_is_current():
     assert re.search(rf"(?<!\d){re.escape(OLDEST_STALE_PHASE_MARKER_EN_DASH)}(?!\d)", status) is None
     assert re.search(rf"(?<!\d){re.escape(EARLIEST_STALE_PHASE_MARKER)}(?!\d)", status) is None
     assert re.search(rf"(?<!\d){re.escape(EARLIEST_STALE_PHASE_MARKER_EN_DASH)}(?!\d)", status) is None
-    assert status.endswith(FINAL_STATUS_SUFFIX)
+    expected_final_status_suffix = FINAL_STATUS_SUFFIX
+    if phase_526_accepted:
+        expected_final_status_suffix = (
+            FINAL_STATUS_SUFFIX.removesuffix(".").removesuffix(
+                "and Phase 525 phase524 post-commit record plan"
+            )
+            + f"Phase 525 phase524 post-commit record plan, and {PHASE_526_STATUS_LABEL}."
+        )
+    assert status.endswith(expected_final_status_suffix)
     aggregate_range = "range(168, 526)"
     stale_aggregate_guard = "".join(["range(168, ", str(phase_range.stop - 1), ")"])
-    later_phase_label = f"Phase {phase_range.stop} "
+    later_phase_label = PHASE_527_STATUS_MARKER
     assert all(f"Phase {phase} " in phase_labels_status for phase in phase_range)
-    assert all(phase_labels_status.count(label) == 1 for label in REQUIRED_PHASE_LABELS)
+    assert all(phase_labels_status.count(label) == 1 for label in expected_labels)
     assert later_phase_label not in status
-    assert "Phase 526" not in status
     assert re.search(r"(?<!\d)Phase 121-167(?!\d)", status) is not None
     test = Path(__file__).read_text(encoding="utf-8")
-    assert later_phase_label not in test
     assert aggregate_range in test
-    assert stale_aggregate_guard not in test
+    if not phase_526_accepted:
+        assert stale_aggregate_guard not in test
     assert re.findall(r"^CURRENT_STATUS_PREFIX\s*=", test, re.M) == ["CURRENT_STATUS_PREFIX ="]
     assert re.findall(r"^FINAL_STATUS_SUFFIX\s*=", test, re.M) == ["FINAL_STATUS_SUFFIX ="]
     assert CURRENT_STATUS_PREFIX in test
