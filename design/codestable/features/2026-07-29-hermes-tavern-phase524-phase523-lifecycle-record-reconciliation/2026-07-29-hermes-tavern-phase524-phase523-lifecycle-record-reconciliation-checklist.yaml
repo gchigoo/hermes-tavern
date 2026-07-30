@@ -11,7 +11,7 @@ parent_verification_required: true
 parent_verification_completed: true
 controller_review_completed: true
 worker_commit_or_push_performed: false
-parent_commit_or_push_performed: false
+parent_commit_or_push_performed: true
 acceptance_artifact: design/codestable/features/2026-07-29-hermes-tavern-phase524-phase523-lifecycle-record-reconciliation/2026-07-29-hermes-tavern-phase524-phase523-lifecycle-record-reconciliation-acceptance.md
 acceptance_md_present: true
 tags: [codestable, lifecycle, docs, static-test, status-sync]

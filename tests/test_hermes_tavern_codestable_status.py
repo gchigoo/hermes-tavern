@@ -629,6 +629,40 @@ def test_phase523_accepted_lifecycle_records_are_consistent():
     assert all(check.get("status") == "passed" for check in phase_523_checklist["checks"])
 
 
+def test_phase524_accepted_lifecycle_records_are_consistent():
+    phase_524_dir = REPO_ROOT / "design/codestable/features/2026-07-29-hermes-tavern-phase524-phase523-lifecycle-record-reconciliation"
+    phase_524_design_text = (phase_524_dir / "2026-07-29-hermes-tavern-phase524-phase523-lifecycle-record-reconciliation-design.md").read_text(encoding="utf-8")
+    phase_524_checklist_text = (phase_524_dir / "2026-07-29-hermes-tavern-phase524-phase523-lifecycle-record-reconciliation-checklist.yaml").read_text(encoding="utf-8")
+    phase_524_acceptance_text = (phase_524_dir / "2026-07-29-hermes-tavern-phase524-phase523-lifecycle-record-reconciliation-acceptance.md").read_text(encoding="utf-8")
+    phase_524_design = yaml.safe_load(phase_524_design_text.split("---", 2)[1])
+    phase_524_checklist = yaml.safe_load(phase_524_checklist_text)
+    phase_524_acceptance = yaml.safe_load(phase_524_acceptance_text.split("---", 2)[1])
+
+    expected_feature = "2026-07-29-hermes-tavern-phase524-phase523-lifecycle-record-reconciliation"
+    assert {
+        phase_524_design["feature"],
+        phase_524_checklist["feature"],
+        phase_524_acceptance["feature"],
+    } == {expected_feature}
+    assert phase_524_design["status"] == "approved"
+    assert phase_524_design["acceptance_state"] == "accepted"
+    assert phase_524_design["parent_verification_completed"] is True
+    assert phase_524_checklist["status"] == "accepted"
+    assert phase_524_checklist["lifecycle_status"] == "accepted"
+    assert phase_524_checklist["workflow_status"] == "accepted"
+    assert phase_524_checklist["acceptance_state"] == "accepted"
+    assert phase_524_checklist["parent_verification_completed"] is True
+    assert phase_524_checklist["worker_commit_or_push_performed"] is False
+    assert phase_524_checklist["parent_commit_or_push_performed"] is True
+    assert phase_524_acceptance["status"] == "accepted"
+    assert phase_524_acceptance["acceptance_state"] == "accepted"
+    assert phase_524_acceptance["parent_verification_completed"] is True
+    assert phase_524_acceptance["lifecycle_promotion"] == "completed"
+    assert all(step.get("status") == "done" for step in phase_524_checklist["steps"])
+    assert all(check.get("status") == "passed" for check in phase_524_checklist["checks"])
+    assert "At this review point no Phase 524 commit or push has occurred." in phase_524_acceptance_text
+
+
 def test_attention_current_status_line_is_current():
     lines = ATTENTION_DOC.read_text(encoding="utf-8").splitlines()
 
