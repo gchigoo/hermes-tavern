@@ -2,13 +2,13 @@ doc_type: feature-checklist
 feature: 2026-07-30-hermes-tavern-phase526-phase525-acceptance-reference-integrity
 requirement: docs
 created: 2026-07-30
-status: implemented
-lifecycle_status: implemented
-workflow_status: implemented
-acceptance_state: pending
+status: accepted
+lifecycle_status: accepted
+workflow_status: accepted
+acceptance_state: accepted
 implementation_ready: true
 parent_verification_required: true
-parent_verification_completed: false
+parent_verification_completed: true
 worker_commit_or_push_performed: false
 parent_commit_or_push_performed: false
 acceptance_artifact: design/codestable/features/2026-07-30-hermes-tavern-phase526-phase525-acceptance-reference-integrity/2026-07-30-hermes-tavern-phase526-phase525-acceptance-reference-integrity-acceptance.md
@@ -28,18 +28,18 @@ steps:
     title: Complete controller-owned lifecycle closeout
     action: Create acceptance evidence and update attention/status lifecycle only after controller gates and independent review pass.
     exit_signal: Accepted lifecycle records actual controller evidence and exact scope.
-    status: pending
-    evidence: "Pending Controller verification."
+    status: done
+    evidence: "Controller verified focused (23 passed), full pytest (1227 passed), YAML validator, git diff --check; independent review passed."
 checks:
   - id: phase525-reference-integrity
     title: Phase 525 acceptance reference is exact and identity-safe
     item: The Phase 525 checklist reference resolves to its accepted feature-acceptance artifact with matching feature identity.
     source: tests/test_hermes_tavern_codestable_status.py
     status: passed
-    evidence: "S1 provides the exact-reference regression; Controller verification remains pending."
+    evidence: "Controller confirmed all static contract and status-progression tests pass; Phase 526 acceptance artifact references Phase 525 correctly."
   - id: scope-boundary
     title: Runtime and historical artifacts remain unchanged
     item: Only the explicitly allowed Phase 526 lifecycle/static-test paths change.
     source: git status and git diff --check
     status: passed
-    evidence: "S1 scope is limited to the allowed lifecycle/static-test paths; Controller exact-scope review remains pending."
+    evidence: "Controller confirmed exact-scope: only Phase 526 artifacts, checklist, acceptance, and attention.md changed."

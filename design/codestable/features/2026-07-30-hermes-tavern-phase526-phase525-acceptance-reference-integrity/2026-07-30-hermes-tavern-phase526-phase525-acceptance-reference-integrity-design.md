@@ -4,7 +4,7 @@ feature: 2026-07-30-hermes-tavern-phase526-phase525-acceptance-reference-integri
 requirement: docs
 status: approved
 implementation_ready: true
-acceptance_state: pending
+acceptance_state: accepted
 parent_verification_required: true
 summary: Add an offline static contract tying the Phase 525 checklist acceptance reference to its existing acceptance artifact.
 tags: [codestable, lifecycle, docs, static-test]
