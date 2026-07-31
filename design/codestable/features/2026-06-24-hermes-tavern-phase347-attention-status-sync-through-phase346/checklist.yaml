@@ -1,11 +1,12 @@
 doc_type: feature-checklist
-status: implemented
+status: accepted
 workflow_status: passed_parent_verification
-acceptance_state: pending_parent_verification
+acceptance_state: accepted
 implementation_ready: true
 worker_commit_or_push_performed: false
 parent_commit_or_push_performed: false
 parent_verification_required: true
+parent_verification_completed: true
 
 feature: 2026-06-24-hermes-tavern-phase347-attention-status-sync-through-phase346
 date: "2026-06-24"
@@ -18,7 +19,7 @@ selected_phase_slug: 2026-06-24-hermes-tavern-phase347-attention-status-sync-thr
 selected_title: "Phase 347 attention/status sync through Phase 346"
 summary: "Phase 347 attention/status sync through accepted Phase 346 (S1 docs+tests only)."
 controller_lane: company-boost
-acceptance_artifact: none
+acceptance_artifact: design/codestable/features/2026-06-24-hermes-tavern-phase347-attention-status-sync-through-phase346/acceptance.md
 
 phase_selection_gate:
   prior_phase: 346
@@ -31,7 +32,7 @@ phase_selection_gate:
   phase348_preexisting: false
   selected_slice: "Phase 347 attention/status sync through Phase 346"
   executor_acceptance_finalization: prohibited
-  controller_acceptance_finalization: deferred_to_parent_controller
+  controller_acceptance_finalization: completed
 
 status_test_contract:
   current_live_before_s1:
@@ -115,7 +116,7 @@ steps:
     name: "Parent-controller verification and acceptance finalization"
     owner: parent_controller
     status: passed
-    acceptance_creation: deferred
+    acceptance_creation: completed
     checks:
       - id: C8
         description: "validate-yaml"
