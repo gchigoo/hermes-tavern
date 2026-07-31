@@ -1,14 +1,15 @@
 doc_type: feature-checklist
 feature: 2026-07-08-hermes-tavern-phase464-attention-status-sync-through-phase463
-status: pending_parent_verification
-workflow_status: pending_parent_verification
-acceptance_state: pending_parent_verification
+status: accepted
+workflow_status: accepted
+acceptance_state: accepted
 implementation_ready: true
 parent_verification_required: true
+parent_verification_completed: true
 worker_commit_or_push_performed: false
 parent_commit_or_push_performed: false
-acceptance_artifact: null
-acceptance_md_present: false
+acceptance_artifact: design/codestable/features/2026-07-08-hermes-tavern-phase464-attention-status-sync-through-phase463/acceptance.md
+acceptance_md_present: true
 
 date: "2026-07-08"
 owner: company-boost
@@ -18,7 +19,7 @@ result_type: status_sync_single_tick
 selected_scope: status-docs-tests-only
 selected_phase_slug: 2026-07-08-hermes-tavern-phase464-attention-status-sync-through-phase463
 selected_title: "Phase 464 attention/status sync through Phase 463"
-summary: "Phase 464 attention/status sync through accepted Phase 463 is implemented by S1 and awaits parent-controller verification."
+summary: "Phase 464 attention/status sync through accepted Phase 463 is accepted after controller verification."
 controller_lane: company-boost
 architect_design_jsonl: /tmp/hermes-tavern-companyboost-architect-20260708-phase464.jsonl
 executor_jsonl: /tmp/hermes-tavern-companyboost-executor-20260708-phase464.jsonl
@@ -94,27 +95,32 @@ steps:
   - id: S2
     name: "Parent/controller verification and acceptance closeout"
     owner: parent_controller
-    status: pending
-    acceptance_creation: pending_parent_controller
+    status: completed
+    acceptance_creation: completed_by_parent_controller
+    closeout_evidence:
+      artifact: design/codestable/features/2026-07-08-hermes-tavern-phase464-attention-status-sync-through-phase463/acceptance.md
+      status: verified_by_parent_controller
+      verification_executed_by_executor: false
+      notes: "Controller ran YAML validation, py_compile, focused and full pytest, scope review, and git diff --check before lifecycle finalization."
     checks:
       - id: C9
         description: "Validate Phase 464 design/checklist YAML."
-        status: pending
+        status: passed
       - id: C10
         description: "Run py_compile for the focused status test."
-        status: pending
+        status: passed
       - id: C11
         description: "Run focused status pytest."
-        status: pending
+        status: passed
       - id: C12
         description: "Optionally run full pytest as parent/full verification."
-        status: pending
+        status: passed
       - id: C13
         description: "Run static allowed-path/status/range/no-Phase-465/no-acceptance guard and git diff --check."
-        status: pending
+        status: passed
       - id: C14
         description: "Create acceptance.md and finalize checklist status only after parent verification."
-        status: pending
+        status: passed
 
 verification_commands:
   - "PYTHONDONTWRITEBYTECODE=1 python design/codestable/tools/validate-yaml.py --dir design/codestable/features/2026-07-08-hermes-tavern-phase464-attention-status-sync-through-phase463 --require doc_type --require status --require feature"
