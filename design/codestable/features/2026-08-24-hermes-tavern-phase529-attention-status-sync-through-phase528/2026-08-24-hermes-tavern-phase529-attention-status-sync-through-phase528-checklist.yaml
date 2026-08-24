@@ -2,22 +2,23 @@ doc_type: feature-checklist
 feature: 2026-08-24-hermes-tavern-phase529-attention-status-sync-through-phase528
 requirement: docs
 created: 2026-08-24
-status: pending
-workflow_status: pending
-acceptance_state: pending_parent_verification
+status: accepted
+workflow_status: accepted
+acceptance_state: accepted
 implementation_ready: true
 parent_verification_required: true
-parent_verification_completed: false
+parent_verification_completed: true
 worker_commit_or_push_performed: false
 parent_commit_or_push_performed: false
-acceptance_artifact: null
-acceptance_md_present: false
+acceptance_artifact: 2026-08-24-hermes-tavern-phase529-attention-status-sync-through-phase528-acceptance.md
+acceptance_md_present: true
 tags: [codestable, docs, static-test, status-sync, company-boost]
-audit_state: architect_plan_passed
+audit_state: audited_pass
 architect_design_audit: "PASS planning evidence via /tmp/tavern-phase529-architect-ratify-20260824.jsonl: schema-v1 architect audit, gpt-5.6-sol/high, exit 0, complete turn, no failed commands or semantic blockers."
 architect_discovery_evidence: "/tmp/tavern-phase529-architect-20260824.jsonl is structurally complete at gpt-5.6-sol/high; its generic workflow-text scan was superseded by the terse ratification audit."
-executor_audit: null
-independent_review: null
+executor_audit: "Fresh completion/reconciliation evidence: /tmp/tavern-phase529-executor-completion-reconciliation-20260824.jsonl; schema-v1 Executor audit, gpt-5.6-terra/high, matching thread, wrapper enforcement, exit 0, final agent message, and turn.completed. One optional MCP approval denial was non-critical exploration noise; failed command count was zero and the exact five-file bounded diff was preserved."
+independent_review: "PASS at /tmp/tavern-phase529-final-review-current.jsonl: schema-v1 Architect audit, gpt-5.6-sol/high, matching thread, wrapper enforcement, exit 0, complete turn, and VERDICT: PASS after final lifecycle state."
+controller_verification: "Pre-finalization Controller gates passed: feature validator 2/2; checklist YAML-only validator 1/1; py_compile; focused 23/23; packaging smoke 1/1; Tavern glob 1227/1227; authoritative full suite 1227/1227; exact semantic/scope/byte/HEAD/index guard after one false-positive guard correction; git diff checks."
 planning_handoff: "Controller materialized only this approved design and pending checklist. Attention and tests remain unchanged; Executor, implementation verification, and final review were not launched without the required remaining wrapper budget."
 planning_controller_gates: "Directory validator passed 2/2; checklist YAML-only validator passed 1/1; exact two-untracked-path scope, fixed HEAD/main, clean index, design/checklist-only directory, acceptance absence, pending lifecycle, UTF-8/LF/final-newline/whitespace/CR/NUL hygiene, unchanged implementation files, and diff checks all passed."
 verification_commands:
@@ -41,30 +42,30 @@ steps:
     title: Synchronize accepted history through Phase 529
     action: Update only the allowed status source and focused tests to the canonical Phase 529 baseline while preserving every Phase 168-528 label and excluding the immediate successor.
     exit_signal: Worker gates prove ordered unique labels 168-529, count 362, the rotated stale-range guard, exact final suffix, and successor absence.
-    status: pending
-    evidence: null
+    status: done
+    evidence: "Recovery audit evidence: /tmp/tavern-phase529-closeout-executor-recovery-20260824.jsonl; gpt-5.6-terra/high. Implemented only design/codestable/attention.md, tests/test_hermes_tavern_codestable_status.py, and tests/test_hermes_tavern_design_docs.py. TDD exception: documentation/static-contract rotation with no runtime behavior change. Observed bounded gates: directory validator 2 passed/0 failed; checklist YAML-only validator 1 passed/0 failed; py_compile passed; focused design/status tests 23 passed in 0.25s; positive Python scope/lifecycle/semantic guards passed; git diff --check passed. Packaging, Tavern-glob, and full-suite commands were not run."
   - id: controller-verification
-    title: Perform independent Controller verification
-    action: Parent Controller independently reruns all declared gates and decides whether a later S2 closeout may create acceptance evidence.
-    exit_signal: Parent verification is independently recorded while acceptance remains deferred.
-    status: pending
-    evidence: null
+    title: Perform independent Controller verification and parent closeout
+    action: Parent Controller independently reruns all declared gates, verifies the bounded implementation, and creates acceptance evidence when the closeout gates pass.
+    exit_signal: Parent verification is recorded, the checklist and acceptance agree on accepted lifecycle, and commit/push remain false.
+    status: done
+    evidence: "Controller independently observed directory validator 2/2, checklist YAML-only validator 1/1, py_compile, focused design/status 23 passed in 0.24s, packaging smoke 1 passed in 0.14s, Tavern glob 1227 passed in 50.29s, authoritative full suite 1227 passed in 48.75s, exact Phase 529 semantic/scope/byte/HEAD/index checks, a clean index, and git diff checks. The first custom phase-number guard included pre-168 summary labels and false-failed; a corrected Phase-168-tail guard passed without repository changes."
 checks:
   - id: phase529-status-line
     title: Phase 529 status baseline
     item: The attention current-status line records phases 1-529 accepted exactly once and appends the exact Phase 529 label.
     source: tests/test_hermes_tavern_codestable_status.py
-    status: pending
-    evidence: null
+    status: passed
+    evidence: "Focused tests plus the Controller semantic guard confirm phases 1-529 accepted, ordered unique Phase 168-529 labels, exact suffix, canonical range, stale-range absence, and immediate-successor absence."
   - id: canonical-plan-authority
     title: Canonical implementation plan authority remains unchanged
     item: Current authority documents retain the canonical design and implementation-plan paths with no mirror or second authority.
     source: tests/test_hermes_tavern_design_docs.py
-    status: pending
-    evidence: null
+    status: passed
+    evidence: "Focused and full suites preserve the canonical design and implementation-plan authority assertions."
   - id: bounded-scope
     title: Exact lifecycle-aware scope remains bounded
     item: Planning handoff contains only this feature's design/checklist; later worker handoff may add only attention and the two focused tests, while state.json and runtime surfaces remain untouched.
     source: git status, tracked diff, and untracked-byte comparison
-    status: pending
-    evidence: null
+    status: passed
+    evidence: "Controller scope and byte guards confirmed only attention, the Phase 529 checklist, and the two focused tests differed before acceptance creation; the committed Phase 529 design was immutable, HEAD/main stayed fixed, the index stayed clean, and no runtime or state paths changed."
