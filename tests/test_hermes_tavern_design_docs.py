@@ -19,7 +19,7 @@ OBSOLETE_IMPLEMENTATION_PLAN = (
 CANONICAL_IMPLEMENTATION_PLAN_PATH = "design/plans/hermes-tavern-implementation-v0.1.md"
 CANONICAL_DESIGN_DOC_PATH = "design/HERMES_TAVERN_DESIGN.md"
 NONCANONICAL_ROOT_DESIGN_DOC_REFERENCE = "`" + "HERMES_TAVERN_DESIGN.md" + "`"
-ACCEPTED_PHASE_526_STATUS = "Current status (2026-06-18): All phases 1-526 accepted"
+ACCEPTED_PHASE_527_STATUS = "Current status (2026-06-18): All phases 1-527 accepted"
 
 EXPECTED_EXPORT_LITERALS = (
     "/rp relationship export <relationship-id>",
@@ -142,9 +142,9 @@ def test_design_docs_use_the_canonical_implementation_plan_path() -> None:
     attention_text = ATTENTION_DOC.read_text(encoding="utf-8")
     assert f"- Design doc: `{CANONICAL_DESIGN_DOC_PATH}`." in attention_text
     assert NONCANONICAL_ROOT_DESIGN_DOC_REFERENCE not in attention_text
-    assert ACCEPTED_PHASE_526_STATUS in attention_text
+    assert ACCEPTED_PHASE_527_STATUS in attention_text
     assert attention_text.count("Phase 525 phase524 post-commit record plan") == 1
-    assert "Phase " + "527" not in attention_text
+    assert "Phase " + "528" not in attention_text
 
     credential_reuse_text = CREDENTIAL_REUSE_DECISION.read_text(encoding="utf-8")
     assert f"- `{CANONICAL_DESIGN_DOC_PATH}` §19" in credential_reuse_text

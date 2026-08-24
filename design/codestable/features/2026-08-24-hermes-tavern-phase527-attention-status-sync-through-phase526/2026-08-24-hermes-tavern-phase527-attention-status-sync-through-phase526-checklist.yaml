@@ -1,0 +1,58 @@
+doc_type: feature-checklist
+feature: 2026-08-24-hermes-tavern-phase527-attention-status-sync-through-phase526
+requirement: docs
+created: 2026-08-24
+status: accepted
+workflow_status: accepted
+acceptance_state: accepted
+implementation_ready: true
+parent_verification_required: true
+parent_verification_completed: true
+worker_commit_or_push_performed: false
+parent_commit_or_push_performed: false
+acceptance_artifact: 2026-08-24-hermes-tavern-phase527-attention-status-sync-through-phase526-acceptance.md
+acceptance_md_present: true
+tags: [codestable, docs, static-test, status-sync, company-boost]
+audit_state: passed
+architect_audit: "PASS via policy wrapper: gpt-5.6-sol/high, schema-v1 audit, exit 0."
+executor_audit: "Observed required policy mapping via wrapper: gpt-5.6-terra/high, schema-v1 audit, exit 0."
+independent_review: "PASS after lifecycle-evidence correction; no blocking findings remain."
+verification_commands:
+  - "python3 design/codestable/tools/validate-yaml.py --dir design/codestable/features/2026-08-24-hermes-tavern-phase527-attention-status-sync-through-phase526"
+  - "python3 design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-08-24-hermes-tavern-phase527-attention-status-sync-through-phase526/2026-08-24-hermes-tavern-phase527-attention-status-sync-through-phase526-checklist.yaml --yaml-only"
+  - "PYTHONDONTWRITEBYTECODE=1 python3 -B -m py_compile tests/test_hermes_tavern_design_docs.py tests/test_hermes_tavern_codestable_status.py"
+  - "PYTHONDONTWRITEBYTECODE=1 python3 -B -m pytest tests/test_hermes_tavern_design_docs.py tests/test_hermes_tavern_codestable_status.py -q -o 'addopts=' -p no:cacheprovider"
+  - "PYTHONDONTWRITEBYTECODE=1 python3 -B -m pytest -q -o 'addopts=' -p no:cacheprovider"
+  - "git diff --check"
+steps:
+  - id: synchronize-phase527-status
+    title: Synchronize accepted history through Phase 527
+    action: Update only the allowed status source and static tests to the canonical Phase 527 baseline while preserving every Phase 168-526 label and excluding Phase 528.
+    exit_signal: Focused tests prove ordered unique labels 168-527, the split stale range(168, 527) guard, and Phase 528 absence.
+    status: done
+    evidence: "Executor S1 completed through the policy wrapper without acceptance creation or commit/push; Controller focused verification passed with 23 tests."
+  - id: controller-verification
+    title: Perform independent Controller verification and closeout
+    action: Controller reruns all declared gates, exact-scope and untracked-byte guards, creates acceptance evidence, promotes lifecycle fields, and reruns every gate without committing or pushing.
+    exit_signal: Accepted lifecycle records actual verification evidence with parent verification required and completed.
+    status: done
+    evidence: "Controller pre- and post-promotion gates passed: YAML/frontmatter validators, py_compile, focused pytest (23 passed), full pytest (1227 passed), static contracts, exact scope/untracked bytes, and git diff --check."
+checks:
+  - id: phase527-status-line
+    title: Accepted Phase 527 status
+    item: The attention current-status line records phases 1-527 accepted exactly once and appends the exact Phase 527 label.
+    source: tests/test_hermes_tavern_codestable_status.py
+    status: passed
+    evidence: "Static guard and focused suite confirm exact ordered unique Phase 168-527 labels, the Phase 121-167 aggregate, and Phase 528 absence."
+  - id: canonical-plan-authority
+    title: Canonical implementation plan authority remains unchanged
+    item: Current authority documents retain the canonical design and implementation-plan paths with no mirror or second authority.
+    source: tests/test_hermes_tavern_design_docs.py
+    status: passed
+    evidence: "Focused design-doc contract passed inside the 23-test focused suite."
+  - id: bounded-scope
+    title: Exact S1 scope remains bounded
+    item: Only attention, the two focused tests, and this feature lifecycle triplet differ from HEAD; state.json and runtime surfaces remain untouched.
+    source: git status, tracked diff, and untracked-byte comparison
+    status: passed
+    evidence: "Controller scope guard confirmed exactly three tracked paths and three UTF-8 lifecycle artifacts after promotion; HEAD remained fdd6f2a and no commit/push occurred."
