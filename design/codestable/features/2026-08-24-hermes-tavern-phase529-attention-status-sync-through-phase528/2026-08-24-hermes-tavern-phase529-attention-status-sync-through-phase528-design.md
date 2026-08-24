@@ -4,12 +4,16 @@ feature: 2026-08-24-hermes-tavern-phase529-attention-status-sync-through-phase52
 requirement: docs
 status: approved
 implementation_ready: true
-parent_verification_status: pending
-acceptance_state: pending_parent_verification
+parent_verification_status: completed
+acceptance_state: accepted
 parent_verification_required: true
 worker_commit_or_push_performed: false
-parent_commit_or_push_performed: false
-summary: Advance the canonical accepted-status record from Phase 528 through Phase 529 without changing runtime behavior.
+parent_commit_or_push_performed: true
+closeout_commit: 2b2d47f1725c35f785c883f828c5c3a589f22ab7
+closeout_parent_commit: 08c10c4098a0ad3e11dbb9910bc7a8b7aa99b63a
+pushed_ref: origin/main
+post_commit_reconciliation_status: completed
+summary: Phase 529 remains accepted; its bounded post-commit lifecycle-record reconciliation is parent-verified.
 tags: [codestable, docs, static-test, status-sync, company-boost]
 ---
 
@@ -19,22 +23,22 @@ tags: [codestable, docs, static-test, status-sync, company-boost]
 
 Advance exactly one bounded CodeStable status-sync slice after accepted Phase 528. The implementation will update the single canonical current-status line in `design/codestable/attention.md`, append the Phase 529 status label, and rotate only the two focused static-test contracts.
 
-This document and its checklist are the complete approved planning artifacts. Implementation, Executor evidence, independent final review, parent verification, and acceptance remain pending.
+This document and its checklist are the complete approved planning artifacts. The approved implementation and Executor evidence completed, independent final review and parent verification passed, and the existing Phase 529 acceptance artifact records the accepted outcome.
 
 ## Lifecycle
 
-This is a non-final S1 worker handoff plan. The Controller creates the approved design and pending checklist before Executor dispatch. The eventual Executor may implement only the approved functional edits and record worker evidence in the checklist. The design remains immutable after this planning handoff.
+This began as a non-final S1 worker handoff plan. The Controller created the approved design and pending checklist before Executor dispatch; the approved implementation and review then completed, and parent verification passed. The design remains immutable historical planning evidence.
 
-No acceptance artifact is created. `parent_verification_required` remains true, parent verification remains pending, and both worker and parent commit/push flags remain false. No staging, commit, push, or global progress-state update belongs to this slice.
+The existing acceptance artifact is `2026-08-24-hermes-tavern-phase529-attention-status-sync-through-phase528-acceptance.md`. `parent_verification_required` remains true; the accepted Phase 529 lifecycle has completed parent verification, worker commit/push remains false, and parent commit/push is true. The accepted closeout was committed as `2b2d47f1725c35f785c883f828c5c3a589f22ab7`, whose parent is `08c10c4098a0ad3e11dbb9910bc7a8b7aa99b63a`, and pushed to `origin/main`. This three-file reconciliation passed parent verification and an audited independent Architect review; it remains unstaged, uncommitted, and unpushed until Controller closeout.
 
-## Current Planning Handoff
+## Historical Planning Handoff
 
-At the planning-only handoff, exactly these two new paths may be dirty:
+At the planning-only handoff, exactly these two new paths were permitted to be dirty:
 
 - `design/codestable/features/2026-08-24-hermes-tavern-phase529-attention-status-sync-through-phase528/2026-08-24-hermes-tavern-phase529-attention-status-sync-through-phase528-design.md`
 - `design/codestable/features/2026-08-24-hermes-tavern-phase529-attention-status-sync-through-phase528/2026-08-24-hermes-tavern-phase529-attention-status-sync-through-phase528-checklist.yaml`
 
-Attention and tests remain unchanged until an audited Executor is launched with sufficient time for a complete wrapper turn.
+Attention and tests were unchanged at that historical planning point; the later accepted implementation/review evidence is retained in the checklist and acceptance artifact.
 
 ## Exact Implementation Allowlist
 
@@ -93,7 +97,7 @@ In `tests/test_hermes_tavern_design_docs.py`:
 
 ## Boundaries
 
-Do not create an acceptance report. Do not edit Phase 528 or any other existing feature artifacts, later-phase artifacts or markers, `state.json`, requirements, roadmap, architecture, compound knowledge, root design, implementation plans, README, release documentation, or attention content outside the single status line.
+Do not create a new acceptance report. Do not edit Phase 528 or any other existing feature artifacts, later-phase artifacts or markers, `state.json`, requirements, roadmap, architecture, compound knowledge, root design, implementation plans, README, release documentation, or attention content outside the single status line.
 
 Do not change runtime, plugin, Hermes core, gateway, CLI, authentication, authorization, credentials, providers, models, networking, cron, services, packaging, dependencies, configuration, CI, fixtures, assets, or schemas. Do not add dynamic filesystem discovery, refactor unrelated code, introduce formatting churn, TODO/FIXME/debug output, dead imports, or commented-out code.
 
@@ -105,8 +109,8 @@ Hermes plugin behavior, SillyTavern compatibility, and adult-roleplay capability
 
 1. Update only the canonical attention status line and the two focused static-test contracts according to the exact rotations above.
 2. Run the declared worker gates and record raw observed results in the checklist.
-3. Promote only the implementation step and worker evidence to implemented state. Leave the Controller-verification step and all parent-owned checks pending.
-4. Return the exact five-path dirty tree for independent Controller verification and read-only Architect review.
+3. Historical execution promoted the implementation and worker evidence; independent Controller verification and read-only Architect review subsequently completed.
+4. The accepted implementation closeout is historical at `2b2d47f1725c35f785c883f828c5c3a589f22ab7`; return only this current three-path reconciliation for parent Controller verification.
 
 ## Verification
 
@@ -118,7 +122,7 @@ Hermes plugin behavior, SillyTavern compatibility, and adult-roleplay capability
 - `env -u PYTEST_DISABLE_PLUGIN_AUTOLOAD -u PYTEST_ADDOPTS TMPDIR=/tmp PYTHONDONTWRITEBYTECODE=1 /Library/Frameworks/Python.framework/Versions/3.11/bin/python3 -B -m pytest tests/test_hermes_tavern_*.py -q -o 'addopts=' -p no:cacheprovider`
 - `env -u PYTEST_DISABLE_PLUGIN_AUTOLOAD -u PYTEST_ADDOPTS TMPDIR=/tmp PYTHONDONTWRITEBYTECODE=1 /Library/Frameworks/Python.framework/Versions/3.11/bin/python3 -B -m pytest -q -o 'addopts=' -p no:cacheprovider`
 - semantic status/range/label/final-suffix, assignment-count, forbidden-discovery, and successor-absence guards;
-- exact allowed-path, acceptance-absence, fixed-HEAD/branch, clean-index, UTF-8/LF, final-newline, trailing-whitespace, CR, and NUL guards;
+- exact allowed-path, acceptance-presence, fixed-HEAD/branch, clean-index, UTF-8/LF, final-newline, trailing-whitespace, CR, and NUL guards;
 - `git diff --check`;
 - `git status --short --untracked-files=all`.
 
@@ -127,10 +131,10 @@ The worker and Controller must record observed test counts rather than copying t
 ## Review Checklist
 
 - Exactly one Phase 529 slice exists and dirty paths equal the lifecycle-appropriate allowlist.
-- The design/checklist validate and no acceptance artifact exists.
+- The design/checklist validate and the existing acceptance artifact remains present.
 - Attention changes only the canonical status line.
 - Test constants, label count, ranges, stale guards, final suffix, and successor absence match this contract.
 - Focused, packaging, Tavern-glob, and full-suite commands have raw observed results before implementation is claimed.
 - Exact scope, byte hygiene, fixed HEAD, unchanged branch, clean index, and `git diff --check` pass.
-- No runtime, global-progress, unrelated documentation, commit, push, staging, or lifecycle promotion occurred.
-- Parent verification and acceptance remain pending.
+- No runtime, global-progress, unrelated documentation, commit, push, staging, or lifecycle promotion occurs in this reconciliation.
+- The accepted lifecycle retains completed parent verification and accepted status; this reconciliation is independently reviewed and parent-verified.

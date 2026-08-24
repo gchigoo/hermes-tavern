@@ -9,7 +9,11 @@ controller_verification_state: completed
 parent_verification_required: true
 parent_verification_completed: true
 worker_commit_or_push_performed: false
-parent_commit_or_push_performed: false
+parent_commit_or_push_performed: true
+closeout_commit: 2b2d47f1725c35f785c883f828c5c3a589f22ab7
+closeout_parent_commit: 08c10c4098a0ad3e11dbb9910bc7a8b7aa99b63a
+pushed_ref: origin/main
+post_commit_reconciliation_status: completed
 audit_state: audited_pass
 architect_current_audit: /tmp/tavern-phase529-closeout-architect-current-verdict-20260824.jsonl
 executor_recovery_audit: /tmp/tavern-phase529-executor-completion-reconciliation-20260824.jsonl
@@ -28,15 +32,13 @@ The final read-only Architect review at `/tmp/tavern-phase529-final-review-curre
 
 ## Scope
 
-The accepted uncommitted closeout is limited to:
+The historical accepted closeout was committed and pushed as `2b2d47f1725c35f785c883f828c5c3a589f22ab7` on `origin/main`, with S1 parent `08c10c4098a0ad3e11dbb9910bc7a8b7aa99b63a`. The current post-commit reconciliation is limited to:
 
-- `design/codestable/attention.md`
-- `tests/test_hermes_tavern_codestable_status.py`
-- `tests/test_hermes_tavern_design_docs.py`
+- `design/codestable/features/2026-08-24-hermes-tavern-phase529-attention-status-sync-through-phase528/2026-08-24-hermes-tavern-phase529-attention-status-sync-through-phase528-design.md`
 - `design/codestable/features/2026-08-24-hermes-tavern-phase529-attention-status-sync-through-phase528/2026-08-24-hermes-tavern-phase529-attention-status-sync-through-phase528-checklist.yaml`
 - this acceptance artifact
 
-The committed Phase 529 design remains immutable and byte-identical to HEAD. No runtime, plugin, Hermes core, gateway, provider, authentication, cron, global progress-state, dependency, CI, configuration, Phase 528, or later-phase path changed. Hermes plugin behavior and SillyTavern compatibility remain unchanged. No minors-related content or provider-safety-bypass behavior was introduced.
+The committed Phase 529 closeout is historical. This reconciliation diff passed parent Controller verification and audited independent Architect review; it remains unstaged, uncommitted, and unpushed until closeout and does not reopen the accepted lifecycle. No runtime, plugin, Hermes core, gateway, provider, authentication, cron, global progress-state, dependency, CI, configuration, Phase 528, or later-phase path changed. Hermes plugin behavior and SillyTavern compatibility remain unchanged. No minors-related content or provider-safety-bypass behavior was introduced.
 
 ## Controller Verification
 
@@ -56,4 +58,4 @@ The structurally valid recovery Executor audit is `/tmp/tavern-phase529-closeout
 
 ## Lifecycle Decision
 
-Parent verification is complete, the checklist checks are passed, and acceptance evidence exists. Worker and parent commit/push flags remain false because this closeout intentionally leaves a committable dirty tree. No staging, commit, push, stash, reset, clean, service operation, external message, or global progress-state update was performed.
+Parent verification is complete, the checklist checks are passed, and acceptance evidence exists for the historical Phase 529 closeout. Worker commit/push remains false; parent commit/push is true because the closeout was committed as `2b2d47f1725c35f785c883f828c5c3a589f22ab7` and pushed to `origin/main`. The current post-commit reconciliation is parent-verified and remains unstaged, uncommitted, and unpushed until Controller closeout; no staging, commit, push, stash, reset, clean, service operation, external message, or global progress-state update was performed.

@@ -9,7 +9,14 @@ implementation_ready: true
 parent_verification_required: true
 parent_verification_completed: true
 worker_commit_or_push_performed: false
-parent_commit_or_push_performed: false
+parent_commit_or_push_performed: true
+closeout_commit: 2b2d47f1725c35f785c883f828c5c3a589f22ab7
+closeout_parent_commit: 08c10c4098a0ad3e11dbb9910bc7a8b7aa99b63a
+pushed_ref: origin/main
+post_commit_reconciliation_status: completed
+post_commit_architect_plan: "/tmp/hermes-tavern-phase529-reconcile-architect-final.jsonl"
+post_commit_executor_handoff: "/tmp/hermes-tavern-phase529-reconcile-executor.jsonl"
+post_commit_worker_controller_gates: "Python 3.11.1 directory validator 3/3, checklist YAML-only 1/1, validator/focused-test py_compile, focused 23/23, packaging smoke 1/1, Tavern glob 1227/1227, authoritative full pytest 1227/1227, exact three-path/lifecycle/HEAD/origin/clean-index/UTF-8/LF/final-newline/trailing-whitespace/CR/NUL and Phase 530 absence guards, git diff --check, and cached diff checks passed. The first temporary scope guard stripped the first porcelain status line's leading space and false-failed; the corrected raw-status parser passed without repository changes."
 acceptance_artifact: 2026-08-24-hermes-tavern-phase529-attention-status-sync-through-phase528-acceptance.md
 acceptance_md_present: true
 tags: [codestable, docs, static-test, status-sync, company-boost]
@@ -47,9 +54,15 @@ steps:
   - id: controller-verification
     title: Perform independent Controller verification and parent closeout
     action: Parent Controller independently reruns all declared gates, verifies the bounded implementation, and creates acceptance evidence when the closeout gates pass.
-    exit_signal: Parent verification is recorded, the checklist and acceptance agree on accepted lifecycle, and commit/push remain false.
+    exit_signal: Parent verification is recorded and the checklist and acceptance agree on the accepted lifecycle; worker commit/push remains false, while the historical parent closeout is committed and pushed.
     status: done
     evidence: "Controller independently observed directory validator 2/2, checklist YAML-only validator 1/1, py_compile, focused design/status 23 passed in 0.24s, packaging smoke 1 passed in 0.14s, Tavern glob 1227 passed in 50.29s, authoritative full suite 1227 passed in 48.75s, exact Phase 529 semantic/scope/byte/HEAD/index checks, a clean index, and git diff checks. The first custom phase-number guard included pre-168 summary labels and false-failed; a corrected Phase-168-tail guard passed without repository changes."
+  - id: post-commit-reconciliation
+    title: Complete parent verification of post-commit lifecycle reconciliation
+    action: Reconcile the accepted triplet with closeout commit 2b2d47f1725c35f785c883f828c5c3a589f22ab7, S1 parent 08c10c4098a0ad3e11dbb9910bc7a8b7aa99b63a, and pushed ref origin/main without reopening the accepted Phase 529 lifecycle.
+    exit_signal: Parent Controller gates and an independent audited Architect review pass for the exact three-file reconciliation.
+    status: done
+    evidence: "Executor handoff follows valid Architect plan /tmp/hermes-tavern-phase529-reconcile-architect-final.jsonl. Parent Controller reran validators, focused 23/23, Tavern glob 1227/1227, authoritative full pytest 1227/1227, exact scope/lifecycle/HEAD/origin/index/byte/whitespace/Phase530 guards, and git diff checks. Independent review /tmp/hermes-tavern-phase529-reconcile-review.jsonl returned VERDICT: PASS with schema-v1 gpt-5.6-sol/high audit. The historical closeout remains accepted; this reconciliation is verified and awaits only commit/push closeout."
 checks:
   - id: phase529-status-line
     title: Phase 529 status baseline
