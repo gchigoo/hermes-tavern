@@ -5,9 +5,10 @@ requirement: docs
 status: approved
 implementation_ready: true
 parent_verification_status: completed
-acceptance_state: pending_parent_verification
+acceptance_state: accepted
 parent_verification_required: true
 worker_commit_or_push_performed: false
+summary: Controller-accepted Phase 528 attention status synchronization through Phase 527 after bounded S2 closeout gates.
 tags: [codestable, docs, static-test, status-sync, company-boost]
 ---
 
@@ -19,17 +20,15 @@ Advance the single canonical current-status line in `design/codestable/attention
 
 ## Lifecycle
 
-This tick implements and independently verifies S1 only. The design and checklist existed before Executor dispatch; the parent Controller reran the bounded and full gates. Acceptance remains deferred to a later S2 closeout, so no acceptance artifact is created in this slice.
+S1 is committed and its independent parent verification is recorded in the checklist. The parent Controller completed the bounded S2 closeout gates, promoted the lifecycle triplet to accepted, and left the exact three-file S2 tree uncommitted and unpushed for parent closeout.
 
 ## Exact Allowed Files
 
-Only these paths may differ from HEAD:
+For the current S2 preparation, only these paths may differ from HEAD:
 
-- `design/codestable/attention.md`
-- `tests/test_hermes_tavern_codestable_status.py`
-- `tests/test_hermes_tavern_design_docs.py`
 - `design/codestable/features/2026-08-24-hermes-tavern-phase528-attention-status-sync-through-phase527/2026-08-24-hermes-tavern-phase528-attention-status-sync-through-phase527-design.md`
 - `design/codestable/features/2026-08-24-hermes-tavern-phase528-attention-status-sync-through-phase527/2026-08-24-hermes-tavern-phase528-attention-status-sync-through-phase527-checklist.yaml`
+- `design/codestable/features/2026-08-24-hermes-tavern-phase528-attention-status-sync-through-phase527/2026-08-24-hermes-tavern-phase528-attention-status-sync-through-phase527-acceptance.md`
 
 ## Contract
 
@@ -39,19 +38,19 @@ The status test advances the canonical baseline to `range(168, 529)`, rotates cu
 
 ## Boundaries
 
-Do not create an acceptance report. Do not edit Phase 527 artifacts, any later-phase artifact, `state.json`, plugin/runtime code, Hermes core, gateway, authentication, authorization, credentials, providers, models, networking, cron, services, dependencies, packaging, CI, configuration, root design, implementation plans, architecture, requirements, roadmaps, compound documents, README, or release documentation.
+Do not edit attention, tests, Phase 527 artifacts, any later-phase artifact or marker, `state.json`, plugin/runtime code, Hermes core, gateway, authentication, authorization, credentials, providers, models, networking, cron, services, dependencies, packaging, CI, configuration, root design, implementation plans, architecture, requirements, roadmaps, compound documents, README, or release documentation. No commit or push is performed in this S2 closeout.
 
 Hermes plugin behavior, SillyTavern compatibility, and adult-roleplay capability remain unchanged. Content involving minors remains excluded, and provider safety boundaries are not weakened or bypassed.
 
 ## Verification
 
-- `python3 design/codestable/tools/validate-yaml.py --dir design/codestable/features/2026-08-24-hermes-tavern-phase528-attention-status-sync-through-phase527`
-- `python3 design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-08-24-hermes-tavern-phase528-attention-status-sync-through-phase527/2026-08-24-hermes-tavern-phase528-attention-status-sync-through-phase527-checklist.yaml --yaml-only`
-- `PYTHONDONTWRITEBYTECODE=1 python3 -B -m py_compile tests/test_hermes_tavern_design_docs.py tests/test_hermes_tavern_codestable_status.py`
-- `PYTHONDONTWRITEBYTECODE=1 python3 -B -m pytest tests/test_hermes_tavern_design_docs.py tests/test_hermes_tavern_codestable_status.py -q -o 'addopts=' -p no:cacheprovider`
-- `PYTHONDONTWRITEBYTECODE=1 python3 -B -m pytest tests/test_hermes_tavern_*.py -q -o 'addopts=' -p no:cacheprovider`
-- `PYTHONDONTWRITEBYTECODE=1 python3 -B -m pytest -q -o 'addopts=' -p no:cacheprovider`
-- semantic status/range/label and forbidden-discovery guards
-- exact allowed-path, acceptance-absence, UTF-8/LF, final-newline, and trailing-whitespace guards
-- `git diff --check`
+- `/Library/Frameworks/Python.framework/Versions/3.11/bin/python3 -B design/codestable/tools/validate-yaml.py --dir design/codestable/features/2026-08-24-hermes-tavern-phase528-attention-status-sync-through-phase527` — 3/3 passed.
+- `/Library/Frameworks/Python.framework/Versions/3.11/bin/python3 -B design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-08-24-hermes-tavern-phase528-attention-status-sync-through-phase527/2026-08-24-hermes-tavern-phase528-attention-status-sync-through-phase527-checklist.yaml --yaml-only` — 1/1 passed.
+- Python 3.11 `py_compile` for both focused tests — passed.
+- Python 3.11 focused design/status tests — 23 passed.
+- Python 3.11 Tavern glob — 1227 passed.
+- Python 3.11 authoritative full suite — 1227 passed.
+- Semantic status/range/label and forbidden-discovery guards — passed.
+- Exact three-path scope, acceptance-presence, UTF-8/LF, final-newline, trailing-whitespace, CR/NUL, clean-index, and next-phase-absence guards — passed.
+- `git diff --check` — passed.
 - `git status --short --untracked-files=all`

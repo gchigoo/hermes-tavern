@@ -2,28 +2,29 @@ doc_type: feature-checklist
 feature: 2026-08-24-hermes-tavern-phase528-attention-status-sync-through-phase527
 requirement: docs
 created: 2026-08-24
-status: implemented
-workflow_status: implemented
-acceptance_state: pending_parent_verification
+status: accepted
+workflow_status: accepted
+acceptance_state: accepted
 implementation_ready: true
 parent_verification_required: true
 parent_verification_completed: true
 worker_commit_or_push_performed: false
 parent_commit_or_push_performed: false
-acceptance_artifact: null
-acceptance_md_present: false
+acceptance_artifact: 2026-08-24-hermes-tavern-phase528-attention-status-sync-through-phase527-acceptance.md
+acceptance_md_present: true
 tags: [codestable, docs, static-test, status-sync, company-boost]
 audit_state: passed
 architect_design_audit: "Policy wrapper validated schema-v1 architect audit at gpt-5.6-sol/high with exit 0."
 executor_audit: "Policy wrapper recovery validated schema-v1 executor audit at gpt-5.6-terra/high with exit 0 after the first wrapper stream timed out before turn completion."
-independent_review: "PASS via /tmp/tavern-phase528-final-review.jsonl: schema-v1 architect audit, gpt-5.6-sol/high, exit 0, no findings."
+independent_review: "PASS via /tmp/tavern-phase528-s2-final-review.jsonl: schema-v1 architect audit, gpt-5.6-sol/high, exit 0, no findings."
+s2_closeout: "Controller pre- and post-promotion gates passed: validators 3/3 and 1/1, py_compile, focused 23/23, Tavern glob 1227/1227, authoritative Python 3.11 full suite 1227/1227, exact scope/byte/next-phase guard, clean index, and git diff --check; final Architect review PASS."
 verification_commands:
-  - "python3 design/codestable/tools/validate-yaml.py --dir design/codestable/features/2026-08-24-hermes-tavern-phase528-attention-status-sync-through-phase527"
-  - "python3 design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-08-24-hermes-tavern-phase528-attention-status-sync-through-phase527/2026-08-24-hermes-tavern-phase528-attention-status-sync-through-phase527-checklist.yaml --yaml-only"
-  - "PYTHONDONTWRITEBYTECODE=1 python3 -B -m py_compile tests/test_hermes_tavern_design_docs.py tests/test_hermes_tavern_codestable_status.py"
-  - "PYTHONDONTWRITEBYTECODE=1 python3 -B -m pytest tests/test_hermes_tavern_design_docs.py tests/test_hermes_tavern_codestable_status.py -q -o 'addopts=' -p no:cacheprovider"
-  - "PYTHONDONTWRITEBYTECODE=1 python3 -B -m pytest tests/test_hermes_tavern_*.py -q -o 'addopts=' -p no:cacheprovider"
-  - "PYTHONDONTWRITEBYTECODE=1 python3 -B -m pytest -q -o 'addopts=' -p no:cacheprovider"
+  - "/Library/Frameworks/Python.framework/Versions/3.11/bin/python3 -B design/codestable/tools/validate-yaml.py --dir design/codestable/features/2026-08-24-hermes-tavern-phase528-attention-status-sync-through-phase527"
+  - "/Library/Frameworks/Python.framework/Versions/3.11/bin/python3 -B design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-08-24-hermes-tavern-phase528-attention-status-sync-through-phase527/2026-08-24-hermes-tavern-phase528-attention-status-sync-through-phase527-checklist.yaml --yaml-only"
+  - "PYTHONPYCACHEPREFIX=/tmp/hermes-tavern-phase528-controller-pycache /Library/Frameworks/Python.framework/Versions/3.11/bin/python3 -m py_compile tests/test_hermes_tavern_design_docs.py tests/test_hermes_tavern_codestable_status.py"
+  - "PYTHONDONTWRITEBYTECODE=1 /Library/Frameworks/Python.framework/Versions/3.11/bin/python3 -B -m pytest tests/test_hermes_tavern_design_docs.py tests/test_hermes_tavern_codestable_status.py -q -o 'addopts=' -p no:cacheprovider"
+  - "PYTHONDONTWRITEBYTECODE=1 /Library/Frameworks/Python.framework/Versions/3.11/bin/python3 -B -m pytest tests/test_hermes_tavern_*.py -q -o 'addopts=' -p no:cacheprovider"
+  - "PYTHONDONTWRITEBYTECODE=1 /Library/Frameworks/Python.framework/Versions/3.11/bin/python3 -B -m pytest -q -o 'addopts=' -p no:cacheprovider"
   - "git diff --check"
 steps:
   - id: synchronize-phase528-status
@@ -33,11 +34,11 @@ steps:
     status: done
     evidence: "Executor and parent observed directory YAML validation (2/2), checklist yaml-only validation (1/1), py_compile, exact allowed-path/acceptance-absence/UTF-8-LF-trailing-whitespace, semantic Phase 528 status/range/label/Phase 529-absence, and git diff --check passing. Parent focused tests passed 23/23. The Hermes runtime full-suite attempt failed only because its subprocess lacked the editable hermes_tavern install; the declared system Python 3.11 packaging smoke passed 1/1 and authoritative full suite passed 1227/1227. Acceptance remains deferred."
   - id: controller-verification
-    title: Perform independent Controller verification and closeout
-    action: Parent Controller independently reruns all declared gates and decides whether a later S2 closeout may create acceptance evidence.
-    exit_signal: Parent verification is independently recorded while acceptance remains deferred.
+    title: Perform independent Controller verification and S2 closeout
+    action: Parent Controller independently reruns all declared gates, creates acceptance evidence, and promotes the Phase 528 lifecycle triplet without committing or pushing.
+    exit_signal: Accepted lifecycle records actual parent verification while the exact three-file tree remains uncommitted.
     status: done
-    evidence: "Parent Controller completed validators, py_compile, 23 focused tests, the packaging isolation smoke, authoritative Python 3.11 full suite (1227 passed), exact-scope/byte/lifecycle guard, and git diff --check. S2 acceptance remains deferred."
+    evidence: "S1 parent verification remains recorded. For S2, the Controller observed validators 3/3 and 1/1, py_compile, focused 23/23, Tavern glob 1227/1227, authoritative Python 3.11 full suite 1227/1227, exact three-file scope/byte/next-phase and clean-index guards, and git diff --check passing before lifecycle promotion."
 checks:
   - id: phase528-status-line
     title: Phase 528 status baseline
@@ -52,8 +53,8 @@ checks:
     status: passed
     evidence: "Parent focused and full suites preserve the canonical design and implementation-plan authority assertions."
   - id: bounded-scope
-    title: Exact S1 scope remains bounded
-    item: Only attention, the two focused tests, and this feature's design/checklist may differ from HEAD; state.json and runtime surfaces remain untouched.
+    title: Exact S2 scope remains bounded
+    item: Only this feature's design, checklist, and acceptance artifact may differ from HEAD; attention, tests, state.json, later-phase artifacts, and runtime surfaces remain untouched.
     source: git status, tracked diff, and untracked-byte comparison
     status: passed
-    evidence: "Parent exact-scope and byte guard confirmed only the five approved paths differ, no acceptance artifact exists, and all changed files are UTF-8/LF with final newlines and no trailing whitespace."
+    evidence: "Controller scope/byte guard confirmed exactly two tracked lifecycle edits plus one untracked acceptance artifact, a clean index, UTF-8/LF final-newline files without trailing whitespace, CR, or NUL, HEAD 7b674b2, and no next-phase artifact or status marker."
