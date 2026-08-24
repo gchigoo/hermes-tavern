@@ -8,7 +8,12 @@ parent_verification_status: completed
 acceptance_state: accepted
 parent_verification_required: true
 worker_commit_or_push_performed: false
-summary: Controller-accepted Phase 528 attention status synchronization through Phase 527 after bounded S2 closeout gates.
+parent_commit_or_push_performed: true
+closeout_commit: 8ad033ebba87bf5a8750f15502286c8e4218c46f
+closeout_parent_commit: 7b674b22ed8bccec2820c6a568e7fa775cbc544d
+pushed_ref: origin/main
+post_commit_reconciliation_status: completed
+summary: Phase 528 remains accepted; its committed S2 closeout has a Controller-verified post-commit lifecycle writeback.
 tags: [codestable, docs, static-test, status-sync, company-boost]
 ---
 
@@ -20,11 +25,11 @@ Advance the single canonical current-status line in `design/codestable/attention
 
 ## Lifecycle
 
-S1 is committed and its independent parent verification is recorded in the checklist. The parent Controller completed the bounded S2 closeout gates, promoted the lifecycle triplet to accepted, and left the exact three-file S2 tree uncommitted and unpushed for parent closeout.
+S1 was committed as `7b674b22ed8bccec2820c6a568e7fa775cbc544d`, and its independent parent verification is recorded in the checklist. “Acceptance remains deferred” is historical S1-verification evidence, not the current acceptance state. During S2 verification and promotion, the three-file tree was uncommitted; it was subsequently committed and pushed as `8ad033ebba87bf5a8750f15502286c8e4218c46f` on `origin/main`. The current bounded writeback reconciles the triplet with that post-commit fact, performs no commit or push itself, and completed fresh Controller verification.
 
 ## Exact Allowed Files
 
-For the current S2 preparation, only these paths may differ from HEAD:
+For the current post-commit S2 writeback, only these paths may differ from HEAD:
 
 - `design/codestable/features/2026-08-24-hermes-tavern-phase528-attention-status-sync-through-phase527/2026-08-24-hermes-tavern-phase528-attention-status-sync-through-phase527-design.md`
 - `design/codestable/features/2026-08-24-hermes-tavern-phase528-attention-status-sync-through-phase527/2026-08-24-hermes-tavern-phase528-attention-status-sync-through-phase527-checklist.yaml`

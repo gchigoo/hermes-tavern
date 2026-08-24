@@ -9,15 +9,22 @@ implementation_ready: true
 parent_verification_required: true
 parent_verification_completed: true
 worker_commit_or_push_performed: false
-parent_commit_or_push_performed: false
+parent_commit_or_push_performed: true
+closeout_commit: 8ad033ebba87bf5a8750f15502286c8e4218c46f
+closeout_parent_commit: 7b674b22ed8bccec2820c6a568e7fa775cbc544d
+pushed_ref: origin/main
 acceptance_artifact: 2026-08-24-hermes-tavern-phase528-attention-status-sync-through-phase527-acceptance.md
 acceptance_md_present: true
 tags: [codestable, docs, static-test, status-sync, company-boost]
 audit_state: passed
+post_commit_reconciliation_status: completed
+post_commit_architect_plan: "/tmp/tavern-phase528-s2-writeback-architect-20260824.jsonl"
+post_commit_executor_handoff: "/tmp/tavern-phase528-s2-writeback-executor-20260824.jsonl"
+post_commit_controller_gates: "Fresh pre-promotion Controller gates passed with validators 3/3 and 1/1, py_compile, focused 23/23, packaging smoke 1/1, Tavern glob 1227/1227, authoritative full suite 1227/1227, exact scope/byte/semantic and clean-index guards, and git diff checks."
 architect_design_audit: "Policy wrapper validated schema-v1 architect audit at gpt-5.6-sol/high with exit 0."
 executor_audit: "Policy wrapper recovery validated schema-v1 executor audit at gpt-5.6-terra/high with exit 0 after the first wrapper stream timed out before turn completion."
 independent_review: "PASS via /tmp/tavern-phase528-s2-final-review.jsonl: schema-v1 architect audit, gpt-5.6-sol/high, exit 0, no findings."
-s2_closeout: "Controller pre- and post-promotion gates passed: validators 3/3 and 1/1, py_compile, focused 23/23, Tavern glob 1227/1227, authoritative Python 3.11 full suite 1227/1227, exact scope/byte/next-phase guard, clean index, and git diff --check; final Architect review PASS."
+s2_closeout: "Historical S2 evidence before commit records Controller pre- and post-promotion gates, validation, focused and full-suite results, scope/byte guards, and an independent review; the S2 tree was uncommitted only during verification and promotion."
 verification_commands:
   - "/Library/Frameworks/Python.framework/Versions/3.11/bin/python3 -B design/codestable/tools/validate-yaml.py --dir design/codestable/features/2026-08-24-hermes-tavern-phase528-attention-status-sync-through-phase527"
   - "/Library/Frameworks/Python.framework/Versions/3.11/bin/python3 -B design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-08-24-hermes-tavern-phase528-attention-status-sync-through-phase527/2026-08-24-hermes-tavern-phase528-attention-status-sync-through-phase527-checklist.yaml --yaml-only"
@@ -32,13 +39,19 @@ steps:
     action: Update only the allowed status source and static tests to the canonical Phase 528 baseline while preserving every Phase 168-527 label and excluding the next phase.
     exit_signal: Focused tests prove ordered unique labels 168-528, the split stale range guard, and next-phase absence.
     status: done
-    evidence: "Executor and parent observed directory YAML validation (2/2), checklist yaml-only validation (1/1), py_compile, exact allowed-path/acceptance-absence/UTF-8-LF-trailing-whitespace, semantic Phase 528 status/range/label/Phase 529-absence, and git diff --check passing. Parent focused tests passed 23/23. The Hermes runtime full-suite attempt failed only because its subprocess lacked the editable hermes_tavern install; the declared system Python 3.11 packaging smoke passed 1/1 and authoritative full suite passed 1227/1227. Acceptance remains deferred."
+    evidence: "Historical S1 evidence: Executor and parent observed directory YAML validation (2/2), checklist yaml-only validation (1/1), py_compile, exact allowed-path/acceptance-absence/UTF-8-LF-trailing-whitespace, semantic status/range/label/next-phase-absence, and git diff --check. Parent focused tests recorded 23/23. The Hermes runtime full-suite attempt failed only because its subprocess lacked the editable hermes_tavern install; the declared system Python 3.11 packaging smoke recorded 1/1 and authoritative full suite 1227/1227. ‘Acceptance remains deferred’ applies only to that S1 verification time."
   - id: controller-verification
     title: Perform independent Controller verification and S2 closeout
     action: Parent Controller independently reruns all declared gates, creates acceptance evidence, and promotes the Phase 528 lifecycle triplet without committing or pushing.
-    exit_signal: Accepted lifecycle records actual parent verification while the exact three-file tree remains uncommitted.
+    exit_signal: Accepted lifecycle records actual parent verification; the exact three-file tree was uncommitted only during S2 verification and promotion.
     status: done
-    evidence: "S1 parent verification remains recorded. For S2, the Controller observed validators 3/3 and 1/1, py_compile, focused 23/23, Tavern glob 1227/1227, authoritative Python 3.11 full suite 1227/1227, exact three-file scope/byte/next-phase and clean-index guards, and git diff --check passing before lifecycle promotion."
+    evidence: "Historical S1 parent verification remains recorded. During S2 verification and promotion, the Controller observed validators 3/3 and 1/1, py_compile, focused 23/23, Tavern glob 1227/1227, authoritative Python 3.11 full suite 1227/1227, exact three-file scope/byte/next-phase and clean-index guards, and git diff --check before lifecycle promotion. The tree was subsequently committed and pushed as 8ad033ebba87bf5a8750f15502286c8e4218c46f on origin/main."
+  - id: post-commit-reconciliation
+    title: Draft post-commit lifecycle reconciliation
+    action: Reconcile the accepted triplet with closeout commit 8ad033ebba87bf5a8750f15502286c8e4218c46f, S1 parent 7b674b22ed8bccec2820c6a568e7fa775cbc544d, and pushed ref origin/main without reopening acceptance.
+    exit_signal: Controller verifies the bounded writeback and independently decides any further gate or review outcome.
+    status: done
+    evidence: "Fresh Controller gates passed with validators 3/3 and 1/1, py_compile, focused 23/23, packaging smoke 1/1, Tavern glob 1227/1227, authoritative full suite 1227/1227, exact scope/byte/semantic and clean-index guards, and git diff checks. The writeback preserves historical S1/S2 evidence, records parent commit/push as true and worker commit/push as false, and performs no commit or push."
 checks:
   - id: phase528-status-line
     title: Phase 528 status baseline
@@ -57,4 +70,4 @@ checks:
     item: Only this feature's design, checklist, and acceptance artifact may differ from HEAD; attention, tests, state.json, later-phase artifacts, and runtime surfaces remain untouched.
     source: git status, tracked diff, and untracked-byte comparison
     status: passed
-    evidence: "Controller scope/byte guard confirmed exactly two tracked lifecycle edits plus one untracked acceptance artifact, a clean index, UTF-8/LF final-newline files without trailing whitespace, CR, or NUL, HEAD 7b674b2, and no next-phase artifact or status marker."
+    evidence: "Historical S2 scope/byte evidence confirmed exactly two tracked lifecycle edits plus one untracked acceptance artifact, a clean index, UTF-8/LF final-newline files without trailing whitespace, CR, or NUL, HEAD 7b674b2, and no next-phase artifact or status marker."
