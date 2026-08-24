@@ -1,0 +1,70 @@
+doc_type: feature-checklist
+feature: 2026-08-24-hermes-tavern-phase529-attention-status-sync-through-phase528
+requirement: docs
+created: 2026-08-24
+status: pending
+workflow_status: pending
+acceptance_state: pending_parent_verification
+implementation_ready: true
+parent_verification_required: true
+parent_verification_completed: false
+worker_commit_or_push_performed: false
+parent_commit_or_push_performed: false
+acceptance_artifact: null
+acceptance_md_present: false
+tags: [codestable, docs, static-test, status-sync, company-boost]
+audit_state: architect_plan_passed
+architect_design_audit: "PASS planning evidence via /tmp/tavern-phase529-architect-ratify-20260824.jsonl: schema-v1 architect audit, gpt-5.6-sol/high, exit 0, complete turn, no failed commands or semantic blockers."
+architect_discovery_evidence: "/tmp/tavern-phase529-architect-20260824.jsonl is structurally complete at gpt-5.6-sol/high; its generic workflow-text scan was superseded by the terse ratification audit."
+executor_audit: null
+independent_review: null
+planning_handoff: "Controller materialized only this approved design and pending checklist. Attention and tests remain unchanged; Executor, implementation verification, and final review were not launched without the required remaining wrapper budget."
+planning_controller_gates: "Directory validator passed 2/2; checklist YAML-only validator passed 1/1; exact two-untracked-path scope, fixed HEAD/main, clean index, design/checklist-only directory, acceptance absence, pending lifecycle, UTF-8/LF/final-newline/whitespace/CR/NUL hygiene, unchanged implementation files, and diff checks all passed."
+verification_commands:
+  - "/Library/Frameworks/Python.framework/Versions/3.11/bin/python3 -B design/codestable/tools/validate-yaml.py --dir design/codestable/features/2026-08-24-hermes-tavern-phase529-attention-status-sync-through-phase528"
+  - "/Library/Frameworks/Python.framework/Versions/3.11/bin/python3 -B design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-08-24-hermes-tavern-phase529-attention-status-sync-through-phase528/2026-08-24-hermes-tavern-phase529-attention-status-sync-through-phase528-checklist.yaml --yaml-only"
+  - "PYTHONPYCACHEPREFIX=/tmp/hermes-tavern-phase529-controller-pycache /Library/Frameworks/Python.framework/Versions/3.11/bin/python3 -m py_compile tests/test_hermes_tavern_design_docs.py tests/test_hermes_tavern_codestable_status.py"
+  - "env -u PYTEST_DISABLE_PLUGIN_AUTOLOAD -u PYTEST_ADDOPTS TMPDIR=/tmp PYTHONDONTWRITEBYTECODE=1 /Library/Frameworks/Python.framework/Versions/3.11/bin/python3 -B -m pytest tests/test_hermes_tavern_design_docs.py tests/test_hermes_tavern_codestable_status.py -q -o 'addopts=' -p no:cacheprovider"
+  - "env -u PYTEST_DISABLE_PLUGIN_AUTOLOAD -u PYTEST_ADDOPTS TMPDIR=/tmp PYTHONDONTWRITEBYTECODE=1 /Library/Frameworks/Python.framework/Versions/3.11/bin/python3 -B -m pytest tests/test_hermes_tavern_packaging.py::test_editable_install_isolation_smoke -q -o 'addopts=' -p no:cacheprovider"
+  - "env -u PYTEST_DISABLE_PLUGIN_AUTOLOAD -u PYTEST_ADDOPTS TMPDIR=/tmp PYTHONDONTWRITEBYTECODE=1 /Library/Frameworks/Python.framework/Versions/3.11/bin/python3 -B -m pytest tests/test_hermes_tavern_*.py -q -o 'addopts=' -p no:cacheprovider"
+  - "env -u PYTEST_DISABLE_PLUGIN_AUTOLOAD -u PYTEST_ADDOPTS TMPDIR=/tmp PYTHONDONTWRITEBYTECODE=1 /Library/Frameworks/Python.framework/Versions/3.11/bin/python3 -B -m pytest -q -o 'addopts=' -p no:cacheprovider"
+  - "git diff --check"
+  - "git status --short --untracked-files=all"
+steps:
+  - id: materialize-phase529-plan
+    title: Materialize the approved Phase 529 bounded plan
+    action: Create the complete approved design and pending checklist before any implementation dispatch.
+    exit_signal: The feature directory contains exactly the valid design and checklist, while attention and tests remain unchanged.
+    status: done
+    evidence: "Controller materialized the two planning artifacts after a valid schema-v1 gpt-5.6-sol/high Architect ratification. No implementation wrapper was launched."
+  - id: synchronize-phase529-status
+    title: Synchronize accepted history through Phase 529
+    action: Update only the allowed status source and focused tests to the canonical Phase 529 baseline while preserving every Phase 168-528 label and excluding the immediate successor.
+    exit_signal: Worker gates prove ordered unique labels 168-529, count 362, the rotated stale-range guard, exact final suffix, and successor absence.
+    status: pending
+    evidence: null
+  - id: controller-verification
+    title: Perform independent Controller verification
+    action: Parent Controller independently reruns all declared gates and decides whether a later S2 closeout may create acceptance evidence.
+    exit_signal: Parent verification is independently recorded while acceptance remains deferred.
+    status: pending
+    evidence: null
+checks:
+  - id: phase529-status-line
+    title: Phase 529 status baseline
+    item: The attention current-status line records phases 1-529 accepted exactly once and appends the exact Phase 529 label.
+    source: tests/test_hermes_tavern_codestable_status.py
+    status: pending
+    evidence: null
+  - id: canonical-plan-authority
+    title: Canonical implementation plan authority remains unchanged
+    item: Current authority documents retain the canonical design and implementation-plan paths with no mirror or second authority.
+    source: tests/test_hermes_tavern_design_docs.py
+    status: pending
+    evidence: null
+  - id: bounded-scope
+    title: Exact lifecycle-aware scope remains bounded
+    item: Planning handoff contains only this feature's design/checklist; later worker handoff may add only attention and the two focused tests, while state.json and runtime surfaces remain untouched.
+    source: git status, tracked diff, and untracked-byte comparison
+    status: pending
+    evidence: null
