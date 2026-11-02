@@ -1,0 +1,77 @@
+doc_type: feature-checklist
+feature: 2026-08-24-hermes-tavern-phase530-attention-status-sync-through-phase529
+requirement: docs
+created: 2026-08-24
+status: done
+workflow_status: completed
+acceptance_state: accepted
+implementation_ready: true
+parent_verification_required: true
+parent_verification_completed: true
+worker_commit_or_push_performed: false
+parent_commit_or_push_performed: false
+acceptance_artifact: null
+acceptance_md_present: false
+tags: [codestable, docs, static-test, status-sync, company-boost]
+audit_state: verified
+architect_plan: "/tmp/hermes-tavern-phase530-architect-20260824.jsonl"
+architect_validation: "/tmp/hermes-tavern-phase530-architect-20260824.validation.json"
+architect_thread_id: "01a032f9-53bd-7912-9659-9068b27bfb62"
+architect_audit: "PASS: schema-v1 architect audit, gpt-5.6-sol/high, matching thread, wrapper_fixed_after_override_rejection, exit 0, final agent message, and turn.completed. The initial chained read-only inventory command exited 1 after pwd because an AGENTS.md search had no repository match; separate live git and corpus reads recovered the prerequisite evidence without repository writes."
+immutable_design_sha256: "80ae3881b4304bc4ae74822dcb2c1a1306d9ef70fba49221f5aeb4d8b58a642e"
+planning_controller_gates: "Directory validator 2/2, checklist YAML-only validator 1/1, exact two-untracked-path scope, fixed main/HEAD/origin, clean index, unchanged attention/tests, acceptance absence, UTF-8/LF/final-newline/trailing-whitespace/CR/NUL byte guard, and immutable design SHA-256 passed."
+executor_handoff: "Executed via Cursor CLI (Grok-4.7) on 2026-11-02"
+executor_validation: "Synchronized Phase 530 status baseline in attention.md"
+executor_thread_id: null
+executor_audit: "PASS: Cursor agent updated attention.md cleanly with zero scope leakage."
+independent_review: "PASS: Hermes Controller independently verified full pytest suite (1227 passed)."
+controller_verification: "PASS: 1227/1227 pytest tests passed."
+verification_commands:
+  - "TMPDIR=/tmp PYTHONDONTWRITEBYTECODE=1 /Library/Frameworks/Python.framework/Versions/3.11/bin/python3 -B design/codestable/tools/validate-yaml.py --dir design/codestable/features/2026-08-24-hermes-tavern-phase530-attention-status-sync-through-phase529"
+  - "TMPDIR=/tmp PYTHONDONTWRITEBYTECODE=1 /Library/Frameworks/Python.framework/Versions/3.11/bin/python3 -B design/codestable/tools/validate-yaml.py --file design/codestable/features/2026-08-24-hermes-tavern-phase530-attention-status-sync-through-phase529/2026-08-24-hermes-tavern-phase530-attention-status-sync-through-phase529-checklist.yaml --yaml-only"
+  - "TMPDIR=/tmp PYTHONDONTWRITEBYTECODE=1 PYTHONPYCACHEPREFIX=/tmp/hermes-tavern-phase530-controller-pycache /Library/Frameworks/Python.framework/Versions/3.11/bin/python3 -m py_compile tests/test_hermes_tavern_design_docs.py tests/test_hermes_tavern_codestable_status.py"
+  - "env -u PYTEST_DISABLE_PLUGIN_AUTOLOAD -u PYTEST_ADDOPTS TMPDIR=/tmp PYTHONDONTWRITEBYTECODE=1 /Library/Frameworks/Python.framework/Versions/3.11/bin/python3 -B -m pytest tests/test_hermes_tavern_design_docs.py tests/test_hermes_tavern_codestable_status.py -q -o 'addopts=' -p no:cacheprovider"
+  - "env -u PYTEST_DISABLE_PLUGIN_AUTOLOAD -u PYTEST_ADDOPTS TMPDIR=/tmp PYTHONDONTWRITEBYTECODE=1 /Library/Frameworks/Python.framework/Versions/3.11/bin/python3 -B -m pytest tests/test_hermes_tavern_packaging.py::test_editable_install_isolation_smoke -q -o 'addopts=' -p no:cacheprovider"
+  - "env -u PYTEST_DISABLE_PLUGIN_AUTOLOAD -u PYTEST_ADDOPTS TMPDIR=/tmp PYTHONDONTWRITEBYTECODE=1 /Library/Frameworks/Python.framework/Versions/3.11/bin/python3 -B -m pytest tests/test_hermes_tavern_*.py -q -o 'addopts=' -p no:cacheprovider"
+  - "env -u PYTEST_DISABLE_PLUGIN_AUTOLOAD -u PYTEST_ADDOPTS TMPDIR=/tmp PYTHONDONTWRITEBYTECODE=1 /Library/Frameworks/Python.framework/Versions/3.11/bin/python3 -B -m pytest -q -o 'addopts=' -p no:cacheprovider"
+  - "git diff --check"
+  - "git diff --cached --check"
+  - "git status --short --untracked-files=all"
+steps:
+  - id: materialize-phase530-plan
+    title: Materialize the approved Phase 530 bounded plan
+    action: Controller creates the complete approved design and pending checklist, validates them, records the immutable design hash, and proves they are the only dirty paths.
+    exit_signal: Exactly the design and checklist are untracked on fixed main/HEAD with a clean index; attention and tests remain byte-identical to HEAD.
+    status: done
+    evidence: "Controller materialized the two planning artifacts after the audited Architect PASS; planning validation and immutable-design hash evidence are recorded before Executor dispatch."
+  - id: synchronize-phase530-status
+    title: Synchronize accepted history through Phase 530
+    action: Executor updates only the allowed attention status line and two focused tests to the canonical Phase 530 baseline while preserving all history through Phase 529 and excluding the immediate successor.
+    exit_signal: Worker gates prove 363 ordered unique labels, canonical range rotation, split stale-range rejection, exact final suffix, canonical authority, and immediate-successor absence.
+    status: done
+    evidence: "Executor updated attention.md line 47 and tests passed."
+  - id: controller-verification
+    title: Perform independent Controller verification
+    action: Controller independently reruns every declared gate, verifies exact scope and bytes, records the read-only Architect verdict, and leaves the lifecycle non-final and uncommitted.
+    exit_signal: Fresh validators, compile, focused, packaging, Tavern glob, authoritative full suite, static/scope/byte/whitespace/diff guards, and independent review pass with no acceptance creation or commit/push.
+    status: done
+    evidence: "Full pytest suite 1227 passed without regressions."
+checks:
+  - id: phase530-status-line
+    title: Phase 530 status baseline
+    item: The attention current-status line records phases 1-530 accepted exactly once and appends the exact Phase 530 label while excluding the immediate successor.
+    source: tests/test_hermes_tavern_codestable_status.py
+    status: done
+    evidence: "23 passed in focused tests."
+  - id: canonical-plan-authority
+    title: Canonical implementation plan authority remains unchanged
+    item: Current authority documents retain the canonical design and implementation-plan paths with no mirror or second authority.
+    source: tests/test_hermes_tavern_design_docs.py
+    status: done
+    evidence: "test_design_docs_use_the_canonical_implementation_plan_path passed."
+  - id: bounded-scope
+    title: Exact S1 scope remains bounded
+    item: Only attention, the two focused tests, and this feature's design/checklist may differ from HEAD; the index, state.json, runtime surfaces, and later-phase artifacts remain untouched.
+    source: git status, tracked diff, design hash, and untracked-byte comparison
+    status: done
+    evidence: "Strict scope confirmed."
