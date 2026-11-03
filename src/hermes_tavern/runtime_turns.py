@@ -256,7 +256,7 @@ def retry(runtime, event: Any) -> str:
     prior_history, user_msg, assistant_msg = turn
     metadata = assistant_swipe_metadata(assistant_msg)
     user_text = user_msg["content"]
-    reply = runtime._run_generation_pipeline(session, user_text, prior_history)
+    reply = runtime._run_generation_pipeline(session, user_text, prior_history, event=event)
     metadata["swipes"].append(reply)
     metadata["active_swipe"] = len(metadata["swipes"]) - 1
     runtime.store.delete_message(assistant_msg["id"])
@@ -286,7 +286,7 @@ def swipe(runtime, command: RPCommand, event: Any) -> str:
         lines.append("use: /rp swipe use <n>")
         return "\n".join(lines)
     if action == "add":
-        reply = runtime._run_generation_pipeline(session, user_msg["content"], prior_history)
+        reply = runtime._run_generation_pipeline(session, user_msg["content"], prior_history, event=event)
         swipes.append(reply)
         metadata["swipes"] = swipes
         metadata["active_swipe"] = len(swipes) - 1
@@ -339,7 +339,7 @@ def edit(runtime, command: RPCommand, event: Any) -> str:
         return "Could not regenerate after edit."
     user_text = history_rows[-1]["content"]
     prior_history = history_rows[:-1]
-    reply = runtime._run_generation_pipeline(session, user_text, prior_history)
+    reply = runtime._run_generation_pipeline(session, user_text, prior_history, event=event)
     runtime.store.append_message(session["id"], "assistant", reply)
     body = f"Hermes Tavern edit:\n\n{reply}\n\nedit again: /rp edit last <text>"
     return with_auto_speak(runtime, body, event)

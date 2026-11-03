@@ -109,3 +109,28 @@ def test_edit_last_requires_replacement_text(tmp_path):
     assert "Usage: /rp edit last <text>" in response
     assert len(response) < 200
 
+def test_turn_controls_forward_event_to_generation_pipeline(tmp_path):
+    runtime, _, _ = _runtime_with_turn(tmp_path)
+    captured_events = []
+
+    def mock_pipeline(session, user_text, history, event=None):
+        captured_events.append(event)
+        return "regenerated reply"
+
+    runtime._run_generation_pipeline = mock_pipeline
+    test_event = Event()
+
+    # 1. retry forwards event
+    runtime.handle_command_sync(RPCommand("retry", [], "/rp retry"), test_event)
+    assert len(captured_events) == 1
+    assert captured_events[0] is test_event
+
+    # 2. swipe add forwards event
+    runtime.handle_command_sync(RPCommand("swipe", ["add"], "/rp swipe add"), test_event)
+    assert len(captured_events) == 2
+    assert captured_events[1] is test_event
+
+    # 3. edit last forwards event
+    runtime.handle_command_sync(RPCommand("edit", ["last", "new", "prompt"], "/rp edit last new prompt"), test_event)
+    assert len(captured_events) == 3
+    assert captured_events[2] is test_event
