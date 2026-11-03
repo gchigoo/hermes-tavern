@@ -98,3 +98,14 @@ def test_turn_control_error_messages_stay_concise(tmp_path):
     ]
     assert all(len(message) < 200 for message in messages)
     assert all(len(message.splitlines()) <= 3 for message in messages)
+
+
+def test_edit_last_requires_replacement_text(tmp_path):
+    runtime, _, _ = _runtime_with_turn(tmp_path)
+    response = runtime.handle_command_sync(
+        RPCommand("edit", ["last"], "/rp edit last"),
+        Event(),
+    )
+    assert "Usage: /rp edit last <text>" in response
+    assert len(response) < 200
+
