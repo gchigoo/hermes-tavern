@@ -134,3 +134,33 @@ def test_turn_controls_forward_event_to_generation_pipeline(tmp_path):
     runtime.handle_command_sync(RPCommand("edit", ["last", "new", "prompt"], "/rp edit last new prompt"), test_event)
     assert len(captured_events) == 3
     assert captured_events[2] is test_event
+
+
+def test_swipe_use_invokes_auto_speak_when_voice_enabled(tmp_path):
+    spoken = []
+
+    def mock_tts(text):
+        spoken.append(text)
+        return {
+            "success": True,
+            "provider": "mock-tts",
+            "media_tag": 'MEDIA:"test.mp3"',
+        }
+
+    runtime, _, _ = _runtime_with_turn(tmp_path)
+    runtime.tts_renderer = mock_tts
+    test_event = Event()
+
+    # Add candidate 1
+    runtime._run_generation_pipeline = lambda session, user_text, history, event=None: "candidate two"
+    runtime.handle_command_sync(RPCommand("swipe", ["add"], "/rp swipe add"), test_event)
+
+    # Enable voice
+    runtime.handle_command_sync(RPCommand("voice", ["on"], "/rp voice on"), test_event)
+
+    # Use swipe 0
+    res = runtime.handle_command_sync(RPCommand("swipe", ["use", "0"], "/rp swipe use 0"), test_event)
+    assert "Swipe 0 selected" in res
+    assert "Hermes Tavern speak: audio ready (mock-tts)." in res
+    assert 'MEDIA:"test.mp3"' in res
+

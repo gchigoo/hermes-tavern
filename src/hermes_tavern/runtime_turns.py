@@ -304,7 +304,8 @@ def swipe(runtime, command: RPCommand, event: Any) -> str:
             return f"Swipe not found: {idx}. Available: 0-{len(swipes) - 1}"
         metadata["active_swipe"] = idx
         runtime.store.update_message(assistant_msg["id"], swipes[idx], metadata=metadata)
-        return f"Swipe {idx} selected:\n\n{swipes[idx]}"
+        body = f"Swipe {idx} selected:\n\n{swipes[idx]}"
+        return with_auto_speak(runtime, body, event)
     return "Usage: /rp swipe [list|add|use <n>]"
 
 
