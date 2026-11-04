@@ -317,7 +317,7 @@ async def test_retry_preserves_old_reply_as_swipe_candidate(tmp_path):
 
 
 @pytest.mark.asyncio
-async def test_retry_aliases_regen_and_regenerate(tmp_path):
+async def test_retry_aliases_regen_regenerate_and_reroll(tmp_path):
     runtime, store = _make_runtime(tmp_path)
     await runtime.handle_command(RPCommand("start", ["Alice"], "/rp start Alice"), Event())
 
@@ -336,12 +336,16 @@ async def test_retry_aliases_regen_and_regenerate(tmp_path):
     )
     assert "Hermes Tavern retry:" in response_regenerate
 
+    # /rp reroll alias
+    response_reroll = await runtime.handle_command(RPCommand("reroll", [], "/rp reroll"), Event())
+    assert "Hermes Tavern retry:" in response_reroll
+
     session = store.get_active_session(SESSION_KEY)
     messages = store.get_recent_messages(session["id"])
     metadata = json.loads(messages[-1]["metadata_json"])
-    # Original + regen + regenerate => 3 swipes
-    assert len(metadata["swipes"]) == 3
-    assert metadata["active_swipe"] == 2
+    # Original + regen + regenerate + reroll => 4 swipes
+    assert len(metadata["swipes"]) == 4
+    assert metadata["active_swipe"] == 3
 
 
 @pytest.mark.asyncio
@@ -569,6 +573,24 @@ async def test_undo_removes_last_turn(tmp_path):
     count_before = len(store.get_recent_messages(session["id"]))
 
     response = await runtime.handle_command(RPCommand("undo", [], "/rp undo"), Event())
+    assert "undo" in response.lower()
+    count_after = len(store.get_recent_messages(session["id"]))
+    assert count_after < count_before
+
+
+@pytest.mark.asyncio
+async def test_undo_alias_revert(tmp_path):
+    runtime, store = _make_runtime(tmp_path)
+    await runtime.handle_command(RPCommand("start", ["Alice"], "/rp start Alice"), Event())
+
+    class MsgEvent(Event):
+        text = "Turn 1"
+
+    await runtime.handle_active_message(MsgEvent())
+    session = store.get_active_session(SESSION_KEY)
+    count_before = len(store.get_recent_messages(session["id"]))
+
+    response = await runtime.handle_command(RPCommand("revert", [], "/rp revert"), Event())
     assert "undo" in response.lower()
     count_after = len(store.get_recent_messages(session["id"]))
     assert count_after < count_before

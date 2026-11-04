@@ -446,6 +446,8 @@ TAVERN_COMMAND_TABLE: dict[str, TavernCommandEntry] = {
 COMMAND_ALIASES: dict[str, str] = {
     "regen": "retry",
     "regenerate": "retry",
+    "reroll": "retry",
+    "revert": "undo",
 }
 
 
