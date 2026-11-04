@@ -390,6 +390,18 @@ async def test_swipe_next_and_prev_cycle_candidates(tmp_path):
     metadata = json.loads(store.get_recent_messages(session["id"])[-1]["metadata_json"])
     assert metadata["active_swipe"] == 1
 
+    # swipe first jumps to index 0
+    first_res = await runtime.handle_command(RPCommand("swipe", ["first"], "/rp swipe first"), Event())
+    assert "Swipe 0 selected" in first_res
+    metadata = json.loads(store.get_recent_messages(session["id"])[-1]["metadata_json"])
+    assert metadata["active_swipe"] == 0
+
+    # swipe last jumps to index 2
+    last_res = await runtime.handle_command(RPCommand("swipe", ["last"], "/rp swipe last"), Event())
+    assert "Swipe 2 selected" in last_res
+    metadata = json.loads(store.get_recent_messages(session["id"])[-1]["metadata_json"])
+    assert metadata["active_swipe"] == 2
+
 
 @pytest.mark.asyncio
 async def test_swipe_delete_candidate(tmp_path):

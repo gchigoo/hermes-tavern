@@ -286,6 +286,8 @@ def swipe(runtime, command: RPCommand, event: Any) -> str:
         lines.append("use: /rp swipe use <n>")
         lines.append("next: /rp swipe next")
         lines.append("prev: /rp swipe prev")
+        lines.append("first: /rp swipe first")
+        lines.append("last: /rp swipe last")
         lines.append("delete: /rp swipe delete <n>")
         return "\n".join(lines)
     if action == "add":
@@ -321,6 +323,18 @@ def swipe(runtime, command: RPCommand, event: Any) -> str:
         runtime.store.update_message(assistant_msg["id"], swipes[idx], metadata=metadata)
         body = f"Swipe {idx} selected:\n\n{swipes[idx]}"
         return with_auto_speak(runtime, body, event)
+    if action == "first":
+        idx = 0
+        metadata["active_swipe"] = idx
+        runtime.store.update_message(assistant_msg["id"], swipes[idx], metadata=metadata)
+        body = f"Swipe {idx} selected:\n\n{swipes[idx]}"
+        return with_auto_speak(runtime, body, event)
+    if action == "last":
+        idx = len(swipes) - 1
+        metadata["active_swipe"] = idx
+        runtime.store.update_message(assistant_msg["id"], swipes[idx], metadata=metadata)
+        body = f"Swipe {idx} selected:\n\n{swipes[idx]}"
+        return with_auto_speak(runtime, body, event)
     if action in ("delete", "del", "remove", "rm"):
         if len(command.args) < 2:
             return f"Usage: /rp swipe {action} <n>"
@@ -343,7 +357,7 @@ def swipe(runtime, command: RPCommand, event: Any) -> str:
         runtime.store.update_message(assistant_msg["id"], swipes[active], metadata=metadata)
         body = f"Swipe {idx} deleted. Active swipe is now {active}:\n\n{swipes[active]}"
         return with_auto_speak(runtime, body, event)
-    return "Usage: /rp swipe [list|add|use <n>|next|prev|delete <n>]"
+    return "Usage: /rp swipe [list|add|use <n>|next|prev|first|last|delete <n>]"
 
 
 def undo(runtime, event: Any) -> str:
