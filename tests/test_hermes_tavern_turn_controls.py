@@ -392,6 +392,64 @@ async def test_swipe_next_and_prev_cycle_candidates(tmp_path):
 
 
 @pytest.mark.asyncio
+async def test_swipe_delete_candidate(tmp_path):
+    runtime, store = _make_runtime(tmp_path)
+    await runtime.handle_command(RPCommand("start", ["Alice"], "/rp start Alice"), Event())
+
+    class MsgEvent(Event):
+        text = "Hello!"
+
+    await runtime.handle_active_message(MsgEvent())
+
+    # Only 1 candidate exists initially
+    err = await runtime.handle_command(RPCommand("swipe", ["delete", "0"], "/rp swipe delete 0"), Event())
+    assert "Cannot delete the only swipe candidate" in err
+
+    # Usage error when index omitted
+    err_usage = await runtime.handle_command(RPCommand("swipe", ["delete"], "/rp swipe delete"), Event())
+    assert "Usage: /rp swipe delete <n>" in err_usage
+
+    err_nan = await runtime.handle_command(RPCommand("swipe", ["del", "abc"], "/rp swipe del abc"), Event())
+    assert "Usage: /rp swipe del <n>" in err_nan
+
+    # Add 2 more candidates -> total 3 swipes (0: default, 1: two, 2: three)
+    generated = iter(["candidate two", "candidate three"])
+    runtime._run_generation_pipeline = lambda session, user_text, history, event=None: next(generated)
+    await runtime.handle_command(RPCommand("swipe", ["add"], "/rp swipe add"), Event())
+    await runtime.handle_command(RPCommand("swipe", ["add"], "/rp swipe add"), Event())
+
+    session = store.get_active_session(SESSION_KEY)
+    metadata = json.loads(store.get_recent_messages(session["id"])[-1]["metadata_json"])
+    assert len(metadata["swipes"]) == 3
+    assert metadata["active_swipe"] == 2
+
+    # Delete index out of range
+    err_oob = await runtime.handle_command(RPCommand("swipe", ["delete", "5"], "/rp swipe delete 5"), Event())
+    assert "Swipe not found: 5" in err_oob
+
+    # Delete candidate 1 (not currently active)
+    del_res = await runtime.handle_command(RPCommand("swipe", ["delete", "1"], "/rp swipe delete 1"), Event())
+    assert "Swipe 1 deleted" in del_res
+    session = store.get_active_session(SESSION_KEY)
+    msg = store.get_recent_messages(session["id"])[-1]
+    metadata = json.loads(msg["metadata_json"])
+    assert metadata["swipes"] == [FAKE_ADAPTER_REPLY, "candidate three"]
+    # active swipe was 2, now becomes 1
+    assert metadata["active_swipe"] == 1
+    assert msg["content"] == "candidate three"
+
+    # Delete candidate 1 via alias 'rm' (currently active candidate)
+    del_active = await runtime.handle_command(RPCommand("swipe", ["rm", "1"], "/rp swipe rm 1"), Event())
+    assert "Swipe 1 deleted. Active swipe is now 0" in del_active
+    session = store.get_active_session(SESSION_KEY)
+    msg = store.get_recent_messages(session["id"])[-1]
+    metadata = json.loads(msg["metadata_json"])
+    assert metadata["swipes"] == [FAKE_ADAPTER_REPLY]
+    assert metadata["active_swipe"] == 0
+    assert msg["content"] == FAKE_ADAPTER_REPLY
+
+
+@pytest.mark.asyncio
 async def test_swipe_no_active_session(tmp_path):
     runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
     response = await runtime.handle_command(RPCommand("swipe", ["list"], "/rp swipe list"), Event())

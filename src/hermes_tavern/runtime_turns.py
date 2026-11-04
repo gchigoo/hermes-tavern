@@ -286,6 +286,7 @@ def swipe(runtime, command: RPCommand, event: Any) -> str:
         lines.append("use: /rp swipe use <n>")
         lines.append("next: /rp swipe next")
         lines.append("prev: /rp swipe prev")
+        lines.append("delete: /rp swipe delete <n>")
         return "\n".join(lines)
     if action == "add":
         reply = runtime._run_generation_pipeline(session, user_msg["content"], prior_history, event=event)
@@ -320,7 +321,29 @@ def swipe(runtime, command: RPCommand, event: Any) -> str:
         runtime.store.update_message(assistant_msg["id"], swipes[idx], metadata=metadata)
         body = f"Swipe {idx} selected:\n\n{swipes[idx]}"
         return with_auto_speak(runtime, body, event)
-    return "Usage: /rp swipe [list|add|use <n>|next|prev]"
+    if action in ("delete", "del", "remove", "rm"):
+        if len(command.args) < 2:
+            return f"Usage: /rp swipe {action} <n>"
+        try:
+            idx = int(command.args[1])
+        except ValueError:
+            return f"Usage: /rp swipe {action} <n>"
+        if len(swipes) <= 1:
+            return "Cannot delete the only swipe candidate."
+        if idx < 0 or idx >= len(swipes):
+            return f"Swipe not found: {idx}. Available: 0-{len(swipes) - 1}"
+        swipes.pop(idx)
+        active = metadata["active_swipe"]
+        if active == idx:
+            active = min(idx, len(swipes) - 1)
+        elif active > idx:
+            active -= 1
+        metadata["active_swipe"] = active
+        metadata["swipes"] = swipes
+        runtime.store.update_message(assistant_msg["id"], swipes[active], metadata=metadata)
+        body = f"Swipe {idx} deleted. Active swipe is now {active}:\n\n{swipes[active]}"
+        return with_auto_speak(runtime, body, event)
+    return "Usage: /rp swipe [list|add|use <n>|next|prev|delete <n>]"
 
 
 def undo(runtime, event: Any) -> str:
