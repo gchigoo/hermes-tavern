@@ -346,6 +346,52 @@ async def test_swipe_list_add_and_use_last_turn_candidates(tmp_path):
 
 
 @pytest.mark.asyncio
+async def test_swipe_next_and_prev_cycle_candidates(tmp_path):
+    runtime, store = _make_runtime(tmp_path)
+    await runtime.handle_command(RPCommand("start", ["Alice"], "/rp start Alice"), Event())
+
+    class MsgEvent(Event):
+        text = "Next turn?"
+
+    await runtime.handle_active_message(MsgEvent())
+    generated = iter(["candidate two", "candidate three"])
+    runtime._run_generation_pipeline = lambda session, user_text, history, event=None: next(generated)
+
+    # Add two more candidates -> total 3 swipes (0: default, 1: two, 2: three)
+    await runtime.handle_command(RPCommand("swipe", ["add"], "/rp swipe add"), Event())
+    await runtime.handle_command(RPCommand("swipe", ["add"], "/rp swipe add"), Event())
+
+    session = store.get_active_session(SESSION_KEY)
+    metadata = json.loads(store.get_recent_messages(session["id"])[-1]["metadata_json"])
+    assert metadata["active_swipe"] == 2
+
+    # swipe next wraps around to 0
+    next_res = await runtime.handle_command(RPCommand("swipe", ["next"], "/rp swipe next"), Event())
+    assert "Swipe 0 selected" in next_res
+    session = store.get_active_session(SESSION_KEY)
+    metadata = json.loads(store.get_recent_messages(session["id"])[-1]["metadata_json"])
+    assert metadata["active_swipe"] == 0
+
+    # swipe next moves to 1
+    next_res = await runtime.handle_command(RPCommand("swipe", ["next"], "/rp swipe next"), Event())
+    assert "Swipe 1 selected" in next_res
+
+    # swipe prev moves back to 0
+    prev_res = await runtime.handle_command(RPCommand("swipe", ["prev"], "/rp swipe prev"), Event())
+    assert "Swipe 0 selected" in prev_res
+
+    # swipe prev wraps around to 2
+    prev_res = await runtime.handle_command(RPCommand("swipe", ["prev"], "/rp swipe prev"), Event())
+    assert "Swipe 2 selected" in prev_res
+
+    # swipe select acts as alias for use
+    select_res = await runtime.handle_command(RPCommand("swipe", ["select", "1"], "/rp swipe select 1"), Event())
+    assert "Swipe 1 selected" in select_res
+    metadata = json.loads(store.get_recent_messages(session["id"])[-1]["metadata_json"])
+    assert metadata["active_swipe"] == 1
+
+
+@pytest.mark.asyncio
 async def test_swipe_no_active_session(tmp_path):
     runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
     response = await runtime.handle_command(RPCommand("swipe", ["list"], "/rp swipe list"), Event())

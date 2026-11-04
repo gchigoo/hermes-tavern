@@ -164,3 +164,9 @@ def test_swipe_use_invokes_auto_speak_when_voice_enabled(tmp_path):
     assert "Hermes Tavern speak: audio ready (mock-tts)." in res
     assert 'MEDIA:"test.mp3"' in res
 
+    # Next swipe 1
+    res_next = runtime.handle_command_sync(RPCommand("swipe", ["next"], "/rp swipe next"), test_event)
+    assert "Swipe 1 selected" in res_next
+    assert "Hermes Tavern speak: audio ready (mock-tts)." in res_next
+    assert 'MEDIA:"test.mp3"' in res_next
+
