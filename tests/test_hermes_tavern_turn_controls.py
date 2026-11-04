@@ -402,6 +402,16 @@ async def test_swipe_next_and_prev_cycle_candidates(tmp_path):
     metadata = json.loads(store.get_recent_messages(session["id"])[-1]["metadata_json"])
     assert metadata["active_swipe"] == 2
 
+    # swipe current shows active candidate and index
+    current_res = await runtime.handle_command(RPCommand("swipe", ["current"], "/rp swipe current"), Event())
+    assert "Active swipe [2/2]:" in current_res
+    assert "candidate three" in current_res
+
+    # swipe show acts as alias for current
+    show_res = await runtime.handle_command(RPCommand("swipe", ["show"], "/rp swipe show"), Event())
+    assert "Active swipe [2/2]:" in show_res
+    assert "candidate three" in show_res
+
 
 @pytest.mark.asyncio
 async def test_swipe_delete_candidate(tmp_path):

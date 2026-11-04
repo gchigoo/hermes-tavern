@@ -182,6 +182,12 @@ def test_swipe_use_invokes_auto_speak_when_voice_enabled(tmp_path):
     assert "Hermes Tavern speak: audio ready (mock-tts)." in res_first
     assert 'MEDIA:"test.mp3"' in res_first
 
+    # Current swipe (index 0)
+    res_cur = runtime.handle_command_sync(RPCommand("swipe", ["current"], "/rp swipe current"), test_event)
+    assert "Active swipe [0/1]:" in res_cur
+    assert "Hermes Tavern speak: audio ready (mock-tts)." in res_cur
+    assert 'MEDIA:"test.mp3"' in res_cur
+
     # Delete swipe 1
     res_del = runtime.handle_command_sync(RPCommand("swipe", ["delete", "1"], "/rp swipe delete 1"), test_event)
     assert "Swipe 1 deleted" in res_del
