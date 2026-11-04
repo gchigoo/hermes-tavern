@@ -412,6 +412,17 @@ async def test_swipe_next_and_prev_cycle_candidates(tmp_path):
     assert "Active swipe [2/2]:" in show_res
     assert "candidate three" in show_res
 
+    # swipe status shows concise summary
+    status_res = await runtime.handle_command(RPCommand("swipe", ["status"], "/rp swipe status"), Event())
+    assert status_res == "Swipes status: 3 candidate(s), active 2."
+
+    # swipe count and summary act as aliases for status
+    count_res = await runtime.handle_command(RPCommand("swipe", ["count"], "/rp swipe count"), Event())
+    assert count_res == "Swipes status: 3 candidate(s), active 2."
+
+    summary_res = await runtime.handle_command(RPCommand("swipe", ["summary"], "/rp swipe summary"), Event())
+    assert summary_res == "Swipes status: 3 candidate(s), active 2."
+
 
 @pytest.mark.asyncio
 async def test_swipe_delete_candidate(tmp_path):

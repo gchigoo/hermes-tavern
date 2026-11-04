@@ -90,7 +90,7 @@ TAVERN_COMMAND_TABLE: dict[str, TavernCommandEntry] = {
     ),
     "swipe": TavernCommandEntry(
         handler="_swipe",
-        help_lines=["/rp swipe list", "/rp swipe add", "/rp swipe use <n>", "/rp swipe next", "/rp swipe prev", "/rp swipe first", "/rp swipe last", "/rp swipe current", "/rp swipe delete <n>"],
+        help_lines=["/rp swipe list", "/rp swipe add", "/rp swipe use <n>", "/rp swipe next", "/rp swipe prev", "/rp swipe first", "/rp swipe last", "/rp swipe current", "/rp swipe status", "/rp swipe delete <n>"],
     ),
     "undo": TavernCommandEntry(
         handler="_undo",
