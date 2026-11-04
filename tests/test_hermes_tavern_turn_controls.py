@@ -597,6 +597,24 @@ async def test_undo_alias_revert(tmp_path):
 
 
 @pytest.mark.asyncio
+async def test_undo_alias_rollback(tmp_path):
+    runtime, store = _make_runtime(tmp_path)
+    await runtime.handle_command(RPCommand("start", ["Alice"], "/rp start Alice"), Event())
+
+    class MsgEvent(Event):
+        text = "Turn 1"
+
+    await runtime.handle_active_message(MsgEvent())
+    session = store.get_active_session(SESSION_KEY)
+    count_before = len(store.get_recent_messages(session["id"]))
+
+    response = await runtime.handle_command(RPCommand("rollback", [], "/rp rollback"), Event())
+    assert "undo" in response.lower()
+    count_after = len(store.get_recent_messages(session["id"]))
+    assert count_after < count_before
+
+
+@pytest.mark.asyncio
 async def test_undo_noop_when_no_user_messages(tmp_path):
     runtime, store = _make_runtime(tmp_path)
     await runtime.handle_command(RPCommand("start", ["Alice"], "/rp start Alice"), Event())

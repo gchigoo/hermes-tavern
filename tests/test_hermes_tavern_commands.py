@@ -544,11 +544,14 @@ def test_dispatch_command_resolves_aliases_to_canonical_commands():
     table = {
         "retry": TavernCommandEntry(handler="no_args", needs_command=False, needs_event=False),
         "undo": TavernCommandEntry(handler="no_args", needs_command=False, needs_event=False),
+        "end": TavernCommandEntry(handler="no_args", needs_command=False, needs_event=False),
     }
 
     assert dispatch_command(table, runtime, RPCommand("regen", [], "/rp regen"), event) == "none"
     assert dispatch_command(table, runtime, RPCommand("REGENERATE", [], "/rp REGENERATE"), event) == "none"
     assert dispatch_command(table, runtime, RPCommand("reroll", [], "/rp reroll"), event) == "none"
     assert dispatch_command(table, runtime, RPCommand("revert", [], "/rp revert"), event) == "none"
-    assert len(runtime.calls) == 4
+    assert dispatch_command(table, runtime, RPCommand("rollback", [], "/rp rollback"), event) == "none"
+    assert dispatch_command(table, runtime, RPCommand("stop", [], "/rp stop"), event) == "none"
+    assert len(runtime.calls) == 6
 

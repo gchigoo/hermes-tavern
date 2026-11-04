@@ -654,6 +654,19 @@ async def test_runtime_end_deactivates_session(tmp_path):
 
 
 @pytest.mark.asyncio
+async def test_runtime_stop_alias_deactivates_session(tmp_path):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    store.migrate()
+    store.start_session("telegram:chat:chat-1:thread:main:user:user-1")
+    runtime = TavernRuntime(store)
+
+    response = await runtime.handle_command(RPCommand("stop", [], "/rp stop"), Event())
+
+    assert "ended" in response.lower()
+    assert store.get_active_session("telegram:chat:chat-1:thread:main:user:user-1") is None
+
+
+@pytest.mark.asyncio
 async def test_runtime_switch_without_matching_session_returns_not_found(tmp_path):
     store = TavernStore(tmp_path / "tavern.sqlite3")
     store.save_card(parse_character_card({"name": "Alice", "description": "Scholar", "first_mes": "Hello."}))

@@ -448,6 +448,8 @@ COMMAND_ALIASES: dict[str, str] = {
     "regenerate": "retry",
     "reroll": "retry",
     "revert": "undo",
+    "rollback": "undo",
+    "stop": "end",
 }
 
 
