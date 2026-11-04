@@ -553,5 +553,7 @@ def test_dispatch_command_resolves_aliases_to_canonical_commands():
     assert dispatch_command(table, runtime, RPCommand("revert", [], "/rp revert"), event) == "none"
     assert dispatch_command(table, runtime, RPCommand("rollback", [], "/rp rollback"), event) == "none"
     assert dispatch_command(table, runtime, RPCommand("stop", [], "/rp stop"), event) == "none"
-    assert len(runtime.calls) == 6
+    assert dispatch_command(table, runtime, RPCommand("quit", [], "/rp quit"), event) == "none"
+    assert dispatch_command(table, runtime, RPCommand("exit", [], "/rp exit"), event) == "none"
+    assert len(runtime.calls) == 8
 

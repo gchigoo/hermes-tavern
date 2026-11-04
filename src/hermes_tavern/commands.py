@@ -450,6 +450,8 @@ COMMAND_ALIASES: dict[str, str] = {
     "revert": "undo",
     "rollback": "undo",
     "stop": "end",
+    "quit": "end",
+    "exit": "end",
 }
 
 
