@@ -289,6 +289,7 @@ def swipe(runtime, command: RPCommand, event: Any) -> str:
         lines.append("first: /rp swipe first")
         lines.append("last: /rp swipe last")
         lines.append("current: /rp swipe current")
+        lines.append("view: /rp swipe view <n>")
         lines.append("status: /rp swipe status")
         lines.append("delete: /rp swipe delete <n>")
         return "\n".join(lines)
@@ -313,25 +314,25 @@ def swipe(runtime, command: RPCommand, event: Any) -> str:
         runtime.store.update_message(assistant_msg["id"], swipes[idx], metadata=metadata)
         body = f"Swipe {idx} selected:\n\n{swipes[idx]}"
         return with_auto_speak(runtime, body, event)
-    if action == "next":
+    if action in ("next", "forward", "n"):
         idx = (metadata["active_swipe"] + 1) % len(swipes)
         metadata["active_swipe"] = idx
         runtime.store.update_message(assistant_msg["id"], swipes[idx], metadata=metadata)
         body = f"Swipe {idx} selected:\n\n{swipes[idx]}"
         return with_auto_speak(runtime, body, event)
-    if action == "prev":
+    if action in ("prev", "previous", "backward", "back", "p"):
         idx = (metadata["active_swipe"] - 1) % len(swipes)
         metadata["active_swipe"] = idx
         runtime.store.update_message(assistant_msg["id"], swipes[idx], metadata=metadata)
         body = f"Swipe {idx} selected:\n\n{swipes[idx]}"
         return with_auto_speak(runtime, body, event)
-    if action == "first":
+    if action in ("first", "start", "begin"):
         idx = 0
         metadata["active_swipe"] = idx
         runtime.store.update_message(assistant_msg["id"], swipes[idx], metadata=metadata)
         body = f"Swipe {idx} selected:\n\n{swipes[idx]}"
         return with_auto_speak(runtime, body, event)
-    if action == "last":
+    if action in ("last", "end"):
         idx = len(swipes) - 1
         metadata["active_swipe"] = idx
         runtime.store.update_message(assistant_msg["id"], swipes[idx], metadata=metadata)
@@ -340,6 +341,19 @@ def swipe(runtime, command: RPCommand, event: Any) -> str:
     if action in ("current", "show", "active"):
         idx = metadata["active_swipe"]
         body = f"Active swipe [{idx}/{len(swipes) - 1}]:\n\n{swipes[idx]}"
+        return with_auto_speak(runtime, body, event)
+    if action in ("view", "preview"):
+        if len(command.args) < 2:
+            return f"Usage: /rp swipe {action} <n>"
+        try:
+            idx = int(command.args[1])
+        except ValueError:
+            return f"Usage: /rp swipe {action} <n>"
+        if idx < 0 or idx >= len(swipes):
+            return f"Swipe not found: {idx}. Available: 0-{len(swipes) - 1}"
+        active_idx = metadata["active_swipe"]
+        marker = " (active)" if idx == active_idx else ""
+        body = f"Swipe [{idx}/{len(swipes) - 1}]{marker}:\n\n{swipes[idx]}"
         return with_auto_speak(runtime, body, event)
     if action in ("status", "count", "summary"):
         idx = metadata["active_swipe"]
@@ -366,7 +380,7 @@ def swipe(runtime, command: RPCommand, event: Any) -> str:
         runtime.store.update_message(assistant_msg["id"], swipes[active], metadata=metadata)
         body = f"Swipe {idx} deleted. Active swipe is now {active}:\n\n{swipes[active]}"
         return with_auto_speak(runtime, body, event)
-    return "Usage: /rp swipe [list|add|use <n>|next|prev|first|last|current|status|delete <n>]"
+    return "Usage: /rp swipe [list|add|use <n>|next|prev|first|last|current|view <n>|status|delete <n>]"
 
 
 def undo(runtime, event: Any) -> str:

@@ -423,6 +423,33 @@ async def test_swipe_next_and_prev_cycle_candidates(tmp_path):
     summary_res = await runtime.handle_command(RPCommand("swipe", ["summary"], "/rp swipe summary"), Event())
     assert summary_res == "Swipes status: 3 candidate(s), active 2."
 
+    # swipe view allows inspecting candidates without changing active selection
+    view_active = await runtime.handle_command(RPCommand("swipe", ["view", "2"], "/rp swipe view 2"), Event())
+    assert "Swipe [2/2] (active):" in view_active
+    assert "candidate three" in view_active
+    # Active swipe remains unchanged at 2
+    assert json.loads(store.get_recent_messages(session["id"])[-1]["metadata_json"])["active_swipe"] == 2
+
+    # swipe preview alias allows inspecting another candidate
+    preview_other = await runtime.handle_command(RPCommand("swipe", ["preview", "1"], "/rp swipe preview 1"), Event())
+    assert "Swipe [1/2]:" in preview_other
+    assert "(active)" not in preview_other
+    assert "candidate two" in preview_other
+    assert json.loads(store.get_recent_messages(session["id"])[-1]["metadata_json"])["active_swipe"] == 2
+
+    # swipe navigation aliases (forward, n, previous, backward, back, p, start, begin, end)
+    await runtime.handle_command(RPCommand("swipe", ["forward"], "/rp swipe forward"), Event())
+    assert json.loads(store.get_recent_messages(session["id"])[-1]["metadata_json"])["active_swipe"] == 0
+
+    await runtime.handle_command(RPCommand("swipe", ["previous"], "/rp swipe previous"), Event())
+    assert json.loads(store.get_recent_messages(session["id"])[-1]["metadata_json"])["active_swipe"] == 2
+
+    await runtime.handle_command(RPCommand("swipe", ["start"], "/rp swipe start"), Event())
+    assert json.loads(store.get_recent_messages(session["id"])[-1]["metadata_json"])["active_swipe"] == 0
+
+    await runtime.handle_command(RPCommand("swipe", ["end"], "/rp swipe end"), Event())
+    assert json.loads(store.get_recent_messages(session["id"])[-1]["metadata_json"])["active_swipe"] == 2
+
 
 @pytest.mark.asyncio
 async def test_swipe_delete_candidate(tmp_path):
