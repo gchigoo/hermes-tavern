@@ -536,3 +536,16 @@ def test_tavern_command_table_keeps_current_allowed_top_level_families():
 
 def test_tavern_command_table_session_family_includes_export_route():
     assert "/rp session export <id>" in TAVERN_COMMAND_TABLE["session"].help_lines
+
+
+def test_dispatch_command_resolves_aliases_to_canonical_commands():
+    runtime = RecordingRuntime()
+    event = object()
+    table = {
+        "retry": TavernCommandEntry(handler="no_args", needs_command=False, needs_event=False),
+    }
+
+    assert dispatch_command(table, runtime, RPCommand("regen", [], "/rp regen"), event) == "none"
+    assert dispatch_command(table, runtime, RPCommand("REGENERATE", [], "/rp REGENERATE"), event) == "none"
+    assert len(runtime.calls) == 2
+

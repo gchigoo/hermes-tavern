@@ -442,6 +442,13 @@ TAVERN_COMMAND_TABLE: dict[str, TavernCommandEntry] = {
 }
 
 
+# Aliases mapping alternative command names to canonical table keys.
+COMMAND_ALIASES: dict[str, str] = {
+    "regen": "retry",
+    "regenerate": "retry",
+}
+
+
 def _build_help_text() -> str:
     """Build /rp help output from TAVERN_COMMAND_TABLE."""
     lines = ["Hermes Tavern commands:"]
@@ -456,7 +463,9 @@ def dispatch_command(table: dict[str, TavernCommandEntry], runtime: object, comm
 
     Returns the handler's string result, or an error message for unknown commands.
     """
-    entry = table.get(command.name.lower())
+    cmd_name = command.name.lower()
+    canonical_name = COMMAND_ALIASES.get(cmd_name, cmd_name)
+    entry = table.get(canonical_name)
     if entry is None:
         from hermes_tavern.runtime_utils import mobile_preview
 

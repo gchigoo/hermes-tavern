@@ -317,6 +317,34 @@ async def test_retry_preserves_old_reply_as_swipe_candidate(tmp_path):
 
 
 @pytest.mark.asyncio
+async def test_retry_aliases_regen_and_regenerate(tmp_path):
+    runtime, store = _make_runtime(tmp_path)
+    await runtime.handle_command(RPCommand("start", ["Alice"], "/rp start Alice"), Event())
+
+    class MsgEvent(Event):
+        text = "Hello world"
+
+    await runtime.handle_active_message(MsgEvent())
+
+    # /rp regen alias
+    response_regen = await runtime.handle_command(RPCommand("regen", [], "/rp regen"), Event())
+    assert "Hermes Tavern retry:" in response_regen
+
+    # /rp regenerate alias
+    response_regenerate = await runtime.handle_command(
+        RPCommand("regenerate", [], "/rp regenerate"), Event()
+    )
+    assert "Hermes Tavern retry:" in response_regenerate
+
+    session = store.get_active_session(SESSION_KEY)
+    messages = store.get_recent_messages(session["id"])
+    metadata = json.loads(messages[-1]["metadata_json"])
+    # Original + regen + regenerate => 3 swipes
+    assert len(metadata["swipes"]) == 3
+    assert metadata["active_swipe"] == 2
+
+
+@pytest.mark.asyncio
 async def test_swipe_list_add_and_use_last_turn_candidates(tmp_path):
     runtime, store = _make_runtime(tmp_path)
     await runtime.handle_command(RPCommand("start", ["Alice"], "/rp start Alice"), Event())
