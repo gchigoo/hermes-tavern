@@ -560,5 +560,6 @@ def test_dispatch_command_resolves_aliases_to_canonical_commands():
     assert dispatch_command(table, runtime, RPCommand("new", [], "/rp new"), event) == "none"
     assert dispatch_command(table, runtime, RPCommand("begin", [], "/rp begin"), event) == "none"
     assert dispatch_command(table, runtime, RPCommand("unpause", [], "/rp unpause"), event) == "none"
-    assert len(runtime.calls) == 11
+    assert dispatch_command(table, runtime, RPCommand("continue", [], "/rp continue"), event) == "none"
+    assert len(runtime.calls) == 12
 
