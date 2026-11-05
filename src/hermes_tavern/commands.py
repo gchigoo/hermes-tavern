@@ -454,6 +454,7 @@ COMMAND_ALIASES: dict[str, str] = {
     "exit": "end",
     "terminate": "end",
     "halt": "end",
+    "abort": "end",
     "new": "start",
     "begin": "start",
     "suspend": "pause",

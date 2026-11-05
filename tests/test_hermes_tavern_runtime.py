@@ -719,6 +719,19 @@ async def test_runtime_halt_alias_deactivates_session(tmp_path):
 
 
 @pytest.mark.asyncio
+async def test_runtime_abort_alias_deactivates_session(tmp_path):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    store.migrate()
+    store.start_session("telegram:chat:chat-1:thread:main:user:user-1")
+    runtime = TavernRuntime(store)
+
+    response = await runtime.handle_command(RPCommand("abort", [], "/rp abort"), Event())
+
+    assert "ended" in response.lower()
+    assert store.get_active_session("telegram:chat:chat-1:thread:main:user:user-1") is None
+
+
+@pytest.mark.asyncio
 async def test_runtime_new_alias_starts_session(tmp_path):
     store = TavernStore(tmp_path / "tavern.sqlite3")
     store.migrate()
