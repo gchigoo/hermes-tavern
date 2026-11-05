@@ -579,3 +579,31 @@ def test_card_command_empty_args_returns_usage():
     assert "/rp card greeting <card>" in result
     assert len(runtime.calls) == 0
 
+
+def test_session_command_delegates_to_session_info():
+    from hermes_tavern.runtime_sessions import session_command
+
+    class SessionInfoRuntime:
+        def __init__(self):
+            self.calls = []
+
+        def _session_info(self, event):
+            self.calls.append(("session_info", event))
+            return "session-info-result"
+
+    runtime = SessionInfoRuntime()
+    event = object()
+    # Empty args defaults to "info"
+    res1 = session_command(runtime, RPCommand("session", [], "/rp session"), event)
+    assert res1 == "session-info-result"
+
+    # Explicit "info"
+    res2 = session_command(runtime, RPCommand("session", ["info"], "/rp session info"), event)
+    assert res2 == "session-info-result"
+
+    # Unknown subcommand returns usage
+    res3 = session_command(runtime, RPCommand("session", ["unknown_sub"], "/rp session unknown_sub"), event)
+    assert res3 == "Usage: /rp session info"
+
+    assert len(runtime.calls) == 2
+
