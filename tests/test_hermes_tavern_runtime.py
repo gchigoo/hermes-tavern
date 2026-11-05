@@ -758,6 +758,19 @@ async def test_runtime_begin_alias_starts_session(tmp_path):
 
 
 @pytest.mark.asyncio
+async def test_runtime_launch_alias_starts_session(tmp_path):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    store.migrate()
+    store.save_card(parse_character_card({"name": "Alice", "description": "Scholar", "first_mes": "Hello."}))
+    runtime = TavernRuntime(store)
+
+    response = await runtime.handle_command(RPCommand("launch", ["Alice"], "/rp launch Alice"), Event())
+
+    assert "started hermes tavern session with alice" in response.lower()
+    assert store.get_active_session("telegram:chat:chat-1:thread:main:user:user-1") is not None
+
+
+@pytest.mark.asyncio
 async def test_runtime_unpause_alias_resumes_paused_session(tmp_path):
     store = TavernStore(tmp_path / "tavern.sqlite3")
     store.migrate()
