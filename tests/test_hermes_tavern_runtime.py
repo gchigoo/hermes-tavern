@@ -765,6 +765,24 @@ async def test_runtime_continue_alias_resumes_paused_session(tmp_path):
 
 
 @pytest.mark.asyncio
+async def test_runtime_suspend_alias_pauses_active_session(tmp_path):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    store.migrate()
+    store.save_card(parse_character_card({"name": "Alice", "description": "Scholar", "first_mes": "Hello."}))
+    runtime = TavernRuntime(store)
+
+    await runtime.handle_command(RPCommand("start", ["Alice"], "/rp start Alice"), Event())
+    assert store.get_active_session("telegram:chat:chat-1:thread:main:user:user-1") is not None
+
+    suspend_response = await runtime.handle_command(RPCommand("suspend", [], "/rp suspend"), Event())
+    assert "paused" in suspend_response.lower()
+    assert store.get_active_session("telegram:chat:chat-1:thread:main:user:user-1") is None
+    paused_session = store.get_paused_session("telegram:chat:chat-1:thread:main:user:user-1")
+    assert paused_session is not None
+    assert paused_session["status"] == "paused"
+
+
+@pytest.mark.asyncio
 async def test_runtime_switch_without_matching_session_returns_not_found(tmp_path):
     store = TavernStore(tmp_path / "tavern.sqlite3")
     store.save_card(parse_character_card({"name": "Alice", "description": "Scholar", "first_mes": "Hello."}))
