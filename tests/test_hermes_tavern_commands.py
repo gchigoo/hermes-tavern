@@ -545,6 +545,7 @@ def test_dispatch_command_resolves_aliases_to_canonical_commands():
         "retry": TavernCommandEntry(handler="no_args", needs_command=False, needs_event=False),
         "undo": TavernCommandEntry(handler="no_args", needs_command=False, needs_event=False),
         "end": TavernCommandEntry(handler="no_args", needs_command=False, needs_event=False),
+        "start": TavernCommandEntry(handler="no_args", needs_command=False, needs_event=False),
     }
 
     assert dispatch_command(table, runtime, RPCommand("regen", [], "/rp regen"), event) == "none"
@@ -555,5 +556,7 @@ def test_dispatch_command_resolves_aliases_to_canonical_commands():
     assert dispatch_command(table, runtime, RPCommand("stop", [], "/rp stop"), event) == "none"
     assert dispatch_command(table, runtime, RPCommand("quit", [], "/rp quit"), event) == "none"
     assert dispatch_command(table, runtime, RPCommand("exit", [], "/rp exit"), event) == "none"
-    assert len(runtime.calls) == 8
+    assert dispatch_command(table, runtime, RPCommand("new", [], "/rp new"), event) == "none"
+    assert dispatch_command(table, runtime, RPCommand("begin", [], "/rp begin"), event) == "none"
+    assert len(runtime.calls) == 10
 
