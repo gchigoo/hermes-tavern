@@ -563,3 +563,19 @@ def test_dispatch_command_resolves_aliases_to_canonical_commands():
     assert dispatch_command(table, runtime, RPCommand("continue", [], "/rp continue"), event) == "none"
     assert len(runtime.calls) == 12
 
+
+def test_card_command_empty_args_returns_usage():
+    from hermes_tavern.runtime_assets import card_command
+
+    runtime = RecordingRuntime()
+    event = object()
+    result = card_command(runtime, RPCommand("card", [], "/rp card"), event)
+    assert result.startswith("Usage: /rp card")
+    assert "/rp card import <file>" in result
+    assert "/rp card search <query>" in result
+    assert "/rp card inspect <card>" in result
+    assert "/rp card export <card>" in result
+    assert "/rp card use <card>" in result
+    assert "/rp card greeting <card>" in result
+    assert len(runtime.calls) == 0
+

@@ -88,7 +88,12 @@ def _card_not_found(ref: str) -> str:
 
 
 def card_command(runtime: Any, command: RPCommand, event: Any) -> str:
-    subcommand = command.args[0].lower() if command.args else "inspect"
+    if not command.args:
+        return (
+            "Usage: /rp card import <file> | /rp card search <query> | /rp card inspect <card> | "
+            "/rp card export <card> | /rp card use <card> | /rp card greeting <card>"
+        )
+    subcommand = command.args[0].lower()
     if subcommand == "import":
         return card_import(runtime, command, event)
     if subcommand == "search":
