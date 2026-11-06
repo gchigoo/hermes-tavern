@@ -573,7 +573,8 @@ def test_dispatch_command_resolves_aliases_to_canonical_commands():
     assert dispatch_command(table, runtime, RPCommand("unpause", [], "/rp unpause"), event) == "none"
     assert dispatch_command(table, runtime, RPCommand("continue", [], "/rp continue"), event) == "none"
     assert dispatch_command(table, runtime, RPCommand("proceed", [], "/rp proceed"), event) == "none"
-    assert len(runtime.calls) == 23
+    assert dispatch_command(table, runtime, RPCommand("unhold", [], "/rp unhold"), event) == "none"
+    assert len(runtime.calls) == 24
 
 
 def test_card_command_empty_args_returns_usage():
