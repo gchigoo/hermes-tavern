@@ -465,6 +465,7 @@ COMMAND_ALIASES: dict[str, str] = {
     "suspend": "pause",
     "unpause": "resume",
     "continue": "resume",
+    "proceed": "resume",
 }
 
 
