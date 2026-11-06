@@ -565,10 +565,11 @@ def test_dispatch_command_resolves_aliases_to_canonical_commands():
     assert dispatch_command(table, runtime, RPCommand("new", [], "/rp new"), event) == "none"
     assert dispatch_command(table, runtime, RPCommand("begin", [], "/rp begin"), event) == "none"
     assert dispatch_command(table, runtime, RPCommand("launch", [], "/rp launch"), event) == "none"
+    assert dispatch_command(table, runtime, RPCommand("init", [], "/rp init"), event) == "none"
     assert dispatch_command(table, runtime, RPCommand("suspend", [], "/rp suspend"), event) == "none"
     assert dispatch_command(table, runtime, RPCommand("unpause", [], "/rp unpause"), event) == "none"
     assert dispatch_command(table, runtime, RPCommand("continue", [], "/rp continue"), event) == "none"
-    assert len(runtime.calls) == 18
+    assert len(runtime.calls) == 19
 
 
 def test_card_command_empty_args_returns_usage():
