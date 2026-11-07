@@ -472,6 +472,7 @@ COMMAND_ALIASES: dict[str, str] = {
     "unhold": "resume",
     "unfreeze": "resume",
     "unsuspend": "resume",
+    "unstandby": "resume",
 }
 
 
