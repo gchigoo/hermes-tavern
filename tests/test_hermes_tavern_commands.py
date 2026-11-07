@@ -571,13 +571,14 @@ def test_dispatch_command_resolves_aliases_to_canonical_commands():
     assert dispatch_command(table, runtime, RPCommand("suspend", [], "/rp suspend"), event) == "none"
     assert dispatch_command(table, runtime, RPCommand("hold", [], "/rp hold"), event) == "none"
     assert dispatch_command(table, runtime, RPCommand("freeze", [], "/rp freeze"), event) == "none"
+    assert dispatch_command(table, runtime, RPCommand("standby", [], "/rp standby"), event) == "none"
     assert dispatch_command(table, runtime, RPCommand("unpause", [], "/rp unpause"), event) == "none"
     assert dispatch_command(table, runtime, RPCommand("continue", [], "/rp continue"), event) == "none"
     assert dispatch_command(table, runtime, RPCommand("proceed", [], "/rp proceed"), event) == "none"
     assert dispatch_command(table, runtime, RPCommand("unhold", [], "/rp unhold"), event) == "none"
     assert dispatch_command(table, runtime, RPCommand("unfreeze", [], "/rp unfreeze"), event) == "none"
     assert dispatch_command(table, runtime, RPCommand("unsuspend", [], "/rp unsuspend"), event) == "none"
-    assert len(runtime.calls) == 27
+    assert len(runtime.calls) == 28
 
 
 def test_card_command_empty_args_returns_usage():
