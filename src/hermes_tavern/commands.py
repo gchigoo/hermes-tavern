@@ -476,6 +476,7 @@ COMMAND_ALIASES: dict[str, str] = {
     "unstandby": "resume",
     "unsleep": "resume",
     "wake": "resume",
+    "wakeup": "resume",
 }
 
 
