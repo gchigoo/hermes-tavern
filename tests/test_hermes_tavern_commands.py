@@ -583,7 +583,8 @@ def test_dispatch_command_resolves_aliases_to_canonical_commands():
     assert dispatch_command(table, runtime, RPCommand("unsleep", [], "/rp unsleep"), event) == "none"
     assert dispatch_command(table, runtime, RPCommand("wake", [], "/rp wake"), event) == "none"
     assert dispatch_command(table, runtime, RPCommand("wakeup", [], "/rp wakeup"), event) == "none"
-    assert len(runtime.calls) == 33
+    assert dispatch_command(table, runtime, RPCommand("awake", [], "/rp awake"), event) == "none"
+    assert len(runtime.calls) == 34
 
 
 def test_card_command_empty_args_returns_usage():
