@@ -483,6 +483,7 @@ COMMAND_ALIASES: dict[str, str] = {
     "reactivate": "resume",
     "restore": "resume",
     "recover": "resume",
+    "recommence": "resume",
 }
 
 
