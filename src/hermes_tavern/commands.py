@@ -490,6 +490,7 @@ COMMAND_ALIASES: dict[str, str] = {
     "resurrect": "resume",
     "reawaken": "resume",
     "rekindle": "resume",
+    "reignite": "resume",
 }
 
 
