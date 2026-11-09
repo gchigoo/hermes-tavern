@@ -498,6 +498,7 @@ COMMAND_ALIASES: dict[str, str] = {
     "reestablish": "resume",
     "reinitiate": "resume",
     "reopen": "resume",
+    "relaunch": "resume",
 }
 
 

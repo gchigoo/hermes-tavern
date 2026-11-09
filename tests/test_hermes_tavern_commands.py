@@ -604,7 +604,8 @@ def test_dispatch_command_resolves_aliases_to_canonical_commands():
     assert dispatch_command(table, runtime, RPCommand("reestablish", [], "/rp reestablish"), event) == "none"
     assert dispatch_command(table, runtime, RPCommand("reinitiate", [], "/rp reinitiate"), event) == "none"
     assert dispatch_command(table, runtime, RPCommand("reopen", [], "/rp reopen"), event) == "none"
-    assert len(runtime.calls) == 54
+    assert dispatch_command(table, runtime, RPCommand("relaunch", [], "/rp relaunch"), event) == "none"
+    assert len(runtime.calls) == 55
 
 
 def test_card_command_empty_args_returns_usage():
