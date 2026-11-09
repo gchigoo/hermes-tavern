@@ -500,6 +500,7 @@ COMMAND_ALIASES: dict[str, str] = {
     "reopen": "resume",
     "relaunch": "resume",
     "reembark": "resume",
+    "reenter": "resume",
 }
 
 
