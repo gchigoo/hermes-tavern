@@ -597,7 +597,8 @@ def test_dispatch_command_resolves_aliases_to_canonical_commands():
     assert dispatch_command(table, runtime, RPCommand("reawaken", [], "/rp reawaken"), event) == "none"
     assert dispatch_command(table, runtime, RPCommand("rekindle", [], "/rp rekindle"), event) == "none"
     assert dispatch_command(table, runtime, RPCommand("reignite", [], "/rp reignite"), event) == "none"
-    assert len(runtime.calls) == 47
+    assert dispatch_command(table, runtime, RPCommand("revitalize", [], "/rp revitalize"), event) == "none"
+    assert len(runtime.calls) == 48
 
 
 def test_card_command_empty_args_returns_usage():
