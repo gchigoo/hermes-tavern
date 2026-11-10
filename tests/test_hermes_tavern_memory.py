@@ -72,6 +72,47 @@ def test_memory_modules_include_summary_and_budgeted_facts():
     assert "Low importance note" in modules[1].content
 
 
+def test_memory_modules_skip_oversized_first_fact_then_keep_smaller():
+    modules = build_memory_modules(
+        TavernMemoryContext(
+            facts=(
+                TavernMemoryFact(id="small", content="abcd", importance=1),
+                TavernMemoryFact(id="big", content="123456789012", importance=5),
+            ),
+        ),
+        fact_budget_tokens=2,
+    )
+
+    assert [module.name for module in modules] == ["memory:facts"]
+    assert "abcd" in modules[0].content
+    assert "123456789012" not in modules[0].content
+
+
+def test_memory_modules_zero_fact_budget_preserves_summary():
+    modules = build_memory_modules(
+        TavernMemoryContext(
+            summary="They are travelling at night.",
+            facts=(TavernMemoryFact(id="fact", content="abcd", importance=1),),
+        ),
+        fact_budget_tokens=0,
+    )
+
+    assert [module.name for module in modules] == ["memory:summary"]
+    assert "They are travelling at night" in modules[0].content
+
+
+def test_memory_modules_include_fact_at_exact_budget():
+    modules = build_memory_modules(
+        TavernMemoryContext(
+            facts=(TavernMemoryFact(id="exact", content="12345678", importance=1),),
+        ),
+        fact_budget_tokens=2,
+    )
+
+    assert [module.name for module in modules] == ["memory:facts"]
+    assert "12345678" in modules[0].content
+
+
 def test_summarize_recent_messages_is_deterministic_and_local():
     summary = summarize_recent_messages([
         {"role": "assistant", "content": "Hello there."},

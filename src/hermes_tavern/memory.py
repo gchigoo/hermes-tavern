@@ -56,7 +56,7 @@ def build_memory_modules(
     used_tokens = 0
     for fact in sorted(context.facts, key=lambda item: (-item.importance, item.content.lower())):
         fact_tokens = estimate_tokens(fact.content)
-        if selected and used_tokens + fact_tokens > fact_budget_tokens:
+        if used_tokens + fact_tokens > fact_budget_tokens:
             continue
         selected.append(fact)
         used_tokens += fact_tokens
