@@ -506,6 +506,7 @@ COMMAND_ALIASES: dict[str, str] = {
     "reconnect": "resume",
     "relink": "resume",
     "rebind": "resume",
+    "reacquire": "resume",
 }
 
 
