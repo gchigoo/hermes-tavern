@@ -611,7 +611,8 @@ def test_dispatch_command_resolves_aliases_to_canonical_commands():
     assert dispatch_command(table, runtime, RPCommand("reattach", [], "/rp reattach"), event) == "none"
     assert dispatch_command(table, runtime, RPCommand("reconnect", [], "/rp reconnect"), event) == "none"
     assert dispatch_command(table, runtime, RPCommand("relink", [], "/rp relink"), event) == "none"
-    assert len(runtime.calls) == 61
+    assert dispatch_command(table, runtime, RPCommand("rebind", [], "/rp rebind"), event) == "none"
+    assert len(runtime.calls) == 62
 
 
 def test_card_command_empty_args_returns_usage():
