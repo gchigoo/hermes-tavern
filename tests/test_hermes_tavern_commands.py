@@ -608,7 +608,8 @@ def test_dispatch_command_resolves_aliases_to_canonical_commands():
     assert dispatch_command(table, runtime, RPCommand("reembark", [], "/rp reembark"), event) == "none"
     assert dispatch_command(table, runtime, RPCommand("reenter", [], "/rp reenter"), event) == "none"
     assert dispatch_command(table, runtime, RPCommand("rejoin", [], "/rp rejoin"), event) == "none"
-    assert len(runtime.calls) == 58
+    assert dispatch_command(table, runtime, RPCommand("reattach", [], "/rp reattach"), event) == "none"
+    assert len(runtime.calls) == 59
 
 
 def test_card_command_empty_args_returns_usage():
