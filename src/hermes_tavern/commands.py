@@ -517,6 +517,7 @@ COMMAND_ALIASES: dict[str, str] = {
     "reconvene": "resume",
     "reassemble": "resume",
     "regroup": "resume",
+    "reunite": "resume",
 }
 
 
