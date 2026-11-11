@@ -510,6 +510,7 @@ COMMAND_ALIASES: dict[str, str] = {
     "reclaim": "resume",
     "recapture": "resume",
     "regain": "resume",
+    "reassume": "resume",
 }
 
 
