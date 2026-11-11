@@ -620,7 +620,8 @@ def test_dispatch_command_resolves_aliases_to_canonical_commands():
     assert dispatch_command(table, runtime, RPCommand("repossess", [], "/rp repossess"), event) == "none"
     assert dispatch_command(table, runtime, RPCommand("reoccupy", [], "/rp reoccupy"), event) == "none"
     assert dispatch_command(table, runtime, RPCommand("retake", [], "/rp retake"), event) == "none"
-    assert len(runtime.calls) == 70
+    assert dispatch_command(table, runtime, RPCommand("reconvene", [], "/rp reconvene"), event) == "none"
+    assert len(runtime.calls) == 71
 
 
 def test_card_command_empty_args_returns_usage():
