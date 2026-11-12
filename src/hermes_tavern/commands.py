@@ -521,6 +521,7 @@ COMMAND_ALIASES: dict[str, str] = {
     "reconverge": "resume",
     "regather": "resume",
     "remuster": "resume",
+    "remarshal": "resume",
 }
 
 
