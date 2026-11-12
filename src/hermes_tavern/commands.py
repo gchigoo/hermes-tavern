@@ -528,6 +528,7 @@ COMMAND_ALIASES: dict[str, str] = {
     "realign": "resume",
     "reorient": "resume",
     "recenter": "resume",
+    "reanchor": "resume",
 }
 
 
