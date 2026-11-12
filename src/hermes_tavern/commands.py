@@ -525,6 +525,7 @@ COMMAND_ALIASES: dict[str, str] = {
     "remobilize": "resume",
     "redeploy": "resume",
     "reposition": "resume",
+    "realign": "resume",
 }
 
 
