@@ -79,6 +79,9 @@ def _command_segment_has_literal(surface_text: str, literal: str) -> bool:
         " /rpx help ",
         "/rphelp",
         "/rpstart Alice",
+        "/rp@ help",
+        "/rp@! status",
+        "/rp@bot/extra help",
     ],
 )
 def test_parse_rp_command_ignores_non_rp_text(text):
@@ -91,6 +94,10 @@ def test_parse_rp_command_ignores_non_rp_text(text):
         ("/rp", RPCommand(name="help", args=[], raw="/rp")),
         ("\t/rp\n", RPCommand(name="help", args=[], raw="/rp")),
         ("/rp help", RPCommand(name="help", args=[], raw="/rp help")),
+        ("/RP HeLp", RPCommand(name="help", args=[], raw="/RP HeLp")),
+        ("/rp@hermes_bot status", RPCommand(name="status", args=[], raw="/rp@hermes_bot status")),
+        ("/RP@MyBot", RPCommand(name="help", args=[], raw="/RP@MyBot")),
+        ("/rp@bot", RPCommand(name="help", args=[], raw="/rp@bot")),
         ("/rp status", RPCommand(name="status", args=[], raw="/rp status")),
         ("/rp StAtUs", RPCommand(name="status", args=[], raw="/rp StAtUs")),
         ("/rp end", RPCommand(name="end", args=[], raw="/rp end")),
@@ -500,6 +507,32 @@ def test_dispatch_command_help_for_command_returns_only_its_help_lines():
     assert response == "\n".join(TAVERN_COMMAND_TABLE["swipe"].help_lines)
     assert not response.startswith("Hermes Tavern commands:")
     assert runtime.calls == []
+
+
+def test_dispatch_command_help_filters_by_subcommand_case_insensitively():
+    runtime = RecordingRuntime()
+
+    response = dispatch_command(
+        TAVERN_COMMAND_TABLE,
+        runtime,
+        RPCommand("help", ["swipe", "USE"], "/rp help swipe USE"),
+        object(),
+    )
+
+    assert response == "/rp swipe use <n>"
+    assert runtime.calls == []
+
+
+def test_help_filters_by_joined_subcommand_parts_and_falls_back_to_all_lines():
+    assert _build_help_text("project STYLE INSPECT") == (
+        "/rp project style inspect [project-id]"
+    )
+    assert _build_help_text("swipe missing") == "\n".join(
+        TAVERN_COMMAND_TABLE["swipe"].help_lines
+    )
+    assert _build_help_text("card port") == "\n".join(
+        TAVERN_COMMAND_TABLE["card"].help_lines
+    )
 
 
 def test_dispatch_command_help_resolves_alias_to_canonical_help_lines():

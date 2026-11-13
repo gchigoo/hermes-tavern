@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass, field
 from difflib import get_close_matches
 from typing import Mapping
@@ -555,15 +556,27 @@ def _build_help_text(
                 lines.append(hl)
         return "\n".join(lines)
 
-    canonical_name = COMMAND_ALIASES.get(normalized, normalized)
+    parts = normalized.split()
+    cmd_part = parts[0]
+    sub_parts = parts[1:]
+    canonical_name = COMMAND_ALIASES.get(cmd_part, cmd_part)
     target_entry = table.get(canonical_name)
     if target_entry is not None:
-        return "\n".join(target_entry.help_lines)
+        help_lines = target_entry.help_lines
+        if sub_parts:
+            matching_lines = [
+                line
+                for line in help_lines
+                if line.lower().split()[2 : 2 + len(sub_parts)] == sub_parts
+            ]
+            if matching_lines:
+                help_lines = matching_lines
+        return "\n".join(help_lines)
 
     from hermes_tavern.runtime_utils import mobile_preview
 
-    suggestion = suggest_command(normalized, table)
-    base = f"Unknown /rp command: {mobile_preview(normalized, 80)}"
+    suggestion = suggest_command(cmd_part, table)
+    base = f"Unknown /rp command: {mobile_preview(cmd_part, 80)}"
     if suggestion:
         return f"{base}. Did you mean /rp {suggestion}?"
     return base
@@ -608,7 +621,7 @@ def dispatch_command(table: dict[str, TavernCommandEntry], runtime: object, comm
         return base
     if not entry.handler:
         # handler="" means special — currently only "help"
-        topic = command.args[0] if command.args else None
+        topic = " ".join(command.args) if command.args else None
         return _build_help_text(topic, table)
 
     handler = getattr(runtime, entry.handler)
@@ -624,8 +637,17 @@ def parse_rp_command(text: str) -> RPCommand | None:
     """Parse a `/rp` command into a small immutable command object."""
     raw = text.strip()
     parts = raw.split()
-    if not parts or parts[0] != "/rp":
+    if not parts:
         return None
+
+    command_token = parts[0]
+    normalized_token = command_token.lower()
+    if normalized_token != "/rp":
+        if not normalized_token.startswith("/rp@"):
+            return None
+        bot_name = command_token[4:]
+        if re.fullmatch(r"[A-Za-z0-9_]+", bot_name) is None:
+            return None
 
     if len(parts) == 1:
         return RPCommand(name="help", args=[], raw=raw)
