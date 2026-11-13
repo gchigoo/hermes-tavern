@@ -542,13 +542,31 @@ COMMAND_ALIASES: dict[str, str] = {
 }
 
 
-def _build_help_text() -> str:
-    """Build /rp help output from TAVERN_COMMAND_TABLE."""
-    lines = ["Hermes Tavern commands:"]
-    for entry in TAVERN_COMMAND_TABLE.values():
-        for hl in entry.help_lines:
-            lines.append(hl)
-    return "\n".join(lines)
+def _build_help_text(
+    topic: str | None = None,
+    table: Mapping[str, TavernCommandEntry] = TAVERN_COMMAND_TABLE,
+) -> str:
+    """Build full or command-specific /rp help output from *table*."""
+    normalized = topic.strip().lower().lstrip("/") if topic else ""
+    if not normalized:
+        lines = ["Hermes Tavern commands:"]
+        for entry in table.values():
+            for hl in entry.help_lines:
+                lines.append(hl)
+        return "\n".join(lines)
+
+    canonical_name = COMMAND_ALIASES.get(normalized, normalized)
+    target_entry = table.get(canonical_name)
+    if target_entry is not None:
+        return "\n".join(target_entry.help_lines)
+
+    from hermes_tavern.runtime_utils import mobile_preview
+
+    suggestion = suggest_command(normalized, table)
+    base = f"Unknown /rp command: {mobile_preview(normalized, 80)}"
+    if suggestion:
+        return f"{base}. Did you mean /rp {suggestion}?"
+    return base
 
 
 def suggest_command(
@@ -590,7 +608,8 @@ def dispatch_command(table: dict[str, TavernCommandEntry], runtime: object, comm
         return base
     if not entry.handler:
         # handler="" means special — currently only "help"
-        return _build_help_text()
+        topic = command.args[0] if command.args else None
+        return _build_help_text(topic, table)
 
     handler = getattr(runtime, entry.handler)
     args: list[object] = []

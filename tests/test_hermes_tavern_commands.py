@@ -471,22 +471,76 @@ def test_dispatch_command_is_case_insensitive_for_table_lookup():
     assert runtime.calls == [("no_args",)]
 
 
-def test_dispatch_command_help_entry_returns_table_help_text():
+def test_dispatch_command_help_without_topic_returns_full_help_text():
     runtime = RecordingRuntime()
-    command = RPCommand("help", [], "/rp help")
-    table = {
-        "help": TavernCommandEntry(
-            handler="",
-            help_lines=["/rp help"],
-            needs_command=False,
-            needs_event=False,
-        )
-    }
+    expected = _build_help_text()
 
-    response = dispatch_command(table, runtime, command, object())
+    response = dispatch_command(
+        TAVERN_COMMAND_TABLE,
+        runtime,
+        RPCommand("help", [], "/rp help"),
+        object(),
+    )
 
-    assert response.startswith("Hermes Tavern commands:")
-    assert "/rp help" in response
+    assert response == expected
+    assert _build_help_text("   ") == expected
+    assert runtime.calls == []
+
+
+def test_dispatch_command_help_for_command_returns_only_its_help_lines():
+    runtime = RecordingRuntime()
+
+    response = dispatch_command(
+        TAVERN_COMMAND_TABLE,
+        runtime,
+        RPCommand("help", ["swipe"], "/rp help swipe"),
+        object(),
+    )
+
+    assert response == "\n".join(TAVERN_COMMAND_TABLE["swipe"].help_lines)
+    assert not response.startswith("Hermes Tavern commands:")
+    assert runtime.calls == []
+
+
+def test_dispatch_command_help_resolves_alias_to_canonical_help_lines():
+    runtime = RecordingRuntime()
+
+    response = dispatch_command(
+        TAVERN_COMMAND_TABLE,
+        runtime,
+        RPCommand("help", ["regather"], "/rp help regather"),
+        object(),
+    )
+
+    assert response == "\n".join(TAVERN_COMMAND_TABLE["resume"].help_lines)
+    assert runtime.calls == []
+
+
+def test_dispatch_command_help_typo_returns_suggestion():
+    runtime = RecordingRuntime()
+
+    response = dispatch_command(
+        TAVERN_COMMAND_TABLE,
+        runtime,
+        RPCommand("help", ["stauts"], "/rp help stauts"),
+        object(),
+    )
+
+    assert response == "Unknown /rp command: stauts. Did you mean /rp status?"
+    assert runtime.calls == []
+
+
+def test_dispatch_command_help_unknown_returns_no_suggestion():
+    runtime = RecordingRuntime()
+
+    response = dispatch_command(
+        TAVERN_COMMAND_TABLE,
+        runtime,
+        RPCommand("help", ["mystery"], "/rp help mystery"),
+        object(),
+    )
+
+    assert response == "Unknown /rp command: mystery"
     assert runtime.calls == []
 
 
