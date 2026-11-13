@@ -639,7 +639,8 @@ def test_dispatch_command_resolves_aliases_to_canonical_commands():
     assert dispatch_command(table, runtime, RPCommand("resettle", [], "/rp resettle"), event) == "none"
     assert dispatch_command(table, runtime, RPCommand("restabilize", [], "/rp restabilize"), event) == "none"
     assert dispatch_command(table, runtime, RPCommand("rebalance", [], "/rp rebalance"), event) == "none"
-    assert len(runtime.calls) == 89
+    assert dispatch_command(table, runtime, RPCommand("readjust", [], "/rp readjust"), event) == "none"
+    assert len(runtime.calls) == 90
 
 
 def test_card_command_empty_args_returns_usage():
