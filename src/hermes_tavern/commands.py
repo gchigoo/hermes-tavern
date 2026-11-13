@@ -535,6 +535,7 @@ COMMAND_ALIASES: dict[str, str] = {
     "rebalance": "resume",
     "readjust": "resume",
     "recalibrate": "resume",
+    "retune": "resume",
 }
 
 
