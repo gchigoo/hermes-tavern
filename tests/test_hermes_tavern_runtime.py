@@ -2146,6 +2146,24 @@ async def test_runtime_readjust_alias_resumes_paused_session(tmp_path):
 
 
 @pytest.mark.asyncio
+async def test_runtime_recalibrate_alias_resumes_paused_session(tmp_path):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    store.migrate()
+    store.save_card(parse_character_card({"name": "Alice", "description": "Scholar", "first_mes": "Hello."}))
+    runtime = TavernRuntime(store)
+
+    await runtime.handle_command(RPCommand("start", ["Alice"], "/rp start Alice"), Event())
+    await runtime.handle_command(RPCommand("sleep", [], "/rp sleep"), Event())
+    assert store.get_active_session("telegram:chat:chat-1:thread:main:user:user-1") is None
+
+    recalibrate_response = await runtime.handle_command(RPCommand("recalibrate", [], "/rp recalibrate"), Event())
+    assert "resumed" in recalibrate_response.lower()
+    resumed_session = store.get_active_session("telegram:chat:chat-1:thread:main:user:user-1")
+    assert resumed_session is not None
+    assert resumed_session["status"] == "active"
+
+
+@pytest.mark.asyncio
 async def test_runtime_switch_without_matching_session_returns_not_found(tmp_path):
     store = TavernStore(tmp_path / "tavern.sqlite3")
     store.save_card(parse_character_card({"name": "Alice", "description": "Scholar", "first_mes": "Hello."}))
