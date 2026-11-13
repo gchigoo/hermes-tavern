@@ -689,3 +689,33 @@ def test_session_command_delegates_to_session_info():
 
     assert len(runtime.calls) == 2
 
+
+def test_suggest_command_and_dispatch_typo_hint():
+    from hermes_tavern.commands import suggest_command
+
+    runtime = RecordingRuntime()
+
+    assert suggest_command("stauts") == "status"
+    assert suggest_command("chpater") == "chapter"
+    assert suggest_command("continune") == "resume"
+    assert suggest_command("") is None
+    assert suggest_command("nope") is None
+    assert suggest_command("status", {}) is None
+
+    typo_resp = dispatch_command(
+        TAVERN_COMMAND_TABLE,
+        runtime,
+        RPCommand("stauts", [], "/rp stauts"),
+        object(),
+    )
+    assert typo_resp == "Unknown /rp command: stauts. Did you mean /rp status?"
+
+    unknown_resp = dispatch_command(
+        TAVERN_COMMAND_TABLE,
+        runtime,
+        RPCommand("mystery", [], "/rp mystery"),
+        object(),
+    )
+    assert unknown_resp == "Unknown /rp command: mystery"
+    assert runtime.calls == []
+

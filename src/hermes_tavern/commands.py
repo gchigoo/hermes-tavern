@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from difflib import get_close_matches
+from typing import Mapping
 
 
 @dataclass(frozen=True)
@@ -549,6 +551,27 @@ def _build_help_text() -> str:
     return "\n".join(lines)
 
 
+def suggest_command(
+    name: str,
+    table: Mapping[str, TavernCommandEntry] = TAVERN_COMMAND_TABLE,
+    *,
+    cutoff: float = 0.8,
+) -> str | None:
+    """Return the closest canonical command name in *table* for a typo, or None."""
+    normalized = name.strip().lower()
+    if not normalized or not table:
+        return None
+    direct = get_close_matches(normalized, table.keys(), n=1, cutoff=cutoff)
+    if direct:
+        return direct[0]
+    alias_hits = get_close_matches(normalized, COMMAND_ALIASES.keys(), n=1, cutoff=cutoff)
+    if alias_hits:
+        canonical = COMMAND_ALIASES[alias_hits[0]]
+        if canonical in table:
+            return canonical
+    return None
+
+
 def dispatch_command(table: dict[str, TavernCommandEntry], runtime: object, command: RPCommand, event: object) -> str:
     """Resolve and call the handler for *command* using *table* on *runtime*.
 
@@ -560,7 +583,11 @@ def dispatch_command(table: dict[str, TavernCommandEntry], runtime: object, comm
     if entry is None:
         from hermes_tavern.runtime_utils import mobile_preview
 
-        return f"Unknown /rp command: {mobile_preview(command.name, 80)}"
+        suggestion = suggest_command(cmd_name, table)
+        base = f"Unknown /rp command: {mobile_preview(command.name, 80)}"
+        if suggestion:
+            return f"{base}. Did you mean /rp {suggestion}?"
+        return base
     if not entry.handler:
         # handler="" means special — currently only "help"
         return _build_help_text()
