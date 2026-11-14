@@ -563,6 +563,32 @@ def get_command_aliases(canonical_name: str) -> list[str]:
     return sorted(alias for alias, target in COMMAND_ALIASES.items() if target == normalized)
 
 
+def is_known_command(
+    name: str,
+    table: Mapping[str, TavernCommandEntry] = TAVERN_COMMAND_TABLE,
+) -> bool:
+    """Return True if *name* resolves to a canonical command in *table*."""
+    return resolve_command_name(name, table) is not None
+
+
+def list_known_commands(
+    table: Mapping[str, TavernCommandEntry] = TAVERN_COMMAND_TABLE,
+    *,
+    include_aliases: bool = False,
+) -> list[str]:
+    """Return canonical command names in *table*, optionally including aliases."""
+    names = list(table.keys())
+    if not include_aliases:
+        return names
+    seen = set(names)
+    for alias in sorted(COMMAND_ALIASES):
+        target = COMMAND_ALIASES[alias]
+        if target in table and alias not in seen:
+            names.append(alias)
+            seen.add(alias)
+    return names
+
+
 def _build_help_text(
     topic: str | None = None,
     table: Mapping[str, TavernCommandEntry] = TAVERN_COMMAND_TABLE,

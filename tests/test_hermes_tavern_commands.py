@@ -825,3 +825,30 @@ def test_resolve_command_name_and_get_command_aliases():
     assert get_command_aliases("unknown_command") == []
     assert get_command_aliases("") == []
 
+
+def test_is_known_command_and_list_known_commands():
+    from hermes_tavern.commands import is_known_command, list_known_commands
+
+    assert is_known_command("status") is True
+    assert is_known_command("  REGEN ") is True
+    assert is_known_command("mystery") is False
+    assert is_known_command("") is False
+    assert is_known_command("status", {}) is False
+
+    canonical_only = list_known_commands()
+    assert canonical_only == list(TAVERN_COMMAND_TABLE.keys())
+    assert "regen" not in canonical_only
+
+    with_aliases = list_known_commands(include_aliases=True)
+    assert "status" in with_aliases
+    assert "regen" in with_aliases
+    assert len(with_aliases) == len(set(with_aliases))
+
+    subset_table = {"retry": TAVERN_COMMAND_TABLE["retry"]}
+    subset_with_aliases = list_known_commands(subset_table, include_aliases=True)
+    assert subset_with_aliases[0] == "retry"
+    assert "regen" in subset_with_aliases
+    assert "status" not in subset_with_aliases
+    assert list_known_commands({}) == []
+    assert list_known_commands({}, include_aliases=True) == []
+
