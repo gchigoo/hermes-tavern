@@ -945,6 +945,20 @@ def test_suggest_command_prefers_closer_available_alias():
     assert suggest_command("nupause", table) == "resume"
 
 
+def test_suggest_command_alias_respects_inclusive_cutoff():
+    """nupause 对 unpause 的相似度等于 6/7 时建议 resume，略高则无建议。"""
+    import math
+
+    from hermes_tavern.commands import suggest_command
+
+    table = {
+        "pause": TAVERN_COMMAND_TABLE["pause"],
+        "resume": TAVERN_COMMAND_TABLE["resume"],
+    }
+    assert suggest_command("nupause", table, cutoff=6 / 7) == "resume"
+    assert suggest_command("nupause", table, cutoff=math.nextafter(6 / 7, 1.0)) is None
+
+
 def test_resolve_command_name_and_get_command_aliases():
     from hermes_tavern.commands import get_command_aliases, resolve_command_name
 
