@@ -969,6 +969,48 @@ def test_suggest_command_alias_respects_inclusive_cutoff():
     assert suggest_command("nupause", table, cutoff=math.nextafter(6 / 7, 1.0)) is None
 
 
+def test_resolve_command_name_prefers_direct_table_entry_over_global_alias():
+    from hermes_tavern.commands import resolve_command_name
+
+    runtime = RecordingRuntime()
+    event = object()
+    table = {
+        "regen": TavernCommandEntry(
+            handler="no_args",
+            help_lines=["custom regen help"],
+            needs_command=False,
+            needs_event=False,
+        )
+    }
+
+    assert resolve_command_name("regen", table) == "regen"
+    assert _build_help_text("regen", table) == "custom regen help"
+    assert dispatch_command(table, runtime, RPCommand("regen", [], "/rp regen"), event) == "none"
+    assert runtime.calls == [("no_args",)]
+
+
+def test_suggest_command_prefers_direct_table_entry_over_colliding_alias():
+    from hermes_tavern.commands import suggest_command
+
+    runtime = RecordingRuntime()
+    event = object()
+    table = {
+        "regen": TavernCommandEntry(
+            handler="no_args", help_lines=["custom regen help"],
+            needs_command=False, needs_event=False,
+        ),
+        "retry": TAVERN_COMMAND_TABLE["retry"],
+    }
+    assert suggest_command("regn", table) == "regen"
+    assert _build_help_text("regn", table) == (
+        "Unknown /rp command: regn. Did you mean /rp help regen?"
+    )
+    assert dispatch_command(table, runtime, RPCommand("regn", [], "/rp regn"), event) == (
+        "Unknown /rp command: regn. Did you mean /rp regen?"
+    )
+    assert runtime.calls == []
+
+
 def test_resolve_command_name_and_get_command_aliases():
     from hermes_tavern.commands import get_command_aliases, resolve_command_name
 

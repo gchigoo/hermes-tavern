@@ -547,11 +547,13 @@ def resolve_command_name(
     name: str,
     table: Mapping[str, TavernCommandEntry] = TAVERN_COMMAND_TABLE,
 ) -> str | None:
-    """Resolve *name* (or an alias in COMMAND_ALIASES) to a canonical command in *table*."""
+    """Resolve *name* to a direct table entry or an available global alias."""
     normalized = name.strip().lower()
     if not normalized:
         return None
-    canonical_name = COMMAND_ALIASES.get(normalized, normalized)
+    if normalized in table:
+        return normalized
+    canonical_name = COMMAND_ALIASES.get(normalized)
     return canonical_name if canonical_name in table else None
 
 
@@ -662,7 +664,7 @@ def suggest_command(
     if not matches:
         return None
     match = matches[0]
-    return COMMAND_ALIASES.get(match, match)
+    return match if match in table else COMMAND_ALIASES[match]
 
 
 def dispatch_command(table: dict[str, TavernCommandEntry], runtime: object, command: RPCommand, event: object) -> str:
