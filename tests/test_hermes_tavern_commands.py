@@ -575,9 +575,19 @@ def test_help_prefixed_missing_subcommand_falls_back_to_canonical_lines():
 
 def test_help_prefixed_unknown_topic_returns_exact_message():
     assert _build_help_text("/rp stauts") == (
-        "Unknown /rp command: stauts. Did you mean /rp status?"
+        "Unknown /rp command: stauts. Did you mean /rp help status?"
     )
     assert _build_help_text("/rp mystery") == "Unknown /rp command: mystery"
+
+
+def test_help_continune_topics_keep_help_suggestion_context():
+    """`/rp help continune` and `/rp help /rp continune` suggest `/rp help resume`."""
+    expected = "Unknown /rp command: continune. Did you mean /rp help resume?"
+    help_topic = " ".join(parse_rp_command("/rp help continune").args)
+    nested_topic = " ".join(parse_rp_command("/rp help /rp continune").args)
+
+    assert _build_help_text(help_topic) == expected
+    assert _build_help_text(nested_topic) == expected
 
 
 @pytest.mark.parametrize(
@@ -650,7 +660,7 @@ def test_dispatch_command_help_typo_returns_suggestion():
         object(),
     )
 
-    assert response == "Unknown /rp command: stauts. Did you mean /rp status?"
+    assert response == "Unknown /rp command: stauts. Did you mean /rp help status?"
     assert runtime.calls == []
 
 
@@ -915,7 +925,7 @@ def test_suggest_command_restricted_table_ignores_unavailable_closer_alias():
     assert suggest_command("ussuspend", {}) is None
 
     assert _build_help_text("/rp ussuspend", pause_only) == (
-        "Unknown /rp command: ussuspend. Did you mean /rp pause?"
+        "Unknown /rp command: ussuspend. Did you mean /rp help pause?"
     )
     help_resp = dispatch_command(
         help_table,
@@ -929,7 +939,7 @@ def test_suggest_command_restricted_table_ignores_unavailable_closer_alias():
         RPCommand("ussuspend", [], "/rp ussuspend"),
         event,
     )
-    assert help_resp == "Unknown /rp command: ussuspend. Did you mean /rp pause?"
+    assert help_resp == "Unknown /rp command: ussuspend. Did you mean /rp help pause?"
     assert unknown_resp == "Unknown /rp command: ussuspend. Did you mean /rp pause?"
     assert runtime.calls == []
 

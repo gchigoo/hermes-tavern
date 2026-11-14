@@ -593,7 +593,11 @@ def _build_help_text(
     topic: str | None = None,
     table: Mapping[str, TavernCommandEntry] = TAVERN_COMMAND_TABLE,
 ) -> str:
-    """Build full or command-specific /rp help output from *table*."""
+    """Build full or command-specific /rp help output from *table*.
+
+    Unknown-topic typos suggest ``/rp help {command}`` so the hint stays in
+    help context. Direct unknown commands are formatted by ``dispatch_command``.
+    """
     stripped = topic.strip() if topic else ""
     if stripped and parse_rp_command(stripped) is not None:
         tokens = stripped.split(maxsplit=1)
@@ -628,7 +632,8 @@ def _build_help_text(
     suggestion = suggest_command(cmd_part, table)
     base = f"Unknown /rp command: {mobile_preview(cmd_part, 80)}"
     if suggestion:
-        return f"{base}. Did you mean /rp {suggestion}?"
+        # 帮助主题建议保留 help 上下文；裸未知命令仍是 /rp {suggestion}。
+        return f"{base}. Did you mean /rp help {suggestion}?"
     return base
 
 
