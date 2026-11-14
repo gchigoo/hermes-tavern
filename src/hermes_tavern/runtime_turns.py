@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 from typing import Any
 
-from hermes_tavern.commands import RPCommand
+from hermes_tavern.commands import RPCommand, parse_rp_command
 from hermes_tavern.identity import session_key_from_event
 from hermes_tavern.runtime_utils import (
     parse_pagination,
@@ -77,8 +77,31 @@ def greeting(runtime, command: RPCommand, event: Any) -> str:
     return "Usage: /rp greeting [list|use <0..N>]"
 
 
+def _say_message_text(command: RPCommand) -> str:
+    """Return the /rp say body, preserving raw spacing when a reparse matches.
+
+    Parsed args are already split on any whitespace, so joining them collapses
+    newlines, tabs, and repeated spaces. The original body is used only when
+    reparsing ``command.raw`` yields the same name and args.
+    """
+    joined = " ".join(command.args).strip()
+    raw = command.raw or ""
+    parsed = parse_rp_command(raw) if raw else None
+    # 名称或参数对不上、或没有 raw 时，退回旧的 args 拼接。
+    if (
+        parsed is None
+        or parsed.name != command.name
+        or list(parsed.args) != list(command.args)
+    ):
+        return joined
+    parts = raw.split(maxsplit=2)
+    if len(parts) < 3:
+        return joined
+    return parts[2].strip()
+
+
 def say(runtime, command: RPCommand, event: Any) -> str:
-    text = " ".join(command.args).strip()
+    text = _say_message_text(command)
     if not text:
         return "Usage: /rp say <message>"
     session_key = session_key_from_event(event)

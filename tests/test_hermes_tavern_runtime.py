@@ -6,8 +6,8 @@ import zlib
 
 import pytest
 
-from plugins.hermes_tavern.adapters import FAKE_ADAPTER_REPLY
-from plugins.hermes_tavern.commands import RPCommand
+from plugins.hermes_tavern.adapters import FAKE_ADAPTER_REPLY, FakeModelAdapter
+from plugins.hermes_tavern.commands import RPCommand, parse_rp_command
 from plugins.hermes_tavern.db import TavernStore
 from plugins.hermes_tavern.gateway_hook import pre_gateway_dispatch
 from plugins.hermes_tavern import runtime_model
@@ -186,6 +186,112 @@ async def test_runtime_say_generates_turn_and_preserves_text(tmp_path):
     assert messages[-2]["content"] == "What happens next?"
     assert messages[-1]["role"] == "assistant"
     assert messages[-1]["content"] == FAKE_ADAPTER_REPLY
+
+
+_SESSION_KEY = "telegram:chat:chat-1:thread:main:user:user-1"
+
+
+async def _started_alice_runtime(tmp_path):
+    """Open an Alice session so /rp say can generate and persist a turn."""
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    store.migrate()
+    store.save_card(parse_character_card({
+        "name": "Alice",
+        "description": "Scholar",
+        "first_mes": "Hello there.",
+    }))
+    runtime = TavernRuntime(store)
+    await runtime.handle_command(RPCommand("start", ["Alice"], "/rp start Alice"), Event())
+    return store, runtime
+
+
+def _record_generated_user_text(monkeypatch) -> list[str]:
+    """Capture the user message the fake generator actually receives."""
+    seen: list[str] = []
+
+    def generate(self, messages, profile):
+        del self, profile
+        assert messages[-1]["role"] == "user"
+        seen.append(messages[-1]["content"])
+        return FAKE_ADAPTER_REPLY
+
+    monkeypatch.setattr(FakeModelAdapter, "generate", generate)
+    return seen
+
+
+def _user_messages(store):
+    session = store.get_active_session(_SESSION_KEY)
+    return [
+        message["content"]
+        for message in store.get_recent_messages(session["id"], limit=20)
+        if message["role"] == "user"
+    ]
+
+
+@pytest.mark.asyncio
+async def test_runtime_say_preserves_multiline_body_from_parsed_bot_command(tmp_path, monkeypatch):
+    store, runtime = await _started_alice_runtime(tmp_path)
+    generated = _record_generated_user_text(monkeypatch)
+    source = " \n/RP@TavernBot SaY hello\n\n  there\tfriend \t\n"
+    command = parse_rp_command(source)
+
+    assert command == RPCommand(
+        name="say",
+        args=["hello", "there", "friend"],
+        raw="/RP@TavernBot SaY hello\n\n  there\tfriend",
+    )
+    response = await runtime.handle_command(command, Event())
+
+    expected = "hello\n\n  there\tfriend"
+    assert " ".join(command.args) == "hello there friend"
+    assert response == FAKE_ADAPTER_REPLY
+    assert generated == [expected]
+    assert _user_messages(store) == [expected]
+
+
+@pytest.mark.asyncio
+async def test_runtime_say_rejects_empty_content(tmp_path, monkeypatch):
+    store, runtime = await _started_alice_runtime(tmp_path)
+    session = store.get_active_session(_SESSION_KEY)
+    before = store.get_recent_messages(session["id"], limit=20)
+
+    def generate(self, messages, profile):
+        del self, messages, profile
+        raise AssertionError("empty /rp say must not generate")
+
+    monkeypatch.setattr(FakeModelAdapter, "generate", generate)
+    sources = ("/rp say", "/RP@Bot SAY\n\t", "  /rp   SaY   \n")
+    for source in sources:
+        command = parse_rp_command(source)
+        assert command is not None and command.name == "say" and command.args == []
+        assert await runtime.handle_command(command, Event()) == "Usage: /rp say <message>"
+    assert await runtime.handle_command(RPCommand("say", [], ""), Event()) == "Usage: /rp say <message>"
+    assert await runtime.handle_command(RPCommand("say", [" \n\t "], ""), Event()) == "Usage: /rp say <message>"
+    assert store.get_recent_messages(session["id"], limit=20) == before
+    assert _user_messages(store) == []
+
+
+@pytest.mark.asyncio
+async def test_runtime_say_manual_command_falls_back_to_joined_args(tmp_path, monkeypatch):
+    store, runtime = await _started_alice_runtime(tmp_path)
+    generated = _record_generated_user_text(monkeypatch)
+    cases = (
+        (RPCommand("say", ["kept", "tokens"], ""), "kept tokens"),
+        (
+            RPCommand("say", ["hello", "there"], "/rp say hello\n\n  there\tfriend"),
+            "hello there",
+        ),
+        (RPCommand("say", ["alpha", "beta"], "/rp edit last nope"), "alpha beta"),
+        (RPCommand("say", ["plain", "words"], "not an rp command"), "plain words"),
+    )
+
+    for command, expected in cases:
+        response = await runtime.handle_command(command, Event())
+        assert response == FAKE_ADAPTER_REPLY
+
+    assert generated == [expected for _, expected in cases]
+    assert _user_messages(store) == [expected for _, expected in cases]
+    assert "hello\n\n  there\tfriend" not in _user_messages(store)
 
 
 @pytest.mark.asyncio
