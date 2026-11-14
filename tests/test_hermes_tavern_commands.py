@@ -898,6 +898,42 @@ def test_suggest_command_and_dispatch_typo_hint():
     assert runtime.calls == []
 
 
+def test_suggest_command_restricted_table_ignores_unavailable_closer_alias():
+    """ussuspend 在仅含 pause 的表中应建议 pause，默认表仍建议 resume。"""
+    from hermes_tavern.commands import suggest_command
+
+    pause_only = {"pause": TAVERN_COMMAND_TABLE["pause"]}
+    help_table = {
+        "help": TAVERN_COMMAND_TABLE["help"],
+        "pause": TAVERN_COMMAND_TABLE["pause"],
+    }
+    runtime = RecordingRuntime()
+    event = object()
+
+    assert suggest_command("ussuspend") == "resume"
+    assert suggest_command("ussuspend", pause_only) == "pause"
+    assert suggest_command("ussuspend", {}) is None
+
+    assert _build_help_text("/rp ussuspend", pause_only) == (
+        "Unknown /rp command: ussuspend. Did you mean /rp pause?"
+    )
+    help_resp = dispatch_command(
+        help_table,
+        runtime,
+        RPCommand("help", ["/rp", "ussuspend"], "/rp help /rp ussuspend"),
+        event,
+    )
+    unknown_resp = dispatch_command(
+        pause_only,
+        runtime,
+        RPCommand("ussuspend", [], "/rp ussuspend"),
+        event,
+    )
+    assert help_resp == "Unknown /rp command: ussuspend. Did you mean /rp pause?"
+    assert unknown_resp == "Unknown /rp command: ussuspend. Did you mean /rp pause?"
+    assert runtime.calls == []
+
+
 def test_resolve_command_name_and_get_command_aliases():
     from hermes_tavern.commands import get_command_aliases, resolve_command_name
 
