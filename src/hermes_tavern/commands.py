@@ -543,6 +543,26 @@ COMMAND_ALIASES: dict[str, str] = {
 }
 
 
+def resolve_command_name(
+    name: str,
+    table: Mapping[str, TavernCommandEntry] = TAVERN_COMMAND_TABLE,
+) -> str | None:
+    """Resolve *name* (or an alias in COMMAND_ALIASES) to a canonical command in *table*."""
+    normalized = name.strip().lower()
+    if not normalized:
+        return None
+    canonical_name = COMMAND_ALIASES.get(normalized, normalized)
+    return canonical_name if canonical_name in table else None
+
+
+def get_command_aliases(canonical_name: str) -> list[str]:
+    """Return sorted aliases that map to *canonical_name*."""
+    normalized = canonical_name.strip().lower()
+    if not normalized:
+        return []
+    return sorted(alias for alias, target in COMMAND_ALIASES.items() if target == normalized)
+
+
 def _build_help_text(
     topic: str | None = None,
     table: Mapping[str, TavernCommandEntry] = TAVERN_COMMAND_TABLE,
@@ -559,8 +579,8 @@ def _build_help_text(
     parts = normalized.split()
     cmd_part = parts[0]
     sub_parts = parts[1:]
-    canonical_name = COMMAND_ALIASES.get(cmd_part, cmd_part)
-    target_entry = table.get(canonical_name)
+    canonical_name = resolve_command_name(cmd_part, table)
+    target_entry = table.get(canonical_name) if canonical_name is not None else None
     if target_entry is not None:
         help_lines = target_entry.help_lines
         if sub_parts:
@@ -604,17 +624,13 @@ def suggest_command(
 
 
 def dispatch_command(table: dict[str, TavernCommandEntry], runtime: object, command: RPCommand, event: object) -> str:
-    """Resolve and call the handler for *command* using *table* on *runtime*.
-
-    Returns the handler's string result, or an error message for unknown commands.
-    """
-    cmd_name = command.name.lower()
-    canonical_name = COMMAND_ALIASES.get(cmd_name, cmd_name)
-    entry = table.get(canonical_name)
+    """Resolve and call the handler for *command* using *table* on *runtime*."""
+    canonical_name = resolve_command_name(command.name, table)
+    entry = table.get(canonical_name) if canonical_name is not None else None
     if entry is None:
         from hermes_tavern.runtime_utils import mobile_preview
 
-        suggestion = suggest_command(cmd_name, table)
+        suggestion = suggest_command(command.name.lower(), table)
         base = f"Unknown /rp command: {mobile_preview(command.name, 80)}"
         if suggestion:
             return f"{base}. Did you mean /rp {suggestion}?"

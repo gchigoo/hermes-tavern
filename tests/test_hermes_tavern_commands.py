@@ -806,3 +806,22 @@ def test_suggest_command_and_dispatch_typo_hint():
     assert unknown_resp == "Unknown /rp command: mystery"
     assert runtime.calls == []
 
+
+def test_resolve_command_name_and_get_command_aliases():
+    from hermes_tavern.commands import get_command_aliases, resolve_command_name
+
+    assert resolve_command_name("status") == "status"
+    assert resolve_command_name("  REGEN ") == "retry"
+    assert resolve_command_name("reharmonize") == "resume"
+    assert resolve_command_name("") is None
+    assert resolve_command_name("mystery") is None
+    assert resolve_command_name("status", {}) is None
+
+    retry_aliases = get_command_aliases("retry")
+    assert "regen" in retry_aliases
+    assert "reroll" in retry_aliases
+    assert retry_aliases == sorted(retry_aliases)
+    assert get_command_aliases("  RETRY ") == retry_aliases
+    assert get_command_aliases("unknown_command") == []
+    assert get_command_aliases("") == []
+
