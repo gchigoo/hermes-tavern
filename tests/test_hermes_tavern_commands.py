@@ -934,6 +934,17 @@ def test_suggest_command_restricted_table_ignores_unavailable_closer_alias():
     assert runtime.calls == []
 
 
+def test_suggest_command_prefers_closer_available_alias():
+    """nupause 比 canonical pause 更接近可用别名 unpause，应建议 resume。"""
+    from hermes_tavern.commands import suggest_command
+
+    table = {
+        "pause": TAVERN_COMMAND_TABLE["pause"],
+        "resume": TAVERN_COMMAND_TABLE["resume"],
+    }
+    assert suggest_command("nupause", table) == "resume"
+
+
 def test_resolve_command_name_and_get_command_aliases():
     from hermes_tavern.commands import get_command_aliases, resolve_command_name
 

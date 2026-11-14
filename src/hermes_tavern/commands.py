@@ -640,23 +640,24 @@ def suggest_command(
 ) -> str | None:
     """Return the closest canonical command name in *table* for a typo, or None.
 
-    Alias candidates are limited to commands present in *table*, so a closer
-    alias for an unavailable command cannot hide a weaker available match.
+    Eligible canonical names and aliases compete together. Alias candidates
+    are limited to commands present in *table*, so a closer alias for an
+    unavailable command cannot hide a weaker available match.
     """
     normalized = name.strip().lower()
     if not normalized or not table:
         return None
-    direct = get_close_matches(normalized, table.keys(), n=1, cutoff=cutoff)
-    if direct:
-        return direct[0]
     # 只保留目标命令在 table 中的别名，避免更近但不可用的别名挡住可用建议。
     available_aliases = [
         alias for alias, canonical in COMMAND_ALIASES.items() if canonical in table
     ]
-    alias_hits = get_close_matches(normalized, available_aliases, n=1, cutoff=cutoff)
-    if alias_hits:
-        return COMMAND_ALIASES[alias_hits[0]]
-    return None
+    matches = get_close_matches(
+        normalized, [*table, *available_aliases], n=1, cutoff=cutoff
+    )
+    if not matches:
+        return None
+    match = matches[0]
+    return COMMAND_ALIASES.get(match, match)
 
 
 def dispatch_command(table: dict[str, TavernCommandEntry], runtime: object, command: RPCommand, event: object) -> str:
