@@ -535,6 +535,97 @@ def test_help_filters_by_joined_subcommand_parts_and_falls_back_to_all_lines():
     )
 
 
+@pytest.mark.parametrize(
+    ("topic", "expected"),
+    [
+        ("/rp status", "/rp status"),
+        ("/rp swipe use", "/rp swipe use <n>"),
+        (" \t/RP@MyBot\tSWIPE\nUSE  ", "/rp swipe use <n>"),
+        ("/rp project STYLE INSPECT", "/rp project style inspect [project-id]"),
+        ("/rp REGEN", "/rp retry"),
+    ],
+)
+def test_help_strips_valid_rp_invocation_before_lookup(topic, expected):
+    assert _build_help_text(topic) == expected
+
+
+@pytest.mark.parametrize(
+    "topic",
+    [
+        "/rp",
+        "/RP",
+        "/rp@hermes_bot",
+        "  /rp  ",
+        " \t/RP\n",
+        "\t/rp@hermes_bot  ",
+    ],
+)
+def test_help_prefix_only_equals_full_help_text(topic):
+    assert _build_help_text(topic) == _build_help_text()
+
+
+def test_help_prefixed_missing_subcommand_falls_back_to_canonical_lines():
+    assert _build_help_text("/rp swipe missing") == "\n".join(
+        TAVERN_COMMAND_TABLE["swipe"].help_lines
+    )
+    assert _build_help_text("/rp card port") == "\n".join(
+        TAVERN_COMMAND_TABLE["card"].help_lines
+    )
+
+
+def test_help_prefixed_unknown_topic_returns_exact_message():
+    assert _build_help_text("/rp stauts") == (
+        "Unknown /rp command: stauts. Did you mean /rp status?"
+    )
+    assert _build_help_text("/rp mystery") == "Unknown /rp command: mystery"
+
+
+@pytest.mark.parametrize(
+    ("topic", "name"),
+    [
+        ("/rpx status", "rpx"),
+        ("/rp@ status", "rp@"),
+        ("/rp@! status", "rp@!"),
+        ("/rp@bot/extra status", "rp@bot/extra"),
+        ("/rp /rp status", "rp"),
+    ],
+)
+def test_help_invalid_or_repeated_prefix_is_not_stripped(topic, name):
+    assert _build_help_text(topic) == f"Unknown /rp command: {name}"
+
+
+def test_help_prefixed_topic_uses_supplied_table():
+    table = {
+        "retry": TavernCommandEntry(handler="", help_lines=["custom retry help"]),
+    }
+
+    assert _build_help_text("/rp regen", table) == "custom retry help"
+    assert _build_help_text("/rp status", table) == "Unknown /rp command: status"
+    assert _build_help_text("/rp retry", {}) == "Unknown /rp command: retry"
+    assert _build_help_text("/rp", {}) == "Hermes Tavern commands:"
+
+
+def test_dispatch_command_help_strips_nested_rp_topic_without_runtime_calls():
+    runtime = RecordingRuntime()
+
+    swipe = dispatch_command(
+        TAVERN_COMMAND_TABLE,
+        runtime,
+        parse_rp_command("/rp help /rp swipe use"),
+        object(),
+    )
+    regen = dispatch_command(
+        TAVERN_COMMAND_TABLE,
+        runtime,
+        parse_rp_command("/RP@OuterBot HELP /RP@InnerBot REGEN"),
+        object(),
+    )
+
+    assert swipe == "/rp swipe use <n>"
+    assert regen == "/rp retry"
+    assert runtime.calls == []
+
+
 def test_dispatch_command_help_resolves_alias_to_canonical_help_lines():
     runtime = RecordingRuntime()
 

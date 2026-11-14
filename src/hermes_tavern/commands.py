@@ -594,6 +594,10 @@ def _build_help_text(
     table: Mapping[str, TavernCommandEntry] = TAVERN_COMMAND_TABLE,
 ) -> str:
     """Build full or command-specific /rp help output from *table*."""
+    stripped = topic.strip() if topic else ""
+    if stripped and parse_rp_command(stripped) is not None:
+        tokens = stripped.split(maxsplit=1)
+        topic = tokens[1] if len(tokens) > 1 else ""
     normalized = topic.strip().lower().lstrip("/") if topic else ""
     if not normalized:
         lines = ["Hermes Tavern commands:"]
