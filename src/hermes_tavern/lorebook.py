@@ -152,6 +152,7 @@ def _entry_matches(row: dict[str, Any], haystack: str, haystack_lower: str) -> t
 def _any_key_matches(
     keys: tuple[str, ...], haystack: str, haystack_lower: str, regex: bool
 ) -> tuple[bool, str]:
+    matched_key: str | None = None
     for key in keys:
         if regex:
             if len(key) > _MAX_REGEX_KEY_LENGTH:
@@ -159,12 +160,15 @@ def _any_key_matches(
             if _NESTED_QUANTIFIER_RE.search(key):
                 return False, "regex rejected: nested quantifier"
             try:
-                if re.search(key, haystack, flags=re.IGNORECASE):
-                    return True, key
+                found = re.search(key, haystack, flags=re.IGNORECASE)
             except (re.error, OverflowError, RecursionError, ValueError) as exc:
                 return False, f"regex error: {exc}"
+            if found and matched_key is None:
+                matched_key = key
         elif key.lower() in haystack_lower:
             return True, key
+    if matched_key is not None:
+        return True, matched_key
     return False, ""
 
 

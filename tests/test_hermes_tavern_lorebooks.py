@@ -581,3 +581,86 @@ def test_lorebook_regex_unexpected_runtime_error_propagates(monkeypatch):
         )
 
     assert caught.value is failure
+
+
+@pytest.mark.parametrize("key_position", ("primary", "secondary"))
+@pytest.mark.parametrize("malformed_order", ("before", "after"))
+def test_lorebook_regex_malformed_key_order_is_excluded(key_position, malformed_order):
+    """A malformed regex in the same key list excludes the entry in either order."""
+    malformed = "["
+    valid = "moon"
+    ordered = [malformed, valid] if malformed_order == "before" else [valid, malformed]
+    if key_position == "secondary":
+        keys_json = json.dumps(["moon"])
+        secondary_keys_json = json.dumps(ordered)
+    else:
+        keys_json = json.dumps(ordered)
+        secondary_keys_json = json.dumps([])
+    broken = {
+        "id": "malformed",
+        "title": "Malformed",
+        "content": "Malformed lore",
+        "enabled": 1,
+        "probability": 1,
+        "regex": 1,
+        "keys_json": keys_json,
+        "secondary_keys_json": secondary_keys_json,
+    }
+    healthy = {
+        "id": "healthy",
+        "title": "Healthy",
+        "content": "Healthy repeat",
+        "enabled": 1,
+        "probability": 1,
+        "regex": 1,
+        "keys_json": json.dumps(["a{2}"]),
+        "secondary_keys_json": json.dumps([]),
+    }
+
+    result = match_lorebook_entries([broken, healthy], "moon aaa")
+    modules = modules_from_lore_matches(result)
+    malformed_excluded = [item for item in result.excluded if item.entry_id == "malformed"]
+
+    assert [(item.entry_id, item.matched) for item in result.matches] == [("healthy", True)]
+    assert [module.content for module in modules] == ["Healthy repeat"]
+    assert len(result.excluded) == 1
+    assert len(malformed_excluded) == 1
+    excluded = malformed_excluded[0]
+    reason = excluded.reason
+    prefix = "regex error: "
+    assert excluded.matched is False
+    assert excluded.module is None
+    assert reason.startswith(prefix)
+    assert reason[len(prefix):]
+    assert f"excluded Malformed: {reason}" in result.debug
+
+
+@pytest.mark.parametrize(
+    ("keys", "first_key"),
+    (
+        (("moon", "rises"), "moon"),
+        (("rises", "moon"), "rises"),
+    ),
+)
+def test_lorebook_regex_first_matching_key_names_reason(keys, first_key):
+    """When several valid regex keys match, the reason names the first matching key."""
+    result = match_lorebook_entries(
+        [{
+            "id": "ordered",
+            "title": "Ordered",
+            "content": "Ordered lore",
+            "enabled": 1,
+            "probability": 1,
+            "regex": 1,
+            "keys_json": json.dumps(list(keys)),
+            "secondary_keys_json": json.dumps([]),
+        }],
+        "The moon rises.",
+    )
+    modules = modules_from_lore_matches(result)
+
+    assert [(item.entry_id, item.matched, item.reason) for item in result.matches] == [
+        ("ordered", True, f"key match: {first_key}"),
+    ]
+    assert [module.content for module in modules] == ["Ordered lore"]
+    assert not result.excluded
