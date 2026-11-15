@@ -311,3 +311,69 @@ def test_lorebook_error_prefix_keyword_public_boundary(keyword, regex, key_posit
     assert not missed.matches
     assert modules_from_lore_matches(missed) == []
     assert [item.reason for item in missed.excluded] == [miss_reason]
+
+
+@pytest.mark.parametrize("key_position", ("primary", "secondary"))
+def test_lorebook_regex_repeat_overflow_is_excluded(key_position):
+    """Oversized regex repeats are excluded without dropping a healthy companion."""
+    pattern = "a{99999999999999999999}"
+    if key_position == "secondary":
+        primary_key = "moon"
+        keys_json = json.dumps(["moon"])
+        secondary_keys_json = json.dumps([pattern])
+    else:
+        primary_key = pattern
+        keys_json = json.dumps([pattern])
+        secondary_keys_json = json.dumps([])
+    overflow = {
+        "id": "overflow",
+        "title": "Overflow",
+        "content": "Overflow lore",
+        "enabled": 1,
+        "probability": 1,
+        "regex": 1,
+        "keys_json": keys_json,
+        "secondary_keys_json": secondary_keys_json,
+    }
+    healthy = {
+        "id": "healthy",
+        "title": "Healthy",
+        "content": "Healthy repeat",
+        "enabled": 1,
+        "probability": 1,
+        "regex": 1,
+        "keys_json": json.dumps(["a{2}"]),
+        "secondary_keys_json": json.dumps([]),
+    }
+
+    result = match_lorebook_entries([overflow, healthy], "moon aaa")
+    modules = modules_from_lore_matches(result)
+
+    assert [(item.entry_id, item.matched) for item in result.matches] == [("healthy", True)]
+    assert [module.content for module in modules] == ["Healthy repeat"]
+    assert len(result.excluded) == 1
+    assert result.excluded[0].entry_id == "overflow"
+    assert result.excluded[0].matched is False
+    assert result.excluded[0].module is None
+    assert result.excluded[0].reason and result.excluded[0].reason.startswith("regex error: ")
+
+    literal = match_lorebook_entries(
+        [{
+            "id": "literal",
+            "title": "Literal",
+            "content": "Literal lore",
+            "enabled": 1,
+            "probability": 1,
+            "regex": False,
+            "keys_json": keys_json,
+            "secondary_keys_json": secondary_keys_json,
+        }],
+        f"moon aaa {pattern}",
+    )
+    literal_modules = modules_from_lore_matches(literal)
+
+    assert [(item.entry_id, item.matched, item.reason) for item in literal.matches] == [
+        ("literal", True, f"key match: {primary_key}"),
+    ]
+    assert [module.content for module in literal_modules] == ["Literal lore"]
+    assert not literal.excluded

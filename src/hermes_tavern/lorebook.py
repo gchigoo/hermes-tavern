@@ -161,7 +161,7 @@ def _any_key_matches(
             try:
                 if re.search(key, haystack, flags=re.IGNORECASE):
                     return True, key
-            except re.error as exc:
+            except (re.error, OverflowError) as exc:
                 return False, f"regex error: {exc}"
         elif key.lower() in haystack_lower:
             return True, key
