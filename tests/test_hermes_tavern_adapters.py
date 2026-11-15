@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from types import SimpleNamespace
+
 import pytest
 
 from plugins.hermes_tavern.adapters import (
@@ -169,3 +171,55 @@ def test_hermes_chat_completion_adapter_rejects_http_base_url():
 
     with pytest.raises((ValueError, RuntimeError)):
         adapter.generate([{"role": "user", "content": "hi"}], None)
+
+
+_EMPTY_CONTENT_ERROR = "HermesChatCompletionAdapter returned empty content"
+_PADDED_COMPLETION = "  live adapter reply\n"
+
+
+def _completion_response(envelope: str, content: str | None):
+    if envelope == "dict":
+        return {"choices": [{"message": {"content": content}}]}
+    return SimpleNamespace(
+        choices=[SimpleNamespace(message=SimpleNamespace(content=content))]
+    )
+
+
+def _adapter_for_response(response):
+    def factory(**kwargs):
+        client = _FakeOpenAIClient(**kwargs)
+
+        def create(**create_kwargs):
+            del create_kwargs
+            return response
+
+        client.chat.completions.create = create
+        return client
+
+    return HermesChatCompletionAdapter(
+        lambda: {
+            "provider": "apiyi",
+            "base_url": "https://api.apiyi.com/v1",
+            "api_key": "secret",
+            "model": "claude-opus-4-6",
+        },
+        client_factory=factory,
+    )
+
+
+@pytest.mark.parametrize("envelope", ("dict", "object"))
+@pytest.mark.parametrize("content", (None, "", " ", "\n\t"))
+def test_hermes_chat_completion_adapter_rejects_blank_completion_content(envelope, content):
+    adapter = _adapter_for_response(_completion_response(envelope, content))
+
+    with pytest.raises(RuntimeError) as exc_info:
+        adapter.generate([{"role": "user", "content": "hi"}], None)
+
+    assert str(exc_info.value) == _EMPTY_CONTENT_ERROR
+
+
+@pytest.mark.parametrize("envelope", ("dict", "object"))
+def test_hermes_chat_completion_adapter_preserves_surrounding_whitespace(envelope):
+    adapter = _adapter_for_response(_completion_response(envelope, _PADDED_COMPLETION))
+
+    assert adapter.generate([{"role": "user", "content": "hi"}], None) == _PADDED_COMPLETION

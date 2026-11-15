@@ -130,6 +130,6 @@ class HermesChatCompletionAdapter(HermesProviderAdapter):
             messages=messages,
         )
         content = _message_content(response)
-        if not content:
+        if not content.strip():
             raise RuntimeError("HermesChatCompletionAdapter returned empty content")
         return content
