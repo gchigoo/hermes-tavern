@@ -77,31 +77,35 @@ def greeting(runtime, command: RPCommand, event: Any) -> str:
     return "Usage: /rp greeting [list|use <0..N>]"
 
 
-def _say_message_text(command: RPCommand) -> str:
-    """Return the /rp say body, preserving raw spacing when a reparse matches.
+def _message_body_text(command: RPCommand, arg_offset: int) -> str:
+    """Return a command body, preserving raw spacing when a reparse matches.
 
     Parsed args are already split on any whitespace, so joining them collapses
     newlines, tabs, and repeated spaces. The original body is used only when
-    reparsing ``command.raw`` yields the same name and args.
+    reparsing ``command.raw`` yields the same name and complete argument list.
+    ``arg_offset`` skips leading subcommand args (``0`` for ``/rp say``,
+    ``1`` for ``/rp edit last``). Outer whitespace is trimmed either way.
     """
-    joined = " ".join(command.args).strip()
+    joined = " ".join(command.args[arg_offset:]).strip()
     raw = command.raw or ""
     parsed = parse_rp_command(raw) if raw else None
-    # 名称或参数对不上、或没有 raw 时，退回旧的 args 拼接。
+    # 名称或完整参数对不上、或没有 raw 时，退回旧的 args 拼接。
     if (
         parsed is None
         or parsed.name != command.name
         or list(parsed.args) != list(command.args)
     ):
         return joined
-    parts = raw.split(maxsplit=2)
-    if len(parts) < 3:
+    # 跳过调用前缀、命令名和前导参数，余下才是需要保留空白的正文。
+    body_index = 2 + arg_offset
+    parts = raw.split(maxsplit=body_index)
+    if len(parts) <= body_index:
         return joined
-    return parts[2].strip()
+    return parts[body_index].strip()
 
 
 def say(runtime, command: RPCommand, event: Any) -> str:
-    text = _say_message_text(command)
+    text = _message_body_text(command, 0)
     if not text:
         return "Usage: /rp say <message>"
     session_key = session_key_from_event(event)
@@ -421,7 +425,7 @@ def undo(runtime, event: Any) -> str:
 def edit(runtime, command: RPCommand, event: Any) -> str:
     if not command.args or command.args[0].lower() != "last" or len(command.args) < 2:
         return "Usage: /rp edit last <text>"
-    new_text = " ".join(command.args[1:]).strip()
+    new_text = _message_body_text(command, 1)
     if not new_text:
         return "Usage: /rp edit last <text>"
     session_key = session_key_from_event(event)

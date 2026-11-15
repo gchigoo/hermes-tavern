@@ -4,8 +4,8 @@ import json
 
 import pytest
 
-from plugins.hermes_tavern.adapters import FAKE_ADAPTER_REPLY
-from plugins.hermes_tavern.commands import RPCommand
+from plugins.hermes_tavern.adapters import FAKE_ADAPTER_REPLY, FakeModelAdapter
+from plugins.hermes_tavern.commands import RPCommand, parse_rp_command
 from plugins.hermes_tavern.db import TavernStore
 from plugins.hermes_tavern.importers.cards import parse_character_card
 from plugins.hermes_tavern.runtime import TavernRuntime
@@ -739,6 +739,153 @@ async def test_edit_last_replaces_assistant_reply(tmp_path):
     assistant_after = [m for m in msgs_after if m["role"] == "assistant"]
     # Net assistant count should be same: old reply removed, new appended
     assert len(assistant_after) == len(assistant_before)
+
+
+_EDIT_BODY = "hello\n\n  there\tfriend"
+
+
+def _user_message_contents(store):
+    """Return user message texts for the active test session, oldest first."""
+    session = store.get_active_session(SESSION_KEY)
+    return [
+        message["content"]
+        for message in store.get_recent_messages(session["id"])
+        if message["role"] == "user"
+    ]
+
+
+def _record_generated_user_text(monkeypatch):
+    """Capture the user text ``FakeModelAdapter.generate`` actually receives."""
+    seen = []
+
+    def generate(self, messages, profile):
+        del self, profile
+        assert messages[-1]["role"] == "user"
+        seen.append(messages[-1]["content"])
+        return FAKE_ADAPTER_REPLY
+
+    monkeypatch.setattr(FakeModelAdapter, "generate", generate)
+    return seen
+
+
+async def _start_with_user_turn(runtime):
+    """Start Alice and store one user turn so ``/rp edit last`` has a target."""
+    await runtime.handle_command(RPCommand("start", ["Alice"], "/rp start Alice"), Event())
+
+    class MsgEvent(Event):
+        text = "Original message"
+
+    await runtime.handle_active_message(MsgEvent())
+
+
+@pytest.mark.asyncio
+async def test_edit_last_preserves_multiline_body_from_parsed_command(tmp_path, monkeypatch):
+    runtime, store = _make_runtime(tmp_path)
+    await _start_with_user_turn(runtime)
+    generated = _record_generated_user_text(monkeypatch)
+    source = " \n/rp edit last hello\n\n  there\tfriend \t\n"
+    command = parse_rp_command(source)
+
+    assert command == RPCommand(
+        name="edit",
+        args=["last", "hello", "there", "friend"],
+        raw="/rp edit last hello\n\n  there\tfriend",
+    )
+    response = await runtime.handle_command(command, Event())
+
+    assert " ".join(command.args[1:]) == "hello there friend"
+    assert FAKE_ADAPTER_REPLY in response
+    assert generated == [_EDIT_BODY]
+    assert _user_message_contents(store) == [_EDIT_BODY]
+    session = store.get_active_session(SESSION_KEY)
+    messages = store.get_recent_messages(session["id"])
+    assert [message["content"] for message in messages] == [
+        "Hello there.",
+        _EDIT_BODY,
+        FAKE_ADAPTER_REPLY,
+    ]
+
+
+@pytest.mark.asyncio
+async def test_edit_last_preserves_multiline_body_from_parsed_bot_command(tmp_path, monkeypatch):
+    runtime, store = _make_runtime(tmp_path)
+    await _start_with_user_turn(runtime)
+    generated = _record_generated_user_text(monkeypatch)
+    source = " \n/RP@TavernBot EdIt LAST hello\n\n  there\tfriend \t\n"
+    command = parse_rp_command(source)
+
+    assert command == RPCommand(
+        name="edit",
+        args=["LAST", "hello", "there", "friend"],
+        raw="/RP@TavernBot EdIt LAST hello\n\n  there\tfriend",
+    )
+    response = await runtime.handle_command(command, Event())
+
+    assert source != source.strip()
+    assert _EDIT_BODY == _EDIT_BODY.strip()
+    assert " ".join(command.args[1:]) == "hello there friend"
+    assert FAKE_ADAPTER_REPLY in response
+    assert generated == [_EDIT_BODY]
+    assert _user_message_contents(store) == [_EDIT_BODY]
+
+
+@pytest.mark.asyncio
+async def test_edit_last_manual_command_falls_back_to_joined_args(tmp_path, monkeypatch):
+    runtime, store = _make_runtime(tmp_path)
+    await _start_with_user_turn(runtime)
+    generated = _record_generated_user_text(monkeypatch)
+    cases = (
+        (RPCommand("edit", ["last", "kept", "tokens"], ""), "kept tokens"),
+        (
+            RPCommand(
+                "edit",
+                ["last", "hello", "there"],
+                "/rp edit last hello\n\n  there\tfriend",
+            ),
+            "hello there",
+        ),
+        (RPCommand("edit", ["last", "alpha", "beta"], "/rp say nope"), "alpha beta"),
+        (RPCommand("edit", ["last", "plain", "words"], "not an rp command"), "plain words"),
+    )
+
+    for command, expected in cases:
+        response = await runtime.handle_command(command, Event())
+        assert FAKE_ADAPTER_REPLY in response
+        assert _user_message_contents(store) == [expected]
+
+    assert generated == [expected for _, expected in cases]
+    assert _EDIT_BODY not in _user_message_contents(store)
+
+
+@pytest.mark.asyncio
+async def test_edit_last_rejects_empty_content(tmp_path, monkeypatch):
+    runtime, store = _make_runtime(tmp_path)
+    await _start_with_user_turn(runtime)
+    session = store.get_active_session(SESSION_KEY)
+    before = store.get_recent_messages(session["id"])
+
+    def generate(self, messages, profile):
+        del self, messages, profile
+        raise AssertionError("empty /rp edit last must not generate")
+
+    monkeypatch.setattr(FakeModelAdapter, "generate", generate)
+    sources = ("/rp edit last", "/RP@Bot EdIt LAST\n\t", "  /rp   EdIt   LAST   \n")
+    for source in sources:
+        command = parse_rp_command(source)
+        assert command is not None and command.name == "edit"
+        assert command.args[0].lower() == "last" and len(command.args) == 1
+        assert await runtime.handle_command(command, Event()) == "Usage: /rp edit last <text>"
+    assert await runtime.handle_command(
+        RPCommand("edit", ["last"], ""), Event()
+    ) == "Usage: /rp edit last <text>"
+    assert await runtime.handle_command(
+        RPCommand("edit", ["last", " \n\t "], ""), Event()
+    ) == "Usage: /rp edit last <text>"
+    assert await runtime.handle_command(
+        RPCommand("edit", ["last", " \n\t "], "/rp edit last \n\t"), Event()
+    ) == "Usage: /rp edit last <text>"
+    assert store.get_recent_messages(session["id"]) == before
+    assert _user_message_contents(store) == ["Original message"]
 
 
 # ---------------------------------------------------------------------------
