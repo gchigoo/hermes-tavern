@@ -177,7 +177,7 @@ _EMPTY_CONTENT_ERROR = "HermesChatCompletionAdapter returned empty content"
 _PADDED_COMPLETION = "  live adapter reply\n"
 
 
-def _completion_response(envelope: str, content: str | None):
+def _completion_response(envelope: str, content: object):
     if envelope == "dict":
         return {"choices": [{"message": {"content": content}}]}
     return SimpleNamespace(
@@ -210,6 +210,17 @@ def _adapter_for_response(response):
 @pytest.mark.parametrize("envelope", ("dict", "object"))
 @pytest.mark.parametrize("content", (None, "", " ", "\n\t"))
 def test_hermes_chat_completion_adapter_rejects_blank_completion_content(envelope, content):
+    adapter = _adapter_for_response(_completion_response(envelope, content))
+
+    with pytest.raises(RuntimeError) as exc_info:
+        adapter.generate([{"role": "user", "content": "hi"}], None)
+
+    assert str(exc_info.value) == _EMPTY_CONTENT_ERROR
+
+
+@pytest.mark.parametrize("envelope", ("dict", "object"))
+@pytest.mark.parametrize("content", (123, ["reply"], {"text": "reply"}, b"reply"))
+def test_hermes_chat_completion_adapter_rejects_non_string_completion_content(envelope, content):
     adapter = _adapter_for_response(_completion_response(envelope, content))
 
     with pytest.raises(RuntimeError) as exc_info:

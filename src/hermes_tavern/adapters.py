@@ -20,7 +20,7 @@ def _message_content(response: Any) -> str:
     content = getattr(message, "content", None)
     if content is None and isinstance(message, dict):
         content = message.get("content")
-    return content or ""
+    return content if isinstance(content, str) else ""
 
 FAKE_ADAPTER_REPLY = "[Hermes Tavern fake adapter response]"
 DEFAULT_PROVIDER_TIMEOUT_SECONDS = 45.0
