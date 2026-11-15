@@ -377,3 +377,112 @@ def test_lorebook_regex_repeat_overflow_is_excluded(key_position):
     ]
     assert [module.content for module in literal_modules] == ["Literal lore"]
     assert not literal.excluded
+
+
+@pytest.mark.parametrize("key_position", ("primary", "secondary"))
+def test_lorebook_regex_recursion_error_is_excluded(key_position, monkeypatch):
+    """RecursionError from regex search is excluded without dropping a healthy companion."""
+    sentinel = "trigger"
+    if key_position == "secondary":
+        primary_key = "moon"
+        keys_json = json.dumps(["moon"])
+        secondary_keys_json = json.dumps([sentinel])
+    else:
+        primary_key = sentinel
+        keys_json = json.dumps([sentinel])
+        secondary_keys_json = json.dumps([])
+    import plugins.hermes_tavern.lorebook as lorebook_module
+
+    real_search = lorebook_module.re.search
+    search_calls = {"count": 0}
+
+    def controlled_search(*args, **kwargs):
+        search_calls["count"] += 1
+        pattern = args[0] if args else kwargs["pattern"]
+        if pattern == sentinel:
+            raise RecursionError("controlled regex recursion failure")
+        return real_search(*args, **kwargs)
+
+    monkeypatch.setattr("plugins.hermes_tavern.lorebook.re.search", controlled_search)
+    failing = {
+        "id": "failing",
+        "title": "Failing",
+        "content": "Failing lore",
+        "enabled": 1,
+        "probability": 1,
+        "regex": 1,
+        "keys_json": keys_json,
+        "secondary_keys_json": secondary_keys_json,
+    }
+    healthy = {
+        "id": "healthy",
+        "title": "Healthy",
+        "content": "Healthy repeat",
+        "enabled": 1,
+        "probability": 1,
+        "regex": 1,
+        "keys_json": json.dumps(["a{2}"]),
+        "secondary_keys_json": json.dumps([]),
+    }
+
+    result = match_lorebook_entries([failing, healthy], "moon aaa trigger")
+    modules = modules_from_lore_matches(result)
+
+    assert [(item.entry_id, item.matched) for item in result.matches] == [("healthy", True)]
+    assert [module.content for module in modules] == ["Healthy repeat"]
+    assert len(result.excluded) == 1
+    assert result.excluded[0].entry_id == "failing"
+    assert result.excluded[0].matched is False
+    assert result.excluded[0].module is None
+    assert result.excluded[0].reason == "regex error: controlled regex recursion failure"
+    assert "excluded Failing: regex error: controlled regex recursion failure" in result.debug
+
+    calls_before_literal = search_calls["count"]
+    literal = match_lorebook_entries(
+        [{
+            "id": "literal",
+            "title": "Literal",
+            "content": "Literal lore",
+            "enabled": 1,
+            "probability": 1,
+            "regex": False,
+            "keys_json": keys_json,
+            "secondary_keys_json": secondary_keys_json,
+        }],
+        "moon aaa trigger",
+    )
+    literal_modules = modules_from_lore_matches(literal)
+
+    assert search_calls["count"] == calls_before_literal
+    assert [(item.entry_id, item.matched, item.reason) for item in literal.matches] == [
+        ("literal", True, f"key match: {primary_key}"),
+    ]
+    assert [module.content for module in literal_modules] == ["Literal lore"]
+    assert not literal.excluded
+
+
+def test_lorebook_regex_unexpected_runtime_error_propagates(monkeypatch):
+    """Runtime errors outside regex containment propagate unchanged."""
+    failure = RuntimeError("unexpected search failure")
+
+    def fail_search(*args, **kwargs):
+        raise failure
+
+    monkeypatch.setattr("plugins.hermes_tavern.lorebook.re.search", fail_search)
+
+    with pytest.raises(RuntimeError) as caught:
+        match_lorebook_entries(
+            [{
+                "id": "runtime",
+                "title": "Runtime",
+                "content": "Runtime lore",
+                "enabled": 1,
+                "probability": 1,
+                "regex": 1,
+                "keys_json": json.dumps(["a{2}"]),
+                "secondary_keys_json": json.dumps([]),
+            }],
+            "aaa",
+        )
+
+    assert caught.value is failure
