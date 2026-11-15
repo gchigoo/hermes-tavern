@@ -270,3 +270,44 @@ def test_lorebook_secondary_regex_rejection_excludes_entry():
 
     assert len(result.matches) == 0
     assert result.excluded[0].reason == "regex rejected: nested quantifier"
+
+
+@pytest.mark.parametrize("keyword", ("regex error", "regex rejected"))
+@pytest.mark.parametrize("regex", (False, True))
+@pytest.mark.parametrize("key_position", ("primary", "secondary"))
+def test_lorebook_error_prefix_keyword_public_boundary(keyword, regex, key_position):
+    """Keys that share a regex error-reason prefix follow ordinary key matching."""
+    if key_position == "secondary":
+        primary_key = "moon"
+        keys_json = json.dumps(["moon"])
+        secondary_keys_json = json.dumps([keyword])
+        miss_reason = "secondary key filter miss"
+    else:
+        primary_key = keyword
+        keys_json = json.dumps([keyword])
+        secondary_keys_json = json.dumps([])
+        miss_reason = "no primary key match"
+    entry = {
+        "id": "boundary",
+        "title": "Boundary",
+        "content": "Lore text.",
+        "enabled": 1,
+        "probability": 1,
+        "regex": regex,
+        "keys_json": keys_json,
+        "secondary_keys_json": secondary_keys_json,
+    }
+
+    matched = match_lorebook_entries([entry], "moon REGEX ERROR; REGEX REJECTED")
+    modules = modules_from_lore_matches(matched)
+
+    assert [item.entry_id for item in matched.matches] == ["boundary"]
+    assert not matched.excluded
+    assert matched.matches[0].reason == f"key match: {primary_key}"
+    assert [module.content for module in modules] == ["Lore text."]
+
+    missed = match_lorebook_entries([entry], "moon")
+
+    assert not missed.matches
+    assert modules_from_lore_matches(missed) == []
+    assert [item.reason for item in missed.excluded] == [miss_reason]

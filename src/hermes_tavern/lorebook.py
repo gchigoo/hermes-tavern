@@ -133,35 +133,39 @@ def _entry_matches(row: dict[str, Any], haystack: str, haystack_lower: str) -> t
     if not keys:
         return False, "no keys"
     regex = bool(row.get("regex"))
-    primary_hit = _any_key_matches(keys, haystack, haystack_lower, regex)
-    if primary_hit.startswith(("regex error", "regex rejected")):
-        return False, primary_hit
-    if not primary_hit:
+    primary_matched, primary_detail = _any_key_matches(keys, haystack, haystack_lower, regex)
+    if not primary_matched:
+        if primary_detail:
+            return False, primary_detail
         return False, "no primary key match"
     if secondary:
-        secondary_hit = _any_key_matches(secondary, haystack, haystack_lower, regex)
-        if secondary_hit.startswith(("regex error", "regex rejected")):
-            return False, secondary_hit
-        if not secondary_hit:
+        secondary_matched, secondary_detail = _any_key_matches(
+            secondary, haystack, haystack_lower, regex
+        )
+        if not secondary_matched:
+            if secondary_detail:
+                return False, secondary_detail
             return False, "secondary key filter miss"
-    return True, f"key match: {primary_hit}"
+    return True, f"key match: {primary_detail}"
 
 
-def _any_key_matches(keys: tuple[str, ...], haystack: str, haystack_lower: str, regex: bool) -> str:
+def _any_key_matches(
+    keys: tuple[str, ...], haystack: str, haystack_lower: str, regex: bool
+) -> tuple[bool, str]:
     for key in keys:
         if regex:
             if len(key) > _MAX_REGEX_KEY_LENGTH:
-                return "regex rejected: pattern too long"
+                return False, "regex rejected: pattern too long"
             if _NESTED_QUANTIFIER_RE.search(key):
-                return "regex rejected: nested quantifier"
+                return False, "regex rejected: nested quantifier"
             try:
                 if re.search(key, haystack, flags=re.IGNORECASE):
-                    return key
+                    return True, key
             except re.error as exc:
-                return f"regex error: {exc}"
+                return False, f"regex error: {exc}"
         elif key.lower() in haystack_lower:
-            return key
-    return ""
+            return True, key
+    return False, ""
 
 
 def _keys(value: Any) -> tuple[str, ...]:
