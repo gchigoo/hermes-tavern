@@ -580,6 +580,28 @@ def test_help_prefixed_unknown_topic_returns_exact_message():
     assert _build_help_text("/rp mystery") == "Unknown /rp command: mystery"
 
 
+@pytest.mark.parametrize(
+    ("topic", "expected"),
+    [
+        (
+            "stauts info export",
+            "Unknown /rp command: stauts. Did you mean /rp help status info export?",
+        ),
+        (
+            " \t/RP\tSTAUTS \n info   EXPORT ",
+            "Unknown /rp command: stauts. Did you mean /rp help status info export?",
+        ),
+        (
+            "stauts",
+            "Unknown /rp command: stauts. Did you mean /rp help status?",
+        ),
+    ],
+)
+def test_help_typo_suggestion_appends_normalized_subcommands(topic, expected):
+    """错字帮助建议附上规范化子命令；裸错字仍只建议纠正后的命令。"""
+    assert _build_help_text(topic) == expected
+
+
 def test_help_continune_topics_keep_help_suggestion_context():
     """`/rp help continune` and `/rp help /rp continune` suggest `/rp help resume`."""
     expected = "Unknown /rp command: continune. Did you mean /rp help resume?"

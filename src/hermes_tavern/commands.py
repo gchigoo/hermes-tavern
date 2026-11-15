@@ -597,8 +597,9 @@ def _build_help_text(
 ) -> str:
     """Build full or command-specific /rp help output from *table*.
 
-    Unknown-topic typos suggest ``/rp help {command}`` so the hint stays in
-    help context. Direct unknown commands are formatted by ``dispatch_command``.
+    Unknown-topic typos suggest ``/rp help {command}`` plus any normalized
+    subcommand tokens so the hint stays in help context. Direct unknown
+    commands are formatted by ``dispatch_command`` and keep their alias hints.
     """
     stripped = topic.strip() if topic else ""
     if stripped and parse_rp_command(stripped) is not None:
@@ -634,8 +635,10 @@ def _build_help_text(
     suggestion = suggest_command(cmd_part, table)
     base = f"Unknown /rp command: {mobile_preview(cmd_part, 80)}"
     if suggestion:
-        # 帮助主题建议保留 help 上下文；裸未知命令仍是 /rp {suggestion}。
-        return f"{base}. Did you mean /rp help {suggestion}?"
+        # 帮助主题建议保留 help 上下文，并附上已拆分规范化的子命令。
+        # 裸未知命令仍由 dispatch_command 格式化为 /rp {suggestion}，别名提示不变。
+        corrected = " ".join((suggestion, *sub_parts))
+        return f"{base}. Did you mean /rp help {corrected}?"
     return base
 
 
