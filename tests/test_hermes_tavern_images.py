@@ -5,9 +5,11 @@ from __future__ import annotations
 from pathlib import Path
 import json
 
+import pytest
+
 from plugins.hermes_tavern.commands import RPCommand
 from plugins.hermes_tavern.db import TavernStore
-from plugins.hermes_tavern.images import GeneratedImage, ImagePrompt, compile_image_prompt, expand_image_template_macros
+from plugins.hermes_tavern.images import ComfyUIProvider, GeneratedImage, ImagePrompt, compile_image_prompt, expand_image_template_macros
 from plugins.hermes_tavern.importers.cards import parse_character_card
 from plugins.hermes_tavern.runtime import TavernRuntime
 
@@ -609,3 +611,68 @@ def test_image_safety_clear_resets_to_safe(tmp_path):
     reset = runtime.handle_command_sync(RPCommand("image", ["safety", "clear"], "/rp image safety clear"), FakeEvent())
     assert "reset to safe" in reset
     assert "mode: safe" in runtime.handle_command_sync(RPCommand("image", ["safety"], "/rp image safety"), FakeEvent())
+
+
+@pytest.mark.parametrize(
+    ("settings", "workflow_seed", "metadata_seed"),
+    [
+        ({"seed": 0}, 0, 0),
+        ({"seed": "0"}, 0, 0),
+        ({"seed": 123}, 123, 123),
+        ({"seed": -1}, 42, -1),
+        pytest.param(None, 42, -1, id="absent-settings"),
+    ],
+)
+def test_comfyui_provider_generate_seed(tmp_path, monkeypatch, settings, workflow_seed, metadata_seed):
+    """Configured seeds pass through; negative and absent settings use time_ns and keep metadata -1."""
+    prompt_id = "prompt-42"
+    image_bytes = b"fixed-image-bytes"
+    captured = {}
+
+    class _Response:
+        """Context manager returning a fixed urlopen body."""
+
+        def __init__(self, payload: bytes) -> None:
+            self._payload = payload
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *_exc):
+            return False
+
+        def read(self) -> bytes:
+            return self._payload
+
+    def fake_urlopen(request, timeout=None):
+        url = request.full_url if hasattr(request, "full_url") else str(request)
+        if url.endswith("/prompt"):
+            captured["workflow"] = json.loads(request.data.decode())["prompt"]
+            return _Response(json.dumps({"prompt_id": prompt_id}).encode())
+        if f"/history/{prompt_id}" in url:
+            history = {
+                prompt_id: {
+                    "outputs": {
+                        "9": {"images": [{"filename": "out.png", "subfolder": "", "type": "output"}]},
+                    },
+                },
+            }
+            return _Response(json.dumps(history).encode())
+        if "/view" in url:
+            return _Response(image_bytes)
+        raise AssertionError(url)
+
+    monkeypatch.setattr("urllib.request.urlopen", fake_urlopen)
+    monkeypatch.setattr("time.time_ns", lambda: (1 << 32) + 42)
+    result = ComfyUIProvider(model="configured.safetensors").generate(
+        ImagePrompt(
+            mode="free",
+            prompt="moonlit lake",
+            metadata=None if settings is None else {"settings": settings},
+        ),
+        output_dir=tmp_path,
+    )
+
+    assert captured["workflow"]["3"]["inputs"]["seed"] == workflow_seed
+    assert result.metadata["seed"] == metadata_seed
+    assert Path(result.file_path).read_bytes() == image_bytes

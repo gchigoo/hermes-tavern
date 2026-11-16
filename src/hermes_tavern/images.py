@@ -500,7 +500,7 @@ class ComfyUIProvider:
         cfg = float(settings.get("cfg_scale") or 7.0)
         sampler = str(settings.get("sampler") or "euler")
         sampler = self._SAMPLER_MAP.get(sampler, sampler)  # map A1111 → ComfyUI names
-        seed = int(settings.get("seed") or -1)
+        seed = int(settings["seed"])
 
         # ── 1. Resolve checkpoint ──────────────────────────────────
         checkpoint = self._checkpoint
