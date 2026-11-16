@@ -276,7 +276,10 @@ def _read_png_chara(data: bytes) -> str | None:
                 if inflated is None:
                     continue
                 text = inflated
-            return text.decode("utf-8", errors="replace")
+            try:
+                return text.decode("utf-8")
+            except UnicodeDecodeError:
+                continue
 
         elif chunk_type == b"IEND":
             break

@@ -633,6 +633,27 @@ def test_read_png_chara_png_chunk_bounds_bad_crc_returns_later_chara(form: str):
     assert _read_png_chara(data) == later_b64
 
 
+@pytest.mark.parametrize("compression_flag", [0, 1])
+def test_read_png_chara_itxt_invalid_utf8_skips_to_later_chara(compression_flag: int):
+    """CRC-valid iTXt chara with invalid UTF-8 text is skipped for a later tEXt chara."""
+    text = b"\xff" if compression_flag == 0 else zlib.compress(b"\xff")
+    payload = _itxt_chara_payload(
+        compression_flag=compression_flag,
+        compression_method=0,
+        text=text,
+    )
+    assert _read_png_chara(_png_with_chunks((b"iTXt", payload))) is None
+
+    later_b64 = base64.b64encode(
+        json.dumps({"name": "Later"}).encode("utf-8")
+    ).decode("ascii")
+    data = _png_with_chunks(
+        (b"iTXt", payload),
+        (b"tEXt", b"chara\x00" + later_b64.encode("ascii")),
+    )
+    assert _read_png_chara(data) == later_b64
+
+
 def test_load_card_file_png_chunk_bounds_truncated_raises_unsupported(tmp_path):
     """A PNG whose chara chunk stops one byte early has no readable metadata."""
     png_path = tmp_path / "truncated-chara.png"
