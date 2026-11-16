@@ -87,7 +87,7 @@ def parse_character_card(raw_card: dict[str, Any]) -> CharacterCard:
     if raw_talkativeness is not None:
         try:
             talkativeness = float(raw_talkativeness)
-        except (TypeError, ValueError):
+        except (TypeError, ValueError, OverflowError):
             talkativeness = None
 
     return CharacterCard(

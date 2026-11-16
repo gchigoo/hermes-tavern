@@ -270,6 +270,24 @@ def test_parse_talkativeness_invalid_value_becomes_none():
     assert card.talkativeness is None
 
 
+@pytest.mark.parametrize("talkativeness", [10**400, -(10**400)])
+@pytest.mark.parametrize("nested", [False, True], ids=["direct", "nested"])
+def test_parse_talkativeness_overflow_becomes_none(talkativeness: int, nested: bool):
+    """Huge optional talkativeness integers become None and leave raw metadata intact."""
+    fields = {"name": "Overflow", "talkativeness": talkativeness}
+    raw = {"spec": "chara_card_v2", "data": fields} if nested else fields
+    snapshot = json.loads(json.dumps(raw))
+
+    parsed = parse_character_card(raw)
+    loaded = load_card_file(json.dumps(raw))
+
+    assert raw == snapshot
+    for card in (parsed, loaded):
+        assert card.name == "Overflow"
+        assert card.talkativeness is None
+        assert card.raw == snapshot
+
+
 def test_parse_fixture_st_v2():
     raw = json.loads((FIXTURES / "st_v2.json").read_text())
 
