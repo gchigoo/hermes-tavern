@@ -97,6 +97,35 @@ def _png_with_compressed_itxt_text(raw_text: bytes) -> bytes:
     return _png_with_chunks((b"iTXt", payload))
 
 
+_PNG_CHUNK_BOUNDS_CARD = {"name": "Bounds"}
+_PNG_CHUNK_BOUNDS_B64 = base64.b64encode(
+    json.dumps(_PNG_CHUNK_BOUNDS_CARD).encode("utf-8")
+).decode("ascii")
+
+
+def _png_chunk_bounds_chara_chunk(form: str) -> bytes:
+    """Return one CRC-complete chara chunk: tEXt, iTXt, or compressed iTXt.
+
+    The text field is the same base64 JSON in every form. Callers truncate
+    the returned bytes to drop physical CRC bytes without altering the CRC value.
+    """
+    if form == "tEXt":
+        text = _PNG_CHUNK_BOUNDS_B64.encode("ascii")
+        return _png_chunk(b"tEXt", b"chara\x00" + text)
+    if form == "iTXt":
+        return _png_chunk(b"iTXt", _itxt_chara_payload(_PNG_CHUNK_BOUNDS_CARD))
+    if form == "iTXt-compressed":
+        payload = _itxt_chara_payload(
+            _PNG_CHUNK_BOUNDS_CARD,
+            language="en",
+            translated_keyword="角色",
+            compression_flag=1,
+            compression_method=0,
+        )
+        return _png_chunk(b"iTXt", payload)
+    raise ValueError(f"unknown chara chunk form: {form}")
+
+
 FIXTURES = Path(__file__).parent / "fixtures" / "cards"
 
 
@@ -520,6 +549,52 @@ def test_read_png_chara_rejects_decompressed_text_over_byte_limit():
         _png_with_compressed_itxt_text(b"A" * (MAX_LOCAL_IMPORT_BYTES + 1))
     )
     assert decoded is None
+
+
+@pytest.mark.parametrize(
+    "form",
+    [
+        pytest.param("tEXt", id="tEXt"),
+        pytest.param("iTXt", id="iTXt-uncompressed"),
+        pytest.param("iTXt-compressed", id="iTXt-compressed"),
+    ],
+)
+@pytest.mark.parametrize("dropped_crc_bytes", [1, 2, 3, 4])
+def test_read_png_chara_png_chunk_bounds_missing_crc_returns_none(
+    form: str,
+    dropped_crc_bytes: int,
+):
+    """A chara chunk missing 1 to 4 physical CRC bytes is not metadata."""
+    chunk = _png_chunk_bounds_chara_chunk(form)
+    data = b"\x89PNG\r\n\x1a\n" + chunk[:-dropped_crc_bytes]
+    assert _read_png_chara(data) is None
+
+
+@pytest.mark.parametrize("length_mode", ["one-over-available", "ffffffff"])
+def test_read_png_chara_png_chunk_bounds_oversize_length_returns_none(length_mode: str):
+    """A declared payload past the buffer, including 0xffffffff, yields None."""
+    payload = b"chara\x00" + _PNG_CHUNK_BOUNDS_B64.encode("ascii")
+    available = len(payload)
+    declared = available + 1 if length_mode == "one-over-available" else 0xFFFFFFFF
+    data = b"\x89PNG\r\n\x1a\n" + struct.pack(">I", declared) + b"tEXt" + payload
+    assert _read_png_chara(data) is None
+
+
+def test_read_png_chara_png_chunk_bounds_exact_eof():
+    """A standalone chara chunk ending at EOF decodes; one byte short does not."""
+    data = b"\x89PNG\r\n\x1a\n" + _png_chunk_bounds_chara_chunk("tEXt")
+    assert _read_png_chara(data) == _PNG_CHUNK_BOUNDS_B64
+    assert _read_png_chara(data[:-1]) is None
+
+
+def test_load_card_file_png_chunk_bounds_truncated_raises_unsupported(tmp_path):
+    """A PNG whose chara chunk stops one byte early has no readable metadata."""
+    png_path = tmp_path / "truncated-chara.png"
+    data = b"\x89PNG\r\n\x1a\n" + _png_chunk_bounds_chara_chunk("tEXt")
+    png_path.write_bytes(data[:-1])
+
+    with pytest.raises(UnsupportedCardFormat, match="No 'chara' metadata"):
+        load_card_file(png_path)
 
 
 def test_load_card_file_png_missing_chara_raises_unsupported(tmp_path):

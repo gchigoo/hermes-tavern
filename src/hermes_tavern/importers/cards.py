@@ -224,9 +224,13 @@ def _read_png_chara(data: bytes) -> str | None:
     pos = 8
     while pos + 8 <= len(data):
         (length,) = struct.unpack(">I", data[pos : pos + 4])
+        # length field + type + payload + CRC; equal to len(data) is a complete chunk
+        chunk_end = pos + 12 + length
+        if chunk_end > len(data):
+            return None
         chunk_type = data[pos + 4 : pos + 8]
         chunk_data = data[pos + 8 : pos + 8 + length]
-        pos += 12 + length
+        pos = chunk_end
 
         if chunk_type == b"tEXt":
             sep = chunk_data.find(b"\x00")
