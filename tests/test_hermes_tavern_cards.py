@@ -429,13 +429,19 @@ def test_load_card_file_png_with_chara_v2_returns_card(tmp_path):
     assert card.source_path == str(png_path)
 
 
-def test_load_card_file_png_itxt_empty_language_returns_card(tmp_path):
-    """Uncompressed iTXt with empty language and translated keyword."""
+@pytest.mark.parametrize("compression_method", [0, 1, 255])
+def test_load_card_file_png_itxt_empty_language_returns_card(
+    tmp_path,
+    compression_method: int,
+):
+    """Uncompressed iTXt with empty language ignores the method byte."""
     png_path = tmp_path / "empty-lang.png"
     payload = _itxt_chara_payload(
         {"name": "Ita", "description": "Empty tags"},
         language="",
         translated_keyword="",
+        compression_flag=0,
+        compression_method=compression_method,
     )
     png_path.write_bytes(_png_with_chunks((b"iTXt", payload)))
 
@@ -505,7 +511,6 @@ _COMPRESSED_CHARA_TEXT = zlib.compress(_UNCOMPRESSED_CHARA_TEXT)
     [
         pytest.param(2, 0, _COMPRESSED_CHARA_TEXT, id="invalid-compression-flag"),
         pytest.param(1, 1, _COMPRESSED_CHARA_TEXT, id="compression-method-not-zero"),
-        pytest.param(0, 1, _UNCOMPRESSED_CHARA_TEXT, id="uncompressed-invalid-method"),
         pytest.param(1, 0, b"not-a-zlib-stream", id="invalid-zlib"),
         pytest.param(1, 0, _COMPRESSED_CHARA_TEXT[:-1], id="truncated-zlib"),
         pytest.param(1, 0, _COMPRESSED_CHARA_TEXT + b"trailing", id="trailing-bytes"),

@@ -251,12 +251,12 @@ def _read_png_chara(data: bytes) -> str | None:
                 continue
             if chunk_data[:sep].decode("latin-1") != "chara":
                 continue
-            # flag at sep+1, method at sep+2; only uncompressed or zlib is valid
+            # flag at sep+1, method at sep+2; method is ignored when flag is 0
             if sep + 2 >= len(chunk_data):
                 continue
             compression_flag = chunk_data[sep + 1]
             compression_method = chunk_data[sep + 2]
-            if compression_flag == 0 and compression_method == 0:
+            if compression_flag == 0:
                 compressed = False
             elif compression_flag == 1 and compression_method == 0:
                 compressed = True
