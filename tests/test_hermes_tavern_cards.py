@@ -31,6 +31,48 @@ def _make_png_with_chara(card_json: dict) -> bytes:
         + chunk(b"IEND", b"")
     )
 
+
+def _png_chunk(chunk_type: bytes, data: bytes) -> bytes:
+    """Return a length-prefixed PNG chunk with its CRC."""
+    crc = zlib.crc32(chunk_type + data) & 0xFFFFFFFF
+    return struct.pack(">I", len(data)) + chunk_type + data + struct.pack(">I", crc)
+
+
+def _png_with_chunks(*chunks: tuple[bytes, bytes]) -> bytes:
+    """Return a 1x1 PNG with the given chunks between IHDR and IEND."""
+    ihdr = struct.pack(">IIBBBBB", 1, 1, 8, 2, 0, 0, 0)
+    parts = [b"\x89PNG\r\n\x1a\n", _png_chunk(b"IHDR", ihdr)]
+    parts.extend(_png_chunk(chunk_type, data) for chunk_type, data in chunks)
+    parts.append(_png_chunk(b"IEND", b""))
+    return b"".join(parts)
+
+
+def _itxt_chara_payload(
+    card_json: dict,
+    *,
+    language: str = "",
+    translated_keyword: str = "",
+    compression_flag: int = 0,
+) -> bytes:
+    """Return iTXt data for keyword 'chara'.
+
+    Language is Latin-1. Translated keyword and text are UTF-8.
+    A non-zero compression flag zlib-compresses only the text field.
+    """
+    text = base64.b64encode(json.dumps(card_json).encode("utf-8"))
+    if compression_flag:
+        text = zlib.compress(text)
+    return (
+        b"chara\x00"
+        + bytes((compression_flag, 0))
+        + language.encode("latin-1")
+        + b"\x00"
+        + translated_keyword.encode("utf-8")
+        + b"\x00"
+        + text
+    )
+
+
 FIXTURES = Path(__file__).parent / "fixtures" / "cards"
 
 
@@ -309,6 +351,67 @@ def test_load_card_file_png_with_chara_v2_returns_card(tmp_path):
     assert card.name == "Lyra"
     assert card.first_mes == "Hi!"
     assert card.source_path == str(png_path)
+
+
+def test_load_card_file_png_itxt_empty_language_returns_card(tmp_path):
+    """Uncompressed iTXt with empty language and translated keyword."""
+    png_path = tmp_path / "empty-lang.png"
+    payload = _itxt_chara_payload(
+        {"name": "Ita", "description": "Empty tags"},
+        language="",
+        translated_keyword="",
+    )
+    png_path.write_bytes(_png_with_chunks((b"iTXt", payload)))
+
+    card = load_card_file(png_path)
+
+    assert card.name == "Ita"
+    assert card.description == "Empty tags"
+    assert card.source_path == str(png_path)
+
+
+def test_load_card_file_png_itxt_populated_language_returns_card(tmp_path):
+    """Uncompressed iTXt with a language tag and translated keyword."""
+    png_path = tmp_path / "populated-lang.png"
+    payload = _itxt_chara_payload(
+        {"name": "Nia", "description": "Tagged"},
+        language="en",
+        translated_keyword="角色",
+    )
+    png_path.write_bytes(_png_with_chunks((b"iTXt", payload)))
+
+    card = load_card_file(png_path)
+
+    assert card.name == "Nia"
+    assert card.description == "Tagged"
+    assert card.source_path == str(png_path)
+
+
+def test_load_card_file_png_itxt_truncated_raises_unsupported(tmp_path):
+    """iTXt cut off before the translated-keyword separator is not a card."""
+    text = base64.b64encode(json.dumps({"name": "Cut"}).encode("utf-8"))
+    # keyword, flag, method, empty-language null, then text with no keyword null
+    payload = b"chara\x00\x00\x00\x00" + text
+    png_path = tmp_path / "truncated.png"
+    png_path.write_bytes(_png_with_chunks((b"iTXt", payload)))
+
+    with pytest.raises(UnsupportedCardFormat, match="No 'chara' metadata"):
+        load_card_file(png_path)
+
+
+def test_load_card_file_png_itxt_compressed_raises_unsupported(tmp_path):
+    """Compressed iTXt chara chunks are rejected."""
+    png_path = tmp_path / "compressed.png"
+    payload = _itxt_chara_payload(
+        {"name": "Zip", "description": "Compressed"},
+        language="en",
+        translated_keyword="角色",
+        compression_flag=1,
+    )
+    png_path.write_bytes(_png_with_chunks((b"iTXt", payload)))
+
+    with pytest.raises(UnsupportedCardFormat, match="No 'chara' metadata"):
+        load_card_file(png_path)
 
 
 def test_load_card_file_png_missing_chara_raises_unsupported(tmp_path):

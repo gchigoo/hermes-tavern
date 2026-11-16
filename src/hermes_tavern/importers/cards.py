@@ -218,10 +218,10 @@ def _read_png_chara(data: bytes) -> str | None:
                 continue
             if chunk_data[:sep].decode("latin-1") != "chara":
                 continue
-            # compression_flag at sep+1; skip compressed variants
+            # compression flag at sep+1, method at sep+2; skip compressed chunks
             if sep + 1 >= len(chunk_data) or chunk_data[sep + 1] != 0:
                 continue
-            rest = chunk_data[sep + 2 :]  # skip comp_flag + comp_method
+            rest = chunk_data[sep + 3 :]  # language tag follows the method byte
             lang_end = rest.find(b"\x00")
             if lang_end == -1:
                 continue
