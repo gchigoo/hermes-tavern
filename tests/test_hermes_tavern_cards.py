@@ -654,6 +654,28 @@ def test_read_png_chara_itxt_invalid_utf8_skips_to_later_chara(compression_flag:
     assert _read_png_chara(data) == later_b64
 
 
+@pytest.mark.parametrize(
+    "payload",
+    [
+        pytest.param(b"!!!!", id="invalid-alphabet"),
+        pytest.param(b"YQ", id="missing-padding"),
+        pytest.param(b"\xff", id="non-ascii"),
+    ],
+)
+def test_read_png_chara_text_invalid_base64_skips_to_later_chara(payload: bytes):
+    """CRC-valid tEXt chara with invalid base64 is skipped for a later tEXt chara."""
+    assert _read_png_chara(_png_with_chunks((b"tEXt", b"chara\x00" + payload))) is None
+
+    later_b64 = base64.b64encode(
+        json.dumps({"name": "Later"}).encode("utf-8")
+    ).decode("ascii")
+    data = _png_with_chunks(
+        (b"tEXt", b"chara\x00" + payload),
+        (b"tEXt", b"chara\x00" + later_b64.encode("ascii")),
+    )
+    assert _read_png_chara(data) == later_b64
+
+
 def test_load_card_file_png_chunk_bounds_truncated_raises_unsupported(tmp_path):
     """A PNG whose chara chunk stops one byte early has no readable metadata."""
     png_path = tmp_path / "truncated-chara.png"
@@ -702,7 +724,7 @@ def test_load_card_file_png_malformed_base64_raises_unsupported(tmp_path):
     png_path = tmp_path / "bad.png"
     png_path.write_bytes(png_bytes)
 
-    with pytest.raises(UnsupportedCardFormat, match="Could not decode"):
+    with pytest.raises(UnsupportedCardFormat, match="No 'chara' metadata"):
         load_card_file(png_path)
 
 

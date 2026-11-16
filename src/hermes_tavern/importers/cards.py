@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import base64
+import binascii
 import copy
 import json
 import struct
@@ -243,7 +244,13 @@ def _read_png_chara(data: bytes) -> str | None:
             if sep == -1:
                 continue
             if chunk_data[:sep].decode("latin-1") == "chara":
-                return chunk_data[sep + 1 :].decode("latin-1")
+                payload = chunk_data[sep + 1 :]
+                try:
+                    # 只校验原始字节；成功时仍返回未改写的 Latin-1 文本
+                    base64.b64decode(payload, validate=True)
+                except binascii.Error:
+                    continue
+                return payload.decode("latin-1")
 
         elif chunk_type == b"iTXt":
             sep = chunk_data.find(b"\x00")
