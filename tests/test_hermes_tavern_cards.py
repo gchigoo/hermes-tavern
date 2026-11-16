@@ -8,6 +8,7 @@ import pytest
 
 from plugins.hermes_tavern.importers.cards import (
     UnsupportedCardFormat,
+    _read_png_chara,
     load_card_file,
     parse_character_card,
 )
@@ -39,38 +40,61 @@ def _png_chunk(chunk_type: bytes, data: bytes) -> bytes:
 
 
 def _png_with_chunks(*chunks: tuple[bytes, bytes]) -> bytes:
-    """Return a 1x1 PNG with the given chunks between IHDR and IEND."""
+    """Return a complete 1x1 truecolor PNG with chunks between IHDR and IDAT."""
     ihdr = struct.pack(">IIBBBBB", 1, 1, 8, 2, 0, 0, 0)
+    # Filter 0 (None) plus one black RGB pixel. IDAT must precede IEND.
+    idat = zlib.compress(b"\x00\x00\x00\x00")
     parts = [b"\x89PNG\r\n\x1a\n", _png_chunk(b"IHDR", ihdr)]
     parts.extend(_png_chunk(chunk_type, data) for chunk_type, data in chunks)
+    parts.append(_png_chunk(b"IDAT", idat))
     parts.append(_png_chunk(b"IEND", b""))
     return b"".join(parts)
 
 
 def _itxt_chara_payload(
-    card_json: dict,
+    card_json: dict | None = None,
     *,
     language: str = "",
     translated_keyword: str = "",
     compression_flag: int = 0,
+    compression_method: int = 0,
+    text: bytes | None = None,
 ) -> bytes:
     """Return iTXt data for keyword 'chara'.
 
     Language is Latin-1. Translated keyword and text are UTF-8.
-    A non-zero compression flag zlib-compresses only the text field.
+    When text is omitted, the text field is base64 JSON of card_json, and a
+    non-zero compression flag zlib-compresses that generated field. Pass text
+    to set the field bytes directly, including precompressed or malformed data.
+    compression_method is the iTXt method byte; 0 means zlib.
     """
-    text = base64.b64encode(json.dumps(card_json).encode("utf-8"))
-    if compression_flag:
-        text = zlib.compress(text)
+    if text is None:
+        if card_json is None:
+            raise ValueError("card_json is required when text is omitted")
+        text = base64.b64encode(json.dumps(card_json).encode("utf-8"))
+        if compression_flag:
+            text = zlib.compress(text)
     return (
         b"chara\x00"
-        + bytes((compression_flag, 0))
+        + bytes((compression_flag, compression_method))
         + language.encode("latin-1")
         + b"\x00"
         + translated_keyword.encode("utf-8")
         + b"\x00"
         + text
     )
+
+
+def _png_with_compressed_itxt_text(raw_text: bytes) -> bytes:
+    """Return a 1x1 PNG whose iTXt chara text inflates to raw_text."""
+    payload = _itxt_chara_payload(
+        language="en",
+        translated_keyword="角色",
+        compression_flag=1,
+        compression_method=0,
+        text=zlib.compress(raw_text),
+    )
+    return _png_with_chunks((b"iTXt", payload))
 
 
 FIXTURES = Path(__file__).parent / "fixtures" / "cards"
@@ -399,19 +423,85 @@ def test_load_card_file_png_itxt_truncated_raises_unsupported(tmp_path):
         load_card_file(png_path)
 
 
-def test_load_card_file_png_itxt_compressed_raises_unsupported(tmp_path):
-    """Compressed iTXt chara chunks are rejected."""
+def test_load_card_file_png_itxt_compressed_returns_card(tmp_path):
+    """Compressed iTXt chara (flag 1, method 0) loads a card."""
     png_path = tmp_path / "compressed.png"
     payload = _itxt_chara_payload(
         {"name": "Zip", "description": "Compressed"},
         language="en",
         translated_keyword="角色",
         compression_flag=1,
+        compression_method=0,
+    )
+    png_path.write_bytes(_png_with_chunks((b"iTXt", payload)))
+
+    card = load_card_file(png_path)
+
+    assert card.name == "Zip"
+    assert card.description == "Compressed"
+    assert card.source_path == str(png_path)
+
+
+_UNCOMPRESSED_CHARA_TEXT = base64.b64encode(
+    json.dumps({"name": "Nope", "description": "Rejected"}).encode("utf-8")
+)
+_COMPRESSED_CHARA_TEXT = zlib.compress(_UNCOMPRESSED_CHARA_TEXT)
+
+
+@pytest.mark.parametrize(
+    ("compression_flag", "compression_method", "text"),
+    [
+        pytest.param(2, 0, _COMPRESSED_CHARA_TEXT, id="invalid-compression-flag"),
+        pytest.param(1, 1, _COMPRESSED_CHARA_TEXT, id="compression-method-not-zero"),
+        pytest.param(0, 1, _UNCOMPRESSED_CHARA_TEXT, id="uncompressed-invalid-method"),
+        pytest.param(1, 0, b"not-a-zlib-stream", id="invalid-zlib"),
+        pytest.param(1, 0, _COMPRESSED_CHARA_TEXT[:-1], id="truncated-zlib"),
+        pytest.param(1, 0, _COMPRESSED_CHARA_TEXT + b"trailing", id="trailing-bytes"),
+    ],
+)
+def test_load_card_file_png_itxt_malformed_compressed_rejected(
+    tmp_path,
+    compression_flag: int,
+    compression_method: int,
+    text: bytes,
+):
+    """Malformed iTXt chara chunks expose no usable metadata."""
+    png_path = tmp_path / "bad-compressed.png"
+    payload = _itxt_chara_payload(
+        language="en",
+        translated_keyword="角色",
+        compression_flag=compression_flag,
+        compression_method=compression_method,
+        text=text,
     )
     png_path.write_bytes(_png_with_chunks((b"iTXt", payload)))
 
     with pytest.raises(UnsupportedCardFormat, match="No 'chara' metadata"):
         load_card_file(png_path)
+
+
+def test_read_png_chara_accepts_decompressed_text_at_byte_limit():
+    """Decompressed iTXt text of exactly MAX_LOCAL_IMPORT_BYTES is returned."""
+    decoded = _read_png_chara(
+        _png_with_compressed_itxt_text(b"A" * MAX_LOCAL_IMPORT_BYTES)
+    )
+    assert decoded is not None
+    length = len(decoded)
+    head = decoded[:4]
+    tail = decoded[-4:]
+    mark_count = decoded.count("A")
+    assert length == MAX_LOCAL_IMPORT_BYTES
+    assert head == "AAAA"
+    assert tail == "AAAA"
+    assert mark_count == length
+
+
+def test_read_png_chara_rejects_decompressed_text_over_byte_limit():
+    """Decompressed iTXt text one byte over MAX_LOCAL_IMPORT_BYTES is ignored."""
+    decoded = _read_png_chara(
+        _png_with_compressed_itxt_text(b"A" * (MAX_LOCAL_IMPORT_BYTES + 1))
+    )
+    assert decoded is None
 
 
 def test_load_card_file_png_missing_chara_raises_unsupported(tmp_path):

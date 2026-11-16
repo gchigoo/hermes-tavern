@@ -6,6 +6,7 @@ import base64
 import copy
 import json
 import struct
+import zlib
 from dataclasses import dataclass, field, replace
 from pathlib import Path
 from typing import Any
@@ -13,7 +14,7 @@ from urllib.parse import urlparse
 from urllib.request import Request, urlopen
 from uuid import NAMESPACE_URL, uuid5
 
-from hermes_tavern.importers import assert_local_import_size
+from hermes_tavern.importers import MAX_LOCAL_IMPORT_BYTES, assert_local_import_size
 from hermes_tavern.provider_bridge import validate_provider_base_url
 
 
@@ -194,6 +195,28 @@ def _load_remote_card(source: str) -> CharacterCard:
     return replace(card, source_path=source)
 
 
+def _decompress_itxt_text(payload: bytes) -> bytes | None:
+    """Inflate one zlib iTXt text field, or return None when it must be rejected.
+
+    Reads at most ``MAX_LOCAL_IMPORT_BYTES + 1`` decompressed bytes. Oversized,
+    truncated, invalid, trailing, or concatenated zlib streams are rejected.
+    """
+    inflater = zlib.decompressobj()
+    try:
+        # read one extra byte to detect overflow; avoid unbounded compression-bomb allocation
+        text = inflater.decompress(payload, MAX_LOCAL_IMPORT_BYTES + 1)
+    except zlib.error:
+        return None
+    if (
+        len(text) > MAX_LOCAL_IMPORT_BYTES
+        or inflater.unconsumed_tail
+        or not inflater.eof
+        or inflater.unused_data
+    ):
+        return None
+    return text
+
+
 def _read_png_chara(data: bytes) -> str | None:
     """Return the base64 text from a PNG tEXt/iTXt 'chara' chunk, or None."""
     if not data.startswith(_PNG_SIG):
@@ -218,8 +241,16 @@ def _read_png_chara(data: bytes) -> str | None:
                 continue
             if chunk_data[:sep].decode("latin-1") != "chara":
                 continue
-            # compression flag at sep+1, method at sep+2; skip compressed chunks
-            if sep + 1 >= len(chunk_data) or chunk_data[sep + 1] != 0:
+            # flag at sep+1, method at sep+2; only uncompressed or zlib is valid
+            if sep + 2 >= len(chunk_data):
+                continue
+            compression_flag = chunk_data[sep + 1]
+            compression_method = chunk_data[sep + 2]
+            if compression_flag == 0 and compression_method == 0:
+                compressed = False
+            elif compression_flag == 1 and compression_method == 0:
+                compressed = True
+            else:
                 continue
             rest = chunk_data[sep + 3 :]  # language tag follows the method byte
             lang_end = rest.find(b"\x00")
@@ -229,7 +260,13 @@ def _read_png_chara(data: bytes) -> str | None:
             trans_end = rest.find(b"\x00")
             if trans_end == -1:
                 continue
-            return rest[trans_end + 1 :].decode("utf-8", errors="replace")
+            text = rest[trans_end + 1 :]
+            if compressed:
+                inflated = _decompress_itxt_text(text)
+                if inflated is None:
+                    continue
+                text = inflated
+            return text.decode("utf-8", errors="replace")
 
         elif chunk_type == b"IEND":
             break
