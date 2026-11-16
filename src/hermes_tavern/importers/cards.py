@@ -232,6 +232,12 @@ def _read_png_chara(data: bytes) -> str | None:
         chunk_data = data[pos + 8 : pos + 8 + length]
         pos = chunk_end
 
+        # CRC-check tEXt/iTXt only; a mismatch skips the chunk and keeps scanning for chara
+        if chunk_type in (b"tEXt", b"iTXt"):
+            (stored_crc,) = struct.unpack(">I", data[chunk_end - 4 : chunk_end])
+            if stored_crc != (zlib.crc32(chunk_type + chunk_data) & 0xFFFFFFFF):
+                continue
+
         if chunk_type == b"tEXt":
             sep = chunk_data.find(b"\x00")
             if sep == -1:

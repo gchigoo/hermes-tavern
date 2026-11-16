@@ -126,6 +126,11 @@ def _png_chunk_bounds_chara_chunk(form: str) -> bytes:
     raise ValueError(f"unknown chara chunk form: {form}")
 
 
+def _png_chunk_flip_final_crc_bit(chunk: bytes) -> bytes:
+    """Return chunk with one bit flipped in its final CRC byte."""
+    return chunk[:-1] + bytes((chunk[-1] ^ 0x01,))
+
+
 FIXTURES = Path(__file__).parent / "fixtures" / "cards"
 
 
@@ -551,14 +556,14 @@ def test_read_png_chara_rejects_decompressed_text_over_byte_limit():
     assert decoded is None
 
 
-@pytest.mark.parametrize(
-    "form",
-    [
-        pytest.param("tEXt", id="tEXt"),
-        pytest.param("iTXt", id="iTXt-uncompressed"),
-        pytest.param("iTXt-compressed", id="iTXt-compressed"),
-    ],
-)
+_PNG_CHUNK_BOUNDS_FORMS = [
+    pytest.param("tEXt", id="tEXt"),
+    pytest.param("iTXt", id="iTXt-uncompressed"),
+    pytest.param("iTXt-compressed", id="iTXt-compressed"),
+]
+
+
+@pytest.mark.parametrize("form", _PNG_CHUNK_BOUNDS_FORMS)
 @pytest.mark.parametrize("dropped_crc_bytes", [1, 2, 3, 4])
 def test_read_png_chara_png_chunk_bounds_missing_crc_returns_none(
     form: str,
@@ -580,11 +585,47 @@ def test_read_png_chara_png_chunk_bounds_oversize_length_returns_none(length_mod
     assert _read_png_chara(data) is None
 
 
-def test_read_png_chara_png_chunk_bounds_exact_eof():
+@pytest.mark.parametrize("form", _PNG_CHUNK_BOUNDS_FORMS)
+def test_read_png_chara_png_chunk_bounds_exact_eof(form: str):
     """A standalone chara chunk ending at EOF decodes; one byte short does not."""
-    data = b"\x89PNG\r\n\x1a\n" + _png_chunk_bounds_chara_chunk("tEXt")
+    data = b"\x89PNG\r\n\x1a\n" + _png_chunk_bounds_chara_chunk(form)
     assert _read_png_chara(data) == _PNG_CHUNK_BOUNDS_B64
     assert _read_png_chara(data[:-1]) is None
+
+
+@pytest.mark.parametrize("form", _PNG_CHUNK_BOUNDS_FORMS)
+def test_read_png_chara_png_chunk_bounds_bad_crc_returns_none(form: str):
+    """A complete chara chunk with one flipped CRC bit is not metadata."""
+    chunk = _png_chunk_flip_final_crc_bit(_png_chunk_bounds_chara_chunk(form))
+    data = b"\x89PNG\r\n\x1a\n" + chunk
+    assert _read_png_chara(data) is None
+
+
+@pytest.mark.parametrize("form", _PNG_CHUNK_BOUNDS_FORMS)
+def test_read_png_chara_png_chunk_bounds_bad_crc_returns_later_chara(form: str):
+    """A bad-CRC chara chunk before a valid one yields the later base64 payload."""
+    later_card = {"name": "Later"}
+    later_b64 = base64.b64encode(json.dumps(later_card).encode("utf-8")).decode("ascii")
+    if form == "tEXt":
+        later_chunk = _png_chunk(b"tEXt", b"chara\x00" + later_b64.encode("ascii"))
+    elif form == "iTXt":
+        later_chunk = _png_chunk(b"iTXt", _itxt_chara_payload(later_card))
+    elif form == "iTXt-compressed":
+        later_chunk = _png_chunk(
+            b"iTXt",
+            _itxt_chara_payload(
+                later_card,
+                language="en",
+                translated_keyword="角色",
+                compression_flag=1,
+                compression_method=0,
+            ),
+        )
+    else:
+        raise ValueError(f"unknown chara chunk form: {form}")
+    bad_chunk = _png_chunk_flip_final_crc_bit(_png_chunk_bounds_chara_chunk(form))
+    data = b"\x89PNG\r\n\x1a\n" + bad_chunk + later_chunk
+    assert _read_png_chara(data) == later_b64
 
 
 def test_load_card_file_png_chunk_bounds_truncated_raises_unsupported(tmp_path):
@@ -592,6 +633,17 @@ def test_load_card_file_png_chunk_bounds_truncated_raises_unsupported(tmp_path):
     png_path = tmp_path / "truncated-chara.png"
     data = b"\x89PNG\r\n\x1a\n" + _png_chunk_bounds_chara_chunk("tEXt")
     png_path.write_bytes(data[:-1])
+
+    with pytest.raises(UnsupportedCardFormat, match="No 'chara' metadata"):
+        load_card_file(png_path)
+
+
+@pytest.mark.parametrize("form", _PNG_CHUNK_BOUNDS_FORMS)
+def test_load_card_file_png_chunk_bounds_bad_crc_raises_unsupported(tmp_path, form: str):
+    """A PNG whose only chara chunk has a bad CRC has no readable metadata."""
+    png_path = tmp_path / "bad-crc-chara.png"
+    chunk = _png_chunk_flip_final_crc_bit(_png_chunk_bounds_chara_chunk(form))
+    png_path.write_bytes(b"\x89PNG\r\n\x1a\n" + chunk)
 
     with pytest.raises(UnsupportedCardFormat, match="No 'chara' metadata"):
         load_card_file(png_path)
