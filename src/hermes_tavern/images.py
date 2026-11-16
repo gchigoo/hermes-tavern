@@ -497,7 +497,7 @@ class ComfyUIProvider:
         width = int(settings.get("width") or 1024)
         height = int(settings.get("height") or 1024)
         steps = int(settings.get("steps") or 20)
-        cfg = float(settings.get("cfg_scale") or 7.0)
+        cfg = float(settings["cfg_scale"])
         sampler = str(settings.get("sampler") or "euler")
         sampler = self._SAMPLER_MAP.get(sampler, sampler)  # map A1111 → ComfyUI names
         seed = int(settings["seed"])

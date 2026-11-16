@@ -614,17 +614,23 @@ def test_image_safety_clear_resets_to_safe(tmp_path):
 
 
 @pytest.mark.parametrize(
-    ("settings", "workflow_seed", "metadata_seed"),
+    ("settings", "workflow_seed", "metadata_seed", "expected_cfg"),
     [
-        ({"seed": 0}, 0, 0),
-        ({"seed": "0"}, 0, 0),
-        ({"seed": 123}, 123, 123),
-        ({"seed": -1}, 42, -1),
-        pytest.param(None, 42, -1, id="absent-settings"),
+        ({"seed": 0}, 0, 0, 7.0),
+        ({"seed": "0"}, 0, 0, 7.0),
+        ({"seed": 123}, 123, 123, 7.0),
+        ({"seed": -1}, 42, -1, 7.0),
+        pytest.param(None, 42, -1, 7.0, id="absent-settings"),
+        pytest.param({"cfg_scale": 0}, 42, -1, 0.0, id="cfg-scale-0"),
+        pytest.param({"cfg_scale": "0"}, 42, -1, 0.0, id="cfg-scale-str-0"),
+        pytest.param({"cfg_scale": 0.0}, 42, -1, 0.0, id="cfg-scale-0.0"),
+        pytest.param({"cfg_scale": 2.5}, 42, -1, 2.5, id="cfg-scale-2.5"),
     ],
 )
-def test_comfyui_provider_generate_seed(tmp_path, monkeypatch, settings, workflow_seed, metadata_seed):
-    """Configured seeds pass through; negative and absent settings use time_ns and keep metadata -1."""
+def test_comfyui_provider_generate_settings(
+    tmp_path, monkeypatch, settings, workflow_seed, metadata_seed, expected_cfg
+):
+    """Seeds and cfg_scale pass through, including zero cfg; negative or absent seeds use time_ns and keep metadata -1, and omitted cfg_scale stays 7.0."""
     prompt_id = "prompt-42"
     image_bytes = b"fixed-image-bytes"
     captured = {}
@@ -676,3 +682,5 @@ def test_comfyui_provider_generate_seed(tmp_path, monkeypatch, settings, workflo
     assert captured["workflow"]["3"]["inputs"]["seed"] == workflow_seed
     assert result.metadata["seed"] == metadata_seed
     assert Path(result.file_path).read_bytes() == image_bytes
+    assert captured["workflow"]["3"]["inputs"]["cfg"] == expected_cfg
+    assert result.metadata["cfg_scale"] == expected_cfg
