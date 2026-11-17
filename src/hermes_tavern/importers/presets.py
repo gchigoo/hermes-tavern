@@ -114,13 +114,17 @@ def _module_from_entry(entry: dict[str, Any], idx: int) -> ImportedPresetModule 
         raw_order = entry.get("order")
     if raw_order is None or raw_order == "":
         raw_order = idx
+    try:
+        insertion_order = int(raw_order)
+    except (TypeError, ValueError, OverflowError):
+        insertion_order = idx
     return ImportedPresetModule(
         name=name,
         role=role,
         content=content,
         enabled=enabled,
         position=position,
-        insertion_order=int(raw_order),
+        insertion_order=insertion_order,
         risk_level=report.level.value,
         risk_reasons=report.reasons,
         raw={"st_entry": _safe_raw(entry)},
