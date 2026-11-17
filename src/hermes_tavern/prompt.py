@@ -45,11 +45,10 @@ class PromptCompiler:
         modules: list[PromptModule] = []
         macros = macro_context or MacroContext(char_name=card.name)
 
-        # Card system prompt: prefer system_prompt_override, fall back to description
-        system_text = expand_macros(
-            (card.system_prompt_override or card.description or "").strip(),
-            macros,
-        )
+        # Card system prompt: trim override first; blank falls back to trimmed description.
+        override = (card.system_prompt_override or "").strip()
+        source = override or (card.description or "").strip()
+        system_text = expand_macros(source, macros)
         if system_text:
             modules.append(
                 PromptModule(

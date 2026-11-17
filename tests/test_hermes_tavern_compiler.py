@@ -35,6 +35,56 @@ def test_compile_no_system_module_when_both_empty():
     assert ctx.modules == []
 
 
+@pytest.mark.parametrize("override", ("   ", "\t\r\n", "\u00a0\u2003"))
+def test_compile_whitespace_only_override_uses_trimmed_description(override):
+    card = _card(
+        system_prompt_override=override,
+        description="  Description for {{char}}.  ",
+    )
+    ctx = PromptCompiler().compile(card, [], "")
+    assert ctx.modules == [
+        PromptModule(
+            name="char_system",
+            role="system",
+            content="Description for TestChar.",
+            position="before_char",
+            insertion_order=0,
+        )
+    ]
+
+
+def test_compile_padded_override_wins_over_description():
+    card = _card(
+        system_prompt_override="  Override {{char}}.  ",
+        description="  Description for {{char}}.  ",
+    )
+    ctx = PromptCompiler().compile(card, [], "")
+    assert ctx.modules == [
+        PromptModule(
+            name="char_system",
+            role="system",
+            content="Override TestChar.",
+            position="before_char",
+            insertion_order=0,
+        )
+    ]
+
+
+def test_compile_whitespace_only_override_and_description_emit_no_modules():
+    card = _card(system_prompt_override="\u00a0\u2003", description=" \t\r\n ")
+    ctx = PromptCompiler().compile(card, [], "")
+    assert ctx.modules == []
+
+
+def test_compile_selects_nonblank_override_before_empty_session_title_expansion():
+    card = _card(
+        system_prompt_override="{{session_title}}",
+        description="  Description for {{char}}.  ",
+    )
+    ctx = PromptCompiler().compile(card, [], "")
+    assert ctx.modules == []
+
+
 def test_compile_user_message_preserved():
     card = _card()
     ctx = PromptCompiler().compile(card, [], "hi there")
