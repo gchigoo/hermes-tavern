@@ -42,7 +42,7 @@ def import_preset_file(path: str | Path) -> ImportedPreset:
         preset_path,
         label="Preset file",
     )
-    text = preset_path.read_text(encoding="utf-8")
+    text = preset_path.read_text(encoding="utf-8-sig")
     try:
         parsed = json.loads(text)
     except json.JSONDecodeError:

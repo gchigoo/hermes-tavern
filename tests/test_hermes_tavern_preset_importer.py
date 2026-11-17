@@ -209,3 +209,35 @@ def test_import_st_preset_json_malformed_order_preserves_safety_state():
     assert preset.modules[0].risk_level == "safe"
     assert preset.modules[1].risk_level == "jailbreak"
     assert preset.modules[1].enabled is False
+
+
+def test_import_preset_file_preserves_json_structure_with_bom(tmp_path):
+    data = {
+        "name": "Dialogue preset",
+        "prompts": [
+            {
+                "name": "style",
+                "role": "system",
+                "content": "Write café dialogue.",
+                "enabled": True,
+            },
+            {
+                "name": "quiet",
+                "role": "assistant",
+                "content": "Keep pauses brief.",
+                "enabled": False,
+            },
+        ],
+    }
+    path = tmp_path / "attachment.json"
+    path.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8-sig")
+
+    preset = import_preset_file(path)
+
+    assert preset.name == "Dialogue preset"
+    assert preset.source == str(path)
+    assert [(m.name, m.role, m.content, m.enabled) for m in preset.modules] == [
+        ("style", "system", "Write café dialogue.", True),
+        ("quiet", "assistant", "Keep pauses brief.", False),
+    ]
+    assert preset.raw == data
