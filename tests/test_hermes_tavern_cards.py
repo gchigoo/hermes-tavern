@@ -1,5 +1,6 @@
 import base64
 import json
+import math
 import struct
 import zlib
 from pathlib import Path
@@ -320,6 +321,52 @@ def test_parse_talkativeness_overflow_becomes_none(talkativeness: int, nested: b
         assert card.name == "Overflow"
         assert card.talkativeness is None
         assert card.raw == snapshot
+
+
+def _canonical_metadata(value: object) -> str:
+    """Serialize metadata so NaN and Infinity compare as JSON tokens."""
+    return json.dumps(value, sort_keys=True, allow_nan=True)
+
+
+@pytest.mark.parametrize(
+    ("talkativeness", "expected"),
+    [
+        pytest.param(float("nan"), None, id="nan"),
+        pytest.param(float("inf"), None, id="positive-infinity"),
+        pytest.param(float("-inf"), None, id="negative-infinity"),
+        pytest.param("NaN", None, id="nan-string"),
+        pytest.param("Infinity", None, id="positive-infinity-string"),
+        pytest.param("-Infinity", None, id="negative-infinity-string"),
+        pytest.param("1e309", None, id="overflow-infinity-string"),
+        pytest.param("-1e309", None, id="overflow-negative-infinity-string"),
+        pytest.param(0, 0.0, id="zero"),
+        pytest.param("0.5", 0.5, id="half-string"),
+        pytest.param(1e308, 1e308, id="finite-1e308"),
+    ],
+)
+@pytest.mark.parametrize("nested", [False, True], ids=["direct", "nested"])
+def test_parse_talkativeness_nonfinite_becomes_none(
+    talkativeness: float | int | str,
+    expected: float | None,
+    nested: bool,
+):
+    """Non-finite talkativeness becomes None; finite controls and raw metadata stay intact."""
+    fields = {"name": "Boundary", "talkativeness": talkativeness}
+    raw = {"spec": "chara_card_v2", "data": fields} if nested else fields
+    snapshot = _canonical_metadata(raw)
+
+    parsed = parse_character_card(raw)
+    loaded = load_card_file(json.dumps(raw, allow_nan=True))
+
+    assert _canonical_metadata(raw) == snapshot
+    for card in (parsed, loaded):
+        assert card.name == "Boundary"
+        if expected is None:
+            assert card.talkativeness is None
+        else:
+            assert card.talkativeness == expected
+            assert math.isfinite(card.talkativeness)
+        assert _canonical_metadata(card.raw) == snapshot
 
 
 def test_parse_fixture_st_v2():

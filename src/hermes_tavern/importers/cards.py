@@ -6,6 +6,7 @@ import base64
 import binascii
 import copy
 import json
+import math
 import struct
 import zlib
 from dataclasses import dataclass, field, replace
@@ -90,6 +91,9 @@ def parse_character_card(raw_card: dict[str, Any]) -> CharacterCard:
             talkativeness = float(raw_talkativeness)
         except (TypeError, ValueError, OverflowError):
             talkativeness = None
+        else:
+            if not math.isfinite(talkativeness):
+                talkativeness = None
 
     return CharacterCard(
         id=_card_id(raw, data, name),
