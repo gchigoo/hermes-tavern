@@ -676,6 +676,43 @@ def test_read_png_chara_text_invalid_base64_skips_to_later_chara(payload: bytes)
     assert _read_png_chara(data) == later_b64
 
 
+@pytest.mark.parametrize("compression_flag", [0, 1])
+@pytest.mark.parametrize(
+    "payload",
+    [
+        pytest.param(b"!!!!", id="invalid-alphabet"),
+        pytest.param(b"YQ", id="missing-padding"),
+        pytest.param("é".encode("utf-8"), id="utf8-eacute"),
+    ],
+)
+def test_read_png_chara_itxt_invalid_base64_skips_to_later_chara(
+    tmp_path,
+    compression_flag: int,
+    payload: bytes,
+):
+    """CRC-valid iTXt chara with invalid base64 is skipped for a later tEXt chara."""
+    text = payload if compression_flag == 0 else zlib.compress(payload)
+    itxt_payload = _itxt_chara_payload(
+        compression_flag=compression_flag,
+        compression_method=0,
+        text=text,
+    )
+    assert _read_png_chara(_png_with_chunks((b"iTXt", itxt_payload))) is None
+
+    later_b64 = base64.b64encode(
+        json.dumps({"name": "Later"}).encode("utf-8")
+    ).decode("ascii")
+    png_path = tmp_path / "later.png"
+    png_path.write_bytes(
+        _png_with_chunks(
+            (b"iTXt", itxt_payload),
+            (b"tEXt", b"chara\x00" + later_b64.encode("ascii")),
+        )
+    )
+    card = load_card_file(png_path)
+    assert card.name == "Later"
+
+
 def test_load_card_file_png_chunk_bounds_truncated_raises_unsupported(tmp_path):
     """A PNG whose chara chunk stops one byte early has no readable metadata."""
     png_path = tmp_path / "truncated-chara.png"

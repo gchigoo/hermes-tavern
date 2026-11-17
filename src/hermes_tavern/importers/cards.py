@@ -284,6 +284,11 @@ def _read_png_chara(data: bytes) -> str | None:
                     continue
                 text = inflated
             try:
+                # 只校验原始字节；成功时仍返回未改写的 UTF-8 文本
+                base64.b64decode(text, validate=True)
+            except binascii.Error:
+                continue
+            try:
                 return text.decode("utf-8")
             except UnicodeDecodeError:
                 continue
