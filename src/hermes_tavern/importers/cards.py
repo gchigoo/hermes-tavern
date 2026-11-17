@@ -154,7 +154,7 @@ def _load_card_bytes(data: bytes, suffix: str, source_label: str) -> CharacterCa
         return parse_character_card(raw)
     if suffix == ".json":
         try:
-            raw = json.loads(data.decode("utf-8"))
+            raw = json.loads(data.decode("utf-8-sig"))
         except UnicodeDecodeError as exc:
             raise ValueError(f"Invalid UTF-8 in {source_label}: {exc}") from exc
         except json.JSONDecodeError as exc:
@@ -356,7 +356,7 @@ def load_card_file(source: str | Path) -> CharacterCard:
     )
 
     try:
-        raw = json.loads(path.read_text(encoding="utf-8"))
+        raw = json.loads(path.read_text(encoding="utf-8-sig"))
     except json.JSONDecodeError as exc:
         raise ValueError(f"Invalid JSON in {path.name}: {exc}") from exc
 

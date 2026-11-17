@@ -942,6 +942,57 @@ def test_load_card_file_https_json_url(monkeypatch):
     assert card.source_path == "https://example.com/cards/alice.json"
 
 
+_UTF8_BOM = b"\xef\xbb\xbf"
+
+
+def _load_json_bytes(tmp_path, monkeypatch, body: bytes, filename: str, *, remote: bool):
+    """Load JSON bytes from a local file or a monkeypatched HTTPS response."""
+    if remote:
+        source = f"https://example.com/cards/{filename}"
+
+        def fake_urlopen(request, timeout):
+            assert request.full_url == source
+            assert timeout == 20
+            return _FakeUrlResponse(body)
+
+        monkeypatch.setattr("plugins.hermes_tavern.importers.cards.urlopen", fake_urlopen)
+        return load_card_file(source), source
+    card_file = tmp_path / filename
+    card_file.write_bytes(body)
+    return load_card_file(card_file), str(card_file)
+
+
+@pytest.mark.parametrize("remote", [False, True], ids=["local-file", "https-download"])
+def test_load_card_file_json_accepts_utf8_bom(tmp_path, monkeypatch, remote: bool):
+    """UTF-8 BOM JSON imports keep Unicode fields and source_path on both paths."""
+    raw = {
+        "name": "林薇",
+        "description": "学者 · Élodie",
+        "personality": "温和而坚定",
+        "first_mes": "你好，旅人。",
+    }
+    body = _UTF8_BOM + json.dumps(raw, ensure_ascii=False).encode("utf-8")
+
+    card, source_path = _load_json_bytes(tmp_path, monkeypatch, body, "lin.json", remote=remote)
+
+    assert card.name == "林薇"
+    assert card.description == "学者 · Élodie"
+    assert card.personality == "温和而坚定"
+    assert card.first_mes == "你好，旅人。"
+    assert card.source_path == source_path
+
+
+@pytest.mark.parametrize("remote", [False, True], ids=["local-file", "https-download"])
+def test_load_card_file_bom_prefixed_malformed_json_raises_value_error(
+    tmp_path, monkeypatch, remote: bool
+):
+    """BOM-prefixed malformed JSON still raises ValueError on both load paths."""
+    body = _UTF8_BOM + b"{not valid json}"
+
+    with pytest.raises(ValueError, match="Invalid JSON"):
+        _load_json_bytes(tmp_path, monkeypatch, body, "bad.json", remote=remote)
+
+
 def test_load_card_file_https_url_download_error_does_not_leak_secret(monkeypatch):
     def fake_urlopen(request, timeout):
         raise RuntimeError("TLS handshake failed for https://example.com/cards/alice.json?token=SECRET")
