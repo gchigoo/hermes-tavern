@@ -142,6 +142,62 @@ def test_lorebook_imports_st_entries_dict_shape():
     assert lorebook.entries[1].enabled is False
 
 
+def test_lorebook_entry_id_keeps_integer_zero():
+    """Integer 0 wins by uid/id/key precedence; False and other falsy values fall back."""
+    uid_zero = import_st_lorebook_json({
+        "name": "Ids",
+        "entries": [
+            {"uid": 0, "id": "later", "content": "Uid zero.", "keys": ["uid"]},
+        ],
+    })
+    id_zero = import_st_lorebook_json({
+        "name": "Ids",
+        "entries": [
+            {"id": 0, "key": "later", "content": "Id zero."},
+        ],
+    })
+    key_zero = import_st_lorebook_json({
+        "name": "Ids",
+        "entries": [
+            {"uid": False, "id": "", "key": 0, "content": "Key zero."},
+        ],
+    })
+    fallback = import_st_lorebook_json({
+        "name": "Ids",
+        "entries": [
+            {"content": "Missing id."},
+            {"uid": False, "id": False, "key": False, "content": "False id."},
+            {"uid": "", "id": None, "key": 0.0, "content": "Other falsy."},
+        ],
+    })
+
+    assert uid_zero.entries[0].id == "0"
+    assert id_zero.entries[0].id == "0"
+    assert id_zero.entries[0].keys == ("later",)
+    assert key_zero.entries[0].id == "0"
+    assert [entry.id for entry in fallback.entries] == ["entry_0", "entry_1", "entry_2"]
+
+
+def test_lorebook_integer_zero_and_one_stay_distinct_in_store(tmp_path):
+    """A 0/1 id pair both survive TavernStore instead of collapsing the zero id."""
+    lorebook = import_st_lorebook_json({
+        "name": "Pair",
+        "entries": [
+            {"uid": 0, "id": 9, "comment": "Zero", "content": "Zero lore", "keys": ["zero"]},
+            {"uid": 1, "comment": "One", "content": "One lore", "keys": ["one"]},
+        ],
+    })
+
+    assert [entry.id for entry in lorebook.entries] == ["0", "1"]
+
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    lorebook_id = store.save_lorebook(lorebook)
+    stored = store.list_lorebook_entries(lorebook_id)
+
+    assert [entry["id"] for entry in stored] == [f"{lorebook_id}:0", f"{lorebook_id}:1"]
+    assert [entry["title"] for entry in stored] == ["Zero", "One"]
+
+
 def test_lorebook_store_round_trips_entries(tmp_path):
     store = TavernStore(tmp_path / "tavern.sqlite3")
     lorebook = import_st_lorebook_json({"name": "Atlas", "entries": [{"comment": "Moon", "content": "Moon lore", "keys": ["moon"]}]})

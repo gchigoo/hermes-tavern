@@ -142,7 +142,7 @@ def _entry_from_raw(raw: dict[str, Any], idx: int, *, source: str) -> ImportedLo
     content = raw.get("content") or raw.get("entry") or raw.get("text") or raw.get("value")
     if not isinstance(content, str) or not content.strip():
         return None
-    raw_id = raw.get("uid") or raw.get("id") or raw.get("key") or f"entry_{idx}"
+    raw_id = _entry_id_from_raw(raw, idx)
     title = str(raw.get("comment") or raw.get("title") or raw.get("name") or raw_id)
     entry_id = str(raw_id)
     if not entry_id:
@@ -165,6 +165,29 @@ def _entry_from_raw(raw: dict[str, Any], idx: int, *, source: str) -> ImportedLo
         probability=_probability(raw.get("probability") if "probability" in raw else raw.get("chance")),
         raw=_safe_raw(raw),
     )
+
+
+def _entry_id_from_raw(raw: dict[str, Any], idx: int) -> Any:
+    """Select an entry id: uid, then id, then key, then ``entry_{idx}``.
+
+    Integer 0 is a valid SillyTavern uid. Boolean False and other falsy
+    values are skipped so they fall through to the next candidate.
+    """
+    for field in ("uid", "id", "key"):
+        value = raw.get(field)
+        if _is_usable_entry_id(value):
+            return value
+    return f"entry_{idx}"
+
+
+def _is_usable_entry_id(value: Any) -> bool:
+    """Return whether ``value`` can be kept as an entry id."""
+    # bool 是 int 的子类，False == 0；必须先排除 False，再保留整数 0。
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, int):
+        return True
+    return bool(value)
 
 
 def _tuple_strings(value: Any) -> tuple[str, ...]:
