@@ -713,6 +713,66 @@ def test_read_png_chara_itxt_invalid_base64_skips_to_later_chara(
     assert card.name == "Later"
 
 
+@pytest.mark.parametrize(
+    "empty_chunk",
+    [
+        pytest.param((b"tEXt", b"chara\x00"), id="tEXt"),
+        pytest.param(
+            (
+                b"iTXt",
+                _itxt_chara_payload(
+                    compression_flag=0,
+                    compression_method=0,
+                    text=b"",
+                ),
+            ),
+            id="iTXt-uncompressed",
+        ),
+        pytest.param(
+            (
+                b"iTXt",
+                _itxt_chara_payload(
+                    compression_flag=1,
+                    compression_method=0,
+                    text=zlib.compress(b""),
+                ),
+            ),
+            id="iTXt-compressed",
+        ),
+    ],
+)
+def test_png_chara_empty_text_skips_to_later_chara(
+    tmp_path,
+    empty_chunk: tuple[bytes, bytes],
+):
+    """Empty chara text is valid base64 and must not block a later chunk."""
+    empty_png = _png_with_chunks(empty_chunk)
+    assert _read_png_chara(empty_png) is None
+
+    empty_path = tmp_path / "empty-chara.png"
+    empty_path.write_bytes(empty_png)
+    with pytest.raises(UnsupportedCardFormat, match="No 'chara' metadata"):
+        load_card_file(empty_path)
+
+    later_card = {"name": "Later"}
+    later_b64 = base64.b64encode(
+        json.dumps(later_card).encode("utf-8")
+    ).decode("ascii")
+    png_path = tmp_path / "later.png"
+    png_path.write_bytes(
+        _png_with_chunks(
+            empty_chunk,
+            (b"tEXt", b"chara\x00" + later_b64.encode("ascii")),
+        )
+    )
+    assert _read_png_chara(png_path.read_bytes()) == later_b64
+
+    card = load_card_file(png_path)
+    assert card.name == "Later"
+    assert card.raw == {"name": "Later"}
+    assert card.source_path == str(png_path)
+
+
 def test_load_card_file_png_chunk_bounds_truncated_raises_unsupported(tmp_path):
     """A PNG whose chara chunk stops one byte early has no readable metadata."""
     png_path = tmp_path / "truncated-chara.png"

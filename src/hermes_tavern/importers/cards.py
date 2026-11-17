@@ -245,6 +245,8 @@ def _read_png_chara(data: bytes) -> str | None:
                 continue
             if chunk_data[:sep].decode("latin-1") == "chara":
                 payload = chunk_data[sep + 1 :]
+                if not payload:
+                    continue
                 try:
                     # 只校验原始字节；成功时仍返回未改写的 Latin-1 文本
                     base64.b64decode(payload, validate=True)
@@ -283,6 +285,8 @@ def _read_png_chara(data: bytes) -> str | None:
                 if inflated is None:
                     continue
                 text = inflated
+            if not text:
+                continue
             try:
                 # 只校验原始字节；成功时仍返回未改写的 UTF-8 文本
                 base64.b64decode(text, validate=True)
