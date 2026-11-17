@@ -1,4 +1,5 @@
 import json
+from dataclasses import asdict
 
 import pytest
 
@@ -196,6 +197,73 @@ def test_lorebook_integer_zero_and_one_stay_distinct_in_store(tmp_path):
 
     assert [entry["id"] for entry in stored] == [f"{lorebook_id}:0", f"{lorebook_id}:1"]
     assert [entry["title"] for entry in stored] == ["Zero", "One"]
+
+
+@pytest.mark.parametrize("field", ("insertion_order", "order", "displayIndex"))
+def test_lorebook_import_zero_order_controls_budget(field):
+    """Integer zero order is kept and spends the token budget before a later entry."""
+    book = import_st_lorebook_json({
+        "name": "Orders",
+        "entries": [
+            {"uid": "one", "comment": "A one", "content": "BBBB", "constant": True, "insertion_order": 1},
+            {"uid": "zero", "comment": "Z zero", "content": "AAAA", "constant": True, field: 0},
+        ],
+    })
+
+    assert [entry.insertion_order for entry in book.entries] == [1, 0]
+
+    result = match_lorebook_entries([asdict(entry) for entry in book.entries], "", token_budget=1)
+    modules = modules_from_lore_matches(result)
+
+    assert [item.entry_id for item in result.matches] == ["zero"]
+    assert [(item.entry_id, item.reason) for item in result.excluded] == [("one", "token budget exceeded")]
+    assert [module.content for module in modules] == ["AAAA"]
+    assert result.token_budget == 1
+
+
+@pytest.mark.parametrize(
+    ("order_fields", "expected_order"),
+    (
+        ({"insertion_order": 0, "order": 9}, 0),
+        ({"order": 0, "displayIndex": 9}, 0),
+        ({"insertion_order": -1, "order": 9}, -1),
+        ({"insertion_order": 1, "order": 9}, 1),
+        ({"insertion_order": "0", "order": 9}, 0),
+        ({}, 1),
+        ({"insertion_order": None, "order": 9}, 9),
+        ({"insertion_order": "", "order": 9}, 9),
+        ({"insertion_order": False, "order": 9}, 9),
+        ({"insertion_order": 0.0, "order": 9}, 9),
+        ({"insertion_order": "invalid", "order": 9}, 1),
+        ({"displayIndex": False}, 0),
+        ({"displayIndex": 0.0}, 0),
+    ),
+)
+def test_lorebook_import_order_precedence_and_fallbacks(order_fields, expected_order):
+    """Present numeric orders win; empty sentinels fall through and invalid values use the index."""
+    book = import_st_lorebook_json({
+        "name": "Orders",
+        "entries": [
+            {"uid": "filler", "content": "Filler."},
+            {"uid": "target", "content": "Target.", **order_fields},
+        ],
+    })
+
+    assert book.entries[1].insertion_order == expected_order
+
+
+@pytest.mark.parametrize("field", ("insertion_order", "order", "displayIndex"))
+def test_lorebook_file_import_infinite_order_falls_back(field, tmp_path):
+    """JSON Infinity on any order alias falls back instead of aborting the import."""
+    path = tmp_path / "infinite-order.json"
+    path.write_text(
+        f'{{"entries": [{{"content": "Filler."}}, {{"content": "Target.", "{field}": Infinity}}]}}',
+        encoding="utf-8",
+    )
+
+    book = import_lorebook_file(path)
+
+    assert book.entries[1].insertion_order == 1
 
 
 def test_lorebook_store_round_trips_entries(tmp_path):

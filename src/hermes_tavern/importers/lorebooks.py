@@ -150,6 +150,12 @@ def _entry_from_raw(raw: dict[str, Any], idx: int, *, source: str) -> ImportedLo
     enabled = not bool(raw.get("disable") or raw.get("disabled"))
     if isinstance(raw.get("enabled"), bool):
         enabled = bool(raw["enabled"])
+    raw_order = raw.get("displayIndex")
+    for field in ("insertion_order", "order"):
+        value = raw.get(field)
+        if value or (type(value) is int and value == 0):
+            raw_order = value
+            break
     return ImportedLorebookEntry(
         id=entry_id,
         title=title,
@@ -160,7 +166,7 @@ def _entry_from_raw(raw: dict[str, Any], idx: int, *, source: str) -> ImportedLo
         constant=bool(raw.get("constant") or raw.get("always_active")),
         regex=bool(raw.get("regex") or raw.get("use_regex")),
         position=str(raw.get("position") or "before_char"),
-        insertion_order=_int(raw.get("insertion_order") or raw.get("order") or raw.get("displayIndex"), idx),
+        insertion_order=_int(raw_order, idx),
         priority=_int(raw.get("priority"), 0),
         probability=_probability(raw.get("probability") if "probability" in raw else raw.get("chance")),
         raw=_safe_raw(raw),
@@ -203,7 +209,7 @@ def _tuple_strings(value: Any) -> tuple[str, ...]:
 def _int(value: Any, default: int) -> int:
     try:
         return int(value)
-    except (TypeError, ValueError):
+    except (TypeError, ValueError, OverflowError):
         return default
 
 
