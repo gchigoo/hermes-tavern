@@ -85,3 +85,25 @@ def test_preset_import_rejects_oversize_text(tmp_path):
 
     with pytest.raises(ValueError, match="too large"):
         import_preset_file(path)
+
+
+@pytest.mark.parametrize(
+    "order_fields",
+    (
+        {"insertion_order": 0},
+        {"order": 0},
+        {"insertion_order": 0, "order": 9},
+    ),
+)
+def test_import_st_preset_json_preserves_explicit_numeric_zero(order_fields):
+    data = {
+        "name": "zero-order",
+        "prompts": [
+            {"name": "lead", "content": "Write plainly."},
+            {"name": "zero", "content": "Write plainly.", **order_fields},
+        ],
+    }
+
+    preset = import_st_preset_json(data)
+
+    assert preset.modules[1].insertion_order == 0

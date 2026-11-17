@@ -108,13 +108,19 @@ def _module_from_entry(entry: dict[str, Any], idx: int) -> ImportedPresetModule 
         enabled = explicit_enabled and report.enable_by_default
     else:
         enabled = report.enable_by_default
+    # Preserve numeric zero; only missing, None, or empty values fall through.
+    raw_order = entry.get("insertion_order")
+    if raw_order is None or raw_order == "":
+        raw_order = entry.get("order")
+    if raw_order is None or raw_order == "":
+        raw_order = idx
     return ImportedPresetModule(
         name=name,
         role=role,
         content=content,
         enabled=enabled,
         position=position,
-        insertion_order=int(entry.get("insertion_order") or entry.get("order") or idx),
+        insertion_order=int(raw_order),
         risk_level=report.level.value,
         risk_reasons=report.reasons,
         raw={"st_entry": _safe_raw(entry)},
