@@ -130,16 +130,27 @@ def test_embedded_lorebook_unusable_character_book_falls_back_to_world_info(prim
     assert result.id
 
 
-def test_embedded_lorebook_character_book_text_alias_wins_over_world_info():
-    """Valid data.character_book text wins when data.world_info is also valid."""
+@pytest.mark.parametrize(
+    "content",
+    (
+        pytest.param(None, id="absent"),
+        pytest.param("   ", id="whitespace"),
+        pytest.param(12, id="numeric"),
+    ),
+)
+def test_embedded_lorebook_character_book_text_alias_wins_over_world_info(content):
+    """Valid data.character_book text wins over data.world_info even if content is blank or numeric."""
     primary = "Primary text lore."
+    primary_entry = {"comment": "P", "text": primary, "keys": ["primary"]}
+    if content is not None:
+        primary_entry["content"] = content
     raw = {
         "spec": "chara_card_v3",
         "data": {
             "name": "Elena",
             "character_book": {
                 "name": "Primary Book",
-                "entries": [{"comment": "P", "text": primary, "keys": ["primary"]}],
+                "entries": [primary_entry],
             },
             "world_info": {
                 "name": "World Book",
@@ -209,6 +220,64 @@ def test_embedded_lorebook_store_round_trip_is_idempotent(tmp_path):
     assert lore_id1 == lore_id2
     lorebooks = store.list_lorebooks()
     assert len(lorebooks) == 1
+
+
+_CONTENT_ALIASES = ("content", "entry", "text", "value")
+_UNUSABLE_CONTENT_VALUES = (
+    pytest.param("   ", id="whitespace"),
+    pytest.param(12, id="nonzero-number"),
+    pytest.param(True, id="true"),
+    pytest.param(False, id="false"),
+    pytest.param(["blocked"], id="nonempty-list"),
+    pytest.param({"blocked": "lore"}, id="nonempty-dict"),
+    pytest.param("", id="empty"),
+    pytest.param(None, id="null"),
+    pytest.param(0, id="zero"),
+)
+
+
+@pytest.mark.parametrize("selected_alias", ("entry", "text", "value"))
+@pytest.mark.parametrize("unusable", _UNUSABLE_CONTENT_VALUES)
+def test_lorebook_import_content_alias_skips_unusable_earlier_values(selected_alias, unusable):
+    """Earlier unusable aliases fall through to the first later string with nonempty strip."""
+    selected_index = _CONTENT_ALIASES.index(selected_alias)
+    raw = {alias: unusable for alias in _CONTENT_ALIASES[:selected_index]}
+    for alias in _CONTENT_ALIASES[selected_index:]:
+        raw[alias] = f"{alias} lore"
+    selected = raw[selected_alias]
+    companion = "Companion lore."
+    book = import_st_lorebook_json({
+        "entries": [
+            raw,
+            {"comment": "Healthy", "content": companion},
+        ],
+    })
+
+    assert [entry.content for entry in book.entries] == [selected, companion]
+
+
+@pytest.mark.parametrize("winner", ("content", "entry", "text"))
+def test_lorebook_import_content_alias_precedence_preserves_whitespace(winner):
+    """When several aliases are usable, the earliest wins with its whitespace intact."""
+    start = _CONTENT_ALIASES.index(winner)
+    raw = {alias: f"  {alias} lore  " for alias in _CONTENT_ALIASES[start:]}
+    book = import_st_lorebook_json({"entries": [raw]})
+
+    assert [entry.content for entry in book.entries] == [raw[winner]]
+
+
+@pytest.mark.parametrize("unusable", _UNUSABLE_CONTENT_VALUES)
+def test_lorebook_import_excludes_entry_when_content_aliases_unusable(unusable):
+    """An entry with only unusable content aliases is dropped; a companion remains."""
+    companion = "Companion lore."
+    book = import_st_lorebook_json({
+        "entries": [
+            {alias: unusable for alias in _CONTENT_ALIASES},
+            {"comment": "Healthy", "content": companion},
+        ],
+    })
+
+    assert [entry.content for entry in book.entries] == [companion]
 
 
 def test_lorebook_imports_st_entries_dict_shape():

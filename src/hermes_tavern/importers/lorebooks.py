@@ -142,8 +142,13 @@ def _extract_entries(data: dict[str, Any] | list[Any]) -> list[dict[str, Any]]:
 
 
 def _entry_from_raw(raw: dict[str, Any], idx: int, *, source: str) -> ImportedLorebookEntry | None:
-    content = raw.get("content") or raw.get("entry") or raw.get("text") or raw.get("value")
-    if not isinstance(content, str) or not content.strip():
+    content = None
+    for field in ("content", "entry", "text", "value"):
+        candidate = raw.get(field)
+        if isinstance(candidate, str) and candidate.strip():
+            content = candidate
+            break
+    if content is None:
         return None
     raw_id = _entry_id_from_raw(raw, idx)
     title = str(raw.get("comment") or raw.get("title") or raw.get("name") or raw_id)
