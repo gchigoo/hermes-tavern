@@ -218,7 +218,7 @@ def _probability(value: Any) -> float:
         return 1.0
     try:
         p = float(value)
-    except (TypeError, ValueError):
+    except (TypeError, ValueError, OverflowError):
         return 1.0
     if p > 1:
         p = p / 100.0

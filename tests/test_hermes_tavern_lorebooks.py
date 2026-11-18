@@ -266,6 +266,21 @@ def test_lorebook_file_import_infinite_order_falls_back(field, tmp_path):
     assert book.entries[1].insertion_order == 1
 
 
+@pytest.mark.parametrize("field", ("probability", "chance"))
+@pytest.mark.parametrize("huge", (10**400, -(10**400)))
+def test_lorebook_import_huge_probability_falls_back(field, huge):
+    """Huge integer probability or chance falls back to 1.0; a percent still scales."""
+    book = import_st_lorebook_json({
+        "name": "Odds",
+        "entries": [
+            {"uid": "huge", "content": "Huge.", field: huge},
+            {"uid": "healthy", "content": "Healthy.", "probability": 25},
+        ],
+    })
+
+    assert [entry.probability for entry in book.entries] == [1.0, 0.25]
+
+
 @pytest.mark.parametrize("encoding", ("utf-8", "utf-8-sig"))
 def test_lorebook_file_import_unicode_json(tmp_path, encoding):
     """UTF-8 and UTF-8-SIG lorebook files keep Unicode fields and no leading BOM."""
