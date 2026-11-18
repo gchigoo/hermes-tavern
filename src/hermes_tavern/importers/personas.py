@@ -26,7 +26,8 @@ def import_persona_file(path: str | Path) -> ImportedPersona:
         persona_path,
         label="Persona file",
     )
-    text = persona_path.read_text(encoding="utf-8")
+    # utf-8-sig 去掉 BOM 后再解析 JSON；解析失败仍走原文回退。
+    text = persona_path.read_text(encoding="utf-8-sig")
     try:
         parsed = json.loads(text)
     except json.JSONDecodeError:

@@ -130,6 +130,61 @@ def test_persona_import_supports_raw_text(tmp_path):
     assert persona.raw_json["format"] == "raw_text"
 
 
+@pytest.mark.parametrize("encoding", ["utf-8", "utf-8-sig"])
+def test_persona_import_unicode_json_sanitizes_secrets(tmp_path, encoding):
+    """UTF-8 and UTF-8-SIG JSON keep Unicode name/content and drop secrets."""
+    payload = {
+        "name": "林薇",
+        "persona": "我是 {{user}}，学者 · Élodie。",
+        "api_key": "must-not-persist",
+        "token": "must-not-show",
+        "password": "must-not-keep",
+    }
+    path = tmp_path / "lin.json"
+    path.write_text(json.dumps(payload, ensure_ascii=False), encoding=encoding)
+
+    persona = import_persona_file(path)
+    stored = json.dumps(persona.raw_json, ensure_ascii=False)
+
+    assert persona.name == "林薇"
+    assert persona.content == "我是 {{user}}，学者 · Élodie。"
+    assert persona.source_path == str(path)
+    assert persona.raw_json["name"] == "林薇"
+    assert persona.raw_json["persona"] == persona.content
+    assert persona.raw_json.get("format") != "raw_text"
+    for secret_key in ("api_key", "token", "password"):
+        assert secret_key not in persona.raw_json
+    assert "must-not-persist" not in stored
+    assert "must-not-show" not in stored
+    assert "must-not-keep" not in stored
+    assert "\ufeff" not in persona.name
+    assert "\ufeff" not in persona.content
+
+
+@pytest.mark.parametrize("encoding", ["utf-8", "utf-8-sig"])
+@pytest.mark.parametrize(
+    ("filename", "body"),
+    [
+        ("traveler.txt", "我是 {{user}}，耐心的旅人 · Élodie。"),
+        ("broken.json", '{"name": "林薇", "persona": "未闭合'),
+    ],
+    ids=["raw-text", "malformed-json"],
+)
+def test_persona_import_raw_text_and_malformed_json_fallback(tmp_path, encoding, filename, body):
+    """UTF-8 and UTF-8-SIG raw text or malformed JSON stay on the raw-text path."""
+    path = tmp_path / filename
+    path.write_text(body, encoding=encoding)
+
+    persona = import_persona_file(path)
+
+    assert persona.name == path.stem
+    assert persona.content == body.strip()
+    assert persona.source_path == str(path)
+    assert persona.raw_json == {"format": "raw_text", "source_path": str(path)}
+    assert "\ufeff" not in persona.name
+    assert "\ufeff" not in persona.content
+
+
 def test_persona_import_rejects_oversize_json(tmp_path):
     path = tmp_path / "oversize-persona.json"
     payload = {"name": "Pilot", "persona": "A" * (MAX_LOCAL_IMPORT_BYTES + 1)}
