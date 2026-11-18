@@ -222,3 +222,22 @@ def test_resolve_explicit_wrong_suffix_gateway_rejected(tmp_path):
     decision = _resolve(event, explicit=str(f))
     assert decision.value is None
     assert "rejected" in decision.error.lower()
+
+
+def test_resolve_explicit_malformed_ipv6_url_gateway_rejected():
+    event = _gateway_event(platform="telegram")
+    decision = _resolve(event, explicit="https://[broken/card.json")
+    assert decision.value is None
+    assert decision.error is not None
+    assert "rejected" in decision.error.lower()
+
+
+def test_resolve_malformed_ipv6_attachment_ignored_valid_card_selected():
+    event = _gateway_event(
+        "https://[broken/card.json",
+        "/example/card.json",
+        platform="telegram",
+    )
+    decision = _resolve(event)
+    assert decision.error is None
+    assert decision.value == Path("/example/card.json")

@@ -15,7 +15,11 @@ class ImportPathDecision:
 
 
 def is_local_media_path(value: str) -> bool:
-    parsed = urlparse(value)
+    try:
+        parsed = urlparse(value)
+    except ValueError:
+        # Malformed IPv6 URLs (unbalanced brackets) are not local paths.
+        return False
     return not parsed.scheme and not parsed.netloc
 
 
