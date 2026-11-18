@@ -241,3 +241,121 @@ def test_import_preset_file_preserves_json_structure_with_bom(tmp_path):
         ("quiet", "assistant", "Keep pauses brief.", False),
     ]
     assert preset.raw == data
+
+
+@pytest.mark.parametrize(
+    ("candidates", "expected"),
+    (
+        pytest.param(
+            {
+                "prompts": [],
+                "prompt_order": [{"name": "from-order", "content": "Write plainly."}],
+                "modules": [{"name": "from-modules", "content": "Keep sentences concrete."}],
+            },
+            [("from-order", "Write plainly.")],
+            id="empty-prompts",
+        ),
+        pytest.param(
+            {
+                "prompts": [],
+                "prompt_order": [],
+                "modules": [{"name": "from-modules", "content": "Write plainly."}],
+            },
+            [("from-modules", "Write plainly.")],
+            id="empty-prompts-and-order",
+        ),
+        pytest.param(
+            {
+                "prompts": ["skip", 1, None],
+                "prompt_order": [{"name": "from-order", "content": "Write plainly."}],
+                "modules": [{"name": "from-modules", "content": "Keep sentences concrete."}],
+            },
+            [("from-order", "Write plainly.")],
+            id="non-dict-prompts",
+        ),
+        pytest.param(
+            {
+                "prompts": ["skip"],
+                "prompt_order": [1, None],
+                "modules": [{"name": "from-modules", "content": "Write plainly."}],
+            },
+            [("from-modules", "Write plainly.")],
+            id="non-dict-prompts-and-order",
+        ),
+        pytest.param(
+            {
+                "prompts": ["skip", {"name": "kept", "content": "Write plainly."}],
+                "modules": [{"name": "from-modules", "content": "Keep sentences concrete."}],
+            },
+            [("kept", "Write plainly.")],
+            id="mixed-list-keeps-dict",
+        ),
+        pytest.param(
+            {
+                "prompts": [{"name": "from-prompts", "content": "Write plainly."}],
+                "prompt_order": [{"name": "from-order", "content": "Keep sentences concrete."}],
+                "modules": [{"name": "from-modules", "content": "Write cinematic prose."}],
+            },
+            [("from-prompts", "Write plainly.")],
+            id="prompts-win",
+        ),
+        pytest.param(
+            {
+                "prompts": [{"name": "blank"}, {"name": "kept", "content": "Write plainly."}],
+                "modules": [{"name": "from-modules", "content": "Keep sentences concrete."}],
+            },
+            [("kept", "Write plainly.")],
+            id="earlier-dict-list-wins",
+        ),
+        pytest.param(
+            {
+                "prompt_order": [{"name": "from-order", "content": "Write plainly."}],
+                "modules": [{"name": "from-modules", "content": "Keep sentences concrete."}],
+            },
+            [("from-order", "Write plainly.")],
+            id="order-precedes-modules",
+        ),
+    ),
+)
+def test_import_st_preset_json_uses_first_dict_candidate_list(candidates, expected):
+    data = {"name": "candidates", **candidates}
+
+    preset = import_st_preset_json(data)
+
+    assert [(module.name, module.content) for module in preset.modules] == expected
+    assert preset.raw.get("format") != "raw_text"
+
+
+@pytest.mark.parametrize(
+    "candidates",
+    (
+        pytest.param(
+            {
+                "prompts": [{"name": "blank"}],
+                "modules": [{"name": "from-modules", "content": "Write plainly."}],
+            },
+            id="rejected-dict-keeps-precedence",
+        ),
+        pytest.param(
+            {"prompts": [], "prompt_order": [], "modules": []},
+            id="all-empty",
+        ),
+        pytest.param(
+            {"prompts": ["skip"], "prompt_order": [1], "modules": [None]},
+            id="all-non-dict",
+        ),
+        pytest.param(
+            {"prompts": [], "prompt_order": ["skip"], "modules": [None]},
+            id="empty-and-non-dict",
+        ),
+    ),
+)
+def test_import_st_preset_json_unimportable_candidates_fall_back_to_raw_text(candidates):
+    data = {"name": "candidates", **candidates}
+
+    preset = import_st_preset_json(data)
+
+    assert [(module.name, module.content) for module in preset.modules] == [
+        ("raw_text", json.dumps(data, ensure_ascii=False, sort_keys=True)),
+    ]
+    assert preset.raw["format"] == "raw_text"

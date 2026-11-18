@@ -91,7 +91,9 @@ def _extract_prompt_entries(data: dict[str, Any]) -> list[dict[str, Any]]:
     for key in ("prompts", "prompt_order", "modules"):
         value = data.get(key)
         if isinstance(value, list):
-            return [entry for entry in value if isinstance(entry, dict)]
+            entries = [entry for entry in value if isinstance(entry, dict)]
+            if entries:
+                return entries
     return []
 
 
