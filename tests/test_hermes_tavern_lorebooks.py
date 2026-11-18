@@ -266,6 +266,44 @@ def test_lorebook_file_import_infinite_order_falls_back(field, tmp_path):
     assert book.entries[1].insertion_order == 1
 
 
+@pytest.mark.parametrize("encoding", ("utf-8", "utf-8-sig"))
+def test_lorebook_file_import_unicode_json(tmp_path, encoding):
+    """UTF-8 and UTF-8-SIG lorebook files keep Unicode fields and no leading BOM."""
+    payload = {
+        "name": "隐欲 · Élodie",
+        "entries": [
+            {
+                "comment": "月相",
+                "content": "月亮裂开了，café 仍亮着。",
+                "keys": ["月亮", "Élodie"],
+            },
+        ],
+    }
+    path = tmp_path / "unicode-lorebook.json"
+    path.write_text(json.dumps(payload, ensure_ascii=False), encoding=encoding)
+
+    book = import_lorebook_file(path)
+    entry = book.entries[0]
+    imported = (
+        book.name,
+        book.source,
+        json.dumps(book.raw, ensure_ascii=False),
+        entry.id,
+        entry.title,
+        entry.content,
+        *entry.keys,
+    )
+
+    assert book.name == "隐欲 · Élodie"
+    assert book.source == str(path)
+    assert book.raw == payload
+    assert entry.id == "entry_0"
+    assert entry.title == "月相"
+    assert entry.content == "月亮裂开了，café 仍亮着。"
+    assert entry.keys == ("月亮", "Élodie")
+    assert all("\ufeff" not in item for item in imported)
+
+
 def test_lorebook_store_round_trips_entries(tmp_path):
     store = TavernStore(tmp_path / "tavern.sqlite3")
     lorebook = import_st_lorebook_json({"name": "Atlas", "entries": [{"comment": "Moon", "content": "Moon lore", "keys": ["moon"]}]})
