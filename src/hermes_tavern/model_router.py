@@ -95,6 +95,8 @@ def _descriptor_from_row(row: dict[str, Any]) -> ModelProfileDescriptor:
         extra = json.loads(raw)
     except Exception:
         pass
+    if not isinstance(extra, dict):
+        extra = {}
     return ModelProfileDescriptor(
         provider=row.get("provider", _DEFAULT_PROVIDER),
         model_id=row.get("model_id", _DEFAULT_MODEL_ID),
