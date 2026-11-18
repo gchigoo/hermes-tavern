@@ -115,7 +115,10 @@ def _find_embedded_book(raw: dict[str, Any]) -> tuple[dict[str, Any] | list[Any]
         ("world_info", raw.get("world_info")),
     ])
     for key, value in candidates:
-        if isinstance(value, (dict, list)) and _extract_entries(value):
+        if isinstance(value, (dict, list)) and any(
+            _entry_from_raw(entry, idx, source=key) is not None
+            for idx, entry in enumerate(_extract_entries(value))
+        ):
             return value, key
     return None, ""
 

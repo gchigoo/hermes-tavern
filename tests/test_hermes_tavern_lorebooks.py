@@ -91,6 +91,90 @@ def test_embedded_lorebook_returns_none_when_no_book():
     assert import_embedded_lorebook_from_card(card) is None
 
 
+@pytest.mark.parametrize(
+    "primary_entry",
+    (
+        {"content": "   "},
+        {"content": 12},
+        {},
+    ),
+)
+def test_embedded_lorebook_unusable_character_book_falls_back_to_world_info(primary_entry):
+    """Unusable data.character_book entries yield the data.world_info book."""
+    fallback = "Fallback world lore."
+    raw = {
+        "spec": "chara_card_v3",
+        "data": {
+            "name": "Elena",
+            "character_book": {
+                "name": "Broken Book",
+                "entries": [primary_entry],
+            },
+            "world_info": {
+                "name": "World Book",
+                "entries": [{"comment": "W", "content": fallback, "keys": ["world"]}],
+            },
+        },
+        "name": "",
+    }
+    card = parse_character_card(raw)
+
+    result = import_embedded_lorebook_from_card(card)
+    repeated = import_embedded_lorebook_from_card(card)
+
+    assert result is not None
+    assert repeated is not None
+    assert result.source == f"embedded:{card.id}:data.world_info"
+    assert [entry.content for entry in result.entries] == [fallback]
+    assert result.id == repeated.id
+    assert result.id
+
+
+def test_embedded_lorebook_character_book_text_alias_wins_over_world_info():
+    """Valid data.character_book text wins when data.world_info is also valid."""
+    primary = "Primary text lore."
+    raw = {
+        "spec": "chara_card_v3",
+        "data": {
+            "name": "Elena",
+            "character_book": {
+                "name": "Primary Book",
+                "entries": [{"comment": "P", "text": primary, "keys": ["primary"]}],
+            },
+            "world_info": {
+                "name": "World Book",
+                "entries": [{"comment": "W", "content": "Fallback world lore.", "keys": ["world"]}],
+            },
+        },
+        "name": "",
+    }
+    card = parse_character_card(raw)
+
+    result = import_embedded_lorebook_from_card(card)
+
+    assert result is not None
+    assert result.source == f"embedded:{card.id}:data.character_book"
+    assert [entry.content for entry in result.entries] == [primary]
+
+
+def test_embedded_lorebook_returns_none_when_all_candidate_entries_unusable():
+    """Populated nested and top-level books with no usable entry import as None."""
+    raw = {
+        "spec": "chara_card_v3",
+        "data": {
+            "name": "Elena",
+            "character_book": {"entries": [{"content": "   "}]},
+            "world_info": {"entries": [{"content": 12}]},
+        },
+        "name": "",
+        "character_book": {"entries": [{}]},
+        "world_info": {"entries": [{"content": "\n\t"}]},
+    }
+    card = parse_character_card(raw)
+
+    assert import_embedded_lorebook_from_card(card) is None
+
+
 def test_embedded_lorebook_stable_id_on_repeated_calls():
     card = parse_character_card(_v3_card_with_character_book())
 
