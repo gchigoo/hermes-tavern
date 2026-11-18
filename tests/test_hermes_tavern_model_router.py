@@ -59,6 +59,7 @@ _PROFILE_ROW = {
     "name": "profile-x",
     "context_window": 4096,
 }
+_MISSING = object()
 
 
 def _assert_resolved_profile(row, expected_mode):
@@ -133,6 +134,83 @@ def test_resolve_object_metadata_mode_fallback_and_row_precedence(
     """Object metadata supplies mode only when the profile row has none."""
     row = {**_PROFILE_ROW, "raw_json": raw_json}
     if row_mode is not None:
+        row["mode"] = row_mode
+    _assert_resolved_profile(row, expected_mode)
+
+
+@pytest.mark.parametrize(
+    ("row_mode", "raw_json", "expected_mode"),
+    (
+        pytest.param(
+            None,
+            '{"mode": "completion"}',
+            "completion",
+            id="explicit-none-uses-metadata",
+        ),
+        pytest.param(
+            _MISSING,
+            '{"mode": null}',
+            "chat",
+            id="missing-row-null-metadata",
+        ),
+        pytest.param(
+            None,
+            '{"mode": null}',
+            "chat",
+            id="explicit-none-null-metadata",
+        ),
+        pytest.param(
+            _MISSING,
+            "{}",
+            "chat",
+            id="missing-row-missing-metadata-mode",
+        ),
+        pytest.param(
+            None,
+            "{}",
+            "chat",
+            id="explicit-none-missing-metadata-mode",
+        ),
+        pytest.param(
+            None,
+            None,
+            "chat",
+            id="explicit-none-missing-raw-json",
+        ),
+        pytest.param(
+            "chat",
+            '{"mode": "completion"}',
+            "chat",
+            id="explicit-chat-overrides-metadata",
+        ),
+        pytest.param(
+            "",
+            '{"mode": "completion"}',
+            "",
+            id="empty-row-mode-preserved",
+        ),
+        pytest.param(
+            _MISSING,
+            '{"mode": ""}',
+            "",
+            id="empty-metadata-mode-preserved",
+        ),
+        pytest.param(
+            None,
+            '{"mode": ""}',
+            "",
+            id="explicit-none-empty-metadata-preserved",
+        ),
+    ),
+)
+def test_resolve_explicit_none_mode_falls_back_without_rewriting_values(
+    row_mode, raw_json, expected_mode
+):
+    """None is absent; every other mode value, including '', stays unchanged."""
+    row = dict(_PROFILE_ROW)
+    if raw_json is not None:
+        row["raw_json"] = raw_json
+    if row_mode is not _MISSING:
         row["mode"] = row_mode
     _assert_resolved_profile(row, expected_mode)
 

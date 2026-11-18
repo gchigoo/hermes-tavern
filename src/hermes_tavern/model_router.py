@@ -106,10 +106,19 @@ def _descriptor_from_row(row: dict[str, Any]) -> ModelProfileDescriptor:
         pass
     if not isinstance(extra, dict):
         extra = {}
+    # 显式 None 视为缺省：行内非 None 优先，否则对象元数据，再否则 chat。
+    row_mode = row.get("mode")
+    metadata_mode = extra.get("mode")
+    if row_mode is not None:
+        mode = row_mode
+    elif metadata_mode is not None:
+        mode = metadata_mode
+    else:
+        mode = "chat"
     return ModelProfileDescriptor(
         provider=row.get("provider", _DEFAULT_PROVIDER),
         model_id=row.get("model_id", _DEFAULT_MODEL_ID),
-        mode=row.get("mode", extra.get("mode", "chat")),
+        mode=mode,
         context_window=_coerce_context_window(
             row.get("context_window", _DEFAULT_CONTEXT_WINDOW)
         ),
