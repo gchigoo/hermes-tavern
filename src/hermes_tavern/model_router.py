@@ -88,6 +88,15 @@ def _fetch_profile(store: Any, profile_id: str) -> dict[str, Any] | None:
         return None
 
 
+def _coerce_context_window(value: Any) -> int:
+    """Return an int context window, or the default when conversion fails."""
+    try:
+        return int(value)
+    except (TypeError, ValueError, OverflowError):
+        # None、非法字符串、容器、NaN、无穷大无法作为窗口，回退默认值。
+        return _DEFAULT_CONTEXT_WINDOW
+
+
 def _descriptor_from_row(row: dict[str, Any]) -> ModelProfileDescriptor:
     raw = row.get("raw_json") or "{}"
     extra: dict[str, Any] = {}
@@ -101,7 +110,9 @@ def _descriptor_from_row(row: dict[str, Any]) -> ModelProfileDescriptor:
         provider=row.get("provider", _DEFAULT_PROVIDER),
         model_id=row.get("model_id", _DEFAULT_MODEL_ID),
         mode=row.get("mode", extra.get("mode", "chat")),
-        context_window=int(row.get("context_window", _DEFAULT_CONTEXT_WINDOW)),
+        context_window=_coerce_context_window(
+            row.get("context_window", _DEFAULT_CONTEXT_WINDOW)
+        ),
         source="db_profile",
         profile_name=row.get("name", "custom"),
     )

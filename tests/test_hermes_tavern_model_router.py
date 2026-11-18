@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import copy
+
 import pytest
 
 from plugins.hermes_tavern.model_router import ModelProfileDescriptor, ModelRouter
@@ -149,3 +151,67 @@ def test_resolve_object_metadata_mode_fallback_and_row_precedence(
 def test_resolve_empty_malformed_none_or_missing_metadata_defaults_to_chat(metadata):
     """Empty, malformed, None, or missing metadata falls back to chat."""
     _assert_resolved_profile({**_PROFILE_ROW, **metadata}, "chat")
+
+
+def _assert_resolve_inputs_unchanged(current, aliases, snapshot):
+    """Require resolve to keep mapping keys, value identity, and contents."""
+    assert list(current) == list(aliases)
+    for key, expected in snapshot.items():
+        value = current[key]
+        assert value is aliases[key]
+        if isinstance(expected, float) and expected != expected:
+            assert isinstance(value, float) and value != value
+            continue
+        assert value == expected
+
+
+@pytest.mark.parametrize(
+    ("context_window", "expected_window"),
+    (
+        pytest.param(4096, 4096, id="int-4096"),
+        pytest.param("4096", 4096, id="numeric-string"),
+        pytest.param(0, 0, id="zero"),
+        pytest.param(-1, -1, id="negative-one"),
+        pytest.param("0", 0, id="numeric-string-zero"),
+        pytest.param("-1", -1, id="numeric-string-negative"),
+        pytest.param(None, 200_000, id="none"),
+        pytest.param("not-a-window", 200_000, id="invalid-string"),
+        pytest.param([4096], 200_000, id="list"),
+        pytest.param({"context_window": 4096}, 200_000, id="dict"),
+        pytest.param(float("nan"), 200_000, id="nan"),
+        pytest.param(float("inf"), 200_000, id="infinity"),
+        pytest.param(float("-inf"), 200_000, id="negative-infinity"),
+    ),
+)
+def test_resolve_context_window_preserves_valid_and_defaults_unusable(
+    context_window, expected_window
+):
+    """Public resolve keeps identity, mode, and source without mutating inputs."""
+    row = {
+        **_PROFILE_ROW,
+        "mode": "completion",
+        "context_window": context_window,
+    }
+    session_row = {"model_profile_id": "profile-1"}
+    row_aliases = dict(row)
+    session_aliases = dict(session_row)
+    row_snapshot = copy.deepcopy(row)
+    session_snapshot = copy.deepcopy(session_row)
+    descriptor = ModelRouter().resolve(
+        session_row=session_row,
+        store=_ProfileStore(row),
+    )
+    assert descriptor == ModelProfileDescriptor(
+        provider="openrouter",
+        model_id="custom/model-1",
+        mode="completion",
+        context_window=expected_window,
+        source="db_profile",
+        profile_name="profile-x",
+    )
+    assert descriptor.mode == "completion"
+    assert descriptor.source == "db_profile"
+    _assert_resolve_inputs_unchanged(row, row_aliases, row_snapshot)
+    _assert_resolve_inputs_unchanged(
+        session_row, session_aliases, session_snapshot
+    )
