@@ -106,6 +106,18 @@ class _RaisesOnAttributeAccess:
         raise RuntimeError(f"failed to read {name}")
 
 
+class _RaisesOnValueAccess:
+    @property
+    def value(self):
+        raise RuntimeError("failed to read value")
+
+
+class _RaisesAttributeErrorOnValueAccess:
+    @property
+    def value(self):
+        raise AttributeError("failed to read value")
+
+
 def test_attribute_access_errors_fall_back_to_deterministic_key():
     assert (
         session_key_from_event(_RaisesOnAttributeAccess())
@@ -124,4 +136,22 @@ def test_enum_like_values_use_value_attribute():
     assert (
         session_key_from_event(event)
         == "matrix:chat:room-1:thread:thread-1:user:user-1"
+    )
+
+
+def test_enum_like_value_access_errors_fall_back_to_default():
+    event = _event(platform=_RaisesOnValueAccess())
+
+    assert (
+        session_key_from_event(event)
+        == "unknown:chat:chat-1:thread:main:user:user-1"
+    )
+
+
+def test_enum_like_value_attribute_errors_fall_back_to_default():
+    event = _event(platform=_RaisesAttributeErrorOnValueAccess())
+
+    assert (
+        session_key_from_event(event)
+        == "unknown:chat:chat-1:thread:main:user:user-1"
     )

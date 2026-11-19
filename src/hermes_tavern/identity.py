@@ -2,7 +2,11 @@
 
 from __future__ import annotations
 
+import inspect
 from typing import Any
+
+
+_MISSING = object()
 
 
 def _safe_attr(obj: Any, name: str, default: str = "unknown") -> str:
@@ -12,8 +16,19 @@ def _safe_attr(obj: Any, name: str, default: str = "unknown") -> str:
         return default
     if value is None or value == "":
         return default
-    if hasattr(value, "value"):
+    try:
         value = value.value
+    except AttributeError:
+        try:
+            value_attribute = inspect.getattr_static(value, "value", _MISSING)
+        except Exception:
+            return default
+        if value_attribute is not _MISSING:
+            return default
+    except Exception:
+        return default
+    if value is None or value == "":
+        return default
     return str(value)
 
 
