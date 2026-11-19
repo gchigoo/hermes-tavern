@@ -9,7 +9,7 @@ import pytest
 
 from plugins.hermes_tavern.commands import RPCommand
 from plugins.hermes_tavern.db import TavernStore
-from plugins.hermes_tavern.images import ComfyUIProvider, GeneratedImage, ImagePrompt, compile_image_prompt, expand_image_template_macros
+from plugins.hermes_tavern.images import ComfyUIProvider, GeneratedImage, ImagePrompt, compile_image_prompt, expand_image_template_macros, normalize_image_settings
 from plugins.hermes_tavern.importers.cards import parse_character_card
 from plugins.hermes_tavern.runtime import TavernRuntime
 
@@ -133,6 +133,20 @@ def test_image_settings_and_no_active_session(tmp_path):
 
     response = runtime.handle_command_sync(RPCommand("image", ["scene"], "/rp image scene"), OtherEvent())
     assert "No active Hermes Tavern session" in response
+
+
+@pytest.mark.parametrize(
+    ("key", "value", "expected"),
+    [
+        ("width", "wide", 1024),
+        ("height", [], 1024),
+        ("steps", {}, 28),
+        ("cfg_scale", ["7"], 7.0),
+        ("seed", "random", -1),
+    ],
+)
+def test_normalize_image_settings_invalid_numeric_values_fall_back_to_defaults(key, value, expected):
+    assert normalize_image_settings({key: value})[key] == expected
 
 
 def test_image_provider_list_use_and_safe_failure(tmp_path):

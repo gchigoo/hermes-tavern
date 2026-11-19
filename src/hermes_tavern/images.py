@@ -293,7 +293,7 @@ def normalize_image_settings(settings: dict[str, Any] | None = None) -> dict[str
                 try:
                     merged[key] = IMAGE_SETTING_TYPES[key](value)
                 except Exception:
-                    merged[key] = value
+                    pass
     merged["width"] = max(64, min(4096, int(merged["width"])))
     merged["height"] = max(64, min(4096, int(merged["height"])))
     merged["steps"] = max(1, min(150, int(merged["steps"])))
