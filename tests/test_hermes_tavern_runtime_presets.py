@@ -55,6 +55,39 @@ def test_runtime_preset_import_list_inspect(tmp_path):
     assert "raw_text: jailbreak (disabled)" in inspected
 
 
+def test_runtime_preset_inspect_marks_malformed_module_raw_json_invalid(tmp_path):
+    preset_file = tmp_path / "plain.json"
+    preset_file.write_text(
+        json.dumps(
+            {
+                "name": "Plain",
+                "prompts": [{"name": "style", "content": "Write plainly."}],
+            }
+        ),
+        encoding="utf-8",
+    )
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    runtime = TavernRuntime(store)
+    runtime.handle_command_sync(
+        RPCommand("preset", ["import", str(preset_file)], f"/rp preset import {preset_file}"),
+        Event(),
+    )
+    preset = store.get_preset("Plain")
+    assert preset is not None
+    with store.connect() as conn:
+        conn.execute(
+            "UPDATE prompt_modules SET raw_json = ? WHERE preset_id = ?",
+            ("not-json", preset["id"]),
+        )
+
+    inspected = runtime.handle_command_sync(
+        RPCommand("preset", ["inspect", "Plain"], "/rp preset inspect Plain"),
+        Event(),
+    )
+
+    assert "style: invalid (enabled)" in inspected
+
+
 def test_runtime_preset_export_uses_stored_raw_json_when_dict(tmp_path, monkeypatch):
     preset_file = tmp_path / "preset.json"
     preset_file.write_text(

@@ -2,18 +2,22 @@
 
 from __future__ import annotations
 
-import json
 from typing import Any
 
 from hermes_tavern.commands import RPCommand
 from hermes_tavern.identity import session_key_from_event
-from hermes_tavern.runtime_utils import mobile_preview, module_risk_counts_db
+from hermes_tavern.runtime_utils import (
+    USABLE_MODULE_RISKS,
+    mobile_preview,
+    module_risk_counts_db,
+    module_risk_details,
+)
 
 _USAGE = (
     "Usage: /rp prompt list | /rp prompt inspect <module> | "
     "/rp prompt enable <module> | /rp prompt disable <module> | /rp prompt debug"
 )
-_BLOCKED_RISKS = {"jailbreak", "disallowed"}
+
 
 
 def prompt_command(runtime: Any, command: RPCommand, event: Any) -> str:
@@ -42,15 +46,7 @@ def _active_preset(runtime: Any, event: Any) -> tuple[str, dict[str, Any] | None
 
 
 def _module_risk(module: dict[str, Any]) -> tuple[str, list[str]]:
-    try:
-        raw = json.loads(module.get("raw_json") or "{}")
-    except Exception:
-        raw = {}
-    risk = str(raw.get("risk_level") or "safe")
-    reasons = raw.get("risk_reasons") or []
-    if not isinstance(reasons, list):
-        reasons = [str(reasons)]
-    return risk, [str(reason) for reason in reasons]
+    return module_risk_details(module)
 
 
 def _module_or_message(runtime: Any, command: RPCommand, event: Any) -> tuple[dict[str, Any] | None, str | None, dict[str, Any] | None]:
@@ -103,6 +99,7 @@ def prompt_inspect(runtime: Any, command: RPCommand, event: Any) -> str:
     module, message, preset = _module_or_message(runtime, command, event)
     if message:
         return message
+    assert module is not None
     risk, reasons = _module_risk(module)
     lines = [
         f"Prompt module: {module['name']} ({module['id'][:8]})",
@@ -123,8 +120,10 @@ def prompt_set_enabled(runtime: Any, command: RPCommand, event: Any, *, enabled:
     module, message, preset = _module_or_message(runtime, command, event)
     if message:
         return message.replace("inspect", "enable" if enabled else "disable")
+    assert module is not None
     risk, reasons = _module_risk(module)
-    if enabled and risk in _BLOCKED_RISKS:
+    if enabled and risk not in USABLE_MODULE_RISKS:
+        runtime.store.set_prompt_module_enabled(module["id"], False)
         detail = f" ({', '.join(reasons)})" if reasons else ""
         return (
             f"Prompt module remains disabled: {module['name']} is classified as {risk}{detail}. "

@@ -17,6 +17,7 @@ from hermes_tavern.runtime_utils import (
     card_row_to_obj,
     event_user_name,
     mobile_preview,
+    module_risk_details,
     parse_pagination,
     module_risk_counts,
     module_risk_counts_db,
@@ -193,6 +194,15 @@ class TestUsableModuleCounts:
         assert counts["safe"] == 0
         assert counts["disabled_risky"] == 0
 
+    @pytest.mark.parametrize(
+        "raw_json",
+        ["not-json", json.dumps([]), json.dumps({"risk_level": []}), json.dumps({})],
+    )
+    def test_corrupt_or_missing_risk_metadata_fails_closed(self, raw_json):
+        counts = usable_module_counts([{"raw_json": raw_json, "enabled": True}], "safe")
+        assert counts == {"safe": 0, "adult_fiction": 0, "disabled_risky": 1}
+        assert module_risk_details({"raw_json": raw_json})[0] == "invalid"
+
 
 # ---------------------------------------------------------------------------
 # module_risk_counts_db
@@ -219,6 +229,14 @@ class TestModuleRiskCountsDb:
         counts = module_risk_counts_db([_make_db_module("adult_fiction", enabled=False)])
         assert counts["adult_fiction"] == 0
         assert counts["risky_disabled"] == 0
+
+    @pytest.mark.parametrize(
+        "raw_json",
+        ["not-json", json.dumps([]), json.dumps({"risk_level": []}), json.dumps({})],
+    )
+    def test_corrupt_or_missing_risk_metadata_counts_as_risky(self, raw_json):
+        counts = module_risk_counts_db([{"raw_json": raw_json, "enabled": True}])
+        assert counts == {"safe": 0, "adult_fiction": 0, "risky_disabled": 1}
 
 
 # ---------------------------------------------------------------------------

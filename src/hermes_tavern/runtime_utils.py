@@ -8,6 +8,12 @@ from typing import Any
 from hermes_tavern.macros import MacroContext
 
 
+USABLE_MODULE_RISKS = frozenset({"safe", "adult_fiction"})
+KNOWN_MODULE_RISKS = USABLE_MODULE_RISKS | {"jailbreak", "disallowed"}
+INVALID_MODULE_RISK = "invalid"
+_INVALID_MODULE_RISK_REASON = "missing or invalid risk metadata"
+
+
 def mobile_preview(text: str, limit: int = 120) -> str:
     """Single-line preview that stays readable in narrow mobile chat apps."""
     compact = " ".join(str(text or "").split())
@@ -45,13 +51,41 @@ def parse_pagination(
     return limit, page
 
 
+def _module_raw_object(module: dict[str, Any]) -> dict[str, Any] | None:
+    raw_json = module.get("raw_json")
+    if isinstance(raw_json, dict):
+        return raw_json
+    if not isinstance(raw_json, str):
+        return None
+    try:
+        parsed = json.loads(raw_json)
+    except (TypeError, ValueError, json.JSONDecodeError):
+        return None
+    return parsed if isinstance(parsed, dict) else None
+
+
+def module_risk_details(module: dict[str, Any]) -> tuple[str, list[str]]:
+    """Read validated prompt-module risk metadata, failing closed on corruption."""
+    raw = _module_raw_object(module)
+    if raw is None:
+        return INVALID_MODULE_RISK, [_INVALID_MODULE_RISK_REASON]
+
+    risk = raw.get("risk_level")
+    if not isinstance(risk, str) or risk not in KNOWN_MODULE_RISKS:
+        return INVALID_MODULE_RISK, [_INVALID_MODULE_RISK_REASON]
+
+    reasons = raw.get("risk_reasons") or []
+    if not isinstance(reasons, list):
+        reasons = [reasons]
+    return risk, [str(reason) for reason in reasons]
+
+
 def usable_module_counts(modules: list[dict[str, Any]], content_mode: str) -> dict[str, int]:
     counts = {"safe": 0, "adult_fiction": 0, "disabled_risky": 0}
     for module in modules:
-        raw = json.loads(module.get("raw_json") or "{}")
-        risk = raw.get("risk_level", "safe")
-        if risk in {"jailbreak", "disallowed"} or not module.get("enabled"):
-            if risk in {"jailbreak", "disallowed"}:
+        risk, _ = module_risk_details(module)
+        if risk not in USABLE_MODULE_RISKS or not module.get("enabled"):
+            if risk not in USABLE_MODULE_RISKS:
                 counts["disabled_risky"] += 1
             continue
         if risk == "safe":
@@ -65,9 +99,8 @@ def module_risk_counts_db(modules: list[dict[str, Any]]) -> dict[str, int]:
     """Aggregate risk counts from DB module rows (enabled/disabled breakdown)."""
     counts = {"safe": 0, "adult_fiction": 0, "risky_disabled": 0}
     for module in modules:
-        raw = json.loads(module.get("raw_json") or "{}")
-        risk = raw.get("risk_level", "safe")
-        if risk in {"jailbreak", "disallowed"}:
+        risk, _ = module_risk_details(module)
+        if risk not in USABLE_MODULE_RISKS:
             counts["risky_disabled"] += 1
         elif module.get("enabled"):
             if risk == "safe":

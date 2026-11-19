@@ -13,6 +13,7 @@ from hermes_tavern.import_policy import resolve_import_path
 from hermes_tavern.importers.presets import import_preset_file
 from hermes_tavern.runtime_utils import (
     mobile_preview,
+    module_risk_details,
     module_risk_counts,
     module_risk_counts_db,
     usable_module_counts,
@@ -165,8 +166,7 @@ def preset_inspect(runtime: Any, command: RPCommand) -> str:
         "module previews:",
     ]
     for module in modules[:5]:
-        raw = json.loads(module["raw_json"] or "{}")
-        risk = raw.get("risk_level", "safe")
+        risk, _ = module_risk_details(module)
         status = "enabled" if module["enabled"] else "disabled"
         preview = mobile_preview(module["content"], 60)
         lines.append(f"  - {module['name']}: {risk} ({status}) — {preview}")

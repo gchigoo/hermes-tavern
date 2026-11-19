@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import json
 
+import pytest
+
 from plugins.hermes_tavern.commands import RPCommand
 from plugins.hermes_tavern.db import TavernStore
 from plugins.hermes_tavern.importers.cards import CharacterCard
@@ -91,6 +93,43 @@ def test_prompt_enable_blocked_for_risky_module(tmp_path):
     assert "remains disabled" in blocked
     assert "classified as jailbreak" in blocked
     assert bad["enabled"] == 0
+
+
+@pytest.mark.parametrize(
+    ("case", "raw_json"),
+    [
+        ("not-json", "not-json"),
+        ("non-object", json.dumps([])),
+        ("non-string-risk", json.dumps({"risk_level": []})),
+        ("missing-risk", json.dumps({})),
+    ],
+)
+def test_corrupt_risk_metadata_cannot_be_enabled_or_compiled(tmp_path, case, raw_json):
+    runtime, store = _runtime_with_mixed_preset(tmp_path)
+    preset_id = store.get_active_session(SESSION_KEY)["preset_id"]
+    style = store.get_prompt_module("style", preset_id=preset_id)
+    with store.connect() as conn:
+        conn.execute(
+            "UPDATE prompt_modules SET raw_json = ?, enabled = 0 WHERE id = ?",
+            (raw_json, style["id"]),
+        )
+
+    blocked = runtime.handle_command_sync(
+        RPCommand("prompt", ["enable", "style"], "/rp prompt enable style"),
+        Event(),
+    )
+
+    assert "remains disabled" in blocked, case
+    assert "classified as invalid" in blocked, case
+    assert store.get_prompt_module(style["id"])["enabled"] == 0
+
+    with store.connect() as conn:
+        conn.execute("UPDATE prompt_modules SET enabled = 1 WHERE id = ?", (style["id"],))
+    session = store.get_active_session(SESSION_KEY)
+    compiled = runtime._session_preset_modules(session)
+
+    assert all(module.name != "preset:style" for module in compiled), case
+    assert all(module.content != "Write cinematic prose." for module in compiled), case
 
 
 def test_prompt_debug_reflects_content_mode_filter(tmp_path):

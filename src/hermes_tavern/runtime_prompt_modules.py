@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 import sqlite3
 from typing import Any
 
@@ -13,6 +12,7 @@ from hermes_tavern.memory import (
     build_memory_modules,
 )
 from hermes_tavern.prompt import PromptModule
+from hermes_tavern.runtime_utils import USABLE_MODULE_RISKS, module_risk_details
 
 
 def session_preset_modules(runtime, session: dict[str, Any]) -> list[PromptModule]:
@@ -24,11 +24,10 @@ def session_preset_modules(runtime, session: dict[str, Any]) -> list[PromptModul
     for row in runtime.store.list_prompt_modules(preset_id):
         if not row.get("enabled"):
             continue
-        raw = json.loads(row.get("raw_json") or "{}")
-        risk = raw.get("risk_level", "safe")
+        risk, _ = module_risk_details(row)
         if risk == "adult_fiction" and content_mode != "adult-fiction":
             continue
-        if risk not in {"safe", "adult_fiction"}:
+        if risk not in USABLE_MODULE_RISKS:
             continue
         modules.append(
             PromptModule(
