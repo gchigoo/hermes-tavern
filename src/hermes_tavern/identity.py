@@ -14,7 +14,12 @@ def _safe_attr(obj: Any, name: str, default: str = "unknown") -> str:
         value = getattr(obj, name, None)
     except Exception:
         return default
-    if value is None or value == "":
+    if value is None:
+        return default
+    try:
+        if value == "":
+            return default
+    except Exception:
         return default
     try:
         value = value.value
@@ -27,9 +32,17 @@ def _safe_attr(obj: Any, name: str, default: str = "unknown") -> str:
             return default
     except Exception:
         return default
-    if value is None or value == "":
+    if value is None:
         return default
-    return str(value)
+    try:
+        if value == "":
+            return default
+    except Exception:
+        return default
+    try:
+        return str(value)
+    except Exception:
+        return default
 
 
 def session_key_from_event(event: Any) -> str:
