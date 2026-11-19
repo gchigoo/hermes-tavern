@@ -50,6 +50,14 @@ def _text(value: Any) -> str:
     return str(value)
 
 
+def _first_nonblank_text(data: dict[str, Any], keys: tuple[str, ...]) -> str:
+    for key in keys:
+        candidate = data.get(key)
+        if isinstance(candidate, str) and candidate.strip():
+            return candidate
+    return ""
+
+
 def _card_id(raw: dict[str, Any], data: dict[str, Any], name: str) -> str:
     explicit = data.get("id") or raw.get("id")
     if explicit:
@@ -105,8 +113,9 @@ def parse_character_card(raw_card: dict[str, Any]) -> CharacterCard:
         mes_example=_text(data.get("mes_example")),
         alternate_greetings=[str(item) for item in alternate],
         creator_notes=_text(data.get("creator_notes")),
-        system_prompt_override=_text(
-            data.get("system_prompt") or data.get("system_prompt_override")
+        system_prompt_override=_first_nonblank_text(
+            data,
+            ("system_prompt", "system_prompt_override"),
         ),
         post_history_instructions=_text(data.get("post_history_instructions")),
         tags=[str(t) for t in tags],

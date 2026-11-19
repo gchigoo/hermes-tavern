@@ -288,6 +288,55 @@ def test_parse_v2_extended_fields():
     assert card.source_path == ""
 
 
+@pytest.mark.parametrize(
+    "primary",
+    (
+        pytest.param(None, id="null"),
+        pytest.param("", id="empty"),
+        pytest.param("   ", id="whitespace"),
+        pytest.param(12, id="number"),
+        pytest.param(True, id="boolean"),
+        pytest.param(["not text"], id="list"),
+        pytest.param({"not": "text"}, id="object"),
+    ),
+)
+def test_parse_card_system_prompt_skips_unusable_primary_alias(primary):
+    card = parse_character_card(
+        {
+            "name": "Prompt alias",
+            "system_prompt": primary,
+            "system_prompt_override": "  Use the legacy override.  ",
+        }
+    )
+
+    assert card.system_prompt_override == "  Use the legacy override.  "
+
+
+def test_parse_card_system_prompt_keeps_usable_primary_alias():
+    card = parse_character_card(
+        {
+            "name": "Prompt alias",
+            "system_prompt": "  Use the standard prompt.  ",
+            "system_prompt_override": "Use the legacy override.",
+        }
+    )
+
+    assert card.system_prompt_override == "  Use the standard prompt.  "
+
+
+@pytest.mark.parametrize("unusable", ("   ", 12, ["not text"], {"not": "text"}))
+def test_parse_card_system_prompt_defaults_empty_when_aliases_are_unusable(unusable):
+    card = parse_character_card(
+        {
+            "name": "Prompt alias",
+            "system_prompt": unusable,
+            "system_prompt_override": unusable,
+        }
+    )
+
+    assert card.system_prompt_override == ""
+
+
 def test_parse_extended_fields_missing_defaults_to_empty():
     card = parse_character_card({"name": "Minimal"})
 
