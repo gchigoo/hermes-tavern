@@ -119,7 +119,15 @@ def test_assert_no_secret_keys_blocks_direct_secret_field(field_name: str):
     ["API_KEY", "ACCESS_TOKEN", "SECRET", "TOKEN", "PASSWORD"],
 )
 def test_assert_no_secret_keys_is_case_insensitive(field_name: str):
-    # key.lower() comparison means uppercase variants are also blocked.
+    with pytest.raises(ValueError, match="must not persist secret field"):
+        assert_no_secret_keys({field_name: "some-value"})
+
+
+@pytest.mark.parametrize(
+    "field_name",
+    ["api-key", "ApiKey", " access token ", "Pass-Word"],
+)
+def test_assert_no_secret_keys_blocks_common_name_variants(field_name: str):
     with pytest.raises(ValueError, match="must not persist secret field"):
         assert_no_secret_keys({field_name: "some-value"})
 

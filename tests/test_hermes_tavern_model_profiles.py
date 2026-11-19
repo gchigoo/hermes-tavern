@@ -25,7 +25,14 @@ def test_save_list_get_model_profile_secret_free(tmp_path):
     assert store.get_model_profile("Opus 4.6 Default")["id"] == "opus-default"
 
 
-def test_model_profile_rejects_secret_fields(tmp_path):
+@pytest.mark.parametrize(
+    "raw",
+    [
+        {"api_key": "should-not-persist"},
+        {"credentials": {"Api-Key": "should-not-persist"}},
+    ],
+)
+def test_model_profile_rejects_secret_fields(tmp_path, raw):
     store = TavernStore(tmp_path / "tavern.sqlite3")
 
     with pytest.raises(ValueError):
@@ -33,7 +40,7 @@ def test_model_profile_rejects_secret_fields(tmp_path):
             name="bad",
             provider="anthropic",
             model_id="claude-opus-4-6",
-            raw={"api_key": "should-not-persist"},
+            raw=raw,
         )
 
 
