@@ -109,6 +109,33 @@ def test_import_st_preset_json_preserves_explicit_numeric_zero(order_fields):
     assert preset.modules[1].insertion_order == 0
 
 
+@pytest.mark.parametrize(
+    "preferred_content",
+    (
+        pytest.param("   ", id="whitespace"),
+        pytest.param({"unexpected": "object"}, id="non-string"),
+    ),
+)
+def test_import_st_preset_json_uses_valid_fallback_content_alias(preferred_content):
+    data = {
+        "name": "content-alias",
+        "prompts": [
+            {
+                "name": "style",
+                "content": preferred_content,
+                "prompt": "Write plainly.",
+            },
+        ],
+    }
+
+    preset = import_st_preset_json(data)
+
+    assert [(module.name, module.content) for module in preset.modules] == [
+        ("style", "Write plainly."),
+    ]
+    assert preset.raw.get("format") != "raw_text"
+
+
 def test_import_st_preset_json_invalid_middle_order_keeps_all_prompts():
     data = {
         "name": "three-safe",

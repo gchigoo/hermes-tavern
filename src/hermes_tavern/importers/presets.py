@@ -98,8 +98,13 @@ def _extract_prompt_entries(data: dict[str, Any]) -> list[dict[str, Any]]:
 
 
 def _module_from_entry(entry: dict[str, Any], idx: int) -> ImportedPresetModule | None:
-    content = entry.get("content") or entry.get("prompt") or entry.get("text") or entry.get("value")
-    if not isinstance(content, str) or not content.strip():
+    content = None
+    for key in ("content", "prompt", "text", "value"):
+        candidate = entry.get(key)
+        if isinstance(candidate, str) and candidate.strip():
+            content = candidate
+            break
+    if content is None:
         return None
     name = str(entry.get("name") or entry.get("identifier") or entry.get("id") or f"module_{idx}")
     role = str(entry.get("role") or "system")
