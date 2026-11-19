@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import base64
 import hashlib
+import math
 import re
 from dataclasses import dataclass
 from pathlib import Path
@@ -291,7 +292,10 @@ def normalize_image_settings(settings: dict[str, Any] | None = None) -> dict[str
         for key, value in settings.items():
             if key in IMAGE_SETTING_TYPES and value not in (None, ""):
                 try:
-                    merged[key] = IMAGE_SETTING_TYPES[key](value)
+                    normalized = IMAGE_SETTING_TYPES[key](value)
+                    if isinstance(normalized, float) and not math.isfinite(normalized):
+                        continue
+                    merged[key] = normalized
                 except Exception:
                     pass
     merged["width"] = max(64, min(4096, int(merged["width"])))

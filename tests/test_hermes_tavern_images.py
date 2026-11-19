@@ -149,6 +149,14 @@ def test_normalize_image_settings_invalid_numeric_values_fall_back_to_defaults(k
     assert normalize_image_settings({key: value})[key] == expected
 
 
+@pytest.mark.parametrize(
+    "value",
+    [float("nan"), float("inf"), float("-inf"), "NaN", "Infinity", "-Infinity", "1e309"],
+)
+def test_normalize_image_settings_nonfinite_cfg_scale_falls_back_to_default(value):
+    assert normalize_image_settings({"cfg_scale": value})["cfg_scale"] == 7.0
+
+
 def test_image_provider_list_use_and_safe_failure(tmp_path):
     runtime, store, session, card = _runtime(tmp_path)
 
