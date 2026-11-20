@@ -138,6 +138,27 @@ def test_card_export_generates_normalized_payload_when_raw_is_missing_or_invalid
     assert data["talkativeness"] == pytest.approx(source_fields["talkativeness"])
 
 
+@pytest.mark.parametrize("data_json", ["{", "[]", "null"])
+def test_card_export_tolerates_corrupt_stored_metadata(tmp_path, monkeypatch, data_json):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    card_id = store.save_card(parse_character_card({"name": "Damaged"}))
+    with store.connect() as conn:
+        conn.execute("UPDATE cards SET data_json = ? WHERE id = ?", (data_json, card_id))
+    runtime = _runtime_with_home(tmp_path / "hermes home", store, monkeypatch)
+
+    response = runtime.handle_command_sync(
+        RPCommand("card", ["export", "Damaged"], "/rp card export Damaged"),
+        Event(),
+    )
+
+    file_path, _ = _extract_export_paths(response)
+    exported = json.loads(Path(file_path).read_text(encoding="utf-8"))
+
+    assert response.startswith("Card exported as JSON.\n")
+    assert exported["spec"] == "chara_card_v2"
+    assert exported["data"]["name"] == "Damaged"
+
+
 def test_card_export_with_last_keyword_uses_last_card(tmp_path, monkeypatch):
     store = TavernStore(tmp_path / "tavern.sqlite3")
     store.save_card(parse_character_card({"name": "First", "description": "Old"}))

@@ -171,7 +171,8 @@ def card_export(runtime: Any, command: RPCommand) -> str:
     if card is None:
         return _card_not_found(card_ref)
 
-    card_data = json.loads(card.get("data_json") or "{}")
+    card_data = _decode_card_data(card.get("data_json"))
+    card_data.setdefault("name", card.get("name") or "")
     payload = _normalize_card_export_payload(card_data)
     payload_text = json.dumps(payload, ensure_ascii=False, indent=2)
 
