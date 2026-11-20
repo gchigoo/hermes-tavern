@@ -76,6 +76,14 @@ def _session_export_filename(session_id: str) -> str:
     return f"session_{safe_id}.json"
 
 
+def _decode_card_data(value: Any) -> dict[str, Any]:
+    try:
+        data = json.loads(value or "{}")
+    except (TypeError, ValueError, RecursionError):
+        return {}
+    return data if isinstance(data, dict) else {}
+
+
 def session_export(runtime: Any, command: RPCommand, event: Any) -> str:
     if len(command.args) < 2:
         return "Usage: /rp session export <id>"
@@ -113,7 +121,7 @@ def session_export(runtime: Any, command: RPCommand, event: Any) -> str:
     if session.get("card_id"):
         card = runtime.store.get_card(session["card_id"])
         if card:
-            card_data = json.loads(card.get("data_json") or "{}")
+            card_data = _decode_card_data(card.get("data_json"))
             card_name = card.get("name") or card_name
 
     preset_name = "none"

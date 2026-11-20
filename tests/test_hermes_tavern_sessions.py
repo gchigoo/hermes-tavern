@@ -3,6 +3,8 @@ from copy import deepcopy
 from pathlib import Path
 import sqlite3
 
+import pytest
+
 from plugins.hermes_tavern.commands import RPCommand
 from plugins.hermes_tavern.db import TavernStore
 from plugins.hermes_tavern.hermes_home import get_hermes_home
@@ -289,6 +291,26 @@ def test_session_runtime_export_exports_exact_id_payload(tmp_path, monkeypatch):
     assert payload["messages"][1]["swipes"] == ["alpha", "beta"]
     assert payload["messages"][1]["active_swipe"] == 1
     assert payload["card"] == json.loads(card_row.get("data_json") or "{}")
+
+
+@pytest.mark.parametrize("data_json", ["{", "[]", "null"])
+def test_session_runtime_export_tolerates_corrupt_card_metadata(tmp_path, monkeypatch, data_json):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    runtime = _runtime_with_home(tmp_path / "hermes home", store, monkeypatch)
+    card_id = store.save_card(parse_character_card({"name": "Damaged"}))
+    session = store.start_session(SESSION_KEY, card_id=card_id)
+    with store.connect() as conn:
+        conn.execute("UPDATE cards SET data_json = ? WHERE id = ?", (data_json, card_id))
+
+    response = runtime.handle_command_sync(
+        RPCommand("session", ["export", session["id"]], f"/rp session export {session['id']}"),
+        Event(),
+    )
+    payload = json.loads(Path(_extract_export_paths(response)[0]).read_text(encoding="utf-8"))
+
+    assert response.startswith("Session exported as JSON.\n")
+    assert payload["card_name"] == "Damaged"
+    assert "card" not in payload
 
 
 def test_session_runtime_export_by_valid_id_prefix(tmp_path, monkeypatch):
