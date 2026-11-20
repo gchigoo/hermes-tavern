@@ -31,6 +31,70 @@ _BLOCKED_HOST_PREFIXES: tuple[str, ...] = (
 _BLOCKED_HOSTS: frozenset[str] = frozenset(
     {"localhost", "::1", "0.0.0.0"}
 )
+_IDNA_DOT_EQUIVALENTS = str.maketrans({"\u3002": ".", "\uff61": ".", "\uff0e": "."})
+
+
+def _normalize_host(host: str) -> str:
+    """Normalize compatibility characters, digits, and a DNS root dot."""
+    normalized = unicodedata.normalize(
+        "NFKC", host.translate(_IDNA_DOT_EQUIVALENTS)
+    ).casefold().removesuffix(".")
+    return "".join(
+        str(unicodedata.decimal(character)) if character.isdecimal() else character
+        for character in normalized
+    )
+
+
+def _looks_like_legacy_ipv4(host: str) -> bool:
+    """Return whether every hostname label uses legacy numeric IPv4 syntax."""
+    parts = host.split(".")
+    if not parts or any(not part for part in parts):
+        return False
+    for part in parts:
+        if part.startswith("0x"):
+            digits = part[2:]
+            if not digits or any(character not in "0123456789abcdef" for character in digits):
+                return False
+        elif not part.isascii() or not part.isdecimal():
+            return False
+    return True
+
+
+def _parse_legacy_ipv4(host: str):
+    """Parse inet_aton-style numeric IPv4 without resolving hostnames."""
+    parts = host.split(".")
+    if not 1 <= len(parts) <= 4:
+        return None
+
+    numbers: list[int] = []
+    for part in parts:
+        if not part:
+            return None
+        if part.lower().startswith("0x"):
+            digits, base = part[2:], 16
+        elif len(part) > 1 and part.startswith("0"):
+            digits, base = part[1:], 8
+        else:
+            digits, base = part, 10
+        valid_digits = {
+            8: "01234567",
+            10: "0123456789",
+            16: "0123456789abcdef",
+        }[base]
+        if not digits or any(character.lower() not in valid_digits for character in digits):
+            return None
+        numbers.append(int(digits, base))
+
+    final_width = {1: 32, 2: 24, 3: 16, 4: 8}[len(numbers)]
+    if any(number > 0xFF for number in numbers[:-1]):
+        return None
+    if numbers[-1] >= 1 << final_width:
+        return None
+
+    value = numbers[-1]
+    for index, number in enumerate(numbers[:-1]):
+        value |= number << (24 - 8 * index)
+    return ip_address(value)
 
 
 def validate_provider_base_url(base_url: str) -> None:
@@ -51,8 +115,16 @@ def validate_provider_base_url(base_url: str) -> None:
     if scheme not in SAFE_URL_SCHEMES:
         raise ValueError("Provider URL not allowed: unsupported scheme")
 
-    # parsed.hostname lowercases and strips brackets from IPv6 addresses
-    host = (parsed.hostname or "").lower()
+    # parsed.hostname strips brackets from IPv6 addresses but leaves percent-
+    # encoded host text intact. Reject it before clients can decode it to an
+    # otherwise blocked address.
+    raw_host = parsed.hostname or ""
+    if "%" in raw_host:
+        raise ValueError("Provider URL not allowed: encoded host")
+
+    # Normalize Unicode decimal forms before classifying numeric hosts; no DNS
+    # lookup is needed.
+    host = _normalize_host(raw_host)
     if not host:
         raise ValueError("Provider URL not allowed: missing host")
 
@@ -62,7 +134,9 @@ def validate_provider_base_url(base_url: str) -> None:
     try:
         parsed_ip = ip_address(host)
     except ValueError:
-        parsed_ip = None
+        parsed_ip = _parse_legacy_ipv4(host)
+        if parsed_ip is None and _looks_like_legacy_ipv4(host):
+            raise ValueError("Provider URL not allowed: invalid numeric host")
     if parsed_ip is not None:
         if (
             parsed_ip.is_private

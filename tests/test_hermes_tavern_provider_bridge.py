@@ -148,6 +148,14 @@ def test_validate_provider_base_url_rejects_empty_string():
     "https://localhost/v1",
     "https://127.0.0.1/v1",
     "https://127.1.2.3/v1",
+    "https://１２７.０.０.１/v1",
+    "https://2130706433/v1",
+    "https://２１３０７０６４３３/v1",
+    "https://0x7f000001/v1",
+    "https://0x7f.1/v1",
+    "https://0177.1/v1",
+    "https://4294967296/v1",
+    "https://4294967297/v1",
     "https://0.0.0.0/v1",
     "https://::1/v1",
     "https://10.0.0.1/v1",
@@ -167,11 +175,52 @@ def test_validate_provider_base_url_rejects_private_hosts(url):
 
 
 @pytest.mark.parametrize("url", [
+    "https://%31%32%37.0.0.1/v1",
+    "https://127%2e0%2e0%2e1/v1",
+    "https://%32%31%33%30%37%30%36%34%33%33/v1",
+])
+def test_validate_provider_base_url_rejects_percent_encoded_hosts(url):
+    with pytest.raises(ValueError) as exc_info:
+        validate_provider_base_url(url)
+    assert url not in str(exc_info.value)
+
+
+@pytest.mark.parametrize(
+    "root_dot",
+    [".", "\u3002", "\uff61", "\uff0e"],
+    ids=[
+        "ascii",
+        "ideographic-full-stop",
+        "halfwidth-ideographic-full-stop",
+        "fullwidth-full-stop",
+    ],
+)
+def test_validate_provider_base_url_rejects_localhost_with_trailing_root_dot(root_dot):
+    url = f"https://localhost{root_dot}/v1"
+    with pytest.raises(ValueError) as exc_info:
+        validate_provider_base_url(url)
+    assert url not in str(exc_info.value)
+
+
+@pytest.mark.parametrize(
+    "separator",
+    ["\u3002", "\uff61", "\uff0e"],
+    ids=["ideographic-full-stop", "halfwidth-ideographic-full-stop", "fullwidth-full-stop"],
+)
+def test_validate_provider_base_url_rejects_loopback_with_idna_dot_separator(separator):
+    url = f"https://127{separator}0{separator}0{separator}1/v1"
+    with pytest.raises(ValueError):
+        validate_provider_base_url(url)
+
+
+@pytest.mark.parametrize("url", [
     "https://api.apiyi.com/v1",
     "https://api.openai.com/v1",
     "https://openrouter.ai/api/v1",
     "https://api.anthropic.com/v1",
     "https://1.1.1.1/v1",
+    "https://134744072/v1",     # legacy integer form of public 8.8.8.8
+    "https://0x08080808/v1",    # legacy hexadecimal form of public 8.8.8.8
     "https://172.32.0.1/v1",   # 172.32 is NOT in the private range
 ])
 def test_validate_provider_base_url_allows_safe_urls(url):
