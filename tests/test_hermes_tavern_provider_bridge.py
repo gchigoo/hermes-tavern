@@ -30,20 +30,28 @@ def test_sanitize_provider_payload_omits_secret_fields():
     assert safe == {"provider": "anthropic", "model": "claude-opus-4-6"}
 
 
-def test_sanitize_provider_payload_is_case_insensitive_and_recursive():
+def test_sanitize_provider_payload_normalizes_secret_key_variants_recursively():
     payload = {
         "provider": "anthropic",
         "model": "claude-opus-4-6",
         "base_url": "https://api.example.test/v1",
-        "API_KEY": "fake-api-key-do-not-persist",
+        "api-key": "leaked-api-key",
+        "ApiKey": "leaked-camel-api-key",
+        "ＡＰＩ＿ＫＥＹ": "leaked-fullwidth-api-key",
         "headers": {
-            "Access_Token": "fake-access-token-do-not-persist",
+            "Access Token": "leaked-access-token",
             "x-request-id": "req-123",
         },
         "nested": [
             {
                 "Secret": "fake-secret-do-not-persist",
-                "metadata": {"password": "fake-password-do-not-persist", "region": "test"},
+                "metadata": {
+                    "Pass-Word": "leaked-password",
+                    "𝚊𝚙𝚒_𝚔𝚎𝚢": "leaked-monospace-api-key",
+                    "region": "test",
+                    7: "non-string-key-metadata",
+                },
+                "tuple": ({"TOKEN": "leaked-token", "timeout": 30},),
             }
         ],
     }
@@ -53,10 +61,15 @@ def test_sanitize_provider_payload_is_case_insensitive_and_recursive():
     assert safe["provider"] == "anthropic"
     assert safe["model"] == "claude-opus-4-6"
     assert safe["base_url"] == "https://api.example.test/v1"
-    assert "API_KEY" not in safe
     assert safe["headers"] == {"x-request-id": "req-123"}
-    assert safe["nested"] == [{"metadata": {"region": "test"}}]
-    assert "fake-" not in repr(safe)
+    assert safe["nested"] == [
+        {
+            "metadata": {"region": "test", 7: "non-string-key-metadata"},
+            "tuple": ({"timeout": 30},),
+        }
+    ]
+    assert "leaked-" not in repr(safe)
+    assert "fake-secret-do-not-persist" not in repr(safe)
 
 
 def test_runtime_provider_resolver_is_dependency_injectable():

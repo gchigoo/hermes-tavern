@@ -8,6 +8,7 @@ credentials without persisting them in Tavern storage.
 
 from __future__ import annotations
 
+import unicodedata
 from ipaddress import ip_address
 from urllib.parse import urlparse
 from typing import Any, Callable
@@ -95,12 +96,19 @@ APIYI_DEFAULT_MODEL = "claude-opus-4-6"
 APIYI_CONTEXT_WINDOW = 200_000
 
 _SECRET_FIELDS: frozenset[str] = frozenset(
-    {"api_key", "access_token", "secret", "token", "password"}
+    {"apikey", "accesstoken", "secret", "token", "password"}
 )
 
 
 def _is_secret_key(key: Any) -> bool:
-    return str(key).lower() in _SECRET_FIELDS
+    if not isinstance(key, str):
+        return False
+    normalized_key = "".join(
+        character
+        for character in unicodedata.normalize("NFKC", key).casefold()
+        if character.isalnum()
+    )
+    return normalized_key in _SECRET_FIELDS
 
 
 class HermesRuntimeProviderResolver:
@@ -156,7 +164,8 @@ def _resolve_apiyi(descriptor: ModelProfileDescriptor) -> dict[str, Any]:
 def sanitize_provider_payload(payload: dict[str, Any]) -> dict[str, Any]:
     """Return provider metadata safe for debug/status display.
 
-    Secret-like keys are omitted case-insensitively at every nested dict level.
+    Secret-like keys are omitted at every nested dict level regardless of case
+    or non-alphanumeric separators.
     Non-secret metadata such as provider, model, base_url, source, and timeout is
     preserved so dry-run/status output remains useful without exposing
     credentials.
