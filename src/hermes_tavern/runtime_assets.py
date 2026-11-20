@@ -225,6 +225,14 @@ def card_import(runtime: Any, command: RPCommand, event: Any) -> str:
     return "\n".join(lines)
 
 
+def _decode_card_data(value: Any) -> dict[str, Any]:
+    try:
+        data = json.loads(value or "{}")
+    except (TypeError, ValueError, RecursionError):
+        return {}
+    return data if isinstance(data, dict) else {}
+
+
 def card_search(runtime: Any, command: RPCommand) -> str:
     query = " ".join(command.args[1:]).strip()
     if not query:
@@ -232,7 +240,7 @@ def card_search(runtime: Any, command: RPCommand) -> str:
     terms = [term.lower() for term in query.split() if term.strip()]
     matches: list[tuple[int, dict[str, Any], dict[str, Any]]] = []
     for row in runtime.store.list_cards():
-        data = json.loads(row.get("data_json") or "{}")
+        data = _decode_card_data(row.get("data_json"))
         haystack_parts = [
             row.get("name") or "",
             data.get("description") or "",

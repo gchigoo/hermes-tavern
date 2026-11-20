@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import pytest
+
 from plugins.hermes_tavern.commands import RPCommand
 from plugins.hermes_tavern.db import TavernStore
 from plugins.hermes_tavern.importers.cards import parse_character_card
@@ -63,3 +65,52 @@ def test_card_search_requires_query(tmp_path):
     )
 
     assert response == "Usage: /rp card search <query>"
+
+
+def test_card_search_skips_malformed_metadata_and_matches_healthy_description(tmp_path):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    store.save_card(parse_character_card({
+        "name": "Healthy Card",
+        "description": "Carries the verdant signal.",
+    }))
+    corrupt_id = store.save_card(parse_character_card({
+        "name": "Corrupt Card",
+        "description": "This metadata must not be searchable.",
+    }))
+    with store.connect() as conn:
+        conn.execute(
+            "UPDATE cards SET data_json = ? WHERE id = ?",
+            ("{", corrupt_id),
+        )
+    runtime = TavernRuntime(store)
+
+    response = runtime.handle_command_sync(
+        RPCommand("card", ["search", "verdant", "signal"], "/rp card search verdant signal"),
+        Event(),
+    )
+
+    assert "Healthy Card" in response
+    assert "Corrupt Card" not in response
+
+
+@pytest.mark.parametrize("data_json", ["null", "[]", '"metadata"', "42"])
+def test_card_search_treats_non_object_metadata_as_empty(tmp_path, data_json):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    card_id = store.save_card(parse_character_card({
+        "name": "Payload Hero",
+        "tags": ["should-disappear"],
+    }))
+    with store.connect() as conn:
+        conn.execute(
+            "UPDATE cards SET data_json = ? WHERE id = ?",
+            (data_json, card_id),
+        )
+    runtime = TavernRuntime(store)
+
+    response = runtime.handle_command_sync(
+        RPCommand("card", ["search", "Payload", "Hero"], "/rp card search Payload Hero"),
+        Event(),
+    )
+
+    assert "Payload Hero — no tags" in response
+    assert "should-disappear" not in response
