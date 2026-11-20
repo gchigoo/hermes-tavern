@@ -145,6 +145,16 @@ def test_validate_provider_base_url_rejects_empty_string():
 
 
 @pytest.mark.parametrize("url", [
+    "https://user@api.example.com/v1",
+    "https://user:secret@api.example.com/v1",
+])
+def test_validate_provider_base_url_rejects_embedded_credentials(url):
+    with pytest.raises(ValueError) as exc_info:
+        validate_provider_base_url(url)
+    assert url not in str(exc_info.value)
+
+
+@pytest.mark.parametrize("url", [
     "https://localhost/v1",
     "https://127.0.0.1/v1",
     "https://127.1.2.3/v1",

@@ -114,6 +114,8 @@ def validate_provider_base_url(base_url: str) -> None:
     scheme = (parsed.scheme or "").lower()
     if scheme not in SAFE_URL_SCHEMES:
         raise ValueError("Provider URL not allowed: unsupported scheme")
+    if parsed.username is not None or parsed.password is not None:
+        raise ValueError("Provider URL not allowed: embedded credentials")
 
     # parsed.hostname strips brackets from IPv6 addresses but leaves percent-
     # encoded host text intact. Reject it before clients can decode it to an
