@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import pytest
+
 from plugins.hermes_tavern.commands import RPCommand
 from plugins.hermes_tavern.db import TavernStore
 from plugins.hermes_tavern.importers.cards import parse_character_card
@@ -45,6 +47,33 @@ def test_cards_command_lists_short_ids_tags_and_next_actions(tmp_path):
     assert "scholar, slow-burn" in response
     assert "start: /rp start Alice" in response
     assert "inspect: /rp card inspect Alice" in response
+
+
+def _cards_response_with_corrupt_metadata(tmp_path, data_json):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    damaged_id = store.save_card(parse_character_card({"name": "Damaged", "tags": ["lost"]}))
+    store.save_card(parse_character_card({"name": "Healthy", "tags": ["stable"]}))
+    with store.connect() as conn:
+        conn.execute("UPDATE cards SET data_json = ? WHERE id = ?", (data_json, damaged_id))
+    runtime = TavernRuntime(store)
+
+    response = runtime.handle_command_sync(RPCommand("cards", [], "/rp cards"), Event())
+
+    assert f"[{damaged_id[:8]}] Damaged — no tags" in response
+    assert "Healthy — stable" in response
+
+
+def test_cards_command_keeps_listing_when_metadata_json_is_malformed(tmp_path):
+    _cards_response_with_corrupt_metadata(tmp_path, '{"tags": [')
+
+
+@pytest.mark.parametrize(
+    "data_json",
+    ["null", "[]", '"metadata"', "1"],
+    ids=["null", "array", "string", "number"],
+)
+def test_cards_command_treats_non_dict_metadata_json_as_empty(tmp_path, data_json):
+    _cards_response_with_corrupt_metadata(tmp_path, data_json)
 
 
 def test_card_inspect_returns_mobile_safe_summary_without_raw_json_dump(tmp_path):

@@ -62,7 +62,7 @@ def cards(runtime: Any, command: RPCommand) -> str:
     page_cards = all_cards[slice_start : slice_start + limit]
     lines = [f"Hermes Tavern cards (page {page}/{total_pages}, {len(page_cards)} shown):"]
     for row in page_cards:
-        data = json.loads(row.get("data_json") or "{}")
+        data = _decode_card_data(row.get("data_json"))
         tags = data.get("tags") or []
         tag_text = ", ".join(str(tag) for tag in tags[:4]) or "no tags"
         desc = mobile_preview(data.get("description") or data.get("personality") or "", 56)
