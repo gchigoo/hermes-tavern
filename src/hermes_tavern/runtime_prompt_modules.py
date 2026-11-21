@@ -5,6 +5,7 @@ from __future__ import annotations
 import sqlite3
 from typing import Any
 
+from hermes_tavern.importers.presets import coerce_legacy_enabled
 from hermes_tavern.lorebook import match_lorebook_entries, modules_from_lore_matches
 from hermes_tavern.memory import (
     TavernMemoryContext,
@@ -22,7 +23,7 @@ def session_preset_modules(runtime, session: dict[str, Any]) -> list[PromptModul
     content_mode = session.get("content_mode") or "safe"
     modules: list[PromptModule] = []
     for row in runtime.store.list_prompt_modules(preset_id):
-        if not row.get("enabled"):
+        if coerce_legacy_enabled(row.get("enabled")) is not True:
             continue
         risk, _ = module_risk_details(row)
         if risk == "adult_fiction" and content_mode != "adult-fiction":
