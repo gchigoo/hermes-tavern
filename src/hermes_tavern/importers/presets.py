@@ -36,6 +36,21 @@ class ImportedPreset:
     modules: tuple[ImportedPresetModule, ...]
 
 
+def coerce_legacy_enabled(value: Any) -> bool | None:
+    """Return a recognized legacy enabled state, or None for historical defaults."""
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, (int, float)):
+        return bool(value)
+    if isinstance(value, str):
+        normalized = value.strip().lower()
+        if normalized in {"1", "true", "yes", "on"}:
+            return True
+        if normalized in {"0", "false", "no", "off"}:
+            return False
+    return None
+
+
 def import_preset_file(path: str | Path) -> ImportedPreset:
     preset_path = Path(path)
     assert_local_import_size(
@@ -110,11 +125,8 @@ def _module_from_entry(entry: dict[str, Any], idx: int) -> ImportedPresetModule 
     role = str(entry.get("role") or "system")
     position = str(entry.get("position") or "before_char")
     report = classify_preset_text(content)
-    explicit_enabled = entry.get("enabled")
-    if isinstance(explicit_enabled, bool):
-        enabled = explicit_enabled and report.enable_by_default
-    else:
-        enabled = report.enable_by_default
+    explicit_enabled = coerce_legacy_enabled(entry.get("enabled"))
+    enabled = report.enable_by_default if explicit_enabled is None else explicit_enabled and report.enable_by_default
     # Preserve numeric zero; only missing, None, or empty values fall through.
     raw_order = entry.get("insertion_order")
     if raw_order is None or raw_order == "":

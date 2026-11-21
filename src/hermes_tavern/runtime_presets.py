@@ -10,7 +10,7 @@ from hermes_tavern.commands import RPCommand
 from hermes_tavern.hermes_home import get_hermes_home
 from hermes_tavern.identity import session_key_from_event
 from hermes_tavern.import_policy import resolve_import_path
-from hermes_tavern.importers.presets import import_preset_file
+from hermes_tavern.importers.presets import coerce_legacy_enabled, import_preset_file
 from hermes_tavern.runtime_utils import (
     mobile_preview,
     module_risk_details,
@@ -49,13 +49,7 @@ def _preset_export_filename(preset_id: Any) -> str:
 
 
 def _coerce_export_bool(value: Any) -> bool:
-    if isinstance(value, bool):
-        return value
-    if isinstance(value, (int, float)):
-        return bool(value)
-    if isinstance(value, str):
-        return value.strip().lower() in {"1", "true", "yes", "on"}
-    return False
+    return coerce_legacy_enabled(value) is True
 
 
 def _coerce_prompt_module_payload(module: dict[str, Any]) -> dict[str, Any]:
