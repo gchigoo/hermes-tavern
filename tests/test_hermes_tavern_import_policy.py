@@ -109,6 +109,19 @@ def test_is_gateway_event_source_all_none_is_false():
     assert is_gateway_event(event) is False
 
 
+def test_is_gateway_event_falls_back_to_top_level_identity_when_source_is_empty():
+    source = types.SimpleNamespace(platform=None, chat_id=None, user_id=None)
+    event = types.SimpleNamespace(
+        media_urls=["/tmp/f.png"],
+        source=source,
+        platform="telegram",
+        chat_id="c1",
+        user_id="u1",
+    )
+
+    assert is_gateway_event(event) is True
+
+
 # ── resolve_import_path ───────────────────────────────────────────────────────
 
 
@@ -160,6 +173,28 @@ def test_resolve_explicit_gateway_event_not_in_attachments_rejected(tmp_path):
     assert decision.value is None
     assert "rejected" in decision.error.lower()
     assert str(target) not in decision.error
+
+
+def test_resolve_explicit_path_rejected_when_only_top_level_gateway_identity_exists(
+    tmp_path,
+):
+    target = tmp_path / "card.json"
+    target.touch()
+    source = types.SimpleNamespace(platform=None, chat_id=None, user_id=None)
+    event = types.SimpleNamespace(
+        media_urls=[],
+        source=source,
+        platform="telegram",
+        chat_id="c1",
+        user_id="u1",
+    )
+
+    decision = _resolve(event, explicit=str(target))
+
+    assert decision.value is None
+    assert decision.error == (
+        "Card import rejected: attach the file to this message first."
+    )
 
 
 def test_resolve_explicit_gateway_event_in_attachments_accepted(tmp_path):

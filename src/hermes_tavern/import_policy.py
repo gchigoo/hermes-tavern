@@ -41,7 +41,8 @@ def is_gateway_event(event: Any) -> bool:
         platform = getattr(source, "platform", None)
         chat_id = getattr(source, "chat_id", None)
         user_id = getattr(source, "user_id", None)
-        return any(value not in (None, "") for value in (platform, chat_id, user_id))
+        if any(value not in (None, "") for value in (platform, chat_id, user_id)):
+            return True
     platform = getattr(event, "platform", None)
     chat_id = getattr(event, "chat_id", None)
     user_id = getattr(event, "user_id", None)
