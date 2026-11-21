@@ -149,7 +149,7 @@ def session_export(runtime: Any, command: RPCommand, event: Any) -> str:
         if metadata_json:
             try:
                 metadata = json.loads(metadata_json)
-                if metadata.get("swipes"):
+                if isinstance(metadata, dict) and metadata.get("swipes"):
                     entry["swipes"] = metadata["swipes"]
                     entry["active_swipe"] = metadata.get("active_swipe", 0)
             except (json.JSONDecodeError, TypeError):

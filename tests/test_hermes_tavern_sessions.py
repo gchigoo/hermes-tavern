@@ -293,6 +293,30 @@ def test_session_runtime_export_exports_exact_id_payload(tmp_path, monkeypatch):
     assert payload["card"] == json.loads(card_row.get("data_json") or "{}")
 
 
+@pytest.mark.parametrize("metadata_json", ["[]", "null", '"metadata"', "1"])
+def test_session_runtime_export_tolerates_non_object_message_metadata(
+    tmp_path, monkeypatch, metadata_json
+):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    runtime = _runtime_with_home(tmp_path / "hermes home", store, monkeypatch)
+    session = store.start_session(SESSION_KEY)
+    message_id = store.append_message(session["id"], "user", "kept")
+    with store.connect() as conn:
+        conn.execute(
+            "UPDATE messages SET metadata_json = ? WHERE id = ?",
+            (metadata_json, message_id),
+        )
+
+    response = runtime.handle_command_sync(
+        RPCommand("session", ["export", session["id"]], f"/rp session export {session['id']}"),
+        Event(),
+    )
+    payload = json.loads(Path(_extract_export_paths(response)[0]).read_text(encoding="utf-8"))
+
+    assert response.startswith("Session exported as JSON.\n")
+    assert payload["messages"] == [{"role": "user", "content": "kept"}]
+
+
 @pytest.mark.parametrize("data_json", ["{", "[]", "null"])
 def test_session_runtime_export_tolerates_corrupt_card_metadata(tmp_path, monkeypatch, data_json):
     store = TavernStore(tmp_path / "tavern.sqlite3")
