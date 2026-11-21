@@ -132,3 +132,63 @@ def test_debug_prompt_only_uses_explicit_true_legacy_module_states(tmp_path):
         assert f"preset:{name}" in debug
     for name in disabled_values:
         assert f"preset:{name}" not in debug
+
+
+def test_preset_inspect_normalizes_legacy_enabled_for_summary_and_preview(tmp_path):
+    """Inspect summary and preview coerce legacy enabled values without rewriting rows."""
+    rows = (
+        ("string_false", "false", "disabled"),
+        ("string_true", "true", "enabled"),
+        ("boolean_false", False, "disabled"),
+        ("numeric_zero", 0, "disabled"),
+        ("numeric_one", 1, "enabled"),
+    )
+    preset_file = tmp_path / "legacy-inspect.json"
+    preset_file.write_text(
+        json.dumps(
+            {
+                "name": "legacy-inspect",
+                "prompts": [
+                    {
+                        "name": name,
+                        "content": f"Write cinematic prose for {name}.",
+                        "enabled": True,
+                        "insertion_order": index,
+                    }
+                    for index, (name, _enabled, _status) in enumerate(rows)
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    runtime = TavernRuntime(store)
+    runtime.handle_command_sync(
+        RPCommand("preset", ["import", str(preset_file)], f"/rp preset import {preset_file}"),
+        Event(),
+    )
+    preset = store.get_preset("legacy-inspect")
+    assert preset is not None
+    with store.connect() as conn:
+        for name, enabled, _status in rows:
+            conn.execute(
+                "UPDATE prompt_modules SET enabled = ? WHERE preset_id = ? AND name = ?",
+                (enabled, preset["id"], name),
+            )
+    stored_before = store.list_prompt_modules(preset["id"])
+
+    inspected = runtime.handle_command_sync(
+        RPCommand("preset", ["inspect", "legacy-inspect"], "/rp preset inspect legacy-inspect"),
+        Event(),
+    )
+
+    assert "safe: 2 enabled, adult_fiction: 0 enabled, risky: 0 disabled" in inspected
+    for name, _enabled, status in rows:
+        assert f"{name}: safe ({status}) — Write cinematic prose for {name}." in inspected
+    assert store.list_prompt_modules(preset["id"]) == stored_before
+    stored_enabled = {row["name"]: row["enabled"] for row in stored_before}
+    assert stored_enabled["string_false"] == "false"
+    assert stored_enabled["string_true"] == "true"
+    assert stored_enabled["boolean_false"] == 0
+    assert stored_enabled["numeric_zero"] == 0
+    assert stored_enabled["numeric_one"] == 1

@@ -160,7 +160,11 @@ def preset_inspect(runtime: Any, command: RPCommand) -> str:
     preset = runtime.store.get_preset(preset_ref)
     if preset is None:
         return _preset_not_found(preset_ref)
-    modules = runtime.store.list_prompt_modules(preset["id"])
+    # 仅复制行供汇总和预览；enabled 按历史值规范，不回写存储。
+    modules = [
+        {**row, "enabled": _coerce_export_bool(row.get("enabled"))}
+        for row in runtime.store.list_prompt_modules(preset["id"])
+    ]
     counts = module_risk_counts_db(modules)
     lines = [
         f"Preset: {preset['name']} ({preset['id'][:8]})",
