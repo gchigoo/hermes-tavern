@@ -190,6 +190,43 @@ def test_runtime_preset_export_falls_back_when_raw_json_is_non_object(tmp_path, 
     assert payload["prompts"][1]["enabled"] is True
 
 
+def test_runtime_preset_export_normalizes_legacy_textual_disabled_state(tmp_path, monkeypatch):
+    preset_file = tmp_path / "preset.json"
+    preset_file.write_text(
+        json.dumps(
+            {
+                "name": "LegacyEnabled",
+                "prompts": [{"name": "style", "content": "Write plainly.", "enabled": True}],
+            }
+        ),
+        encoding="utf-8",
+    )
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    runtime = _runtime_with_home(tmp_path / "hermes home", store, monkeypatch)
+    runtime.handle_command_sync(
+        RPCommand("preset", ["import", str(preset_file)], f"/rp preset import {preset_file}"),
+        Event(),
+    )
+    preset = store.get_preset("LegacyEnabled")
+    assert preset is not None
+    with store.connect() as conn:
+        conn.execute("UPDATE presets SET raw_json = ? WHERE id = ?", ("[]", preset["id"]))
+        conn.execute(
+            "UPDATE prompt_modules SET enabled = ? WHERE preset_id = ?",
+            ("false", preset["id"]),
+        )
+
+    response = runtime.handle_command_sync(
+        RPCommand("preset", ["export", preset["id"]], f"/rp preset export {preset['id']}"),
+        Event(),
+    )
+    file_path, _ = _extract_export_paths(response)
+    payload = json.loads(Path(file_path).read_text(encoding="utf-8"))
+
+    assert store.list_prompt_modules(preset["id"])[0]["enabled"] == "false"
+    assert payload["prompts"][0]["enabled"] is False
+
+
 def test_runtime_preset_export_usage_and_not_found(tmp_path):
     runtime = TavernRuntime(TavernStore(tmp_path / "tavern.sqlite3"))
 

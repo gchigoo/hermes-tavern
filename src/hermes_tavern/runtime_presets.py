@@ -48,12 +48,22 @@ def _preset_export_filename(preset_id: Any) -> str:
     return f"preset_{safe or 'unknown'}.json"
 
 
+def _coerce_export_bool(value: Any) -> bool:
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, (int, float)):
+        return bool(value)
+    if isinstance(value, str):
+        return value.strip().lower() in {"1", "true", "yes", "on"}
+    return False
+
+
 def _coerce_prompt_module_payload(module: dict[str, Any]) -> dict[str, Any]:
     prompt = {
         "name": module.get("name", ""),
         "role": module.get("role", ""),
         "content": module.get("content", ""),
-        "enabled": bool(module.get("enabled", 0)),
+        "enabled": _coerce_export_bool(module.get("enabled", 0)),
         "position": module.get("position", ""),
         "insertion_order": module.get("insertion_order", 0),
     }
