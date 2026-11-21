@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import math
 from types import SimpleNamespace
@@ -155,11 +156,18 @@ def _normalize_card_export_payload(card_data: dict[str, Any]) -> dict[str, Any]:
 
 
 def _card_export_filename(card_id: Any) -> str:
+    original_id = str(card_id)
     safe = "".join(
         char if char.isalnum() or char in {"-", "_", "."} else "_"
-        for char in str(card_id)
+        for char in original_id
     ).strip("._-")
-    return f"card_{safe or 'unknown'}.json"
+    digest = hashlib.sha256(original_id.encode("utf-8")).hexdigest()
+    suffix = f"_{digest}.json"
+    prefix_budget = 255 - len("card_".encode("utf-8")) - len(suffix.encode("utf-8"))
+    readable_prefix = (safe or "unknown").encode("utf-8")[:prefix_budget].decode(
+        "utf-8", errors="ignore"
+    )
+    return f"card_{readable_prefix}_{digest}.json"
 
 
 def card_export(runtime: Any, command: RPCommand) -> str:

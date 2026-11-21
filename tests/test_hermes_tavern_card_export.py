@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 from pathlib import Path
 
@@ -245,9 +246,139 @@ def test_card_export_keeps_explicit_card_id_inside_cards_export_dir(tmp_path, mo
     expected_dir = (
         tmp_path / "hermes home" / "plugins" / "hermes-tavern" / "exports" / "cards"
     )
+    digest = hashlib.sha256("../outside".encode("utf-8")).hexdigest()
     assert export_path.parent == expected_dir
-    assert export_path.name == "card_outside.json"
+    assert export_path.name == f"card_outside_{digest}.json"
     assert export_path.exists()
+
+
+def test_card_export_adds_hash_to_safe_short_identifier_filename(tmp_path, monkeypatch):
+    monkeypatch.setenv("HERMES_HOME", str(tmp_path / "hermes home"))
+    card_id = "safe-ID_42"
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    store.save_card(parse_character_card({"id": card_id, "name": "Safe ID"}))
+    runtime = TavernRuntime(store)
+
+    response = runtime.handle_command_sync(
+        RPCommand("card", ["export", "Safe ID"], "/rp card export Safe ID"),
+        Event(),
+    )
+
+    export_path = Path(_extract_export_paths(response)[0])
+    digest = hashlib.sha256(card_id.encode("utf-8")).hexdigest()
+    # Naming behavior intentionally changed: every original ID now contributes a hash.
+    assert export_path.name == f"card_safe-ID_42_{digest}.json"
+    assert export_path.exists()
+
+
+def test_card_export_filename_is_bounded_for_oversized_identifier(tmp_path, monkeypatch):
+    monkeypatch.setenv("HERMES_HOME", str(tmp_path / "hermes home"))
+    oversized_id = "a" * 300
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    store.save_card(parse_character_card({"id": oversized_id, "name": "Long ID"}))
+    runtime = TavernRuntime(store)
+
+    response = runtime.handle_command_sync(
+        RPCommand("card", ["export", "Long ID"], "/rp card export Long ID"),
+        Event(),
+    )
+
+    export_path = Path(_extract_export_paths(response)[0])
+    digest = hashlib.sha256(oversized_id.encode("utf-8")).hexdigest()
+    assert export_path.name == f"card_{'a' * 180}_{digest}.json"
+    assert len(export_path.name.encode("utf-8")) == 255
+    assert export_path.exists()
+
+
+@pytest.mark.parametrize(
+    ("first_id", "second_id"),
+    [
+        ("/" * 300, "?" * 300),
+        ("e\u0301" * 100, "e\u0300" * 100),
+        ("猫" * 100 + "甲", "猫" * 100 + "乙"),
+    ],
+    ids=("punctuation", "lossy-unicode", "shared-unicode-prefix"),
+)
+def test_card_export_filenames_do_not_collide_for_lossy_or_oversized_ids(
+    tmp_path, monkeypatch, first_id, second_id
+):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    store.save_card(parse_character_card({"id": first_id, "name": "First Collision Card"}))
+    store.save_card(parse_character_card({"id": second_id, "name": "Second Collision Card"}))
+    runtime = _runtime_with_home(tmp_path / "hermes home", store, monkeypatch)
+
+    first_response = runtime.handle_command_sync(
+        RPCommand(
+            "card",
+            ["export", "First Collision Card"],
+            "/rp card export First Collision Card",
+        ),
+        Event(),
+    )
+    second_response = runtime.handle_command_sync(
+        RPCommand(
+            "card",
+            ["export", "Second Collision Card"],
+            "/rp card export Second Collision Card",
+        ),
+        Event(),
+    )
+    first_path = Path(_extract_export_paths(first_response)[0])
+    second_path = Path(_extract_export_paths(second_response)[0])
+
+    assert first_path != second_path
+    assert first_path.name.rsplit("_", 1)[0] == second_path.name.rsplit("_", 1)[0]
+    for export_path, original_id, expected_name in (
+        (first_path, first_id, "First Collision Card"),
+        (second_path, second_id, "Second Collision Card"),
+    ):
+        digest = hashlib.sha256(original_id.encode("utf-8")).hexdigest()
+        assert export_path.name.endswith(f"_{digest}.json")
+        assert len(export_path.name.encode("utf-8")) <= 255
+        assert json.loads(export_path.read_text(encoding="utf-8"))["name"] == expected_name
+
+
+@pytest.mark.parametrize(
+    ("first_id", "second_id"),
+    [("caseid", "CASEID"), ("Å", "Å")],
+    ids=("case-equivalent", "unicode-normalization-equivalent"),
+)
+def test_card_export_filenames_do_not_overwrite_filesystem_equivalent_ids(
+    tmp_path, monkeypatch, first_id, second_id
+):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    store.save_card(parse_character_card({"id": first_id, "name": "First Equivalent Card"}))
+    store.save_card(parse_character_card({"id": second_id, "name": "Second Equivalent Card"}))
+    runtime = _runtime_with_home(tmp_path / "hermes home", store, monkeypatch)
+
+    responses = [
+        runtime.handle_command_sync(
+            RPCommand("card", ["export", name], f"/rp card export {name}"),
+            Event(),
+        )
+        for name in ("First Equivalent Card", "Second Equivalent Card")
+    ]
+    first_path, second_path = (
+        Path(_extract_export_paths(response)[0]) for response in responses
+    )
+
+    assert first_path != second_path
+    assert first_path.exists()
+    assert second_path.exists()
+    assert not first_path.samefile(second_path)
+    assert json.loads(first_path.read_text(encoding="utf-8"))["name"] == (
+        "First Equivalent Card"
+    )
+    assert json.loads(second_path.read_text(encoding="utf-8"))["name"] == (
+        "Second Equivalent Card"
+    )
+    for export_path, original_id in (
+        (first_path, first_id),
+        (second_path, second_id),
+    ):
+        digest = hashlib.sha256(original_id.encode("utf-8")).hexdigest()
+        assert export_path.name.endswith(f"_{digest}.json")
+        assert len(export_path.name.encode("utf-8")) <= 255
 
 
 def test_card_export_does_not_mutate_session_or_messages(tmp_path, monkeypatch):
