@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import datetime
+import hashlib
 import json
 from typing import Any
 
@@ -70,10 +71,10 @@ def session_info(runtime: Any, event: Any) -> str:
 
 
 def _session_export_filename(session_id: str) -> str:
-    safe_id = "".join(char for char in str(session_id) if char.isalnum())[:16]
-    if not safe_id:
-        safe_id = "session"
-    return f"session_{safe_id}.json"
+    original_id = str(session_id)
+    readable_prefix = "".join(char for char in original_id if char.isalnum())[:16] or "session"
+    digest = hashlib.sha256(original_id.encode("utf-8")).hexdigest()
+    return f"session_{readable_prefix}_{digest}.json"
 
 
 def _decode_card_data(value: Any) -> dict[str, Any]:

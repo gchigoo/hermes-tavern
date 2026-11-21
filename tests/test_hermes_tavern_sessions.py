@@ -1,3 +1,4 @@
+import hashlib
 import json
 from copy import deepcopy
 from pathlib import Path
@@ -411,6 +412,82 @@ def test_session_runtime_export_exports_all_messages_with_pagination(tmp_path, m
     assert payload["messages"][-1]["content"] == "msg-249"
 
 
+def test_session_runtime_export_paths_do_not_collide_after_shared_id_prefix(tmp_path, monkeypatch):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    runtime = _runtime_with_home(tmp_path / "hermes home", store, monkeypatch)
+    first = store.start_session(SESSION_KEY, card_id="alice")
+    second = store.clone_session(first["id"], SESSION_KEY, title="Second")
+    first_id = "12345678-1234-5678-0000-000000000001"
+    second_id = "12345678-1234-5678-0000-000000000002"
+    with store.connect() as conn:
+        conn.execute("UPDATE sessions SET id = ? WHERE id = ?", (first_id, first["id"]))
+        conn.execute("UPDATE sessions SET id = ? WHERE id = ?", (second_id, second["id"]))
+
+    first_response = runtime.handle_command_sync(
+        RPCommand("session", ["export", first_id], f"/rp session export {first_id}"),
+        Event(),
+    )
+    second_response = runtime.handle_command_sync(
+        RPCommand("session", ["export", second_id], f"/rp session export {second_id}"),
+        Event(),
+    )
+    first_path = Path(_extract_export_paths(first_response)[0])
+    second_path = Path(_extract_export_paths(second_response)[0])
+
+    assert first_path != second_path
+    assert json.loads(first_path.read_text(encoding="utf-8"))["session_title"] == first_id
+    assert json.loads(second_path.read_text(encoding="utf-8"))["session_title"] == "Second"
+
+
+def test_session_export_filenames_do_not_collide_after_punctuation_is_removed(tmp_path, monkeypatch):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    runtime = _runtime_with_home(tmp_path / "hermes home", store, monkeypatch)
+    first = store.start_session(SESSION_KEY, card_id="alice")
+    second = store.clone_session(first["id"], SESSION_KEY, title="Second")
+    punctuated_id = "a-b"
+    plain_id = "ab"
+    with store.connect() as conn:
+        conn.execute("UPDATE sessions SET id = ? WHERE id = ?", (punctuated_id, first["id"]))
+        conn.execute("UPDATE sessions SET id = ? WHERE id = ?", (plain_id, second["id"]))
+
+    punctuated_response = runtime.handle_command_sync(
+        RPCommand("session", ["export", punctuated_id], f"/rp session export {punctuated_id}"),
+        Event(),
+    )
+    plain_response = runtime.handle_command_sync(
+        RPCommand("session", ["export", plain_id], f"/rp session export {plain_id}"),
+        Event(),
+    )
+    punctuated_filename = Path(_extract_export_paths(punctuated_response)[0]).name
+    plain_filename = Path(_extract_export_paths(plain_response)[0]).name
+
+    assert punctuated_filename != plain_filename
+    assert punctuated_filename == (
+        f"session_ab_{hashlib.sha256(punctuated_id.encode('utf-8')).hexdigest()}.json"
+    )
+    assert plain_filename == f"session_ab_{hashlib.sha256(plain_id.encode('utf-8')).hexdigest()}.json"
+
+
+def test_session_export_filename_is_bounded_for_oversized_identifier(tmp_path, monkeypatch):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    runtime = _runtime_with_home(tmp_path / "hermes home", store, monkeypatch)
+    session = store.start_session(SESSION_KEY)
+    oversized_id = "a" * 300
+    with store.connect() as conn:
+        conn.execute("UPDATE sessions SET id = ? WHERE id = ?", (oversized_id, session["id"]))
+
+    response = runtime.handle_command_sync(
+        RPCommand("session", ["export", oversized_id], f"/rp session export {oversized_id}"),
+        Event(),
+    )
+    filename = Path(_extract_export_paths(response)[0]).name
+
+    assert filename == (
+        f"session_{oversized_id[:16]}_{hashlib.sha256(oversized_id.encode('utf-8')).hexdigest()}.json"
+    )
+    assert len(filename.encode("utf-8")) < 255
+
+
 def test_session_runtime_export_with_message_contents_includes_content(tmp_path, monkeypatch):
     store = TavernStore(tmp_path / "tavern.sqlite3")
     runtime = _runtime_with_home(tmp_path / "hermes home", store, monkeypatch)
@@ -488,7 +565,9 @@ def test_session_runtime_export_file_stays_within_sessions_export_dir(tmp_path, 
 
     assert export_path.parent == export_dir
     assert export_path.resolve().is_relative_to(export_dir.resolve())
-    assert export_path.name == "session_" + "".join(c for c in session["id"] if c.isalnum())[:16] + ".json"
+    safe_prefix = "".join(c for c in session["id"] if c.isalnum())[:16] or "session"
+    digest = hashlib.sha256(session["id"].encode("utf-8")).hexdigest()
+    assert export_path.name == f"session_{safe_prefix}_{digest}.json"
 
 
 def test_session_runtime_export_quotes_media_path_with_spaces(tmp_path, monkeypatch):
