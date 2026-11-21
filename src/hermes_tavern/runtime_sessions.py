@@ -153,7 +153,12 @@ def session_export(runtime: Any, command: RPCommand, event: Any) -> str:
                 if isinstance(metadata, dict) and metadata.get("swipes"):
                     entry["swipes"] = metadata["swipes"]
                     entry["active_swipe"] = metadata.get("active_swipe", 0)
-            except (json.JSONDecodeError, TypeError):
+                    try:
+                        json.dumps({"messages": [entry]}, ensure_ascii=False, indent=2)
+                    except (TypeError, ValueError, RecursionError):
+                        entry.pop("swipes", None)
+                        entry.pop("active_swipe", None)
+            except (json.JSONDecodeError, TypeError, RecursionError):
                 pass
         chat_history.append(entry)
 

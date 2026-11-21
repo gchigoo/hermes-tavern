@@ -318,6 +318,41 @@ def test_session_runtime_export_tolerates_non_object_message_metadata(
     assert payload["messages"] == [{"role": "user", "content": "kept"}]
 
 
+def test_session_runtime_export_tolerates_deeply_nested_message_swipes(
+    tmp_path, monkeypatch
+):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    runtime = _runtime_with_home(tmp_path / "hermes home", store, monkeypatch)
+    session = store.start_session(SESSION_KEY)
+    persisted_depth = None
+    for depth in range(1000, 899, -1):
+        deeply_nested_swipes = 0
+        for _ in range(depth):
+            deeply_nested_swipes = [deeply_nested_swipes]
+        try:
+            store.append_message(
+                session["id"],
+                "user",
+                "kept",
+                metadata={"swipes": deeply_nested_swipes},
+            )
+        except RecursionError:
+            continue
+        persisted_depth = depth
+        break
+
+    assert persisted_depth is not None
+
+    response = runtime.handle_command_sync(
+        RPCommand("session", ["export", session["id"]], f"/rp session export {session['id']}"),
+        Event(),
+    )
+
+    assert response.startswith("Session exported as JSON.\n")
+    payload = json.loads(Path(_extract_export_paths(response)[0]).read_text(encoding="utf-8"))
+    assert payload["messages"] == [{"role": "user", "content": "kept"}]
+
+
 @pytest.mark.parametrize("data_json", ["{", "[]", "null"])
 def test_session_runtime_export_tolerates_corrupt_card_metadata(tmp_path, monkeypatch, data_json):
     store = TavernStore(tmp_path / "tavern.sqlite3")
