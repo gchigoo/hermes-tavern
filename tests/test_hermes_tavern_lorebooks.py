@@ -604,6 +604,38 @@ def test_lorebook_matcher_reports_matches_and_exclusions():
     assert any(ex.title == "Sun" and ex.reason == "probability=0" for ex in result.excluded)
 
 
+@pytest.mark.parametrize(
+    ("enabled_fields", "expected_match"),
+    (
+        pytest.param({"enabled": False}, False, id="native-false"),
+        pytest.param({"enabled": True}, True, id="native-true"),
+        pytest.param({"enabled": 0}, False, id="native-zero"),
+        pytest.param({"enabled": 1}, True, id="native-one"),
+        pytest.param({}, True, id="missing-falls-back-to-enabled"),
+        pytest.param({"enabled": "historical-value"}, True, id="unknown-falls-back-to-truthiness"),
+        pytest.param({"enabled": None}, False, id="none-falls-back-to-truthiness"),
+        pytest.param({"enabled": "false"}, False, id="string-false"),
+        pytest.param({"enabled": "true"}, True, id="string-true"),
+    ),
+)
+def test_lorebook_matcher_normalizes_legacy_enabled_values(enabled_fields, expected_match):
+    result = match_lorebook_entries(
+        [
+            {
+                "id": "enabled",
+                "title": "Enabled",
+                "content": "Lore",
+                "constant": True,
+                **enabled_fields,
+            },
+        ],
+        "",
+    )
+
+    assert [item.entry_id for item in result.matches] == (["enabled"] if expected_match else [])
+    assert [item.reason for item in result.excluded] == ([] if expected_match else ["disabled"])
+
+
 def test_lorebook_bad_regex_is_excluded_not_raised():
     result = match_lorebook_entries([
         {"id": "1", "title": "Broken", "content": "Broken lore", "keys_json": '["["]', "enabled": 1, "regex": 1, "probability": 1}

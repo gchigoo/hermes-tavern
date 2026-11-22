@@ -8,6 +8,7 @@ import re
 from dataclasses import dataclass, field
 from typing import Any
 
+from hermes_tavern.importers.presets import coerce_legacy_enabled
 from hermes_tavern.prompt import PromptModule
 from hermes_tavern.utils import estimate_tokens
 
@@ -59,7 +60,10 @@ def match_lorebook_entries(
         entry_id = str(row.get("id") or "")
         title = str(row.get("title") or entry_id or "untitled")
         content = str(row.get("content") or "")
-        if not row.get("enabled", True):
+        enabled = coerce_legacy_enabled(row.get("enabled"))
+        if enabled is None:
+            enabled = bool(row.get("enabled", True))
+        if not enabled:
             excluded.append(LoreMatch(entry_id, title, False, "disabled"))
             continue
         if not content.strip():
