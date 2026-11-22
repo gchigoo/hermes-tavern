@@ -11,6 +11,7 @@ from uuid import uuid4
 
 from hermes_tavern.hermes_home import get_hermes_home
 from hermes_tavern.db_novel import NovelDBMixin
+from hermes_tavern.importers.presets import coerce_legacy_enabled
 from hermes_tavern.db_utils import (
     assert_no_secret_keys as _assert_no_secret_keys,
     row_to_dict as _row_to_dict,
@@ -18,6 +19,11 @@ from hermes_tavern.db_utils import (
 )
 
 SQLITE_BUSY_TIMEOUT_MS = 5000
+
+
+def _sqlite_legacy_enabled(value: Any) -> int:
+    """Expose the preset legacy-enabled normalization to SQLite aggregates."""
+    return int(coerce_legacy_enabled(value) is True)
 
 
 class TavernStore(NovelDBMixin):
@@ -66,6 +72,7 @@ class TavernStore(NovelDBMixin):
         self.db_path.parent.mkdir(parents=True, exist_ok=True)
         conn = sqlite3.connect(self.db_path)
         conn.row_factory = sqlite3.Row
+        conn.create_function("is_legacy_enabled", 1, _sqlite_legacy_enabled)
         conn.execute("PRAGMA foreign_keys = ON")
         conn.execute(f"PRAGMA busy_timeout = {SQLITE_BUSY_TIMEOUT_MS}")
         return conn
@@ -790,7 +797,7 @@ class TavernStore(NovelDBMixin):
                 """
                 SELECT presets.id, presets.name, presets.source, presets.created_at,
                        COUNT(prompt_modules.id) AS module_count,
-                       SUM(CASE WHEN prompt_modules.enabled = 1 THEN 1 ELSE 0 END) AS enabled_count
+                       SUM(is_legacy_enabled(prompt_modules.enabled)) AS enabled_count
                 FROM presets
                 LEFT JOIN prompt_modules ON prompt_modules.preset_id = presets.id
                 GROUP BY presets.id
