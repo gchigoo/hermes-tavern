@@ -696,6 +696,42 @@ def test_lorebook_matcher_normalizes_persisted_canonical_flags(
         ]
 
 
+@pytest.mark.parametrize(
+    ("entry_fields", "text", "expected_reason"),
+    (
+        pytest.param(
+            {"always_active": "yes"},
+            "",
+            "constant",
+            id="legacy-always-active-alias",
+        ),
+        pytest.param(
+            {"use_regex": "on", "keys_json": json.dumps(["moon."])},
+            "moonX",
+            "key match: moon.",
+            id="legacy-use-regex-alias",
+        ),
+    ),
+)
+def test_lorebook_matcher_honors_legacy_matching_flag_aliases(entry_fields, text, expected_reason):
+    result = match_lorebook_entries(
+        [{
+            "id": "legacy-alias",
+            "title": "Legacy alias",
+            "content": "Lore",
+            "enabled": 1,
+            "probability": 1,
+            **entry_fields,
+        }],
+        text,
+    )
+
+    assert [(item.entry_id, item.reason) for item in result.matches] == [
+        ("legacy-alias", expected_reason)
+    ]
+    assert not result.excluded
+
+
 def test_lorebook_bad_regex_is_excluded_not_raised():
     result = match_lorebook_entries([
         {"id": "1", "title": "Broken", "content": "Broken lore", "keys_json": '["["]', "enabled": 1, "regex": 1, "probability": 1}

@@ -130,18 +130,13 @@ def modules_from_lore_matches(result: LoreMatchResult) -> list[PromptModule]:
 
 
 def _entry_matches(row: dict[str, Any], haystack: str, haystack_lower: str) -> tuple[bool, str]:
-    constant = coerce_legacy_enabled(row.get("constant"))
-    if constant is None:
-        constant = bool(row.get("constant"))
-    if constant:
+    if _legacy_or(row, "constant", "always_active"):
         return True, "constant"
     keys = _keys(row.get("keys_json") or row.get("keys"))
     secondary = _keys(row.get("secondary_keys_json") or row.get("secondary_keys"))
     if not keys:
         return False, "no keys"
-    regex = coerce_legacy_enabled(row.get("regex"))
-    if regex is None:
-        regex = bool(row.get("regex"))
+    regex = _legacy_or(row, "regex", "use_regex")
     primary_matched, primary_detail = _any_key_matches(keys, haystack, haystack_lower, regex)
     if not primary_matched:
         if primary_detail:
@@ -156,6 +151,16 @@ def _entry_matches(row: dict[str, Any], haystack: str, haystack_lower: str) -> t
                 return False, secondary_detail
             return False, "secondary key filter miss"
     return True, f"key match: {primary_detail}"
+
+
+def _legacy_or(row: dict[str, Any], *fields: str) -> bool:
+    """OR legacy serialized boolean aliases, retaining historical truthiness."""
+    for field in fields:
+        value = row.get(field)
+        normalized = coerce_legacy_enabled(value)
+        if normalized is True or (normalized is None and bool(value)):
+            return True
+    return False
 
 
 def _any_key_matches(
