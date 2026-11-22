@@ -130,13 +130,18 @@ def modules_from_lore_matches(result: LoreMatchResult) -> list[PromptModule]:
 
 
 def _entry_matches(row: dict[str, Any], haystack: str, haystack_lower: str) -> tuple[bool, str]:
-    if row.get("constant"):
+    constant = coerce_legacy_enabled(row.get("constant"))
+    if constant is None:
+        constant = bool(row.get("constant"))
+    if constant:
         return True, "constant"
     keys = _keys(row.get("keys_json") or row.get("keys"))
     secondary = _keys(row.get("secondary_keys_json") or row.get("secondary_keys"))
     if not keys:
         return False, "no keys"
-    regex = bool(row.get("regex"))
+    regex = coerce_legacy_enabled(row.get("regex"))
+    if regex is None:
+        regex = bool(row.get("regex"))
     primary_matched, primary_detail = _any_key_matches(keys, haystack, haystack_lower, regex)
     if not primary_matched:
         if primary_detail:

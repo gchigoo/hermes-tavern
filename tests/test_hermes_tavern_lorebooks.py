@@ -636,6 +636,66 @@ def test_lorebook_matcher_normalizes_legacy_enabled_values(enabled_fields, expec
     assert [item.reason for item in result.excluded] == ([] if expected_match else ["disabled"])
 
 
+@pytest.mark.parametrize(
+    ("entry_fields", "text", "expected_match", "expected_reason"),
+    (
+        pytest.param(
+            {"constant": "false", "keys_json": json.dumps(["moon"])},
+            "sun",
+            False,
+            "no primary key match",
+            id="serialized-false-constant-is-not-always-active",
+        ),
+        pytest.param(
+            {"regex": "0", "keys_json": json.dumps(["moon."])},
+            "moonX",
+            False,
+            "no primary key match",
+            id="serialized-zero-regex-keeps-key-literal",
+        ),
+        pytest.param(
+            {"constant": "yes"},
+            "",
+            True,
+            "constant",
+            id="recognized-constant-positive-is-always-active",
+        ),
+        pytest.param(
+            {"regex": "on", "keys_json": json.dumps(["moon rises"])},
+            "The moon rises.",
+            True,
+            "key match: moon rises",
+            id="recognized-regex-positive-matches-ordinary-pattern",
+        ),
+    ),
+)
+def test_lorebook_matcher_normalizes_persisted_canonical_flags(
+    entry_fields, text, expected_match, expected_reason
+):
+    result = match_lorebook_entries(
+        [{
+            "id": "canonical",
+            "title": "Canonical",
+            "content": "Lore",
+            "enabled": 1,
+            "probability": 1,
+            **entry_fields,
+        }],
+        text,
+    )
+
+    if expected_match:
+        assert [(item.entry_id, item.reason) for item in result.matches] == [
+            ("canonical", expected_reason)
+        ]
+        assert not result.excluded
+    else:
+        assert not result.matches
+        assert [(item.entry_id, item.reason) for item in result.excluded] == [
+            ("canonical", expected_reason)
+        ]
+
+
 def test_lorebook_bad_regex_is_excluded_not_raised():
     result = match_lorebook_entries([
         {"id": "1", "title": "Broken", "content": "Broken lore", "keys_json": '["["]', "enabled": 1, "regex": 1, "probability": 1}
