@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import math
 import random
 import re
 from dataclasses import dataclass, field
@@ -209,6 +210,7 @@ def _int(value: Any, default: int) -> int:
 
 def _float(value: Any, default: float) -> float:
     try:
-        return float(value)
+        result = float(value)
     except (TypeError, ValueError):
         return default
+    return result if math.isfinite(result) else default

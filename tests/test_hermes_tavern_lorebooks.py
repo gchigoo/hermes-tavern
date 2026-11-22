@@ -615,6 +615,33 @@ def test_lorebook_matcher_reports_matches_and_exclusions():
     assert any(ex.title == "Sun" and ex.reason == "probability=0" for ex in result.excluded)
 
 
+def test_lorebook_matcher_non_finite_probability_defaults_to_certain_and_zero_excludes():
+    result = match_lorebook_entries(
+        [
+            {
+                "id": "negative-infinity",
+                "title": "Negative infinity",
+                "content": "Non-finite lore",
+                "constant": True,
+                "probability": float("-inf"),
+            },
+            {
+                "id": "zero",
+                "title": "Zero",
+                "content": "Zero lore",
+                "constant": True,
+                "probability": 0.0,
+            },
+        ],
+        "",
+    )
+
+    assert [item.entry_id for item in result.matches] == ["negative-infinity"]
+    assert [(item.entry_id, item.reason) for item in result.excluded] == [
+        ("zero", "probability=0"),
+    ]
+
+
 @pytest.mark.parametrize(
     ("enabled_fields", "expected_match"),
     (
