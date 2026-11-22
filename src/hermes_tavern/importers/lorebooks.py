@@ -161,6 +161,16 @@ def _entry_enabled(raw: dict[str, Any]) -> bool:
     return True
 
 
+def _legacy_or(raw: dict[str, Any], *fields: str) -> bool:
+    """OR legacy aliases, normalizing recognized serialized boolean values."""
+    for field in fields:
+        value = raw.get(field)
+        normalized = coerce_legacy_enabled(value)
+        if normalized is True or (normalized is None and bool(value)):
+            return True
+    return False
+
+
 def _entry_from_raw(raw: dict[str, Any], idx: int, *, source: str) -> ImportedLorebookEntry | None:
     content = None
     for field in ("content", "entry", "text", "value"):
@@ -189,8 +199,8 @@ def _entry_from_raw(raw: dict[str, Any], idx: int, *, source: str) -> ImportedLo
         keys=_tuple_strings(raw.get("keys") or raw.get("key") or raw.get("primary_keys")),
         secondary_keys=_tuple_strings(raw.get("secondary_keys") or raw.get("keysecondary") or raw.get("filters")),
         enabled=enabled,
-        constant=bool(raw.get("constant") or raw.get("always_active")),
-        regex=bool(raw.get("regex") or raw.get("use_regex")),
+        constant=_legacy_or(raw, "constant", "always_active"),
+        regex=_legacy_or(raw, "regex", "use_regex"),
         position=str(raw.get("position") or "before_char"),
         insertion_order=_int(raw_order, idx),
         priority=_int(raw.get("priority"), 0),

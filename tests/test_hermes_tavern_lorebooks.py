@@ -321,6 +321,75 @@ def test_lorebook_import_normalizes_legacy_enabled_flags(flags, expected):
     assert lorebook.entries[0].enabled is expected
 
 
+@pytest.mark.parametrize(
+    ("flags", "expected_constant", "expected_regex"),
+    (
+        pytest.param(
+            {"constant": "false", "regex": "0"},
+            False,
+            False,
+            id="recognized-false-strings",
+        ),
+        pytest.param(
+            {"always_active": "true", "use_regex": "yes"},
+            True,
+            True,
+            id="recognized-true-alias-strings",
+        ),
+        pytest.param(
+            {
+                "constant": "false",
+                "always_active": "true",
+                "regex": "off",
+                "use_regex": "on",
+            },
+            True,
+            True,
+            id="aliases-remain-or-combined",
+        ),
+        pytest.param(
+            {"constant": "unknown", "regex": "unknown"},
+            True,
+            True,
+            id="unrecognized-strings-retain-truthiness-fallback",
+        ),
+        pytest.param(
+            {
+                "constant": True,
+                "always_active": False,
+                "regex": True,
+                "use_regex": False,
+            },
+            True,
+            True,
+            id="native-booleans-preserved",
+        ),
+        pytest.param(
+            {
+                "constant": False,
+                "always_active": False,
+                "regex": False,
+                "use_regex": False,
+            },
+            False,
+            False,
+            id="native-false-booleans-preserved",
+        ),
+    ),
+)
+def test_lorebook_import_normalizes_legacy_constant_and_regex_flags(
+    flags,
+    expected_constant,
+    expected_regex,
+):
+    """Public lorebook import normalizes serialized constant and regex aliases."""
+    lorebook = import_st_lorebook_json({"entries": [{"content": "Lore.", **flags}]})
+
+    entry = lorebook.entries[0]
+    assert entry.constant is expected_constant
+    assert entry.regex is expected_regex
+
+
 def test_lorebook_entry_id_keeps_integer_zero():
     """Integer 0 wins by uid/id/key precedence; False and other falsy values fall back."""
     uid_zero = import_st_lorebook_json({
