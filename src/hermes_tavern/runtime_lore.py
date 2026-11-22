@@ -86,9 +86,12 @@ def _as_bool(value: Any) -> bool:
 
 def _as_number(value: Any, default: int | float) -> int | float:
     try:
-        return int(value) if isinstance(default, int) else float(value)
-    except (TypeError, ValueError):
+        number = int(value) if isinstance(default, int) else float(value)
+    except (TypeError, ValueError, OverflowError):
         return default
+    if isinstance(number, float) and not math.isfinite(number):
+        return default
+    return number
 
 
 def _lorebook_export_filename(lorebook_id: Any) -> str:

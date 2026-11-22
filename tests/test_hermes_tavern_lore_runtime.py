@@ -196,6 +196,46 @@ async def test_lore_runtime_export_fallback_payload_last_and_no_mutation(tmp_pat
 
 
 @pytest.mark.asyncio
+async def test_lore_runtime_export_fallback_defaults_nonfinite_and_overflow_numbers(tmp_path, monkeypatch):
+    monkeypatch.setenv("HERMES_HOME", str(tmp_path / "hermes_home"))
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    runtime = TavernRuntime(store)
+    lorebook = ImportedLorebook(
+        name="LegacyNumbers",
+        source="legacy",
+        raw=["legacy"],
+        entries=(
+            ImportedLorebookEntry(
+                id="entry-1",
+                title="Legacy entry",
+                content="Legacy content",
+                keys=("legacy",),
+                insertion_order=3,
+                priority=7,
+                probability=0.5,
+            ),
+        ),
+        id="legacy-numbers",
+    )
+    lorebook_id = store.save_lorebook(lorebook)
+    with store.connect() as conn:
+        conn.execute(
+            "UPDATE lorebook_entries SET insertion_order = ?, priority = ?, probability = ? WHERE lorebook_id = ?",
+            (float("inf"), 7, "Infinity", lorebook_id),
+        )
+
+    response = await runtime.handle_command(
+        RPCommand("lore", ["export", lorebook_id], f"/rp lore export {lorebook_id}"),
+        Event(),
+    )
+    data = json.loads(_extract_export_path(response).read_text(encoding="utf-8"))
+
+    assert data["entries"][0]["insertion_order"] == 0
+    assert data["entries"][0]["priority"] == 7
+    assert data["entries"][0]["probability"] == 1.0
+
+
+@pytest.mark.asyncio
 async def test_lore_runtime_export_uses_last_reference(monkeypatch, tmp_path):
     monkeypatch.setenv("HERMES_HOME", str(tmp_path / "hermes_home"))
     store = TavernStore(tmp_path / "tavern.sqlite3")
