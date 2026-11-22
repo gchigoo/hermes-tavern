@@ -9,6 +9,7 @@ from typing import Any
 from uuid import uuid5, NAMESPACE_URL
 
 from hermes_tavern.importers import assert_local_import_size
+from hermes_tavern.importers.presets import coerce_legacy_enabled
 
 
 @dataclass(frozen=True)
@@ -141,6 +142,25 @@ def _extract_entries(data: dict[str, Any] | list[Any]) -> list[dict[str, Any]]:
     return []
 
 
+def _entry_enabled(raw: dict[str, Any]) -> bool:
+    """Normalize native and legacy lorebook enabled flags.
+
+    A recognized ``enabled`` value is authoritative.  Otherwise the historical
+    negative aliases keep their default-enabled behavior, except recognized
+    textual/numeric false values no longer disable entries.  Unrecognized
+    nonempty negative values retain the conservative legacy fallback.
+    """
+    explicit_enabled = coerce_legacy_enabled(raw.get("enabled"))
+    if explicit_enabled is not None:
+        return explicit_enabled
+    for field in ("disable", "disabled"):
+        value = raw.get(field)
+        disabled = coerce_legacy_enabled(value)
+        if disabled is True or (disabled is None and bool(value)):
+            return False
+    return True
+
+
 def _entry_from_raw(raw: dict[str, Any], idx: int, *, source: str) -> ImportedLorebookEntry | None:
     content = None
     for field in ("content", "entry", "text", "value"):
@@ -155,9 +175,7 @@ def _entry_from_raw(raw: dict[str, Any], idx: int, *, source: str) -> ImportedLo
     entry_id = str(raw_id)
     if not entry_id:
         entry_id = str(uuid5(NAMESPACE_URL, f"{source}:{idx}:{title}:{content[:80]}"))
-    enabled = not bool(raw.get("disable") or raw.get("disabled"))
-    if isinstance(raw.get("enabled"), bool):
-        enabled = bool(raw["enabled"])
+    enabled = _entry_enabled(raw)
     raw_order = raw.get("displayIndex")
     for field in ("insertion_order", "order"):
         value = raw.get(field)

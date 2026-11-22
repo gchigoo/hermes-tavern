@@ -296,6 +296,31 @@ def test_lorebook_imports_st_entries_dict_shape():
     assert lorebook.entries[1].enabled is False
 
 
+@pytest.mark.parametrize(
+    ("flags", "expected"),
+    (
+        pytest.param({}, True, id="native-absence-defaults-enabled"),
+        pytest.param({"enabled": 0}, False, id="explicit-numeric-zero"),
+        pytest.param({"enabled": 1}, True, id="explicit-numeric-one"),
+        pytest.param({"enabled": "false"}, False, id="explicit-text-false"),
+        pytest.param({"enabled": "true"}, True, id="explicit-text-true"),
+        pytest.param({"enabled": "false", "disabled": "true"}, False, id="explicit-disabled-wins"),
+        pytest.param({"enabled": "true", "disable": True}, True, id="explicit-enabled-wins"),
+        pytest.param({"disable": "false"}, True, id="disable-text-false"),
+        pytest.param({"disabled": "0"}, True, id="disabled-text-zero"),
+        pytest.param({"disable": "true"}, False, id="disable-text-true"),
+        pytest.param({"disabled": 1}, False, id="disabled-numeric-one"),
+        pytest.param({"enabled": "unknown", "disable": "false"}, True, id="unknown-enabled-uses-default"),
+        pytest.param({"disabled": "unknown"}, False, id="unknown-negative-is-conservative"),
+    ),
+)
+def test_lorebook_import_normalizes_legacy_enabled_flags(flags, expected):
+    """Public lorebook import normalizes enabled and negative legacy aliases."""
+    lorebook = import_st_lorebook_json({"entries": [{"content": "Lore.", **flags}]})
+
+    assert lorebook.entries[0].enabled is expected
+
+
 def test_lorebook_entry_id_keeps_integer_zero():
     """Integer 0 wins by uid/id/key precedence; False and other falsy values fall back."""
     uid_zero = import_st_lorebook_json({
