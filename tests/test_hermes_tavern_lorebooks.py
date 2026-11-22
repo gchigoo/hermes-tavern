@@ -528,6 +528,17 @@ def test_lorebook_import_huge_probability_falls_back(field, huge):
     assert [entry.probability for entry in book.entries] == [1.0, 0.25]
 
 
+@pytest.mark.parametrize("field", ("probability", "chance"))
+@pytest.mark.parametrize("value", ("NaN", "Infinity", "-Infinity"))
+def test_lorebook_import_non_finite_probability_falls_back(field, value):
+    """Non-finite probability aliases default to certain inclusion."""
+    book = import_st_lorebook_json({
+        "entries": [{"content": "Lore.", field: value}],
+    })
+
+    assert book.entries[0].probability == 1.0
+
+
 @pytest.mark.parametrize("encoding", ("utf-8", "utf-8-sig"))
 def test_lorebook_file_import_unicode_json(tmp_path, encoding):
     """UTF-8 and UTF-8-SIG lorebook files keep Unicode fields and no leading BOM."""

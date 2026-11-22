@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import math
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -255,6 +256,8 @@ def _probability(value: Any) -> float:
     try:
         p = float(value)
     except (TypeError, ValueError, OverflowError):
+        return 1.0
+    if not math.isfinite(p):
         return 1.0
     if p > 1:
         p = p / 100.0
