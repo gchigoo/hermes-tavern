@@ -344,3 +344,69 @@ async def test_lore_runtime_rejects_nested_quantifier_without_crash(tmp_path):
 
     assert "regex rejected: nested quantifier" in tested
     assert "Nested lore" not in tested
+
+
+@pytest.mark.asyncio
+async def test_lore_runtime_inspect_and_debug_tolerate_bad_key_json(tmp_path):
+    """Inspect and debug keep a healthy entry when stored key JSON is unusable."""
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    session_key = "telegram:chat:chat-1:thread:main:user:user-1"
+    store.start_session(session_key)
+    runtime = TavernRuntime(store)
+    lorebook = ImportedLorebook(
+        name="KeyGuard",
+        source="test",
+        raw={"name": "KeyGuard"},
+        entries=(
+            ImportedLorebookEntry(
+                id="HealthyMoon",
+                title="HealthyMoon",
+                content="HealthyMoon content",
+                keys=("HealthyMoon",),
+            ),
+            ImportedLorebookEntry(
+                id="MalformedKeys",
+                title="MalformedKeys",
+                content="MalformedKeys content",
+                keys=("malformed-key",),
+                secondary_keys=("malformed-secondary",),
+            ),
+            ImportedLorebookEntry(
+                id="NonArrayKeys",
+                title="NonArrayKeys",
+                content="NonArrayKeys content",
+                keys=("nonarray-key",),
+                secondary_keys=("nonarray-secondary",),
+            ),
+        ),
+        id="key-guard",
+    )
+    lorebook_id = store.save_lorebook(lorebook)
+    with store.connect() as conn:
+        malformed = conn.execute(
+            "UPDATE lorebook_entries SET keys_json = ?, secondary_keys_json = ? WHERE lorebook_id = ? AND keys_json LIKE ?",
+            ("{malformed", "[malformed-secondary", lorebook_id, "%malformed-key%"),
+        )
+        nonarray = conn.execute(
+            "UPDATE lorebook_entries SET keys_json = ?, secondary_keys_json = ? WHERE lorebook_id = ? AND keys_json LIKE ?",
+            ('{"ok":true}', '"nonarray-token"', lorebook_id, "%nonarray-key%"),
+        )
+        assert malformed.rowcount == 1
+        assert nonarray.rowcount == 1
+    store.set_session_lorebook(session_key, lorebook_id)
+
+    inspected = await runtime.handle_command(
+        RPCommand("lore", ["inspect", lorebook_id], f"/rp lore inspect {lorebook_id}"),
+        Event(),
+    )
+    debug = await runtime.handle_command(RPCommand("lore", ["debug"], "/rp lore debug"), Event())
+
+    assert "HealthyMoon" in inspected
+    assert "HealthyMoon" in debug
+    assert "Traceback" not in inspected
+    assert "Traceback" not in debug
+    assert "secondary=" not in inspected
+    assert "keys=['HealthyMoon']" in debug
+    for title in ("MalformedKeys", "NonArrayKeys"):
+        assert f"{title} [enabled]: keys=[none]" in inspected
+        assert f"{title}: enabled, keys=[]" in debug

@@ -234,8 +234,8 @@ def lore_inspect(runtime: Any, command: RPCommand) -> str:
         f"showing entries {offset + 1 if total else 0}-{offset + len(page_entries)} of {total} (page {page}/{total_pages})",
     ]
     for entry in page_entries:
-        keys = json.loads(entry.get("keys_json") or "[]")
-        secondary = json.loads(entry.get("secondary_keys_json") or "[]")
+        keys = _safe_lore_keys(entry.get("keys_json"))
+        secondary = _safe_lore_keys(entry.get("secondary_keys_json"))
         key_text = ", ".join(str(k) for k in keys[:3]) or "none"
         flags = []
         if entry.get("enabled"):
@@ -337,7 +337,7 @@ def lore_debug(runtime: Any, event: Any) -> str:
     entries = runtime.store.list_lorebook_entries(lorebook_id)
     lines = [f"Lorebook: {(lorebook or {}).get('name', lorebook_id)} ({lorebook_id})", f"entries: {len(entries)}"]
     for entry in entries:
-        keys = json.loads(entry.get("keys_json") or "[]")
+        keys = _safe_lore_keys(entry.get("keys_json"))
         state = "enabled" if entry.get("enabled") else "disabled"
         flags = []
         if entry.get("constant"):
