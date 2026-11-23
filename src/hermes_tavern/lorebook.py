@@ -71,6 +71,8 @@ def match_lorebook_entries(
             excluded.append(LoreMatch(entry_id, title, False, "empty content"))
             continue
         probability = _float(row.get("probability"), 1.0)
+        if probability < 1 and _stored_probability_disabled(row.get("raw_json")):
+            probability = 1.0
         if probability <= 0:
             excluded.append(LoreMatch(entry_id, title, False, "probability=0"))
             continue
@@ -128,6 +130,16 @@ def match_lorebook_entries(
 
 def modules_from_lore_matches(result: LoreMatchResult) -> list[PromptModule]:
     return [match.module for match in result.matches if match.module is not None]
+
+
+def _stored_probability_disabled(raw: Any) -> bool:
+    # Earlier imports stored the chance even when the world-info roll was off.
+    if isinstance(raw, str):
+        try:
+            raw = json.loads(raw)
+        except (ValueError, RecursionError):
+            return False
+    return isinstance(raw, dict) and raw.get("useProbability") is False
 
 
 def _entry_matches(row: dict[str, Any], haystack: str, haystack_lower: str) -> tuple[bool, str]:

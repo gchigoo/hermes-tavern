@@ -128,10 +128,15 @@ async def test_lore_runtime_export_uses_raw_json(monkeypatch, tmp_path):
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
-    ("percent", "expected_probability"),
-    [(0, 0.0), (0.5, 0.005), (1, 0.01), (2, 0.02), (25, 0.25), (100, 1.0)],
+    ("use_probability", "percent", "expected_probability"),
+    [
+        (True, 0, 0.0), (True, 0.5, 0.005), (True, 1, 0.01), (True, 2, 0.02),
+        (True, 25, 0.25), (True, 100, 1.0), (False, 0, 1.0), (False, 25, 1.0),
+    ],
 )
-async def test_lore_runtime_world_info_probability_round_trip(tmp_path, monkeypatch, percent, expected_probability):
+async def test_lore_runtime_world_info_probability_round_trip(
+    tmp_path, monkeypatch, use_probability, percent, expected_probability,
+):
     monkeypatch.setenv("HERMES_HOME", str(tmp_path / "home"))
     payload = {
         "name": "Moon Atlas",
@@ -141,7 +146,7 @@ async def test_lore_runtime_world_info_probability_round_trip(tmp_path, monkeypa
                 "key": ["moon"],
                 "comment": "月の記録",
                 "content": "A map of the moon.",
-                "useProbability": True,
+                "useProbability": use_probability,
                 "probability": percent,
             },
         },
@@ -171,7 +176,19 @@ async def test_lore_runtime_world_info_probability_round_trip(tmp_path, monkeypa
         rows = candidate.list_lorebook_entries(book["id"])
         assert [row["probability"] for row in rows] == pytest.approx([expected_probability])
         matches = match_lorebook_entries(rows, "moon", rng=random.Random(0))
-        assert [match.title for match in matches.matches] == (["月の記録"] if percent == 100 else [])
+        assert [match.title for match in matches.matches] == (["月の記録"] if expected_probability == 1.0 else [])
+
+
+@pytest.mark.parametrize(
+    ("raw_json", "should_match"),
+    [('{"useProbability":false}', True), ('{"useProbability":true}', False),
+     ('{"useProbability":0}', False), ("invalid", False), ("[]", False), (None, False)],
+)
+def test_stored_probability_uses_original_world_info_switch(raw_json, should_match):
+    row = {"title": "Atlas", "keys": ["moon"], "content": "Moon lore.",
+           "probability": 0, "raw_json": raw_json}
+    assert bool(match_lorebook_entries([row], "moon").matches) is should_match
+    assert not match_lorebook_entries([row], "sun").matches
 
 
 @pytest.mark.parametrize(

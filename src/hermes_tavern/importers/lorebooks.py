@@ -206,7 +206,7 @@ def _entry_from_raw(raw: dict[str, Any], idx: int, *, source: str) -> ImportedLo
         position=str(raw.get("position") or "before_char"),
         insertion_order=_int(raw_order, idx),
         priority=_int(raw.get("priority"), 0),
-        probability=_probability(
+        probability=1.0 if raw.get("useProbability") is False else _probability(
             raw.get("probability") if has_probability else raw.get("chance"),
             percent=has_probability and raw.get("useProbability") is True,
         ),
