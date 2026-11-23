@@ -11,6 +11,7 @@ from hermes_tavern.hermes_home import get_hermes_home
 from hermes_tavern.identity import session_key_from_event
 from hermes_tavern.import_policy import resolve_import_path
 from hermes_tavern.importers.lorebooks import import_lorebook_file
+from hermes_tavern.importers.presets import coerce_legacy_enabled
 from hermes_tavern.lorebook import match_lorebook_entries
 from hermes_tavern.runtime_utils import mobile_preview
 
@@ -85,6 +86,11 @@ def _as_bool(value: Any) -> bool:
     if isinstance(value, str):
         return value.lower() in {"1", "true", "yes", "on"}
     return False
+
+
+def _as_status_bool(value: Any) -> bool:
+    normalized = coerce_legacy_enabled(value)
+    return normalized if normalized is not None else bool(value)
 
 
 def _as_number(value: Any, default: int | float) -> int | float:
@@ -225,9 +231,9 @@ def lore_inspect(runtime: Any, command: RPCommand) -> str:
     if lorebook is None:
         return _lorebook_not_found(lore_ref)
     entries = runtime.store.list_lorebook_entries(lorebook["id"])
-    enabled_count = sum(1 for e in entries if e.get("enabled"))
-    constant_count = sum(1 for e in entries if e.get("constant"))
-    regex_count = sum(1 for e in entries if e.get("regex"))
+    enabled_count = sum(1 for e in entries if _as_status_bool(e.get("enabled")))
+    constant_count = sum(1 for e in entries if _as_status_bool(e.get("constant")))
+    regex_count = sum(1 for e in entries if _as_status_bool(e.get("regex")))
     total = len(entries)
     total_pages = max(1, math.ceil(total / limit))
     page = min(page, total_pages)
@@ -244,13 +250,13 @@ def lore_inspect(runtime: Any, command: RPCommand) -> str:
         secondary = _safe_lore_keys(entry.get("secondary_keys_json"))
         key_text = ", ".join(str(k) for k in keys[:3]) or "none"
         flags = []
-        if entry.get("enabled"):
+        if _as_status_bool(entry.get("enabled")):
             flags.append("enabled")
         else:
             flags.append("disabled")
-        if entry.get("constant"):
+        if _as_status_bool(entry.get("constant")):
             flags.append("constant")
-        if entry.get("regex"):
+        if _as_status_bool(entry.get("regex")):
             flags.append("regex")
         if secondary:
             flags.append(f"secondary={len(secondary)}")
@@ -277,7 +283,7 @@ def lore_use(runtime: Any, command: RPCommand, event: Any) -> str:
         return "No active Hermes Tavern session. Start one with /rp start <card>."
     runtime.store.set_session_lorebook(session_key, lorebook["id"])
     entries = runtime.store.list_lorebook_entries(lorebook["id"])
-    enabled = sum(1 for entry in entries if entry.get("enabled"))
+    enabled = sum(1 for entry in entries if _as_status_bool(entry.get("enabled")))
     return f"Hermes Tavern lorebook bound: {lorebook['name']} ({lorebook['id']})\nenabled entries: {enabled}"
 
 
@@ -344,11 +350,11 @@ def lore_debug(runtime: Any, event: Any) -> str:
     lines = [f"Lorebook: {(lorebook or {}).get('name', lorebook_id)} ({lorebook_id})", f"entries: {len(entries)}"]
     for entry in entries:
         keys = _safe_lore_keys(entry.get("keys_json"))
-        state = "enabled" if entry.get("enabled") else "disabled"
+        state = "enabled" if _as_status_bool(entry.get("enabled")) else "disabled"
         flags = []
-        if entry.get("constant"):
+        if _as_status_bool(entry.get("constant")):
             flags.append("constant")
-        if entry.get("regex"):
+        if _as_status_bool(entry.get("regex")):
             flags.append("regex")
         flag_text = f" [{', '.join(flags)}]" if flags else ""
         lines.append(f"  - {entry['title']}: {state}{flag_text}, keys={keys}")

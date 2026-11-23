@@ -329,6 +329,80 @@ async def test_lore_enable_disable_entry_affects_matching(tmp_path):
 
 
 @pytest.mark.asyncio
+async def test_lore_runtime_export_preserves_unknown_flag_defaults(tmp_path, monkeypatch):
+    monkeypatch.setenv("HERMES_HOME", str(tmp_path / "hermes_home"))
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    runtime = TavernRuntime(store)
+    lorebook_id = store.save_lorebook(
+        ImportedLorebook(
+            name="LegacyFlags",
+            source="test",
+            raw=["legacy"],
+            entries=(ImportedLorebookEntry(id="entry", title="Entry", content="Content", keys=("moon",)),),
+            id="legacy-unknown-flags",
+        )
+    )
+    with store.connect() as conn:
+        conn.execute(
+            "UPDATE lorebook_entries SET enabled = ?, constant = ?, regex = ? WHERE lorebook_id = ?",
+            ("unknown", "unknown", "unknown", lorebook_id),
+        )
+
+    response = await runtime.handle_command(
+        RPCommand("lore", ["export", lorebook_id], f"/rp lore export {lorebook_id}"), Event()
+    )
+    entry = json.loads(_extract_export_path(response).read_text(encoding="utf-8"))["entries"][0]
+
+    assert entry["enabled"] is False
+    assert entry["constant"] is False
+    assert entry["regex"] is False
+
+
+@pytest.mark.asyncio
+async def test_lore_runtime_normalizes_legacy_false_flags_in_status_output(tmp_path):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    session_key = "telegram:chat:chat-1:thread:main:user:user-1"
+    store.start_session(session_key)
+    runtime = TavernRuntime(store)
+    lorebook_id = store.save_lorebook(
+        ImportedLorebook(
+            name="LegacyFlags",
+            source="test",
+            raw={"name": "LegacyFlags"},
+            entries=(
+                ImportedLorebookEntry(
+                    id="entry",
+                    title="Legacy entry",
+                    content="Legacy content",
+                    keys=("moon",),
+                ),
+            ),
+            id="legacy-flags",
+        )
+    )
+    with store.connect() as conn:
+        conn.execute(
+            "UPDATE lorebook_entries SET enabled = ?, constant = ?, regex = ? WHERE lorebook_id = ?",
+            ("false", "false", "false", lorebook_id),
+        )
+
+    bound = await runtime.handle_command(
+        RPCommand("lore", ["use", lorebook_id], f"/rp lore use {lorebook_id}"), Event()
+    )
+    inspected = await runtime.handle_command(
+        RPCommand("lore", ["inspect", lorebook_id], f"/rp lore inspect {lorebook_id}"), Event()
+    )
+    debugged = await runtime.handle_command(RPCommand("lore", ["debug"], "/rp lore debug"), Event())
+    tested = await runtime.handle_command(RPCommand("lore", ["test", "moon"], "/rp lore test moon"), Event())
+
+    assert "enabled entries: 0" in bound
+    assert "entries: 1 total, 0 enabled, 0 constant, 0 regex" in inspected
+    assert "Legacy entry [disabled]: keys=[moon]" in inspected
+    assert "Legacy entry: disabled, keys=['moon']" in debugged
+    assert "Lorebook test: 0 matched, 1 excluded, tokens: 0" in tested
+
+
+@pytest.mark.asyncio
 async def test_lore_runtime_rejects_nested_quantifier_without_crash(tmp_path):
     path = tmp_path / "atlas.json"
     path.write_text(json.dumps({
