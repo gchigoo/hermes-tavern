@@ -204,7 +204,7 @@ def _keys(value: Any) -> tuple[str, ...]:
 def _int(value: Any, default: int) -> int:
     try:
         return int(value)
-    except (TypeError, ValueError):
+    except (TypeError, ValueError, OverflowError):
         return default
 
 

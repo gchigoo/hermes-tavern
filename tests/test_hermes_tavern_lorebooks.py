@@ -642,6 +642,25 @@ def test_lorebook_matcher_non_finite_probability_defaults_to_certain_and_zero_ex
     ]
 
 
+def test_lorebook_matcher_infinite_insertion_order_defaults_to_zero():
+    result = match_lorebook_entries(
+        [
+            {
+                "id": "infinite-order",
+                "title": "Infinite order",
+                "content": "Infinite lore",
+                "enabled": True,
+                "constant": True,
+                "insertion_order": float("inf"),
+            },
+        ],
+        "",
+    )
+
+    assert [item.entry_id for item in result.matches] == ["infinite-order"]
+    assert result.matches[0].module.insertion_order == 0
+
+
 @pytest.mark.parametrize(
     ("enabled_fields", "expected_match"),
     (
