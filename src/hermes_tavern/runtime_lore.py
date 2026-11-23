@@ -22,7 +22,7 @@ def _parse_ref_limit_page(args: list[str], *, default_limit: int, max_limit: int
     page = 1
     limit = default_limit
     try:
-        if len(parts) >= 2 and parts[-1].isdecimal() and parts[-2].isdecimal():
+        if len(parts) >= 3 and parts[-1].isdecimal() and parts[-2].isdecimal():
             page = max(1, int(parts.pop()))
             limit = max(1, min(max_limit, int(parts.pop())))
         elif len(parts) >= 2 and parts[-1].isdecimal():

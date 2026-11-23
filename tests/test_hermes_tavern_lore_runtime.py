@@ -545,6 +545,39 @@ async def test_lore_runtime_inspect_handles_numeric_refs_pagination_and_invalid_
 
 
 @pytest.mark.asyncio
+async def test_lore_runtime_inspect_paginates_decimal_only_names(tmp_path):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    runtime = TavernRuntime(store)
+    lorebook_id = store.save_lorebook(
+        ImportedLorebook(
+            name="1984",
+            source="test",
+            raw={"name": "1984"},
+            entries=tuple(
+                ImportedLorebookEntry(id=f"entry-{index}", title=f"Entry {index}", content="content", keys=("page",))
+                for index in range(1, 4)
+            ),
+            id="decimal-name",
+        ),
+    )
+
+    async def inspect(*args):
+        return await runtime.handle_command(
+            RPCommand("lore", ["inspect", *args], "/rp lore inspect " + " ".join(args)), Event()
+        )
+
+    assert "showing entries 1-3 of 3 (page 1/1)" in await inspect("1984")
+    first_page = await inspect("1984", "2")
+    assert "Lorebook: 1984" in first_page
+    assert "showing entries 1-2 of 3 (page 1/2)" in first_page
+    assert f"next: /rp lore inspect {lorebook_id[:8]} 2 2" in first_page
+    assert "Entry 3" not in first_page
+    second_page = await inspect("1984", "2", "2")
+    assert "showing entries 3-3 of 3 (page 2/2)" in second_page
+    assert "Entry 3" in second_page
+
+
+@pytest.mark.asyncio
 async def test_lore_runtime_inspect_hides_legacy_blob_content_preview(tmp_path):
     store = TavernStore(tmp_path / "tavern.sqlite3")
     runtime = TavernRuntime(store)
