@@ -260,7 +260,8 @@ def lore_inspect(runtime: Any, command: RPCommand) -> str:
             flags.append("regex")
         if secondary:
             flags.append(f"secondary={len(secondary)}")
-        preview = mobile_preview(entry.get("content") or "", 72)
+        content = entry.get("content")
+        preview = mobile_preview(content if isinstance(content, str) else "", 72)
         lines.append(f"  - {entry['title']} [{', '.join(flags)}]: keys=[{key_text}] — {preview}")
     if page > 1:
         lines.append(f"prev: /rp lore inspect {lorebook['id'][:8]} {limit} {page - 1}")

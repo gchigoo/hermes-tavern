@@ -542,3 +542,45 @@ async def test_lore_runtime_inspect_handles_numeric_refs_pagination_and_invalid_
     assert "showing entries 1-3 of 3 (page 1/1)" in clamped_page
     assert invalid_limit == "Usage: /rp lore inspect <lorebook> [limit] [page]"
     assert invalid_page == "Usage: /rp lore inspect <lorebook> [limit] [page]"
+
+
+@pytest.mark.asyncio
+async def test_lore_runtime_inspect_hides_legacy_blob_content_preview(tmp_path):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    runtime = TavernRuntime(store)
+    lorebook_id = store.save_lorebook(
+        ImportedLorebook(
+            name="BlobPreview",
+            source="legacy",
+            raw={"name": "BlobPreview"},
+            entries=(
+                ImportedLorebookEntry(
+                    id="blob-entry",
+                    title="Blob entry",
+                    content="Text that will be replaced by a legacy blob.",
+                    keys=("blob",),
+                ),
+                ImportedLorebookEntry(
+                    id="text-entry",
+                    title="Text entry",
+                    content="Valid preview text",
+                    keys=("text",),
+                ),
+            ),
+            id="blob-preview",
+        )
+    )
+    with store.connect() as conn:
+        updated = conn.execute(
+            "UPDATE lorebook_entries SET content = ? WHERE lorebook_id = ? AND id = ?",
+            (b"\x80legacy-preview", lorebook_id, f"{lorebook_id}:blob-entry"),
+        )
+        assert updated.rowcount == 1
+
+    inspected = await runtime.handle_command(
+        RPCommand("lore", ["inspect", lorebook_id], f"/rp lore inspect {lorebook_id}"), Event()
+    )
+
+    assert "Blob entry [enabled]: keys=[blob] — " in inspected
+    assert "b'\\x80legacy-preview'" not in inspected
+    assert "Text entry [enabled]: keys=[text] — Valid preview text" in inspected
