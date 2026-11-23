@@ -187,6 +187,7 @@ def _entry_from_raw(raw: dict[str, Any], idx: int, *, source: str) -> ImportedLo
     if not entry_id:
         entry_id = str(uuid5(NAMESPACE_URL, f"{source}:{idx}:{title}:{content[:80]}"))
     enabled = _entry_enabled(raw)
+    has_probability = "probability" in raw
     raw_order = raw.get("displayIndex")
     for field in ("insertion_order", "order"):
         value = raw.get(field)
@@ -205,7 +206,10 @@ def _entry_from_raw(raw: dict[str, Any], idx: int, *, source: str) -> ImportedLo
         position=str(raw.get("position") or "before_char"),
         insertion_order=_int(raw_order, idx),
         priority=_int(raw.get("priority"), 0),
-        probability=_probability(raw.get("probability") if "probability" in raw else raw.get("chance")),
+        probability=_probability(
+            raw.get("probability") if has_probability else raw.get("chance"),
+            percent=has_probability and raw.get("useProbability") is True,
+        ),
         raw=_safe_raw(raw),
     )
 
@@ -252,7 +256,12 @@ def _int(value: Any, default: int) -> int:
     return parsed if -(2**63) <= parsed <= 2**63 - 1 else default
 
 
-def _probability(value: Any) -> float:
+def _probability(value: Any, *, percent: bool = False) -> float:
+    """Normalize a lorebook probability to the unit interval.
+
+    Explicitly enabled SillyTavern probability uses a 0–100 scale. Legacy
+    values use the existing mixed-unit heuristic.
+    """
     if value is None:
         return 1.0
     try:
@@ -261,7 +270,7 @@ def _probability(value: Any) -> float:
         return 1.0
     if not math.isfinite(p):
         return 1.0
-    if p > 1:
+    if percent or p > 1:
         p = p / 100.0
     return max(0.0, min(1.0, p))
 

@@ -1,4 +1,5 @@
 import json
+import random
 import sys
 from copy import deepcopy
 from pathlib import Path
@@ -13,6 +14,7 @@ from plugins.hermes_tavern.importers.lorebooks import (
     ImportedLorebookEntry,
     import_st_lorebook_json,
 )
+from plugins.hermes_tavern.lorebook import match_lorebook_entries
 from plugins.hermes_tavern.runtime import TavernRuntime
 from plugins.hermes_tavern.hermes_home import get_hermes_home
 
@@ -122,6 +124,63 @@ async def test_lore_runtime_export_uses_raw_json(monkeypatch, tmp_path):
     assert str(path).startswith(str(home))
     assert f'file: {path}' in response
     assert f'MEDIA:"{path}"' in response
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("percent", "expected_probability"),
+    [(0, 0.0), (0.5, 0.005), (1, 0.01), (2, 0.02), (25, 0.25), (100, 1.0)],
+)
+async def test_lore_runtime_world_info_probability_round_trip(tmp_path, monkeypatch, percent, expected_probability):
+    monkeypatch.setenv("HERMES_HOME", str(tmp_path / "home"))
+    payload = {
+        "name": "Moon Atlas",
+        "entries": {
+            "0": {
+                "uid": 0,
+                "key": ["moon"],
+                "comment": "月の記録",
+                "content": "A map of the moon.",
+                "useProbability": True,
+                "probability": percent,
+            },
+        },
+    }
+    path = tmp_path / "world-info.json"
+    path.write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
+    event = Event()
+    store = TavernStore(tmp_path / "first.sqlite3")
+    runtime = TavernRuntime(store)
+    imported = await runtime.handle_command(RPCommand("lore", ["import", str(path)], "/rp lore import"), event)
+    assert "Imported ST lorebook: Moon Atlas" in imported
+
+    exported = await runtime.handle_command(RPCommand("lore", ["export", "last"], "/rp lore export last"), event)
+    export_path = _extract_export_path(exported)
+    assert json.loads(export_path.read_text(encoding="utf-8")) == payload
+
+    reread_store = TavernStore(tmp_path / "reread.sqlite3")
+    reread_runtime = TavernRuntime(reread_store)
+    reimported = await reread_runtime.handle_command(
+        RPCommand("lore", ["import", str(export_path)], "/rp lore import"), event,
+    )
+    assert "Imported ST lorebook: Moon Atlas" in reimported
+
+    for candidate in (store, reread_store):
+        book = candidate.get_lorebook("last")
+        assert book is not None
+        rows = candidate.list_lorebook_entries(book["id"])
+        assert [row["probability"] for row in rows] == pytest.approx([expected_probability])
+        matches = match_lorebook_entries(rows, "moon", rng=random.Random(0))
+        assert [match.title for match in matches.matches] == (["月の記録"] if percent == 100 else [])
+
+
+@pytest.mark.parametrize(
+    ("fields", "expected_probability"),
+    [({"probability": 1.0}, 1.0), ({"probability": 0.5}, 0.5), ({"chance": 1, "useProbability": True}, 1.0)],
+)
+def test_lorebook_import_preserves_legacy_probability(fields, expected_probability):
+    book = import_st_lorebook_json({"entries": [{"content": "Moon lore.", **fields}]})
+    assert book.entries[0].probability == expected_probability
 
 
 @pytest.mark.asyncio
