@@ -221,6 +221,7 @@ def lore_list(runtime: Any) -> str:
 def lore_inspect(runtime: Any, command: RPCommand) -> str:
     if len(command.args) < 2:
         return "Usage: /rp lore inspect <lorebook> [limit] [page]"
+    full_ref = " ".join(command.args[1:]).strip()
     parsed = _parse_ref_limit_page(command.args[1:], default_limit=5, max_limit=20)
     if parsed is None:
         return "Usage: /rp lore inspect <lorebook> [limit] [page]"
@@ -228,6 +229,12 @@ def lore_inspect(runtime: Any, command: RPCommand) -> str:
     if not lore_ref:
         return "Usage: /rp lore inspect <lorebook> [limit] [page]"
     lorebook = runtime.store.get_lorebook(lore_ref)
+    if lorebook is None and lore_ref != full_ref:
+        exact_lorebook = runtime.store.get_lorebook(full_ref)
+        if exact_lorebook is not None and exact_lorebook["name"] == full_ref:
+            lorebook = exact_lorebook
+            limit = 5
+            page = 1
     if lorebook is None:
         return _lorebook_not_found(lore_ref)
     entries = runtime.store.list_lorebook_entries(lorebook["id"])

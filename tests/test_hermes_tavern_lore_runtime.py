@@ -617,3 +617,74 @@ async def test_lore_runtime_inspect_hides_legacy_blob_content_preview(tmp_path):
     assert "Blob entry [enabled]: keys=[blob] — " in inspected
     assert "b'\\x80legacy-preview'" not in inspected
     assert "Text entry [enabled]: keys=[text] — Valid preview text" in inspected
+
+
+@pytest.mark.asyncio
+async def test_lore_runtime_inspect_numeric_suffix_prefers_prefix_then_exact_name(tmp_path):
+    """A trailing decimal is pagination when its prefix resolves, otherwise an exact book name."""
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    runtime = TavernRuntime(store)
+
+    prefix_id = store.save_lorebook(
+        ImportedLorebook(
+            name="Archive",
+            source="test",
+            raw={"name": "Archive"},
+            entries=tuple(
+                ImportedLorebookEntry(
+                    id=f"archive-{index}",
+                    title=f"Archive entry {index}",
+                    content="content",
+                    keys=("archive",),
+                )
+                for index in range(1, 26)
+            ),
+            id="archive-prefix",
+        )
+    )
+    exact_id = store.save_lorebook(
+        ImportedLorebook(
+            name="Archive 1984",
+            source="test",
+            raw={"name": "Archive 1984"},
+            entries=(ImportedLorebookEntry(id="exact", title="Exact entry", content="content", keys=("exact",)),),
+            id="archive-1984",
+        )
+    )
+    fallback_id = store.save_lorebook(
+        ImportedLorebook(
+            name="Ledger 1984",
+            source="test",
+            raw={"name": "Ledger 1984"},
+            entries=tuple(
+                ImportedLorebookEntry(
+                    id=f"ledger-{index}",
+                    title=f"Ledger entry {index}",
+                    content="content",
+                    keys=("ledger",),
+                )
+                for index in range(1, 7)
+            ),
+            id="book-ledger-1984",
+        )
+    )
+
+    collision = await runtime.handle_command(
+        RPCommand("lore", ["inspect", "Archive", "1984"], "/rp lore inspect Archive 1984"), Event()
+    )
+    fallback = await runtime.handle_command(
+        RPCommand("lore", ["inspect", "Ledger", "1984"], "/rp lore inspect Ledger 1984"), Event()
+    )
+    no_fuzzy_match = await runtime.handle_command(
+        RPCommand("lore", ["inspect", "Ledger", "19840"], "/rp lore inspect Ledger 19840"), Event()
+    )
+
+    assert prefix_id == "archive-prefix"
+    assert exact_id == "archive-1984"
+    assert fallback_id == "book-ledger-1984"
+    assert f"Lorebook: Archive ({prefix_id[:8]})" in collision
+    assert "Lorebook: Archive 1984" not in collision
+    assert "showing entries 1-20 of 25 (page 1/2)" in collision
+    assert f"Lorebook: Ledger 1984 ({fallback_id[:8]})" in fallback
+    assert "showing entries 1-5 of 6 (page 1/2)" in fallback
+    assert no_fuzzy_match == "Lorebook not found: Ledger"
