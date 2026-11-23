@@ -513,6 +513,59 @@ def test_lorebook_file_import_infinite_order_falls_back(field, tmp_path):
     assert book.entries[1].insertion_order == 1
 
 
+@pytest.mark.parametrize(
+    ("field", "other_orders", "fallback"),
+    (
+        ("insertion_order", {"order": 8}, 1),
+        ("order", {"displayIndex": 8}, 1),
+        ("displayIndex", {}, 1),
+        ("priority", {"order": 8}, 0),
+    ),
+)
+@pytest.mark.parametrize(
+    ("value", "in_range"),
+    (
+        pytest.param(-(2**63) - 1, False, id="below-minimum"),
+        pytest.param(-(2**63), True, id="minimum"),
+        pytest.param(2**63 - 1, True, id="maximum"),
+        pytest.param(2**63, False, id="above-maximum"),
+        pytest.param(str(-(2**63)), True, id="minimum-string"),
+        pytest.param(str(2**63), False, id="above-maximum-string"),
+    ),
+)
+def test_lorebook_file_import_sqlite_integer_range(field, other_orders, fallback, value, in_range, tmp_path):
+    target = {
+        "uid": "target",
+        "comment": "Moon",
+        "content": "Moon lore.",
+        "keys": ["moon"],
+        "priority": 7,
+        "probability": 25,
+        **other_orders,
+        field: value,
+    }
+    payload = {"name": "Atlas", "entries": [{"content": "Filler."}, target]}
+    path = tmp_path / "integer-range.json"
+    path.write_text(json.dumps(payload), encoding="utf-8")
+
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    lorebook_id = store.save_lorebook(import_lorebook_file(path))
+    entries = store.list_lorebook_entries(lorebook_id)
+    assert len(entries) == 2
+    saved = next(entry for entry in entries if entry["id"] == f"{lorebook_id}:target")
+
+    expected = int(value) if in_range else fallback
+    if field == "priority":
+        assert (saved["insertion_order"], saved["priority"]) == (8, expected)
+    else:
+        assert (saved["insertion_order"], saved["priority"]) == (expected, 7)
+    assert saved["title"] == "Moon"
+    assert saved["content"] == "Moon lore."
+    assert json.loads(saved["keys_json"]) == ["moon"]
+    assert saved["probability"] == 0.25
+    assert json.loads(saved["raw_json"]) == target
+
+
 @pytest.mark.parametrize("field", ("probability", "chance"))
 @pytest.mark.parametrize("huge", (10**400, -(10**400)))
 def test_lorebook_import_huge_probability_falls_back(field, huge):

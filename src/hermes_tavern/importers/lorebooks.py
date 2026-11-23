@@ -245,9 +245,11 @@ def _tuple_strings(value: Any) -> tuple[str, ...]:
 
 def _int(value: Any, default: int) -> int:
     try:
-        return int(value)
+        parsed = int(value)
     except (TypeError, ValueError, OverflowError):
         return default
+    # SQLite INTEGER columns store signed 64-bit values.
+    return parsed if -(2**63) <= parsed <= 2**63 - 1 else default
 
 
 def _probability(value: Any) -> float:
