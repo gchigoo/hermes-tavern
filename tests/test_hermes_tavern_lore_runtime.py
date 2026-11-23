@@ -1,4 +1,5 @@
 import json
+import sys
 from copy import deepcopy
 from pathlib import Path
 
@@ -410,3 +411,60 @@ async def test_lore_runtime_inspect_and_debug_tolerate_bad_key_json(tmp_path):
     for title in ("MalformedKeys", "NonArrayKeys"):
         assert f"{title} [enabled]: keys=[none]" in inspected
         assert f"{title}: enabled, keys=[]" in debug
+
+
+@pytest.mark.asyncio
+async def test_lore_runtime_inspect_handles_numeric_refs_pagination_and_invalid_decimals(tmp_path):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    runtime = TavernRuntime(store)
+    numeric_name_id = store.save_lorebook(
+        ImportedLorebook(
+            name="Archive ²",
+            source="test",
+            raw={"name": "Archive ²"},
+            entries=(ImportedLorebookEntry(id="numeric-ref", title="Numeric reference", content="content", keys=("ref",)),),
+            id="numeric-reference",
+        ),
+    )
+    paged_id = store.save_lorebook(
+        ImportedLorebook(
+            name="Paged",
+            source="test",
+            raw={"name": "Paged"},
+            entries=tuple(
+                ImportedLorebookEntry(id=f"entry-{index}", title=f"Entry {index}", content="content", keys=("page",))
+                for index in range(1, 4)
+            ),
+            id="paged-reference",
+        ),
+    )
+
+    numeric_name = await runtime.handle_command(
+        RPCommand("lore", ["inspect", "Archive", "²"], "/rp lore inspect Archive ²"), Event()
+    )
+    unicode_decimal_page = await runtime.handle_command(
+        RPCommand("lore", ["inspect", paged_id, "٢", "٢"], f"/rp lore inspect {paged_id} ٢ ٢"), Event()
+    )
+    clamped_page = await runtime.handle_command(
+        RPCommand("lore", ["inspect", paged_id, "99", "99"], f"/rp lore inspect {paged_id} 99 99"), Event()
+    )
+    digit_limit = sys.int_info.str_digits_check_threshold
+    too_long_decimal = "9" * (digit_limit + 1)
+    original_digit_limit = sys.get_int_max_str_digits()
+    sys.set_int_max_str_digits(digit_limit)
+    try:
+        invalid_limit = await runtime.handle_command(
+            RPCommand("lore", ["inspect", paged_id, too_long_decimal], "/rp lore inspect"), Event()
+        )
+        invalid_page = await runtime.handle_command(
+            RPCommand("lore", ["inspect", paged_id, "1", too_long_decimal], "/rp lore inspect"), Event()
+        )
+    finally:
+        sys.set_int_max_str_digits(original_digit_limit)
+
+    assert numeric_name_id == "numeric-reference"
+    assert "Lorebook: Archive ²" in numeric_name
+    assert "showing entries 3-3 of 3 (page 2/2)" in unicode_decimal_page
+    assert "showing entries 1-3 of 3 (page 1/1)" in clamped_page
+    assert invalid_limit == "Usage: /rp lore inspect <lorebook> [limit] [page]"
+    assert invalid_page == "Usage: /rp lore inspect <lorebook> [limit] [page]"

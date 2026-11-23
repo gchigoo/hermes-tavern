@@ -15,16 +15,19 @@ from hermes_tavern.lorebook import match_lorebook_entries
 from hermes_tavern.runtime_utils import mobile_preview
 
 
-def _parse_ref_limit_page(args: list[str], *, default_limit: int, max_limit: int) -> tuple[str, int, int]:
+def _parse_ref_limit_page(args: list[str], *, default_limit: int, max_limit: int) -> tuple[str, int, int] | None:
     """Parse `<ref> [limit] [page]` while allowing spaces in ref names."""
     parts = list(args)
     page = 1
     limit = default_limit
-    if len(parts) >= 2 and parts[-1].isdigit() and parts[-2].isdigit():
-        page = max(1, int(parts.pop()))
-        limit = max(1, min(max_limit, int(parts.pop())))
-    elif len(parts) >= 2 and parts[-1].isdigit():
-        limit = max(1, min(max_limit, int(parts.pop())))
+    try:
+        if len(parts) >= 2 and parts[-1].isdecimal() and parts[-2].isdecimal():
+            page = max(1, int(parts.pop()))
+            limit = max(1, min(max_limit, int(parts.pop())))
+        elif len(parts) >= 2 and parts[-1].isdecimal():
+            limit = max(1, min(max_limit, int(parts.pop())))
+    except ValueError:
+        return None
     return " ".join(parts).strip(), limit, page
 
 
@@ -212,7 +215,10 @@ def lore_list(runtime: Any) -> str:
 def lore_inspect(runtime: Any, command: RPCommand) -> str:
     if len(command.args) < 2:
         return "Usage: /rp lore inspect <lorebook> [limit] [page]"
-    lore_ref, limit, page = _parse_ref_limit_page(command.args[1:], default_limit=5, max_limit=20)
+    parsed = _parse_ref_limit_page(command.args[1:], default_limit=5, max_limit=20)
+    if parsed is None:
+        return "Usage: /rp lore inspect <lorebook> [limit] [page]"
+    lore_ref, limit, page = parsed
     if not lore_ref:
         return "Usage: /rp lore inspect <lorebook> [limit] [page]"
     lorebook = runtime.store.get_lorebook(lore_ref)
