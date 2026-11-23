@@ -168,8 +168,11 @@ def speak(runtime, event: Any) -> str:
     media_tag = _quoted_media_tag(data)
     if not media_tag:
         return "Hermes Tavern speak: TTS produced no deliverable audio."
-    provider = str(data.get("provider") or "tts")
-    return f"Hermes Tavern speak: audio ready ({provider}).\n{media_tag}"
+    caption_prefix = "Hermes Tavern speak: audio ready ("
+    provider = _mobile_preview(
+        str(data.get("provider") or "tts"), 220 - len(caption_prefix) - len(").")
+    )
+    return f"{caption_prefix}{provider}).\n{media_tag}"
 
 
 def voice(runtime, command: RPCommand, event: Any) -> str:

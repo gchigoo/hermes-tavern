@@ -10,6 +10,7 @@ from plugins.hermes_tavern.db import TavernStore
 from gateway.platforms.base import BasePlatformAdapter
 from plugins.hermes_tavern.gateway_hook import _get_adapter, _send_if_possible, pre_gateway_dispatch
 from plugins.hermes_tavern.importers.cards import parse_character_card
+from plugins.hermes_tavern.runtime import TavernRuntime
 
 
 def _event(text: str) -> SimpleNamespace:
@@ -166,6 +167,45 @@ async def test_send_if_possible_strips_media_tags_and_delivers_native_media(tmp_
     adapter.send.assert_awaited_once_with("chat-1", "Generated scene.")
     gateway._deliver_media_from_response.assert_awaited_once()
     assert gateway._deliver_media_from_response.await_args.args[0].endswith(f'MEDIA:"{media}"')
+
+
+@pytest.mark.asyncio
+async def test_gateway_speak_delivers_capped_caption_and_full_voice_path(tmp_path, monkeypatch):
+    audio = tmp_path / ("renderer output " * 8) / ("voice files " * 8) / "spoken reply.ogg"
+    audio.parent.mkdir(parents=True)
+    audio.write_bytes(b"audio")
+    assert len(str(audio)) > 220
+
+    def render_tts(text):
+        assert text == "Hello."
+        return {
+            "success": True,
+            "file_path": str(audio),
+            "media_tag": f"[[audio_as_voice]]\nMEDIA:{audio}",
+            "provider": "p" * 300,
+        }
+
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    store.save_card(parse_character_card({"name": "Alice", "first_mes": "Hello."}))
+    runtime = TavernRuntime(store, tts_renderer=render_tts)
+    monkeypatch.setattr(gateway_hook, "TavernRuntime", lambda _store: runtime)
+    pre_gateway_dispatch(event=_event("/rp start Alice"), store=store)
+    gateway, adapter = _media_gateway()
+    event = _event("/rp speak")
+
+    result = pre_gateway_dispatch(event=event, gateway=gateway, store=store)
+    await asyncio.sleep(0)
+
+    assert result == {"action": "skip", "reason": "hermes-tavern"}
+    gateway._deliver_media_from_response.assert_awaited_once()
+    response, _, _ = gateway._deliver_media_from_response.await_args.args
+    media_files, caption = BasePlatformAdapter.extract_media(response)
+    assert len(caption) == 220
+    assert caption.startswith("Hermes Tavern speak: audio ready (")
+    assert response == f'{caption}\n[[audio_as_voice]]\nMEDIA:"{audio}"'
+    assert media_files == [(str(audio), True)]
+    gateway._deliver_media_from_response.assert_awaited_once_with(response, event, adapter)
+    adapter.send.assert_awaited_once_with("chat-1", caption)
 
 
 @pytest.mark.asyncio

@@ -1,3 +1,6 @@
+import wave
+
+from gateway.platforms.base import BasePlatformAdapter
 from plugins.hermes_tavern.commands import RPCommand
 from plugins.hermes_tavern.db import TavernStore
 from plugins.hermes_tavern.importers.cards import parse_character_card
@@ -103,12 +106,14 @@ def test_provider_connection_error_returns_retry_hint(tmp_path):
 
 
 def test_speak_and_voice_commands_are_mobile_safe(tmp_path):
+    clip_path = tmp_path / "voice clip.mp3"
+
     def fake_tts(text):
         assert text == "A short reply."
         return {
             "success": True,
-            "file_path": str(tmp_path / "voice clip.mp3"),
-            "media_tag": f"MEDIA:{tmp_path / 'voice clip.mp3'}",
+            "file_path": str(clip_path),
+            "media_tag": f"MEDIA:{clip_path}",
             "provider": "fake-tts",
         }
 
@@ -121,12 +126,14 @@ def test_speak_and_voice_commands_are_mobile_safe(tmp_path):
     status = runtime.handle_command_sync(RPCommand("voice", [], "/rp voice"), Event())
     off = runtime.handle_command_sync(RPCommand("voice", ["off"], "/rp voice off"), Event())
 
-    assert "Hermes Tavern speak: audio ready (fake-tts)." in speak
-    assert f'MEDIA:"{tmp_path / "voice clip.mp3"}"' in speak
+    media_files, caption = BasePlatformAdapter.extract_media(speak)
+    assert caption == "Hermes Tavern speak: audio ready (fake-tts)."
+    assert media_files == [(str(clip_path), False)]
+    assert speak == f'{caption}\nMEDIA:"{clip_path}"'
     assert on == "Hermes Tavern voice: on."
     assert status == "Hermes Tavern voice: on."
     assert off == "Hermes Tavern voice: off."
-    assert all(len(item) < 220 for item in (speak, on, status, off))
+    assert all(len(item) <= 220 for item in (caption, on, status, off))
 
 
 def test_speak_preserves_voice_media_directive(tmp_path):
@@ -144,14 +151,42 @@ def test_speak_preserves_voice_media_directive(tmp_path):
 
     speak = runtime.handle_command_sync(RPCommand("speak", [], "/rp speak"), Event())
 
-    assert "[[audio_as_voice]]" in speak
-    assert f'MEDIA:"{tmp_path / "voice.ogg"}"' in speak
-    from gateway.platforms.base import BasePlatformAdapter
-
-    media_files, cleaned = BasePlatformAdapter.extract_media(speak)
+    media_files, caption = BasePlatformAdapter.extract_media(speak)
+    assert caption == "Hermes Tavern speak: audio ready (fake-tts)."
+    assert speak == f'{caption}\n[[audio_as_voice]]\nMEDIA:"{tmp_path / "voice.ogg"}"'
     assert media_files == [(str(tmp_path / "voice.ogg"), True)]
-    assert "MEDIA:" not in cleaned
-    assert "[[audio_as_voice]]" not in cleaned
+
+
+def test_speak_caps_visible_caption_without_shortening_voice_path(tmp_path):
+    audio = tmp_path / ("generated speech " * 8) / ("voice outputs " * 8) / "voice clip.wav"
+    audio.parent.mkdir(parents=True)
+    with wave.open(str(audio), "wb") as clip:
+        clip.setparams((1, 2, 8000, 0, "NONE", "not compressed"))
+        clip.writeframes(b"\0\0" * 80)
+    assert len(str(audio)) > 220
+    provider = "p" * 300
+
+    def fake_tts(_text):
+        return {
+            "success": True,
+            "file_path": str(audio),
+            "media_tag": f"[[audio_as_voice]]\nMEDIA:{audio}",
+            "provider": provider,
+        }
+
+    runtime = _runtime(tmp_path, tts_renderer=fake_tts)
+    session = _seed_active_session(runtime)
+    runtime.store.append_message(session["id"], "assistant", "A short reply.")
+
+    speak = runtime.handle_command_sync(RPCommand("speak", [], "/rp speak"), Event())
+
+    media_files, caption = BasePlatformAdapter.extract_media(speak)
+    prefix = "Hermes Tavern speak: audio ready ("
+    truncated = provider[:220 - len(prefix) - len("…).")]
+    assert len(caption) == 220
+    assert caption == f"{prefix}{truncated}…)."
+    assert speak == f'{caption}\n[[audio_as_voice]]\nMEDIA:"{audio}"'
+    assert media_files == [(str(audio), True)]
 
 
 def test_speak_handles_tts_failure_without_leaking_details(tmp_path):
