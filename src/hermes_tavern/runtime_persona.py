@@ -219,7 +219,10 @@ def persona_export(runtime: Any, command: RPCommand) -> str:
         return _persona_not_found(persona_ref)
 
     payload = _coerce_raw_json_object(persona.get("raw_json"))
-    if payload is None:
+    # This descriptor carries metadata only and re-import needs the stored content.
+    if payload is None or (
+        payload.get("format") == "raw_text" and payload.keys() <= {"format", "source_path"}
+    ):
         payload = _normalize_persona_payload(persona)
 
     export_path = _build_persona_export_path(persona["id"])

@@ -45,30 +45,6 @@ def _extract_export_paths(response: str) -> tuple[str, str]:
     return file_path, media_path
 
 
-def _coerce_expected_persona_payload(persona: dict) -> dict[str, object]:
-    raw_json = persona.get("raw_json")
-    if isinstance(raw_json, dict):
-        return raw_json
-    if isinstance(raw_json, str):
-        try:
-            parsed = json.loads(raw_json)
-        except (TypeError, ValueError, json.JSONDecodeError):
-            return {
-                "name": persona["name"],
-                "content": persona.get("content") or "",
-                "source_path": persona.get("source_path") or "unknown",
-                "created_at": persona.get("created_at", ""),
-            }
-        if isinstance(parsed, dict):
-            return parsed
-    return {
-        "name": persona["name"],
-        "content": persona.get("content") or "",
-        "source_path": persona.get("source_path") or "unknown",
-        "created_at": persona.get("created_at", ""),
-    }
-
-
 def _runtime_with_home(tmp_path: Path, store: TavernStore, monkeypatch) -> TavernRuntime:
     monkeypatch.setattr("plugins.hermes_tavern.runtime_persona.get_hermes_home", lambda: tmp_path)
     return TavernRuntime(store)
@@ -363,6 +339,7 @@ def test_persona_runtime_export_uses_stored_raw_json_when_available(tmp_path, mo
     path.write_text(
         json.dumps(
             {
+                "format": "raw_text",
                 "name": "Pilot",
                 "persona": "I am {{user}}, a careful pilot.",
                 "api_key": "must-not-persist",
@@ -429,6 +406,38 @@ def test_persona_runtime_export_falls_back_for_invalid_or_missing_raw_json(tmp_p
     }
 
 
+def test_persona_runtime_export_round_trips_raw_text(tmp_path, monkeypatch):
+    """Plain Unicode text exports as JSON and re-imports with the same name and content."""
+    original = "我是 {{user}}，耐心的旅人 · Élodie。"
+    path = tmp_path / "traveler.txt"
+    path.write_text(original, encoding="utf-8")
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    runtime = _runtime_with_home(tmp_path / "hermes home", store, monkeypatch)
+
+    runtime.handle_command_sync(
+        RPCommand("persona", ["import", str(path)], f"/rp persona import {path}"),
+        Event(),
+    )
+    response = runtime.handle_command_sync(
+        RPCommand("persona", ["export", "traveler"], "/rp persona export traveler"),
+        Event(),
+    )
+    file_path = _extract_export_paths(response)[0]
+
+    fresh_store = TavernStore(tmp_path / "reimport.sqlite3")
+    fresh_runtime = TavernRuntime(fresh_store)
+    reimported = fresh_runtime.handle_command_sync(
+        RPCommand("persona", ["import", file_path], f"/rp persona import {file_path}"),
+        Event(),
+    )
+    imported = fresh_store.get_persona("traveler")
+
+    assert "Imported Hermes Tavern persona: traveler" in reimported
+    assert imported is not None
+    assert imported["name"] == path.stem
+    assert imported["content"] == original
+
+
 def test_persona_runtime_export_usage_with_last_and_not_found(tmp_path, monkeypatch):
     first = tmp_path / "first.txt"
     second = tmp_path / "second.txt"
@@ -459,7 +468,12 @@ def test_persona_runtime_export_usage_with_last_and_not_found(tmp_path, monkeypa
     payload = json.loads(Path(path).read_text(encoding="utf-8"))
     stored = store.get_persona("last")
     assert stored is not None
-    assert payload == _coerce_expected_persona_payload(stored)
+    assert payload == {
+        "name": stored["name"],
+        "content": stored.get("content") or "",
+        "source_path": stored.get("source_path") or "unknown",
+        "created_at": stored.get("created_at", ""),
+    }
     assert usage == "Usage: /rp persona export <persona>"
     assert not_found == "Persona not found: Missing"
 
