@@ -9,7 +9,11 @@ from typing import Any
 from hermes_tavern.commands import RPCommand
 from hermes_tavern.identity import session_key_from_event
 from hermes_tavern.import_policy import resolve_import_path
-from hermes_tavern.importers.personas import import_persona_file, import_raw_persona_text
+from hermes_tavern.importers.personas import (
+    import_persona_file,
+    import_raw_persona_text,
+    persona_json_name,
+)
 from hermes_tavern.runtime_utils import mobile_preview, parse_pagination
 from hermes_tavern.hermes_home import get_hermes_home
 
@@ -224,6 +228,9 @@ def persona_export(runtime: Any, command: RPCommand) -> str:
         payload.get("format") == "raw_text" and payload.keys() <= {"format", "source_path"}
     ):
         payload = _normalize_persona_payload(persona)
+    elif persona_json_name(payload) is None:
+        # The original import used its filename. Keep that name on re-import.
+        payload = {**payload, "name": persona["name"]}
 
     export_path = _build_persona_export_path(persona["id"])
     export_path.write_text(

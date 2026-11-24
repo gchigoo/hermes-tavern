@@ -445,6 +445,47 @@ def test_persona_runtime_export_falls_back_for_invalid_or_missing_raw_json(tmp_p
     }
 
 
+@pytest.mark.parametrize(
+    ("aliases", "expected_name", "needs_name"),
+    [
+        ({}, "林薇", True),
+        ({"name": " ", "persona_name": "\t", "user_name": "\u3000"}, "林薇", True),
+        ({"name": " ", "user_name": "  航海员  "}, "航海员", False),
+        ({"name": 42}, "42", False),
+    ],
+)
+def test_persona_runtime_export_round_trips_json_name(
+    tmp_path, monkeypatch, aliases, expected_name, needs_name,
+):
+    path = tmp_path / "林薇.json"
+    original = {**aliases, "description": "我是 {{user}}。", "extensions": {"tags": ["航海"]}}
+    path.write_text(json.dumps(original, ensure_ascii=False), encoding="utf-8")
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    runtime = _runtime_with_home(tmp_path / "hermes home", store, monkeypatch)
+    runtime.handle_command_sync(
+        RPCommand("persona", ["import", str(path)], f"/rp persona import {path}"), Event(),
+    )
+    before = store.get_persona(expected_name)
+    assert before is not None
+
+    response = runtime.handle_command_sync(
+        RPCommand("persona", ["export", expected_name], f"/rp persona export {expected_name}"), Event(),
+    )
+    exported_path, _ = _extract_export_paths(response)
+    assert Path(exported_path).stem != expected_name
+    expected_payload = {**original, "name": expected_name} if needs_name else original
+    assert json.loads(Path(exported_path).read_text(encoding="utf-8")) == expected_payload
+
+    fresh_store = TavernStore(tmp_path / "reimport.sqlite3")
+    TavernRuntime(fresh_store).handle_command_sync(
+        RPCommand("persona", ["import", exported_path], f"/rp persona import {exported_path}"), Event(),
+    )
+    reimported = fresh_store.get_persona(expected_name)
+    assert reimported is not None
+    assert reimported["content"] == before["content"] == original["description"]
+    assert store.get_persona(expected_name) == before
+
+
 def test_persona_runtime_export_round_trips_raw_text(tmp_path, monkeypatch):
     """Plain Unicode text exports as JSON and re-imports with the same name and content."""
     original = "我是 {{user}}，耐心的旅人 · Élodie。"
