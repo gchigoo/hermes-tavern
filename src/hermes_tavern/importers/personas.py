@@ -62,12 +62,13 @@ def import_persona_json(
     default_name: str = "persona",
     source_path: str = "json",
 ) -> ImportedPersona:
-    name = str(
-        data.get("name")
-        or data.get("persona_name")
-        or data.get("user_name")
-        or default_name
-    ).strip()
+    name = default_name
+    for key in ("name", "persona_name", "user_name"):
+        value = data.get(key)
+        if not value or (isinstance(value, str) and not value.strip()):
+            continue
+        name = str(value).strip()
+        break
     content = _first_text(
         data,
         ("persona", "description", "prompt", "content", "text", "profile"),

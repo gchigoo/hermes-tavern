@@ -106,6 +106,45 @@ def test_persona_import_supports_raw_text(tmp_path):
     assert persona.raw_json["format"] == "raw_text"
 
 
+@pytest.mark.parametrize(
+    ("names", "expected"),
+    [
+        (
+            {"name": " Primary  Name ", "persona_name": "Persona", "user_name": "User"},
+            "Primary Name",
+        ),
+        (
+            {"name": " \t", "persona_name": " 林  薇 ", "user_name": "User"},
+            "林 薇",
+        ),
+        ({"persona_name": "\u3000", "user_name": " User Name "}, "User Name"),
+        ({"name": "", "persona_name": " \t", "user_name": "\n"}, "filename"),
+        ({}, "filename"),
+        ({"name": 42, "persona_name": "Persona"}, "42"),
+        ({"name": 0, "persona_name": "Persona"}, "Persona"),
+    ],
+    ids=[
+        "priority", "blank-name", "blank-persona-name", "all-blank", "absent",
+        "truthy-number", "falsy-number",
+    ],
+)
+def test_persona_import_json_name_priority(tmp_path, names, expected):
+    payload = {
+        **names,
+        "description": "  Unicode · 内容  ",
+        "extensions": {"tags": ["extra"]},
+    }
+    path = tmp_path / "filename.json"
+    path.write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
+
+    persona = import_persona_file(path)
+
+    assert persona.name == expected
+    assert persona.content == "Unicode · 内容"
+    assert persona.source_path == str(path)
+    assert persona.raw_json == payload
+
+
 @pytest.mark.parametrize("encoding", ["utf-8", "utf-8-sig"])
 def test_persona_import_unicode_json_sanitizes_secrets(tmp_path, encoding):
     """UTF-8 and UTF-8-SIG JSON keep Unicode name/content and drop secrets."""
