@@ -79,13 +79,8 @@ def _safe_lore_keys(value: Any) -> list[str]:
 
 
 def _as_bool(value: Any) -> bool:
-    if isinstance(value, bool):
-        return value
-    if isinstance(value, (int, float)):
-        return bool(value)
-    if isinstance(value, str):
-        return value.lower() in {"1", "true", "yes", "on"}
-    return False
+    """Unknown flags default to False."""
+    return coerce_legacy_enabled(value) is True
 
 
 def _as_status_bool(value: Any) -> bool:

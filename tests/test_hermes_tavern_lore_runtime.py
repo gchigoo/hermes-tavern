@@ -155,8 +155,9 @@ async def test_lore_runtime_export_uses_raw_json(monkeypatch, tmp_path):
 
     raw_payload = {
         "title": "raw-lorebook",
+        "extension": {"layout": [1, {"custom": True}]},
         "entries": [
-            {"comment": "Moon", "content": "The moon is present.", "keys": ["moon"], "id": "x"},
+            {"comment": "Moon", "content": "The moon is present.", "keys": ["moon"], "id": "x", "enabled": True},
         ],
     }
     lorebook = ImportedLorebook(
@@ -174,7 +175,8 @@ async def test_lore_runtime_export_uses_raw_json(monkeypatch, tmp_path):
         ),
         id="AtlasRaw-id",
     )
-    store.save_lorebook(lorebook)
+    lorebook_id = store.save_lorebook(lorebook)
+    assert store.set_lorebook_entry_enabled(f"{lorebook_id}:entry-1", False)
 
     response = await runtime.handle_command(RPCommand("lore", ["export", "AtlasRaw"], "/rp lore export AtlasRaw"), event)
     path = _extract_export_path(response)
@@ -463,6 +465,73 @@ async def test_lore_enable_disable_entry_affects_matching(tmp_path):
     assert "+ Moon: key match: moon" not in after_disable
     assert "lore entry enabled: Sun" in enabled
     assert "+ Sun: key match: sun" in after_enable
+
+
+@pytest.mark.asyncio
+async def test_lore_runtime_fallback_round_trips_legacy_flags(tmp_path, monkeypatch):
+    monkeypatch.setenv("HERMES_HOME", str(tmp_path / "hermes_home"))
+    store = TavernStore(tmp_path / "legacy.sqlite3")
+    runtime = TavernRuntime(store)
+    lorebook = ImportedLorebook(
+        name="LegacyFlags",
+        source="test",
+        raw=["legacy"],
+        entries=(
+            ImportedLorebookEntry(id="moon", title="Moon", content="Moon lore.", keys=("mo+n",)),
+            ImportedLorebookEntry(id="sun", title="Sun", content="Sun lore.", keys=("sun",), priority=2),
+            ImportedLorebookEntry(id="star", title="Star", content="Star lore.", keys=("star",), priority=1),
+        ),
+    )
+    lorebook_id = store.save_lorebook(lorebook)
+    flags = ("enabled", "constant", "regex")
+    moon_flags = ("  YeS  ", "  OfF  ", "  yEs\n")
+    sun_flags = ("  OfF  ", "  TrUe  ", "  No  ")
+    star_flags = ("\tOn  ", " YeS\t", "  fAlSe ")
+    with store.connect() as conn:
+        conn.executemany(
+            "UPDATE lorebook_entries SET enabled = ?, constant = ?, regex = ? WHERE id = ?",
+            [
+                (*moon_flags, f"{lorebook_id}:moon"),
+                (*sun_flags, f"{lorebook_id}:sun"),
+                (*star_flags, f"{lorebook_id}:star"),
+            ],
+        )
+
+    rows = store.list_lorebook_entries(lorebook_id)
+    assert [(row["title"], *(row[flag] for flag in flags)) for row in rows] == [
+        ("Sun", *sun_flags),
+        ("Star", *star_flags),
+        ("Moon", *moon_flags),
+    ]
+    expected_matches = [("Star", "constant"), ("Moon", "key match: mo+n")]
+    matches = match_lorebook_entries(rows, "mooon sun").matches
+    assert [(match.title, match.reason) for match in matches] == expected_matches
+
+    exported = await runtime.handle_command(
+        RPCommand("lore", ["export", lorebook_id], f"/rp lore export {lorebook_id}"), Event(),
+    )
+    export_path = _extract_export_path(exported)
+    entries = json.loads(export_path.read_text(encoding="utf-8"))["entries"]
+    assert [(entry["title"], *(entry[flag] for flag in flags)) for entry in entries] == [
+        ("Sun", False, True, False),
+        ("Star", True, True, False),
+        ("Moon", True, False, True),
+    ]
+    assert all(isinstance(entry[flag], bool) for entry in entries for flag in flags)
+
+    reread_store = TavernStore(tmp_path / "reread.sqlite3")
+    imported = await TavernRuntime(reread_store).handle_command(
+        RPCommand("lore", ["import", str(export_path)], "/rp lore import"), Event(),
+    )
+    assert "Imported ST lorebook: LegacyFlags" in imported
+    reread_rows = reread_store.list_lorebook_entries(reread_store.get_lorebook("last")["id"])
+    assert [(row["title"], *(row[flag] for flag in flags)) for row in reread_rows] == [
+        ("Sun", 0, 1, 0),
+        ("Star", 1, 1, 0),
+        ("Moon", 1, 0, 1),
+    ]
+    reread_matches = match_lorebook_entries(reread_rows, "mooon sun").matches
+    assert [(match.title, match.reason) for match in reread_matches] == expected_matches
 
 
 @pytest.mark.asyncio
