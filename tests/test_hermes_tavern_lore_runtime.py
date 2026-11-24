@@ -72,6 +72,67 @@ async def test_lore_runtime_import_list_use_test_debug(tmp_path):
 
 
 @pytest.mark.asyncio
+async def test_lore_runtime_honors_disabled_selective_filter(tmp_path):
+    path = tmp_path / "world-info.json"
+    path.write_text(json.dumps({
+        "name": "Atlas",
+        "entries": {
+            str(uid): {
+                "uid": uid,
+                "comment": title,
+                "content": "The moon is cracked.",
+                "key": ["moon"],
+                "keysecondary": ["night"],
+                **flags,
+            }
+            for uid, (title, flags) in enumerate([
+                ("Filter off", {"selective": False}),
+                ("Filter on", {"selective": True}),
+                ("Legacy filter", {}),
+            ])
+        },
+    }), encoding="utf-8")
+    db_path = tmp_path / "tavern.sqlite3"
+    session_key = "telegram:chat:chat-1:thread:main:user:user-1"
+    store = TavernStore(db_path)
+    store.start_session(session_key)
+    runtime = TavernRuntime(store)
+    event = Event()
+    imported = await runtime.handle_command(
+        RPCommand("lore", ["import", str(path)], "/rp lore import"), event,
+    )
+    bound = await runtime.handle_command(
+        RPCommand("lore", ["use", "Atlas"], "/rp lore use Atlas"), event,
+    )
+    assert "Imported ST lorebook: Atlas" in imported
+    assert "lorebook bound" in bound
+
+    store = TavernStore(db_path)
+    runtime = TavernRuntime(store)
+    primary = await runtime.handle_command(
+        RPCommand("lore", ["test", "moon"], "/rp lore test moon"), event,
+    )
+    assert "+ Filter off: key match: moon" in primary
+    assert "- Filter on: secondary key filter miss" in primary
+    assert "- Legacy filter: secondary key filter miss" in primary
+
+    secondary = await runtime.handle_command(
+        RPCommand("lore", ["test", "night"], "/rp lore test night"), event,
+    )
+    both = await runtime.handle_command(
+        RPCommand("lore", ["test", "moon", "night"], "/rp lore test moon night"), event,
+    )
+    for title in ("Filter off", "Filter on", "Legacy filter"):
+        assert f"- {title}: no primary key match" in secondary
+        assert f"+ {title}: key match: moon" in both
+
+    book = store.get_lorebook("Atlas")
+    assert book is not None
+    entries = store.list_lorebook_entries(book["id"])
+    assert [json.loads(entry["secondary_keys_json"]) for entry in entries] == [["night"]] * 3
+
+
+@pytest.mark.asyncio
 async def test_lore_runtime_export_usage_and_not_found(tmp_path):
     store = TavernStore(tmp_path / "tavern.sqlite3")
     runtime = TavernRuntime(store)
