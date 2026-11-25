@@ -8,7 +8,7 @@ import pytest
 from plugins.hermes_tavern.commands import RPCommand
 from plugins.hermes_tavern.db import TavernStore
 from plugins.hermes_tavern.importers.cards import parse_character_card
-from plugins.hermes_tavern.importers.personas import import_persona_file
+from plugins.hermes_tavern.importers.personas import ImportedPersona, import_persona_file
 from plugins.hermes_tavern.importers import MAX_LOCAL_IMPORT_BYTES
 from plugins.hermes_tavern.runtime import TavernRuntime
 
@@ -504,6 +504,70 @@ def test_persona_runtime_export_round_trips_json_name(
     assert reimported is not None
     assert reimported["content"] == before["content"] == original["description"]
     assert store.get_persona(expected_name) == before
+
+
+@pytest.mark.parametrize(
+    ("raw_json", "stored_content", "expected_updates", "expected_content"),
+    [
+        pytest.param({}, "我是 {{user}}。", {"persona": "我是 {{user}}。"}, "我是 {{user}}。", id="empty-json"),
+        pytest.param(
+            {"persona_name": "Old name", "extensions": {"tags": ["航海"]}},
+            "我是 {{user}}。",
+            {"persona": "我是 {{user}}。"},
+            "我是 {{user}}。",
+            id="metadata-only",
+        ),
+        pytest.param(
+            {"persona": {"legacy": True}, "description": " \t", "content": ["legacy"]},
+            "Stored persona",
+            {"persona": "Stored persona"},
+            "Stored persona",
+            id="unusable-aliases",
+        ),
+        pytest.param({"extensions": {}}, " \t", {}, "", id="blank-stored-content"),
+        pytest.param(
+            {"persona": {"legacy": True}, "description": " \t", "profile": "  Existing alias  "},
+            "Different stored content",
+            {},
+            "Existing alias",
+            id="valid-alias",
+        ),
+    ],
+)
+def test_persona_runtime_export_round_trips_legacy_content(
+    tmp_path, monkeypatch, raw_json, stored_content, expected_updates, expected_content,
+):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    runtime = _runtime_with_home(tmp_path / "hermes home", store, monkeypatch)
+    name = "Legacy"
+    persona_id = store.save_persona(
+        ImportedPersona(
+            id="legacy-id", name=name, content=stored_content, source_path="legacy.json", raw_json=raw_json,
+        ),
+    )
+    before = store.get_persona(persona_id)
+    assert before is not None
+
+    response = runtime.handle_command_sync(
+        RPCommand("persona", ["export", name], f"/rp persona export {name}"), Event(),
+    )
+    exported_path, _ = _extract_export_paths(response)
+
+    fresh_store = TavernStore(tmp_path / "reimport.sqlite3")
+    result = TavernRuntime(fresh_store).handle_command_sync(
+        RPCommand("persona", ["import", exported_path], f"/rp persona import {exported_path}"), Event(),
+    )
+    reimported = fresh_store.get_persona(name)
+    if expected_content:
+        assert reimported is not None
+        assert reimported["content"] == expected_content
+    else:
+        assert result == "Persona import failed: empty persona content."
+        assert reimported is None
+    assert json.loads(Path(exported_path).read_text(encoding="utf-8")) == {
+        **raw_json, **expected_updates, "name": name,
+    }
+    assert store.get_persona(persona_id) == before
 
 
 def test_persona_runtime_export_round_trips_raw_text(tmp_path, monkeypatch):

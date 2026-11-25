@@ -12,6 +12,7 @@ from hermes_tavern.import_policy import resolve_import_path
 from hermes_tavern.importers.personas import (
     import_persona_file,
     import_raw_persona_text,
+    persona_json_content,
     persona_json_name,
 )
 from hermes_tavern.runtime_utils import mobile_preview, parse_pagination
@@ -231,6 +232,11 @@ def persona_export(runtime: Any, command: RPCommand) -> str:
     elif " ".join((persona_json_name(payload) or "").split()) != persona["name"]:
         # Preserve the stored name when current import rules resolve it differently.
         payload = {**payload, "name": persona["name"]}
+
+    if not persona_json_content(payload):
+        stored_content = persona.get("content")
+        if isinstance(stored_content, str) and stored_content.strip():
+            payload = {**payload, "persona": stored_content}
 
     export_path = _build_persona_export_path(persona["id"])
     export_path.write_text(

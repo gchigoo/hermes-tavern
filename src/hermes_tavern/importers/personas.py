@@ -63,16 +63,20 @@ def import_persona_json(
     source_path: str = "json",
 ) -> ImportedPersona:
     name = persona_json_name(data) or default_name
-    content = _first_text(
-        data,
-        ("persona", "description", "prompt", "content", "text", "profile"),
-    )
     return _persona(
         name=name or default_name,
-        content=content,
+        content=persona_json_content(data),
         source_path=source_path,
         raw_json=_safe_raw(data),
     )
+
+
+def persona_json_content(data: dict[str, Any]) -> str:
+    for key in ("persona", "description", "prompt", "content", "text", "profile"):
+        value = data.get(key)
+        if isinstance(value, str) and value.strip():
+            return value.strip()
+    return ""
 
 
 def persona_json_name(data: dict[str, Any]) -> str | None:
@@ -108,14 +112,6 @@ def _persona(
         source_path=source_path,
         raw_json=raw_json,
     )
-
-
-def _first_text(data: dict[str, Any], keys: tuple[str, ...]) -> str:
-    for key in keys:
-        value = data.get(key)
-        if isinstance(value, str) and value.strip():
-            return value.strip()
-    return ""
 
 
 def _safe_raw(value: Any) -> Any:
