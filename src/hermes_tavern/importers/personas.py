@@ -78,9 +78,11 @@ def import_persona_json(
 def persona_json_name(data: dict[str, Any]) -> str | None:
     for key in ("name", "persona_name", "user_name"):
         value = data.get(key)
-        if not value or (isinstance(value, str) and not value.strip()):
+        if isinstance(value, (dict, list)) or not value:
             continue
-        return str(value).strip() or None
+        name = str(value).strip()
+        if name:
+            return name
     return None
 
 

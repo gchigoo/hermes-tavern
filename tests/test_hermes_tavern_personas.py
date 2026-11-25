@@ -122,10 +122,12 @@ def test_persona_import_supports_raw_text(tmp_path):
         ({}, "filename"),
         ({"name": 42, "persona_name": "Persona"}, "42"),
         ({"name": 0, "persona_name": "Persona"}, "Persona"),
+        ({"name": {"label": "Object"}, "persona_name": ["List"], "user_name": "User"}, "User"),
+        ({"name": ["List"], "persona_name": {"label": "Object"}}, "filename"),
     ],
     ids=[
         "priority", "blank-name", "blank-persona-name", "all-blank", "absent",
-        "truthy-number", "falsy-number",
+        "truthy-number", "falsy-number", "structured-aliases", "structured-without-name",
     ],
 )
 def test_persona_import_json_name_priority(tmp_path, names, expected):
@@ -452,6 +454,8 @@ def test_persona_runtime_export_falls_back_for_invalid_or_missing_raw_json(tmp_p
         ({"name": " ", "persona_name": "\t", "user_name": "\u3000"}, "林薇", True),
         ({"name": " ", "user_name": "  航海员  "}, "航海员", False),
         ({"name": 42}, "42", False),
+        ({"name": ["List"], "persona_name": {"label": "Object"}}, "林薇", True),
+        ({"name": {"label": "Object"}, "user_name": "航海员"}, "航海员", False),
     ],
 )
 def test_persona_runtime_export_round_trips_json_name(
