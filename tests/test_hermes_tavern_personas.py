@@ -264,6 +264,21 @@ async def test_persona_runtime_commands_import_list_inspect_use_debug_clear(tmp_
     assert store.get_active_session(SESSION_KEY)["persona_id"] is None
 
 
+@pytest.mark.parametrize("suffix", [".txt", ".json"])
+def test_persona_import_reports_invalid_utf8_without_saving(tmp_path, suffix):
+    path = tmp_path / f"invalid{suffix}"
+    path.write_bytes(b"Persona text\xff")
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    runtime = TavernRuntime(store)
+
+    result = runtime.handle_command_sync(
+        RPCommand("persona", ["import", str(path)], "/rp persona import"), Event()
+    )
+
+    assert result == "Persona import failed: save the file as UTF-8 and try again."
+    assert store.list_personas() == []
+
+
 @pytest.mark.asyncio
 async def test_persona_new_creates_reusable_persona(tmp_path):
     store = TavernStore(tmp_path / "tavern.sqlite3")
