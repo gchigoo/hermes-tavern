@@ -183,6 +183,29 @@ def test_persona_import_unicode_json_sanitizes_secrets(tmp_path, encoding):
     assert "\ufeff" not in persona.content
 
 
+def test_persona_import_removes_nested_credential_aliases(tmp_path):
+    path = tmp_path / "observer.json"
+    path.write_text(json.dumps({
+        "name": "Observer",
+        "description": "Keeps a field journal.",
+        "apiKey": "fake-root-key",
+        "extensions": [{
+            "accessToken": "fake-nested-token",
+            "API_KEY": "fake-nested-key",
+            "accessTokenLabel": "keep this label",
+        }],
+    }), encoding="utf-8")
+
+    persona = import_persona_file(path)
+
+    assert persona.content == "Keeps a field journal."
+    assert persona.raw_json == {
+        "name": "Observer",
+        "description": "Keeps a field journal.",
+        "extensions": [{"accessTokenLabel": "keep this label"}],
+    }
+
+
 @pytest.mark.parametrize("encoding", ["utf-8", "utf-8-sig"])
 @pytest.mark.parametrize(
     ("filename", "body"),

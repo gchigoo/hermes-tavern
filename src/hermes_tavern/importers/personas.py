@@ -114,12 +114,17 @@ def _persona(
     )
 
 
+_PERSONA_SECRET_KEYS = {
+    "api_key", "apikey", "access_token", "accesstoken", "secret", "token", "password",
+}
+
+
 def _safe_raw(value: Any) -> Any:
     if isinstance(value, dict):
         return {
             str(k): _safe_raw(v)
             for k, v in value.items()
-            if str(k).lower() not in {"api_key", "access_token", "secret", "token", "password"}
+            if str(k).lower() not in _PERSONA_SECRET_KEYS
         }
     if isinstance(value, list):
         return [_safe_raw(item) for item in value]
