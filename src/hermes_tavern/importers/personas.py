@@ -78,7 +78,7 @@ def import_persona_json(
 def persona_json_name(data: dict[str, Any]) -> str | None:
     for key in ("name", "persona_name", "user_name"):
         value = data.get(key)
-        if isinstance(value, (dict, list)) or not value:
+        if isinstance(value, (bool, dict, list)) or not value:
             continue
         name = str(value).strip()
         if name:

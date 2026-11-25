@@ -228,8 +228,8 @@ def persona_export(runtime: Any, command: RPCommand) -> str:
         payload.get("format") == "raw_text" and payload.keys() <= {"format", "source_path"}
     ):
         payload = _normalize_persona_payload(persona)
-    elif persona_json_name(payload) is None:
-        # The original import used its filename. Keep that name on re-import.
+    elif " ".join((persona_json_name(payload) or "").split()) != persona["name"]:
+        # Preserve the stored name when current import rules resolve it differently.
         payload = {**payload, "name": persona["name"]}
 
     export_path = _build_persona_export_path(persona["id"])

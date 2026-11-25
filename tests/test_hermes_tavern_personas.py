@@ -122,12 +122,17 @@ def test_persona_import_supports_raw_text(tmp_path):
         ({}, "filename"),
         ({"name": 42, "persona_name": "Persona"}, "42"),
         ({"name": 0, "persona_name": "Persona"}, "Persona"),
+        ({"name": True, "persona_name": "Persona"}, "Persona"),
+        ({"name": False, "persona_name": True, "user_name": "User"}, "User"),
+        ({"name": False, "persona_name": False, "user_name": "User"}, "User"),
+        ({"name": True, "persona_name": False, "user_name": True}, "filename"),
         ({"name": {"label": "Object"}, "persona_name": ["List"], "user_name": "User"}, "User"),
         ({"name": ["List"], "persona_name": {"label": "Object"}}, "filename"),
     ],
     ids=[
         "priority", "blank-name", "blank-persona-name", "all-blank", "absent",
-        "truthy-number", "falsy-number", "structured-aliases", "structured-without-name",
+        "truthy-number", "falsy-number", "true-name", "false-name-true-persona-name",
+        "false-aliases", "boolean-only", "structured-aliases", "structured-without-name",
     ],
 )
 def test_persona_import_json_name_priority(tmp_path, names, expected):
@@ -448,18 +453,22 @@ def test_persona_runtime_export_falls_back_for_invalid_or_missing_raw_json(tmp_p
 
 
 @pytest.mark.parametrize(
-    ("aliases", "expected_name", "needs_name"),
+    ("aliases", "expected_name", "needs_name", "legacy_name"),
     [
-        ({}, "林薇", True),
-        ({"name": " ", "persona_name": "\t", "user_name": "\u3000"}, "林薇", True),
-        ({"name": " ", "user_name": "  航海员  "}, "航海员", False),
-        ({"name": 42}, "42", False),
-        ({"name": ["List"], "persona_name": {"label": "Object"}}, "林薇", True),
-        ({"name": {"label": "Object"}, "user_name": "航海员"}, "航海员", False),
+        ({}, "林薇", True, None),
+        ({"name": " ", "persona_name": "\t", "user_name": "\u3000"}, "林薇", True, None),
+        ({"name": " ", "user_name": "  远洋\t 航海员  "}, "远洋 航海员", False, None),
+        ({"name": 42}, "42", False, None),
+        ({"name": ["List"], "persona_name": {"label": "Object"}}, "林薇", True, None),
+        ({"name": {"label": "Object"}, "user_name": "航海员"}, "航海员", False, None),
+        ({"name": True, "persona_name": False, "user_name": "航海员"}, "航海员", False, None),
+        ({"name": True, "persona_name": False, "user_name": True}, "林薇", True, None),
+        ({"name": True, "user_name": "航海员"}, "航海员", True, "True"),
+        ({"name": True}, "林薇", True, "True"),
     ],
 )
 def test_persona_runtime_export_round_trips_json_name(
-    tmp_path, monkeypatch, aliases, expected_name, needs_name,
+    tmp_path, monkeypatch, aliases, expected_name, needs_name, legacy_name,
 ):
     path = tmp_path / "林薇.json"
     original = {**aliases, "description": "我是 {{user}}。", "extensions": {"tags": ["航海"]}}
@@ -471,6 +480,13 @@ def test_persona_runtime_export_round_trips_json_name(
     )
     before = store.get_persona(expected_name)
     assert before is not None
+    if legacy_name is not None:
+        with store.connect() as conn:
+            conn.execute("UPDATE personas SET name = ? WHERE id = ?", (legacy_name, before["id"]))
+        expected_name = legacy_name
+        before = store.get_persona(expected_name)
+        assert before is not None
+    assert json.loads(before["raw_json"]) == original
 
     response = runtime.handle_command_sync(
         RPCommand("persona", ["export", expected_name], f"/rp persona export {expected_name}"), Event(),
