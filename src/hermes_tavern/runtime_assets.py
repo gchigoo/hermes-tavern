@@ -212,6 +212,8 @@ def card_import(runtime: Any, command: RPCommand, event: Any) -> str:
     except FileNotFoundError:
         display_path = Path(str(path)).name if is_gateway_event(event) else path
         return f"Card file not found: {display_path}"
+    except OSError:
+        return "Card import failed: unable to read the file."
     except ValueError as exc:
         return f"Could not import card: {exc}"
     card_id = runtime.store.save_card(card)

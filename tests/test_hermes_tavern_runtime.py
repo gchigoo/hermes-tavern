@@ -2511,6 +2511,34 @@ async def test_runtime_card_import_invalid_json_returns_friendly_error(tmp_path)
     assert "Could not import card" in response or "Invalid JSON" in response
 
 
+@pytest.mark.asyncio
+async def test_runtime_card_import_unreadable_returns_friendly_error(monkeypatch, tmp_path):
+    card_file = tmp_path / "private-card.json"
+    card_file.write_text(_json.dumps({"name": "Unreadable"}), encoding="utf-8")
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    existing_card_id = store.save_card(parse_character_card({"name": "Existing"}))
+    existing_cards = store.list_cards()
+    runtime = TavernRuntime(store)
+    read_text = Path.read_text
+
+    def read_text_with_unreadable_card(path, *args, **kwargs):
+        if path == card_file:
+            raise PermissionError(f"Permission denied: {path}")
+        return read_text(path, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "read_text", read_text_with_unreadable_card)
+
+    response = await runtime.handle_command(
+        RPCommand("card", ["import", str(card_file)], f"/rp card import {card_file}"),
+        Event(),
+    )
+
+    assert response == "Card import failed: unable to read the file."
+    assert str(card_file) not in response
+    assert store.list_cards() == existing_cards
+    assert store.get_card("last") == store.get_card(existing_card_id)
+
+
 class AttachmentEvent(Event):
     def __init__(self, media_urls):
         self.media_urls = media_urls
