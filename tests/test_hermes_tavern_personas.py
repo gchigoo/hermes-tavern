@@ -302,6 +302,42 @@ def test_persona_import_reports_invalid_utf8_without_saving(tmp_path, suffix):
     assert store.list_personas() == []
 
 
+@pytest.mark.parametrize("failure", ["directory", "permission-denied", "missing"])
+def test_persona_import_reports_unreadable_file_without_saving(tmp_path, monkeypatch, failure):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    runtime = TavernRuntime(store)
+    existing_path = tmp_path / "existing.txt"
+    existing_path.write_text("An existing persona", encoding="utf-8")
+    existing_id = store.save_persona(import_persona_file(existing_path))
+    store.set_last_persona(existing_id)
+    personas_before = store.list_personas()
+
+    path = tmp_path / "candidate.txt"
+    if failure == "directory":
+        path.mkdir()
+    elif failure == "permission-denied":
+        path.write_text("A new persona", encoding="utf-8")
+        original_stat = Path.stat
+
+        def stat_with_denied_candidate(self, *args, **kwargs):
+            if self == path:
+                raise PermissionError(f"Permission denied: {self}")
+            return original_stat(self, *args, **kwargs)
+
+        monkeypatch.setattr(Path, "stat", stat_with_denied_candidate)
+
+    result = runtime.handle_command_sync(
+        RPCommand("persona", ["import", str(path)], "/rp persona import"), Event()
+    )
+
+    if failure == "missing":
+        assert result == f"Persona file not found: {path}"
+    else:
+        assert result == "Persona import failed: unable to read the file."
+    assert store.list_personas() == personas_before
+    assert store.get_persona("last")["id"] == existing_id
+
+
 @pytest.mark.asyncio
 async def test_persona_new_creates_reusable_persona(tmp_path):
     store = TavernStore(tmp_path / "tavern.sqlite3")

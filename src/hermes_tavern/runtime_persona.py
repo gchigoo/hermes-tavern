@@ -95,12 +95,15 @@ def persona_import(runtime: Any, command: RPCommand, event: Any) -> str:
     if decision.error:
         return decision.error
     path = decision.value
-    if not path.exists():
-        return f"Persona file not found: {path}"
+    assert path is not None
     try:
         persona = import_persona_file(path)
+    except (FileNotFoundError, NotADirectoryError):
+        return f"Persona file not found: {path}"
     except UnicodeDecodeError:
         return "Persona import failed: save the file as UTF-8 and try again."
+    except OSError:
+        return "Persona import failed: unable to read the file."
     if not persona.content:
         return "Persona import failed: empty persona content."
     persona_id = runtime.store.save_persona(persona)
