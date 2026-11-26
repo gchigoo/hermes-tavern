@@ -115,9 +115,15 @@ def preset_import(runtime: Any, command: RPCommand, event: Any) -> str:
     if decision.error:
         return decision.error
     path = decision.value
-    if not path.exists():
+    assert path is not None
+    try:
+        preset = import_preset_file(path)
+    except (FileNotFoundError, NotADirectoryError):
         return f"Preset file not found: {path}"
-    preset = import_preset_file(path)
+    except UnicodeDecodeError:
+        return "Preset import failed: save the file as UTF-8 and try again."
+    except OSError:
+        return "Preset import failed: unable to read the file."
     preset_id = runtime.store.save_preset(preset)
     runtime.store.set_last_preset(preset_id)
     counts = module_risk_counts(preset.modules)

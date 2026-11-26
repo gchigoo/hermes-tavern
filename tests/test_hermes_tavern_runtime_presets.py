@@ -6,6 +6,8 @@ import json
 from copy import deepcopy
 from pathlib import Path
 
+import pytest
+
 from plugins.hermes_tavern.commands import RPCommand
 from plugins.hermes_tavern.db import TavernStore
 from plugins.hermes_tavern.runtime import TavernRuntime
@@ -53,6 +55,43 @@ def test_runtime_preset_import_list_inspect(tmp_path):
     assert "not active system prompts" in imported
     assert "mixed" in listed
     assert "raw_text: jailbreak (disabled)" in inspected
+
+
+@pytest.mark.parametrize(
+    ("relative_path", "message"),
+    [
+        ("missing.txt", "Preset file not found: {path}"),
+        ("invalid-utf8.txt/child.txt", "Preset file not found: {path}"),
+        ("invalid-utf8.txt", "Preset import failed: save the file as UTF-8 and try again."),
+        ("directory.txt", "Preset import failed: unable to read the file."),
+    ],
+)
+def test_runtime_preset_import_read_errors_preserve_storage(tmp_path, relative_path, message):
+    existing_file = tmp_path / "existing.txt"
+    existing_file.write_text("Write plainly.", encoding="utf-8")
+    (tmp_path / "invalid-utf8.txt").write_bytes(b"\xff")
+    (tmp_path / "directory.txt").mkdir()
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    runtime = TavernRuntime(store)
+    runtime.handle_command_sync(
+        RPCommand("preset", ["import", str(existing_file)], f"/rp preset import {existing_file}"),
+        Event(),
+    )
+    last_before = store.get_preset("last")
+    assert last_before is not None
+    presets_before = store.list_presets()
+    modules_before = store.list_prompt_modules(last_before["id"])
+
+    path = tmp_path / relative_path
+    response = runtime.handle_command_sync(
+        RPCommand("preset", ["import", str(path)], f"/rp preset import {path}"),
+        Event(),
+    )
+
+    assert response == message.format(path=path)
+    assert store.list_presets() == presets_before
+    assert store.get_preset("last") == last_before
+    assert store.list_prompt_modules(last_before["id"]) == modules_before
 
 
 def test_runtime_preset_inspect_marks_malformed_module_raw_json_invalid(tmp_path):
