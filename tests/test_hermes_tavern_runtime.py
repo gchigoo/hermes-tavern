@@ -2512,6 +2512,22 @@ async def test_runtime_card_import_invalid_json_returns_friendly_error(tmp_path)
 
 
 @pytest.mark.asyncio
+async def test_runtime_card_import_invalid_utf8_returns_friendly_error(tmp_path):
+    card_file = tmp_path / "invalid-utf8.json"
+    card_file.write_bytes(b'{"name": "Invalid \xff"}')
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    runtime = TavernRuntime(store)
+
+    response = await runtime.handle_command(
+        RPCommand("card", ["import", str(card_file)], f"/rp card import {card_file}"),
+        Event(),
+    )
+
+    assert response == "Card import failed: save the file as UTF-8 and try again."
+    assert store.list_cards() == []
+
+
+@pytest.mark.asyncio
 async def test_runtime_card_import_unreadable_returns_friendly_error(monkeypatch, tmp_path):
     card_file = tmp_path / "private-card.json"
     card_file.write_text(_json.dumps({"name": "Unreadable"}), encoding="utf-8")

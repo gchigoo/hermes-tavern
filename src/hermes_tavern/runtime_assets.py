@@ -214,6 +214,8 @@ def card_import(runtime: Any, command: RPCommand, event: Any) -> str:
         return f"Card file not found: {display_path}"
     except OSError:
         return "Card import failed: unable to read the file."
+    except UnicodeDecodeError:
+        return "Card import failed: save the file as UTF-8 and try again."
     except ValueError as exc:
         return f"Could not import card: {exc}"
     card_id = runtime.store.save_card(card)
