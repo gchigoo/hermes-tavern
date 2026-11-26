@@ -72,6 +72,53 @@ async def test_lore_runtime_import_list_use_test_debug(tmp_path):
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("relative_path", "message"),
+    [
+        ("missing.json", "Lorebook file not found: {path}"),
+        ("invalid-utf8.json/child.json", "Lorebook file not found: {path}"),
+        ("invalid-utf8.json", "Lorebook import failed: save the file as UTF-8 and try again."),
+    ],
+)
+async def test_lore_runtime_import_file_errors_leave_storage_empty(tmp_path, relative_path, message):
+    (tmp_path / "invalid-utf8.json").write_bytes(b"\xff")
+    path = tmp_path / relative_path
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    runtime = TavernRuntime(store)
+
+    response = await runtime.handle_command(
+        RPCommand("lore", ["import", str(path)], "/rp lore import"), Event(),
+    )
+
+    assert response == message.format(path=path)
+    assert store.list_lorebooks() == []
+    assert store.get_lorebook("last") is None
+
+
+@pytest.mark.asyncio
+async def test_lore_runtime_import_permission_error_leaves_storage_empty(tmp_path, monkeypatch):
+    path = tmp_path / "atlas.json"
+    path.write_text('{"name": "Atlas", "entries": []}', encoding="utf-8")
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    runtime = TavernRuntime(store)
+    read_text = Path.read_text
+
+    def deny_lorebook_read(file, *args, **kwargs):
+        if file == path:
+            raise PermissionError("permission denied")
+        return read_text(file, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "read_text", deny_lorebook_read)
+    response = await runtime.handle_command(
+        RPCommand("lore", ["import", str(path)], "/rp lore import"), Event(),
+    )
+
+    assert response == "Lorebook import failed: unable to read the file."
+    assert store.list_lorebooks() == []
+    assert store.get_lorebook("last") is None
+
+
+@pytest.mark.asyncio
 async def test_lore_runtime_honors_disabled_selective_filter(tmp_path):
     path = tmp_path / "world-info.json"
     path.write_text(json.dumps({

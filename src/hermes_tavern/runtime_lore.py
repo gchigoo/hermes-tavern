@@ -182,9 +182,15 @@ def lore_import(runtime: Any, command: RPCommand, event: Any) -> str:
     if decision.error:
         return decision.error
     path = decision.value
-    if not path.exists():
+    assert path is not None
+    try:
+        lorebook = import_lorebook_file(path)
+    except (FileNotFoundError, NotADirectoryError):
         return f"Lorebook file not found: {path}"
-    lorebook = import_lorebook_file(path)
+    except UnicodeDecodeError:
+        return "Lorebook import failed: save the file as UTF-8 and try again."
+    except OSError:
+        return "Lorebook import failed: unable to read the file."
     lorebook_id = runtime.store.save_lorebook(lorebook)
     runtime.store.set_last_lorebook(lorebook_id)
     return (
