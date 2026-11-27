@@ -120,7 +120,7 @@ def parse_character_card(raw_card: dict[str, Any]) -> CharacterCard:
             ("system_prompt", "system_prompt_override"),
         ),
         post_history_instructions=_text(data.get("post_history_instructions")),
-        tags=[str(t) for t in tags],
+        tags=[item for item in tags if isinstance(item, str) and item.strip()],
         talkativeness=talkativeness,
         extensions=dict(extensions),
         source_path="",

@@ -192,6 +192,46 @@ def test_parse_card_filters_alternate_greetings_and_preserves_raw_metadata():
     assert raw == snapshot
 
 
+def test_parse_card_filters_tags_and_preserves_raw_metadata():
+    padded_tag = " \t奇幻🌙 "
+    raw = {
+        "spec": "chara_card_v2",
+        "data": {
+            "name": "Alice",
+            "tags": [
+                None,
+                padded_tag,
+                42,
+                "",
+                " \t\n\u2003",
+                {"label": "object"},
+                True,
+                ["list"],
+                "bard",
+            ],
+            "extensions": {"provider": {"id": "catalog", "labels": ["featured"]}},
+        },
+    }
+    snapshot = json.loads(json.dumps(raw))
+
+    card = parse_character_card(raw)
+
+    assert card.tags == [padded_tag, "bard"]
+    assert card.extensions == snapshot["data"]["extensions"]
+    assert card.raw == snapshot
+    assert raw == snapshot
+    raw["data"]["tags"].append("new tag")
+    assert card.raw == snapshot
+
+
+@pytest.mark.parametrize("tags", ["fantasy", {"label": "fantasy"}])
+def test_parse_card_uses_empty_tags_for_non_list_values(tags):
+    card = parse_character_card({"name": "Bob", "tags": tags})
+
+    assert card.tags == []
+    assert card.raw["tags"] == tags
+
+
 def test_parse_direct_character_card():
     card = parse_character_card({"name": "Bob", "description": "Direct card"})
 
