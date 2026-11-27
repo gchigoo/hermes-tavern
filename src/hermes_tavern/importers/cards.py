@@ -111,7 +111,9 @@ def parse_character_card(raw_card: dict[str, Any]) -> CharacterCard:
         scenario=_text(data.get("scenario")),
         first_mes=_text(data.get("first_mes")),
         mes_example=_text(data.get("mes_example")),
-        alternate_greetings=[str(item) for item in alternate],
+        alternate_greetings=[
+            item for item in alternate if isinstance(item, str) and item.strip()
+        ],
         creator_notes=_text(data.get("creator_notes")),
         system_prompt_override=_first_nonblank_text(
             data,

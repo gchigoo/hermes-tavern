@@ -164,6 +164,34 @@ def test_parse_v2_character_card_preserves_core_fields():
     assert card.id
 
 
+def test_parse_card_filters_alternate_greetings_and_preserves_raw_metadata():
+    padded_greeting = " \t你好，旅人！🌙\n "
+    raw = {
+        "spec": "chara_card_v2",
+        "data": {
+            "name": "Alice",
+            "alternate_greetings": [
+                None,
+                padded_greeting,
+                42,
+                "",
+                " \t\n\u2003",
+                {"text": "object"},
+                True,
+                ["list"],
+                "Good evening.",
+            ],
+        },
+    }
+    snapshot = json.loads(json.dumps(raw))
+
+    card = parse_character_card(raw)
+
+    assert card.alternate_greetings == [padded_greeting, "Good evening."]
+    assert card.raw == snapshot
+    assert raw == snapshot
+
+
 def test_parse_direct_character_card():
     card = parse_character_card({"name": "Bob", "description": "Direct card"})
 
