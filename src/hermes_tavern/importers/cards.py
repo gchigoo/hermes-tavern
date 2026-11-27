@@ -155,7 +155,14 @@ def _load_card_bytes(data: bytes, suffix: str, source_label: str) -> CharacterCa
                 f"This PNG may not be a SillyTavern character card."
             )
         try:
-            raw = json.loads(base64.b64decode(chara_b64, validate=True))
+            payload = base64.b64decode(chara_b64, validate=True)
+            # Preserve JSON's byte encoding detection while decoding strictly.
+            text = payload.decode(json.detect_encoding(payload))
+            raw = json.JSONDecoder().decode(text)
+        except UnicodeDecodeError as exc:
+            raise UnsupportedCardFormat(
+                "Card import failed: save the file as UTF-8 and try again."
+            ) from exc
         except Exception as exc:
             raise UnsupportedCardFormat(
                 f"Could not decode character data from {source_label}: {exc}"

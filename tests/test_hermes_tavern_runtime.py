@@ -17,19 +17,22 @@ from plugins.hermes_tavern.importers.presets import import_raw_preset_text
 from plugins.hermes_tavern.runtime import TavernRuntime
 
 
-def _make_png_with_chara(card_json: dict) -> bytes:
-    chara_b64 = base64.b64encode(_json.dumps(card_json).encode()).decode("latin-1")
-    chunk_data = b"chara\x00" + chara_b64.encode("latin-1")
+def _make_png_with_chara(card_json: dict | bytes) -> bytes:
+    if isinstance(card_json, dict):
+        card_json = _json.dumps(card_json).encode("utf-8")
+    chunk_data = b"chara\x00" + base64.b64encode(card_json)
 
     def chunk(type_: bytes, data: bytes) -> bytes:
         crc = zlib.crc32(type_ + data) & 0xFFFFFFFF
         return struct.pack(">I", len(data)) + type_ + data + struct.pack(">I", crc)
 
     ihdr_data = struct.pack(">IIBBBBB", 1, 1, 8, 2, 0, 0, 0)
+    pixel_data = zlib.compress(b"\x00\x00\x00\x00")
     return (
         b"\x89PNG\r\n\x1a\n"
         + chunk(b"IHDR", ihdr_data)
         + chunk(b"tEXt", chunk_data)
+        + chunk(b"IDAT", pixel_data)
         + chunk(b"IEND", b"")
     )
 
@@ -2466,9 +2469,14 @@ async def test_runtime_card_import_embedded_lorebook_is_saved_and_reported(tmp_p
 
 
 @pytest.mark.asyncio
-async def test_runtime_card_import_png_success(tmp_path):
+@pytest.mark.parametrize(
+    "encoding",
+    ["utf-8", "utf-8-sig", "utf-16", "utf-16-le", "utf-16-be", "utf-32", "utf-32-le", "utf-32-be"],
+)
+async def test_runtime_card_import_png_success(tmp_path, encoding):
     png_path = tmp_path / "bob.png"
-    png_path.write_bytes(_make_png_with_chara({"name": "Bob", "description": "A rogue."}))
+    card_json = _json.dumps({"name": "Bób", "description": "A rogue."}, ensure_ascii=False)
+    png_path.write_bytes(_make_png_with_chara(card_json.encode(encoding)))
     store = TavernStore(tmp_path / "tavern.sqlite3")
     runtime = TavernRuntime(store)
 
@@ -2477,9 +2485,9 @@ async def test_runtime_card_import_png_success(tmp_path):
         Event(),
     )
 
-    assert "Imported card: Bob" in response
+    assert "Imported card: Bób" in response
     assert "/rp card inspect" in response
-    assert store.get_card("Bob") is not None
+    assert store.get_card("Bób") is not None
 
 
 @pytest.mark.asyncio
@@ -2525,6 +2533,29 @@ async def test_runtime_card_import_invalid_utf8_returns_friendly_error(tmp_path)
 
     assert response == "Card import failed: save the file as UTF-8 and try again."
     assert store.list_cards() == []
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "invalid_bytes", [b"\xff", b"\xed\xa0\x80"], ids=["invalid-start-byte", "encoded-surrogate"]
+)
+async def test_card_import_reports_invalid_utf8_png_metadata(tmp_path, invalid_bytes):
+    card_file = tmp_path / "invalid-utf8.png"
+    card_file.write_bytes(_make_png_with_chara(b'{"name": "Invalid ' + invalid_bytes + b'"}'))
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    existing_card_id = store.save_card(parse_character_card({"name": "Existing"}))
+    store.set_last_card(existing_card_id)
+    existing_cards = store.list_cards()
+    runtime = TavernRuntime(store)
+
+    response = await runtime.handle_command(
+        RPCommand("card", ["import", str(card_file)], f"/rp card import {card_file}"),
+        Event(),
+    )
+
+    assert response == "Card import failed: save the file as UTF-8 and try again."
+    assert store.list_cards() == existing_cards
+    assert store.get_card("last") == store.get_card(existing_card_id)
 
 
 @pytest.mark.asyncio
