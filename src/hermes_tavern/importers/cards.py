@@ -129,6 +129,7 @@ def parse_character_card(raw_card: dict[str, Any]) -> CharacterCard:
 _PNG_SIG = b"\x89PNG\r\n\x1a\n"
 _UNSUPPORTED_IMAGE_EXTS = {".webp", ".jpg", ".jpeg"}
 _MAX_REMOTE_CARD_BYTES = 10 * 1024 * 1024
+_INVALID_UTF8_MESSAGE = "Card import failed: save the file as UTF-8 and try again."
 
 
 def _is_url(source: str) -> bool:
@@ -160,9 +161,7 @@ def _load_card_bytes(data: bytes, suffix: str, source_label: str) -> CharacterCa
             text = payload.decode(json.detect_encoding(payload))
             raw = json.JSONDecoder().decode(text)
         except UnicodeDecodeError as exc:
-            raise UnsupportedCardFormat(
-                "Card import failed: save the file as UTF-8 and try again."
-            ) from exc
+            raise UnsupportedCardFormat(_INVALID_UTF8_MESSAGE) from exc
         except Exception as exc:
             raise UnsupportedCardFormat(
                 f"Could not decode character data from {source_label}: {exc}"
@@ -172,7 +171,7 @@ def _load_card_bytes(data: bytes, suffix: str, source_label: str) -> CharacterCa
         try:
             raw = json.loads(data.decode("utf-8-sig"))
         except UnicodeDecodeError as exc:
-            raise ValueError(f"Invalid UTF-8 in {source_label}: {exc}") from exc
+            raise UnsupportedCardFormat(_INVALID_UTF8_MESSAGE) from exc
         except json.JSONDecodeError as exc:
             raise ValueError(f"Invalid JSON in {source_label}: {exc}") from exc
         return parse_character_card(raw)

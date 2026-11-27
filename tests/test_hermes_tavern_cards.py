@@ -1042,6 +1042,23 @@ def test_load_card_file_bom_prefixed_malformed_json_raises_value_error(
         _load_json_bytes(tmp_path, monkeypatch, body, "bad.json", remote=remote)
 
 
+def test_load_card_file_https_json_with_invalid_utf8_is_friendly(monkeypatch):
+    source = "https://example.com/cards/alice.json?token=DUMMY"
+
+    def fake_urlopen(request, timeout):
+        assert request.full_url == source
+        assert timeout == 20
+        return _FakeUrlResponse(b'{"name": "\xff"}')
+
+    monkeypatch.setattr("plugins.hermes_tavern.importers.cards.urlopen", fake_urlopen)
+
+    with pytest.raises(UnsupportedCardFormat) as exc_info:
+        load_card_file(source)
+
+    assert str(exc_info.value) == "Card import failed: save the file as UTF-8 and try again."
+    assert isinstance(exc_info.value.__cause__, UnicodeDecodeError)
+
+
 def test_load_card_file_https_url_download_error_does_not_leak_secret(monkeypatch):
     def fake_urlopen(request, timeout):
         raise RuntimeError("TLS handshake failed for https://example.com/cards/alice.json?token=SECRET")
