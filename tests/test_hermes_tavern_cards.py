@@ -422,6 +422,18 @@ def test_parse_talkativeness_invalid_value_becomes_none():
     assert card.talkativeness is None
 
 
+@pytest.mark.parametrize("talkativeness", [False, True])
+@pytest.mark.parametrize("nested", [False, True], ids=["direct", "nested"])
+def test_parse_talkativeness_boolean_becomes_none(talkativeness: bool, nested: bool):
+    fields = {"name": "Boolean Talkativeness", "talkativeness": talkativeness}
+    raw = {"spec": "chara_card_v2", "data": fields} if nested else fields
+
+    for card in (parse_character_card(raw), load_card_file(json.dumps(raw))):
+        assert card.talkativeness is None
+        raw_fields = card.raw["data"] if nested else card.raw
+        assert raw_fields["talkativeness"] is talkativeness
+
+
 @pytest.mark.parametrize("talkativeness", [10**400, -(10**400)])
 @pytest.mark.parametrize("nested", [False, True], ids=["direct", "nested"])
 def test_parse_talkativeness_overflow_becomes_none(talkativeness: int, nested: bool):

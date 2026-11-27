@@ -94,7 +94,7 @@ def parse_character_card(raw_card: dict[str, Any]) -> CharacterCard:
 
     raw_talkativeness = data.get("talkativeness")
     talkativeness: float | None = None
-    if raw_talkativeness is not None:
+    if raw_talkativeness is not None and not isinstance(raw_talkativeness, bool):
         try:
             talkativeness = float(raw_talkativeness)
         except (TypeError, ValueError, OverflowError):
