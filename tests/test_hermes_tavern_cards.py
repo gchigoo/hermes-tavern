@@ -482,7 +482,7 @@ def test_load_card_file_normalizes_post_history_instructions(
 
 
 @pytest.mark.parametrize("nested", [False, True], ids=["direct", "nested"])
-@pytest.mark.parametrize("field", ["first_mes", "mes_example"])
+@pytest.mark.parametrize("field", ["scenario", "first_mes", "mes_example"])
 @pytest.mark.parametrize(
     ("value", "expected"),
     [
@@ -501,7 +501,9 @@ def test_load_card_file_normalizes_post_history_instructions(
         pytest.param({"text": "Welcome back."}, "", id="object"),
     ],
 )
-def test_load_card_file_normalizes_message_text(nested: bool, field: str, value, expected: str):
+def test_load_card_file_normalizes_optional_text_fields(
+    nested: bool, field: str, value: object, expected: str
+):
     data = {"name": "Alice"} if value is Ellipsis else {"name": "Alice", field: value}
     raw = {"spec": "chara_card_v2", "data": data} if nested else data
 
