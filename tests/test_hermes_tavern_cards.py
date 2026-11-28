@@ -481,6 +481,35 @@ def test_load_card_file_normalizes_post_history_instructions(
     assert card.raw == raw
 
 
+@pytest.mark.parametrize("nested", [False, True], ids=["direct", "nested"])
+@pytest.mark.parametrize(
+    ("fields", "expected"),
+    [
+        pytest.param(
+            {"first_mes": " \tWelcome back.\r\nCome in, 旅人.\n "},
+            " \tWelcome back.\r\nCome in, 旅人.\n ",
+            id="multiline",
+        ),
+        pytest.param({}, "", id="missing"),
+        pytest.param({"first_mes": ""}, "", id="empty"),
+        pytest.param({"first_mes": " \t\n "}, "", id="blank"),
+        pytest.param({"first_mes": None}, "", id="null"),
+        pytest.param({"first_mes": 42}, "", id="number"),
+        pytest.param({"first_mes": True}, "", id="boolean"),
+        pytest.param({"first_mes": ["Welcome back."]}, "", id="array"),
+        pytest.param({"first_mes": {"text": "Welcome back."}}, "", id="object"),
+    ],
+)
+def test_load_card_file_normalizes_first_mes(nested: bool, fields: dict, expected: str):
+    data = {"name": "Alice", **fields}
+    raw = {"spec": "chara_card_v2", "data": data} if nested else data
+
+    card = load_card_file(json.dumps(raw))
+
+    assert card.first_mes == expected
+    assert card.raw == raw
+
+
 def test_parse_extended_fields_missing_defaults_to_empty():
     card = parse_character_card({"name": "Minimal"})
 
