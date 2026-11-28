@@ -482,31 +482,32 @@ def test_load_card_file_normalizes_post_history_instructions(
 
 
 @pytest.mark.parametrize("nested", [False, True], ids=["direct", "nested"])
+@pytest.mark.parametrize("field", ["first_mes", "mes_example"])
 @pytest.mark.parametrize(
-    ("fields", "expected"),
+    ("value", "expected"),
     [
         pytest.param(
-            {"first_mes": " \tWelcome back.\r\nCome in, 旅人.\n "},
+            " \tWelcome back.\r\nCome in, 旅人.\n ",
             " \tWelcome back.\r\nCome in, 旅人.\n ",
             id="multiline",
         ),
-        pytest.param({}, "", id="missing"),
-        pytest.param({"first_mes": ""}, "", id="empty"),
-        pytest.param({"first_mes": " \t\n "}, "", id="blank"),
-        pytest.param({"first_mes": None}, "", id="null"),
-        pytest.param({"first_mes": 42}, "", id="number"),
-        pytest.param({"first_mes": True}, "", id="boolean"),
-        pytest.param({"first_mes": ["Welcome back."]}, "", id="array"),
-        pytest.param({"first_mes": {"text": "Welcome back."}}, "", id="object"),
+        pytest.param(Ellipsis, "", id="missing"),
+        pytest.param("", "", id="empty"),
+        pytest.param(" \t\n ", "", id="blank"),
+        pytest.param(None, "", id="null"),
+        pytest.param(42, "", id="number"),
+        pytest.param(True, "", id="boolean"),
+        pytest.param(["Welcome back."], "", id="array"),
+        pytest.param({"text": "Welcome back."}, "", id="object"),
     ],
 )
-def test_load_card_file_normalizes_first_mes(nested: bool, fields: dict, expected: str):
-    data = {"name": "Alice", **fields}
+def test_load_card_file_normalizes_message_text(nested: bool, field: str, value, expected: str):
+    data = {"name": "Alice"} if value is Ellipsis else {"name": "Alice", field: value}
     raw = {"spec": "chara_card_v2", "data": data} if nested else data
 
     card = load_card_file(json.dumps(raw))
 
-    assert card.first_mes == expected
+    assert getattr(card, field) == expected
     assert card.raw == raw
 
 

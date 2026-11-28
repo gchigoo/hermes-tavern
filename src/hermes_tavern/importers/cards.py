@@ -116,7 +116,7 @@ def parse_character_card(
         personality=_text(data.get("personality")),
         scenario=_text(data.get("scenario")),
         first_mes=_first_nonblank_text(data, ("first_mes",)),
-        mes_example=_text(data.get("mes_example")),
+        mes_example=_first_nonblank_text(data, ("mes_example",)),
         alternate_greetings=[
             item for item in alternate if isinstance(item, str) and item.strip()
         ],
