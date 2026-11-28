@@ -239,9 +239,54 @@ def test_parse_direct_character_card():
     assert card.description == "Direct card"
 
 
-def test_parse_character_card_requires_name():
-    with pytest.raises(ValueError, match="name"):
-        parse_character_card({"description": "No name"})
+@pytest.mark.parametrize(
+    "fields",
+    [
+        {},
+        {"name": ""},
+        {"name": " \t\n"},
+        {"name": None},
+        {"name": False},
+        {"name": True},
+        {"name": 42},
+        {"name": 1.5},
+        {"name": ["Alice"]},
+        {"name": {"value": "Alice"}},
+    ],
+    ids=["missing", "empty", "blank", "null", "false", "true", "integer", "float", "list", "object"],
+)
+@pytest.mark.parametrize("nested", [False, True], ids=["direct", "nested"])
+def test_load_card_file_raw_json_requires_string_name(fields: dict, nested: bool):
+    raw = {"name": "Outer", "data": fields} if nested else fields
+
+    with pytest.raises(ValueError, match="^character card requires a name$"):
+        load_card_file(json.dumps(raw))
+
+
+@pytest.mark.parametrize("extension", [".json", ".png"])
+def test_load_card_file_local_requires_string_name(tmp_path, extension):
+    raw = {"name": "Outer", "data": {"name": 42}}
+    path = tmp_path / f"card{extension}"
+    if extension == ".png":
+        path.write_bytes(_make_png_with_chara(raw))
+    else:
+        path.write_text(json.dumps(raw), encoding="utf-8")
+
+    with pytest.raises(ValueError, match="^character card requires a name$"):
+        load_card_file(path)
+
+
+@pytest.mark.parametrize("nested", [False, True], ids=["direct", "nested"])
+def test_load_card_file_trims_name_and_preserves_raw(nested: bool):
+    fields = {"name": " \tAlice\n ", "id": "card-alice", "description": 42}
+    raw = {"name": "Outer", "id": "outer-id", "data": fields} if nested else fields
+
+    card = load_card_file(json.dumps(raw))
+
+    assert card.name == "Alice"
+    assert card.id == "card-alice"
+    assert card.description == "42"
+    assert card.raw == raw
 
 
 def test_parse_character_card_copies_raw_json():
@@ -1052,6 +1097,17 @@ class _FakeUrlResponse:
 
     def read(self, limit: int) -> bytes:
         return self._data[:limit]
+
+
+def test_load_card_file_https_json_requires_string_name(monkeypatch):
+    payload = json.dumps({"name": 42}).encode("utf-8")
+    monkeypatch.setattr(
+        "plugins.hermes_tavern.importers.cards.urlopen",
+        lambda request, timeout: _FakeUrlResponse(payload),
+    )
+
+    with pytest.raises(ValueError, match="^character card requires a name$"):
+        load_card_file("https://example.com/cards/invalid.json")
 
 
 def test_load_card_file_https_json_url(monkeypatch):

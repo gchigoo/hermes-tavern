@@ -11,7 +11,7 @@ from plugins.hermes_tavern.commands import RPCommand, parse_rp_command
 from plugins.hermes_tavern.db import TavernStore
 from plugins.hermes_tavern.gateway_hook import pre_gateway_dispatch
 from plugins.hermes_tavern import runtime_model
-from plugins.hermes_tavern.importers.cards import parse_character_card
+from plugins.hermes_tavern.importers.cards import CharacterCard, parse_character_card
 from plugins.hermes_tavern.importers.lorebooks import import_st_lorebook_json
 from plugins.hermes_tavern.importers.presets import import_raw_preset_text
 from plugins.hermes_tavern.runtime import TavernRuntime
@@ -126,6 +126,37 @@ async def test_runtime_start_card_auto_binds_embedded_lorebook(tmp_path):
     assert lorebook["name"] == "Alice World"
     entries = store.list_lorebook_entries(session["lorebook_id"])
     assert len(entries) == 2
+
+
+@pytest.mark.asyncio
+async def test_runtime_start_saved_card_with_numeric_raw_name_binds_lorebook(tmp_path):
+    store = TavernStore(tmp_path / "tavern.sqlite3")
+    raw = _v3_card_with_embedded_book("42")
+    raw["data"]["name"] = 42
+    raw["data"]["id"] = "legacy-card"
+    store.save_card(CharacterCard(
+        id="legacy-card",
+        name="42",
+        first_mes=raw["data"]["first_mes"],
+        raw=raw,
+    ))
+    runtime = TavernRuntime(store)
+
+    response = await runtime.handle_command(
+        RPCommand("start", ["42"], "/rp start 42"),
+        Event(),
+    )
+
+    assert "Hello from embedded card." in response
+    assert "embedded lorebook bound: 42 World" in response
+    session = store.get_active_session("telegram:chat:chat-1:thread:main:user:user-1")
+    assert session["card_name"] == "42"
+    assert session["lorebook_id"]
+    entries = store.list_lorebook_entries(session["lorebook_id"])
+    assert {entry["content"] for entry in entries} == {
+        "The moon is cracked.",
+        "Always-on lore.",
+    }
 
 
 @pytest.mark.asyncio

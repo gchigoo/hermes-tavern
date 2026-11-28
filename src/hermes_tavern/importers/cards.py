@@ -66,7 +66,10 @@ def _card_id(raw: dict[str, Any], data: dict[str, Any], name: str) -> str:
     return str(uuid5(NAMESPACE_URL, f"hermes-tavern:{name}:{stable}"))
 
 
-def parse_character_card(raw_card: dict[str, Any]) -> CharacterCard:
+def parse_character_card(
+    raw_card: dict[str, Any], *, require_string_name: bool = False
+) -> CharacterCard:
+    """Parse raw card data, with optional strict name validation for new imports."""
     if not isinstance(raw_card, dict):
         raise ValueError("character card must be a JSON object")
 
@@ -76,7 +79,10 @@ def parse_character_card(raw_card: dict[str, Any]) -> CharacterCard:
     if not isinstance(data, dict):
         raise ValueError("character card data must be a JSON object")
 
-    name = _text(data.get("name")).strip()
+    raw_name = data.get("name")
+    if require_string_name and not isinstance(raw_name, str):
+        raw_name = None
+    name = _text(raw_name).strip()
     if not name:
         raise ValueError("character card requires a name")
 
@@ -168,7 +174,7 @@ def _load_card_bytes(data: bytes, suffix: str, source_label: str) -> CharacterCa
             raise UnsupportedCardFormat(
                 f"Could not decode character data from {source_label}: {exc}"
             ) from exc
-        return parse_character_card(raw)
+        return parse_character_card(raw, require_string_name=True)
     if suffix == ".json":
         try:
             raw = json.loads(data.decode("utf-8-sig"))
@@ -176,7 +182,7 @@ def _load_card_bytes(data: bytes, suffix: str, source_label: str) -> CharacterCa
             raise UnsupportedCardFormat(_INVALID_UTF8_MESSAGE) from exc
         except json.JSONDecodeError as exc:
             raise ValueError(f"Invalid JSON in {source_label}: {exc}") from exc
-        return parse_character_card(raw)
+        return parse_character_card(raw, require_string_name=True)
     if suffix in _UNSUPPORTED_IMAGE_EXTS:
         raise UnsupportedCardFormat(
             "WebP/JPEG card import is not supported. "
@@ -335,7 +341,7 @@ def load_card_file(source: str | Path) -> CharacterCard:
             raw = json.loads(source)
         except json.JSONDecodeError as exc:
             raise ValueError(f"Invalid JSON: {exc}") from exc
-        return parse_character_card(raw)
+        return parse_character_card(raw, require_string_name=True)
 
     if isinstance(source, str) and _is_url(source.strip()):
         return _load_remote_card(source.strip())
@@ -377,5 +383,5 @@ def load_card_file(source: str | Path) -> CharacterCard:
     except json.JSONDecodeError as exc:
         raise ValueError(f"Invalid JSON in {path.name}: {exc}") from exc
 
-    card = parse_character_card(raw)
+    card = parse_character_card(raw, require_string_name=True)
     return replace(card, source_path=str(path))
