@@ -450,6 +450,37 @@ def test_parse_card_system_prompt_defaults_empty_when_aliases_are_unusable(unusa
     assert card.system_prompt_override == ""
 
 
+@pytest.mark.parametrize("nested", [False, True], ids=["direct", "nested"])
+@pytest.mark.parametrize(
+    ("instructions", "expected"),
+    [
+        pytest.param(" \tStay in character.\n ", " \tStay in character.\n ", id="text"),
+        pytest.param("", "", id="empty"),
+        pytest.param(" \t\n ", "", id="blank"),
+        pytest.param(None, "", id="null"),
+        pytest.param(True, "", id="boolean"),
+        pytest.param(42, "", id="number"),
+        pytest.param(["Stay in character."], "", id="array"),
+        pytest.param({"text": "Stay in character."}, "", id="object"),
+    ],
+)
+def test_load_card_file_normalizes_post_history_instructions(
+    nested: bool, instructions: object, expected: str
+):
+    fields = {
+        "name": "Alice",
+        "description": 42,
+        "post_history_instructions": instructions,
+    }
+    raw = {"spec": "chara_card_v2", "data": fields} if nested else fields
+
+    card = load_card_file(json.dumps(raw))
+
+    assert card.post_history_instructions == expected
+    assert card.description == "42"
+    assert card.raw == raw
+
+
 def test_parse_extended_fields_missing_defaults_to_empty():
     card = parse_character_card({"name": "Minimal"})
 

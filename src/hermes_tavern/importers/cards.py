@@ -125,7 +125,10 @@ def parse_character_card(
             data,
             ("system_prompt", "system_prompt_override"),
         ),
-        post_history_instructions=_text(data.get("post_history_instructions")),
+        post_history_instructions=_first_nonblank_text(
+            data,
+            ("post_history_instructions",),
+        ),
         tags=[item for item in tags if isinstance(item, str) and item.strip()],
         talkativeness=talkativeness,
         extensions=dict(extensions),
